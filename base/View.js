@@ -1,0 +1,832 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.View = undefined;
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Bindable = require('./Bindable');
+
+var _ViewList = require('./ViewList');
+
+var _Router = require('./Router');
+
+var _Dom = require('./Dom');
+
+var _Tag = require('./Tag');
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var View = exports.View = function () {
+	function View() {
+		var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+		_classCallCheck(this, View);
+
+		this.args = _Bindable.Bindable.makeBindable(args);
+		this._id = this.uuid();
+		this.args._id = this._id;
+		this.template = '';
+		this.parent = null;
+
+		this.firstNode = null;
+		this.lastNode = null;
+		this.nodes = null;
+
+		this.frames = [];
+		this.timeouts = [];
+		this.intervals = [];
+
+		this.cleanup = [];
+
+		this.attach = [];
+		this.detach = [];
+
+		this.eventCleanup = [];
+
+		this.parent = null;
+		this.viewList = null;
+		this.viewLists = {};
+
+		this.tags = {};
+
+		this.intervals = [];
+		this.timeouts = [];
+		this.frames = [];
+	}
+
+	_createClass(View, [{
+		key: 'onFrame',
+		value: function onFrame(callback) {
+			var c = function c(timestamp) {
+				callback(timestamp);
+				window.requestAnimationFrame(c);
+			};
+
+			c();
+		}
+	}, {
+		key: 'onTimeout',
+		value: function onTimeout(time, _callback) {
+			var _this = this;
+
+			var timeout = setTimeout(_callback, time);
+			var index = this.timeouts.length;
+
+			this.timeouts.push({
+				timeout: timeout,
+				callback: function callback() {
+					_this.timeouts[index].fired = true;
+					_callback();
+				},
+				time: time,
+				fired: false,
+				created: new Date().getTime()
+			});
+
+			return timeout;
+		}
+	}, {
+		key: 'clearTimeout',
+		value: function clearTimeout(timeout) {
+			for (var i in this.timeouts) {
+				if (timeout === this.timeouts[i].timeout) {
+					clearInterval(this.timeouts[i].timeout);
+
+					delete this.timeouts[i];
+				}
+			}
+		}
+	}, {
+		key: 'onInterval',
+		value: function onInterval(time, callback) {
+			var timeout = setInterval(callback, time);
+
+			this.intervals.push({
+				timeout: timeout,
+				callback: callback,
+				time: time
+			});
+
+			return timeout;
+		}
+	}, {
+		key: 'clearInterval',
+		value: function (_clearInterval) {
+			function clearInterval(_x) {
+				return _clearInterval.apply(this, arguments);
+			}
+
+			clearInterval.toString = function () {
+				return _clearInterval.toString();
+			};
+
+			return clearInterval;
+		}(function (timeout) {
+			for (var i in this.intervals) {
+				if (timeout === this.intervals[i].timeout) {
+					clearInterval(this.intervals[i].timeout);
+
+					delete this.intervals[i];
+				}
+			}
+		})
+	}, {
+		key: 'pause',
+		value: function pause() {
+			var paused = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
+
+			if (paused === undefined) {
+				this.paused = !this.paused;
+			}
+
+			this.paused = paused;
+
+			if (this.paused) {
+				for (var i in this.timeouts) {
+					if (this.timeouts[i].fired) {
+						continue;
+					}
+
+					clearTimeout(this.timeouts[i].timeout);
+				}
+
+				for (var _i in this.intervals) {
+					clearInterval(this.intervals[_i].timeout);
+				}
+			} else {
+				for (var _i2 in this.timeouts) {
+					if (this.timeouts[_i2].fired) {
+						continue;
+					}
+
+					this.timeouts[_i2].timeout = setTimeout(this.timeouts[_i2].callback, this.timeouts[_i2].time);
+				}
+
+				for (var _i3 in this.intervals) {
+					this.intervals[_i3].timeout = setInterval(this.intervals[_i3].callback, this.intervals[_i3].time);
+				}
+			}
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+			var _this2 = this;
+
+			var parentNode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+			var insertPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+			if (this.nodes) {
+				for (var i in this.detach) {
+					this.detach[i]();
+				}
+
+				var _loop = function _loop(_i4) {
+					var detachEvent = new Event('cvDomDetached', { bubbles: true, target: _this2.nodes[_i4] });
+					var attachEvent = new Event('cvDomAttached', { bubbles: true, target: _this2.nodes[_i4] });
+
+					_this2.nodes[_i4].dispatchEvent(detachEvent);
+
+					_Dom.Dom.mapTags(_this2.nodes[_i4], false, function (node) {
+						node.dispatchEvent(detachEvent);
+					});
+
+					if (parentNode) {
+						if (insertPoint) {
+							parentNode.insertBefore(_this2.nodes[_i4], insertPoint);
+						} else {
+							parentNode.appendChild(_this2.nodes[_i4]);
+						}
+					}
+
+					_Dom.Dom.mapTags(_this2.nodes[_i4], false, function (node) {
+						node.dispatchEvent(attachEvent);
+					});
+
+					_this2.nodes[_i4].dispatchEvent(attachEvent);
+				};
+
+				for (var _i4 in this.nodes) {
+					_loop(_i4);
+				}
+
+				for (var _i5 in this.attach) {
+					this.attach[_i5]();
+				}
+
+				return;
+			}
+
+			var subDoc = void 0;
+
+			if (this.template == document) {
+				subDoc = this.template;
+			} else {
+				subDoc = document.createRange().createContextualFragment(this.template);
+			}
+
+			// console.log(subDoc);
+
+			_Dom.Dom.mapTags(subDoc, '[cv-each]', function (tag) {
+				var eachAttr = tag.getAttribute('cv-each');
+				var carryAttr = tag.getAttribute('cv-carry');
+				tag.removeAttribute('cv-each');
+				tag.removeAttribute('cv-carry');
+
+				var subTemplate = tag.innerHTML;
+
+				while (tag.firstChild) {
+					tag.removeChild(tag.firstChild);
+				}
+
+				var carryProps = [];
+
+				if (carryAttr) {
+					carryProps = carryAttr.split(',');
+				}
+
+				var _eachAttr$split = eachAttr.split(':'),
+				    _eachAttr$split2 = _slicedToArray(_eachAttr$split, 3),
+				    eachProp = _eachAttr$split2[0],
+				    asProp = _eachAttr$split2[1],
+				    keyProp = _eachAttr$split2[2];
+
+				// console.log(this, eachProp);
+
+				var viewList = void 0;
+
+				_this2.args.bindTo(eachProp, function (v, k, t) {
+					if (viewList) {
+						viewList.remove();
+					}
+
+					viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
+
+					_this2.cleanup.push(function (viewList) {
+						return function () {
+							viewList.remove();
+						};
+					}(viewList));
+
+					viewList.parent = _this2;
+
+					viewList.render(tag);
+
+					for (var _i6 in carryProps) {
+						_this2.args.bindTo(carryProps[_i6], function (v, k) {
+							viewList.args.subArgs[k] = v;
+						});
+					}
+				});
+
+				_this2.viewLists[eachProp] = viewList;
+			});
+
+			_Dom.Dom.mapTags(subDoc, '[cv-with]', function (tag) {
+				var withAttr = tag.getAttribute('cv-with');
+				var carryAttr = tag.getAttribute('cv-carry');
+				tag.removeAttribute('cv-with');
+				tag.removeAttribute('cv-carry');
+
+				var subTemplate = tag.innerHTML;
+
+				var carryProps = [];
+
+				if (carryAttr) {
+					carryProps = carryAttr.split(',');
+				}
+
+				while (tag.firstChild) {
+					tag.removeChild(tag.firstChild);
+				}
+
+				var view = new View();
+
+				_this2.cleanup.push(function (view) {
+					return function () {
+						// view.remove();
+					};
+				}(view));
+
+				view.template = subTemplate;
+				view.parent = _this2;
+
+				// console.log(carryProps);
+
+				for (var _i7 in carryProps) {
+					_this2.args.bindTo(carryProps[_i7], function (v, k) {
+						view.args[k] = v;
+					});
+				}
+
+				for (var _i8 in _this2.args[withAttr]) {
+					_this2.args[withAttr].bindTo(_i8, function (v, k) {
+						view.args[k] = v;
+					});
+				}
+
+				// console.log(view);
+
+				view.render(tag);
+			});
+
+			_Dom.Dom.mapTags(subDoc, '[cv-link]', function (tag) {
+				var LinkAttr = tag.getAttribute('cv-link');
+
+				tag.setAttribute('href', LinkAttr);
+
+				var linkClick = function linkClick(event) {
+					event.preventDefault();
+
+					_Router.Router.go(tag.getAttribute('href'));
+				};
+
+				tag.addEventListener('click', linkClick);
+
+				_this2.cleanup.push(function (tag, eventListener) {
+					return function () {
+						tag.removeEventListener('click', eventListener);
+						tag = undefined;
+						eventListener = undefined;
+					};
+				}(tag, linkClick));
+
+				tag.removeAttribute('cv-link');
+			});
+
+			_Dom.Dom.mapTags(subDoc, '[cv-on]', function (tag) {
+				var action = String(tag.getAttribute('cv-on')).split(/;/).map(function (a) {
+					return a.split(':');
+				}).map(function (object, tag) {
+					return function (a) {
+						var eventName = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+						var callbackName = a[1];
+						var argList = [];
+						var groups = /(\w+)(?:\(([\w\s,]+)\))?/.exec(callbackName);
+						if (groups.length) {
+							callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+							if (groups[2]) {
+								argList = groups[2].split(',').map(function (s) {
+									return s.trim();
+								});
+							}
+						}
+
+						var eventMethod = void 0;
+						var parent = _this2;
+
+						while (parent) {
+							if (parent[callbackName]) {
+								eventMethod = function eventMethod() {
+									var _parent;
+
+									(_parent = parent)[callbackName].apply(_parent, arguments);
+								};
+							}
+
+							if (parent.viewList && parent.viewList.parent) {
+								parent = parent.viewList.parent;
+							} else if (parent.parent) {
+								parent = parent.parent;
+							} else {
+								break;
+							}
+						}
+
+						var eventListener = function (object) {
+							return function (event) {
+								var argRefs = argList.map(function (arg) {
+									if (arg === 'event') {
+										return event;
+									}
+									if (arg in object.args) {
+										return object.args[arg];
+									}
+								});
+								// console.log(argList, argRefs);
+								if (!(typeof eventMethod == 'function')) {
+									// console.log(object);
+									// console.trace();
+									// console.log(this);
+									throw new Error(callbackName + ' is not defined on View object.\n\nTag:\n\n' + tag.outerHTML);
+								}
+								eventMethod.apply(undefined, _toConsumableArray(argRefs));
+							};
+						}(object);
+
+						switch (eventName) {
+							case '_init':
+								eventListener();
+								break;
+
+							case '_attach':
+								_this2.attach.push(eventListener);
+								break;
+
+							case '_detach':
+								_this2.detach.push(eventListener);
+								break;
+
+							default:
+								tag.addEventListener(eventName, eventListener);
+
+								_this2.cleanup.push(function (tag, eventName, eventListener) {
+									return function () {
+										tag.removeEventListener(eventName, eventListener);
+										tag = undefined;
+										eventListener = undefined;
+									};
+								}(tag, eventName, eventListener));
+								break;
+						}
+
+						return [eventName, callbackName, argList];
+					};
+				}(_this2, tag));
+
+				tag.removeAttribute('cv-on');
+			});
+
+			_Dom.Dom.mapTags(subDoc, '[cv-bind]', function (tag) {
+				var bindArg = tag.getAttribute('cv-bind');
+				_this2.args.bindTo(bindArg, function (v, k, t) {
+					if (t[k] === v) {
+						// return;
+					}
+
+					if (t[k] instanceof View) {
+						t[k].remove();
+					}
+
+					if (tag.tagName == 'INPUT' || tag.tagName == 'SELECT') {
+						var type = tag.getAttribute('type');
+						if (type && type.toLowerCase() == 'checkbox') {
+							if (v) {
+								tag.checked = true;
+							} else {
+								tag.checked = false;
+							}
+						} else if (type !== 'file') {
+							tag.value = v || '';
+						}
+						return;
+					}
+
+					if (v instanceof View) {
+						v.render(tag);
+					} else {
+						tag.innerText = v;
+					}
+				});
+
+				var inputListener = function inputListener(event) {
+					if (event.target.getAttribute('type') !== 'password') {
+						console.log(event.target.value);
+					}
+
+					if (event.target !== tag) {
+						return;
+					}
+
+					// console.log(event.target.value);
+
+					_this2.args[bindArg] = event.target.value;
+				};
+
+				tag.addEventListener('input', inputListener);
+				tag.addEventListener('change', inputListener);
+				tag.addEventListener('value-changed', inputListener);
+
+				_this2.cleanup.push(function (tag, eventListener) {
+					return function () {
+						tag.removeEventListener('input', inputListener);
+						tag.removeEventListener('change', inputListener);
+						tag.removeEventListener('value-changed', inputListener);
+						tag = undefined;
+						eventListener = undefined;
+					};
+				}(tag, inputListener));
+
+				tag.removeAttribute('cv-bind');
+			});
+
+			_Dom.Dom.mapTags(subDoc, false, function (tag) {
+				var regex = /(\[\[(\$?\w+)\]\])/g;
+
+				if (tag.nodeType == Node.TEXT_NODE) {
+					var original = tag.nodeValue;
+
+					if (!_this2.interpolatable(original)) {
+						return;
+					}
+
+					var header = 0;
+					var match = void 0;
+
+					while (match = regex.exec(original)) {
+						var bindProperty = match[2];
+
+						var unsafeHtml = false;
+
+						if (bindProperty.substr(0, 1) === '$') {
+							unsafeHtml = true;
+							bindProperty = bindProperty.substr(1);
+						}
+
+						var staticPrefix = original.substring(header, match.index);
+
+						header = match.index + match[1].length;
+
+						var _staticNode = document.createTextNode(staticPrefix);
+
+						tag.parentNode.insertBefore(_staticNode, tag);
+
+						var dynamicNode = void 0;
+
+						if (unsafeHtml) {
+							dynamicNode = document.createElement('div');
+						} else {
+							dynamicNode = document.createTextNode('');
+						}
+
+						tag.parentNode.insertBefore(dynamicNode, tag);
+
+						_this2.args.bindTo(bindProperty, function (dynamicNode, unsafeHtml) {
+							return function (v, k, t) {
+								// console.log(`Setting ${k} to ${v}`, dynamicNode);
+								if (t[k] instanceof View) {
+									t[k].remove();
+								}
+
+								dynamicNode.nodeValue = '';
+
+								if (v instanceof View) {
+
+									v.render(tag.parentNode, dynamicNode);
+								} else {
+									// console.log(dynamicNode);
+									if (unsafeHtml) {
+										dynamicNode.innerHTML = v;
+									} else {
+										dynamicNode.nodeValue = v;
+									}
+								}
+							};
+						}(dynamicNode, unsafeHtml));
+					}
+
+					var staticSuffix = original.substring(header);
+
+					var staticNode = document.createTextNode(staticSuffix);
+
+					tag.parentNode.insertBefore(staticNode, tag);
+
+					tag.nodeValue = '';
+				}
+
+				if (tag.nodeType == Node.ELEMENT_NODE) {
+					var _loop2 = function _loop2(_i9) {
+						if (!_this2.interpolatable(tag.attributes[_i9].value)) {
+							return 'continue';
+						}
+
+						var header = 0;
+						var match = void 0;
+						var original = tag.attributes[_i9].value;
+						var attribute = tag.attributes[_i9];
+
+						var bindProperties = {};
+						var segments = [];
+
+						while (match = regex.exec(original)) {
+							segments.push(original.substring(header, match.index));
+
+							if (!bindProperties[match[2]]) {
+								bindProperties[match[2]] = [];
+							}
+
+							bindProperties[match[2]].push(segments.length);
+
+							segments.push(match[1]);
+
+							header = match.index + match[1].length;
+						}
+
+						segments.push(original.substring(header));
+
+						for (var j in bindProperties) {
+							_this2.args.bindTo(j, function (v, k, t, d) {
+								for (var _i10 in bindProperties) {
+									for (var _j in bindProperties[_i10]) {
+										segments[bindProperties[_i10][_j]] = t[_i10];
+
+										if (k === _i10) {
+											segments[bindProperties[_i10][_j]] = v;
+										}
+									}
+								}
+								tag.setAttribute(attribute.name, segments.join(''));
+							});
+						}
+
+						// console.log(bindProperties, segments);
+
+						// console.log(tag.attributes[i].name, tag.attributes[i].value);
+					};
+
+					for (var _i9 = 0; _i9 < tag.attributes.length; _i9++) {
+						var _ret2 = _loop2(_i9);
+
+						if (_ret2 === 'continue') continue;
+					}
+				}
+			});
+
+			_Dom.Dom.mapTags(subDoc, '[cv-ref]', function (tag) {
+				var refAttr = tag.getAttribute('cv-ref');
+
+				var _refAttr$split = refAttr.split(':'),
+				    _refAttr$split2 = _slicedToArray(_refAttr$split, 3),
+				    refProp = _refAttr$split2[0],
+				    refClassname = _refAttr$split2[1],
+				    refKey = _refAttr$split2[2];
+
+				var refClass = _this2.stringToClass(refClassname);
+
+				tag.removeAttribute('cv-ref');
+
+				if (_this2.viewList) {
+					if (!_this2.viewList.parent.tags[refProp]) {
+						_this2.viewList.parent.tags[refProp] = [];
+					}
+
+					var refKeyVal = _this2.args[refKey];
+
+					_this2.viewList.parent.tags[refProp][refKeyVal] = new refClass(tag, _this2, refProp, refKeyVal);
+				} else {
+					_this2.tags[refProp] = new refClass(tag, _this2, refProp);
+				}
+			});
+
+			_Dom.Dom.mapTags(subDoc, '[cv-if]', function (tag) {
+				var ifProperty = tag.getAttribute('cv-if');
+
+				var ifDoc = document.createRange().createContextualFragment('');
+
+				_this2.args.bindTo(ifProperty, function (tag, ifDoc) {
+					return function (v) {
+						var detachEvent = new Event('cvDomDetached');
+						var attachEvent = new Event('cvDomAttached');
+
+						if (v) {
+							while (ifDoc.firstChild) {
+								var moveTag = ifDoc.firstChild;
+
+								tag.prepend(moveTag);
+
+								moveTag.dispatchEvent(detachEvent);
+
+								_Dom.Dom.mapTags(moveTag, false, function (node) {
+									node.dispatchEvent(detachEvent);
+								});
+							}
+						} else {
+							while (tag.firstChild) {
+								var _moveTag = tag.firstChild;
+
+								ifDoc.prepend(_moveTag);
+
+								_moveTag.dispatchEvent(attachEvent);
+
+								_Dom.Dom.mapTags(_moveTag, false, function (node) {
+									node.dispatchEvent(attachEvent);
+								});
+							}
+						}
+					};
+				}(tag, ifDoc));
+
+				tag.removeAttribute('cv-if');
+			});
+
+			this.nodes = [];
+
+			this.firstNode = document.createComment('Template ' + this._id + ' Start');
+
+			this.nodes.push(this.firstNode);
+
+			if (parentNode) {
+				if (insertPoint) {
+					parentNode.insertBefore(this.firstNode, insertPoint);
+				} else {
+					parentNode.appendChild(this.firstNode);
+				}
+			}
+
+			while (subDoc.firstChild) {
+				var newNode = subDoc.firstChild;
+				var _attachEvent = new Event('cvDomAttached', { bubbles: true, target: newNode });
+
+				this.nodes.push(subDoc.firstChild);
+
+				if (parentNode) {
+					if (insertPoint) {
+						parentNode.insertBefore(subDoc.firstChild, insertPoint);
+					} else {
+						parentNode.appendChild(subDoc.firstChild);
+					}
+				}
+
+				_Dom.Dom.mapTags(newNode, false, function (node) {
+					// node.dispatchEvent(attachEvent);
+				});
+
+				newNode.dispatchEvent(_attachEvent);
+			}
+
+			this.lastNode = document.createComment('Template ' + this._id + ' End');
+
+			this.nodes.push(this.lastNode);
+
+			if (parentNode) {
+				if (insertPoint) {
+					parentNode.insertBefore(this.lastNode, insertPoint);
+				} else {
+					parentNode.appendChild(this.lastNode);
+				}
+			}
+
+			for (var _i11 in this.attach) {
+				this.attach[_i11]();
+			}
+
+			this.postRender(parentNode);
+
+			// return this.nodes;
+		}
+	}, {
+		key: 'postRender',
+		value: function postRender(parentNode) {}
+	}, {
+		key: 'interpolatable',
+		value: function interpolatable(str) {
+			return !!String(str).match(/\[\[\$?\w+\??\]\]/);
+		}
+	}, {
+		key: 'uuid',
+		value: function uuid() {
+			return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
+				return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+			});
+		}
+	}, {
+		key: 'remove',
+		value: function remove() {
+			for (var i in this.nodes) {
+				this.nodes[i].remove();
+			}
+
+			var cleanup = void 0;
+
+			while (cleanup = this.cleanup.shift()) {
+				cleanup();
+			}
+
+			for (var _i12 in this.tags) {
+				if (Array.isArray(this.tags[_i12])) {
+					for (var j in this.tags[_i12]) {
+						this.tags[_i12][j].remove();
+					}
+					continue;
+				}
+				this.tags[_i12].remove();
+			}
+		}
+	}, {
+		key: 'update',
+		value: function update() {}
+	}, {
+		key: 'beforeUpdate',
+		value: function beforeUpdate(args) {}
+	}, {
+		key: 'afterUpdate',
+		value: function afterUpdate(args) {}
+	}, {
+		key: 'stringToClass',
+		value: function stringToClass(refClassname) {
+			var refClassSplit = refClassname.split('/');
+			var refShortClassname = refClassSplit[refClassSplit.length - 1];
+			var refClass = require(refClassname);
+
+			return refClass[refShortClassname];
+		}
+	}]);
+
+	return View;
+}();

@@ -1,0 +1,12 @@
+{
+	"name": "curvature",
+	"version": "0.0.1",
+	"author": "Sean Morris <contact@seanmorr.is> (https://seanmorr.is)",
+	"scripts": {
+		"build": "babel .source --presets babel-preset-es2015 --out-dir ."
+	},
+	"devDependencies": {
+		"babel-cli": "^6.26.0",
+		"babel-preset-es2015": "^6.24.1"
+	}
+}
