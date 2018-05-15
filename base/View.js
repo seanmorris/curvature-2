@@ -87,7 +87,8 @@ var View = exports.View = function () {
 				},
 				time: time,
 				fired: false,
-				created: new Date().getTime()
+				created: new Date().getTime(),
+				paused: false
 			});
 
 			return timeout;
@@ -111,7 +112,8 @@ var View = exports.View = function () {
 			this.intervals.push({
 				timeout: timeout,
 				callback: callback,
-				time: time
+				time: time,
+				paused: false
 			});
 
 			return timeout;
@@ -170,6 +172,12 @@ var View = exports.View = function () {
 				}
 
 				for (var _i3 in this.intervals) {
+					if (!this.intervals[_i3].timeout.paused) {
+						continue;
+					}
+
+					this.intervals[_i3].timeout.paused = false;
+
 					this.intervals[_i3].timeout = setInterval(this.intervals[_i3].callback, this.intervals[_i3].time);
 				}
 			}
@@ -674,46 +682,7 @@ var View = exports.View = function () {
 				}
 			});
 
-			_Dom.Dom.mapTags(subDoc, '[cv-if]', function (tag) {
-				var ifProperty = tag.getAttribute('cv-if');
-
-				var ifDoc = document.createRange().createContextualFragment('');
-
-				_this2.args.bindTo(ifProperty, function (tag, ifDoc) {
-					return function (v) {
-						var detachEvent = new Event('cvDomDetached');
-						var attachEvent = new Event('cvDomAttached');
-
-						if (v) {
-							while (ifDoc.firstChild) {
-								var moveTag = ifDoc.firstChild;
-
-								tag.prepend(moveTag);
-
-								moveTag.dispatchEvent(detachEvent);
-
-								_Dom.Dom.mapTags(moveTag, false, function (node) {
-									node.dispatchEvent(detachEvent);
-								});
-							}
-						} else {
-							while (tag.firstChild) {
-								var _moveTag = tag.firstChild;
-
-								ifDoc.prepend(_moveTag);
-
-								_moveTag.dispatchEvent(attachEvent);
-
-								_Dom.Dom.mapTags(_moveTag, false, function (node) {
-									node.dispatchEvent(attachEvent);
-								});
-							}
-						}
-					};
-				}(tag, ifDoc));
-
-				tag.removeAttribute('cv-if');
-			});
+			_Dom.Dom.mapTags(subDoc, '[cv-if]', this.mapIfTags.bind(this));
 
 			this.nodes = [];
 
@@ -769,6 +738,63 @@ var View = exports.View = function () {
 			this.postRender(parentNode);
 
 			// return this.nodes;
+		}
+	}, {
+		key: 'mapIfTags',
+		value: function mapIfTags(tag) {
+			var _this3 = this;
+
+			var ifProperty = tag.getAttribute('cv-if');
+
+			var inverted = false;
+
+			if (ifProperty.substr(0, 1) === '!') {
+				inverted = true;
+				ifProperty = ifProperty.substr(1);
+			}
+
+			var ifDoc = document.createRange().createContextualFragment('');
+
+			this.args.bindTo(ifProperty, function (tag, ifDoc) {
+				return function (v) {
+					var detachEvent = new Event('cvDomDetached');
+					var attachEvent = new Event('cvDomAttached');
+
+					if (inverted) {
+						v = !v;
+					}
+
+					_Dom.Dom.mapTags(tag, '[cv-if]', _this3.mapIfTags.bind(_this3));
+
+					if (v) {
+						while (ifDoc.firstChild) {
+							var moveTag = ifDoc.firstChild;
+
+							tag.prepend(moveTag);
+
+							moveTag.dispatchEvent(detachEvent);
+
+							_Dom.Dom.mapTags(moveTag, false, function (node) {
+								node.dispatchEvent(detachEvent);
+							});
+						}
+					} else {
+						while (tag.firstChild) {
+							var _moveTag = tag.firstChild;
+
+							ifDoc.prepend(_moveTag);
+
+							_moveTag.dispatchEvent(attachEvent);
+
+							_Dom.Dom.mapTags(_moveTag, false, function (node) {
+								node.dispatchEvent(attachEvent);
+							});
+						}
+					}
+				};
+			}(tag, ifDoc));
+
+			tag.removeAttribute('cv-if');
 		}
 	}, {
 		key: 'postRender',

@@ -87,6 +87,11 @@ var Bindable = exports.Bindable = function () {
 				writable: true
 			});
 
+			Object.defineProperty(object, 'setCount', {
+				enumerable: false,
+				writable: true
+			});
+
 			object.isBindable = Bindable;
 			object.binding = {};
 			object.bindingAll = [];
@@ -117,10 +122,12 @@ var Bindable = exports.Bindable = function () {
 			object.stackTime = [];
 			object.before = [];
 			object.after = [];
+			object.setCount = {};
 
 			object.toString = function (object) {
 				return function () {
 					if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) == 'object') {
+						return JSON.stringify(object);
 						return '[object]';
 					}
 
@@ -158,13 +165,31 @@ var Bindable = exports.Bindable = function () {
 						object.bindingAll[_i2](value, key, target, false);
 					}
 
+					var stop = false;
+
 					if (key in object.binding) {
 						for (var _i3 in object.binding[key]) {
-							object.binding[key][_i3](value, key, target, false);
+							if (object.binding[key][_i3](value, key, target, false) === false) {
+								stop = true;
+							}
 						}
 					}
 
-					target[key] = value;
+					if (!stop) {
+						target[key] = value;
+					}
+
+					if (!target.setCount[key]) {
+						target.setCount[key] = 0;
+					}
+
+					target.setCount[key]++;
+
+					var warnOn = 10;
+
+					if (target.setCount[key] > warnOn && value instanceof Object) {
+						console.log('Warning: Resetting bindable reference "' + key + '" to object ' + target.setCount[key] + ' times.');
+					}
 
 					return true;
 				};
@@ -210,13 +235,13 @@ var Bindable = exports.Bindable = function () {
 							// console.log(`Start ${key}()`);
 
 							for (var _i6 in target.before) {
-								target.before[_i6](target);
+								target.before[_i6](target, key, object);
 							}
 
 							var ret = target[key].apply(target, arguments);
 
 							for (var _i7 in target.after) {
-								target.after[_i7](target);
+								target.after[_i7](target, key, object);
 							}
 
 							target.executing = null;

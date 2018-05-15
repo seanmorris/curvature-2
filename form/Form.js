@@ -7,7 +7,7 @@ exports.Form = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _View2 = require('base/View');
+var _View2 = require('curvature/base/View');
 
 var _Field = require('./Field');
 
@@ -57,7 +57,7 @@ var Form = exports.Form = function (_View) {
 
 		_this._onSubmit = [];
 		_this.action = '';
-		_this.template = '\n\t\t\t<form\n\t\t\t\tclass   = "[[_classes]]"\n\t\t\t\tmethod  = "[[method]]"\n\t\t\t\tcv-each = "fields:field"\n\t\t\t\tcv-on   = "submit:submit(event)"\n\t\t\t\tcv-ref  = "formTag:base/Tag"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t';
+		_this.template = '\n\t\t\t<form\n\t\t\t\tclass   = "[[_classes]]"\n\t\t\t\tmethod  = "[[method]]"\n\t\t\t\tcv-each = "fields:field"\n\t\t\t\tcv-on   = "submit:submit(event)"\n\t\t\t\tcv-ref  = "formTag:curvature/base/Tag"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t';
 
 		_this.args.fields = Form.renderFields(skeleton, _this);
 

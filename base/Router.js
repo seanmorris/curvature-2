@@ -83,9 +83,11 @@ var Router = exports.Router = function () {
 				}
 			}
 
+			forceRefresh = true;
+
 			var result = void 0;
 
-			if (result = _Cache.Cache.load(this.path, false, 'page')) {
+			if (!forceRefresh && (result = _Cache.Cache.load(this.path, false, 'page'))) {
 				// console.log('Using cache!');
 
 				view.args.content.pause(true);
@@ -151,6 +153,7 @@ var Router = exports.Router = function () {
 				if (_result instanceof _View.View) {
 					_result.pause(false);
 				}
+
 				_result.update(args, forceRefresh);
 
 				if (view.args.content instanceof _View.View) {

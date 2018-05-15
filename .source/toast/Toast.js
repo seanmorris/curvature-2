@@ -1,6 +1,6 @@
-import { View } from 'base/View';
+import { View } from 'curvature/base/View';
 
-import { ToastAlert } from 'toast/ToastAlert';
+import { ToastAlert } from './ToastAlert';
 
 export class Toast extends View {
 	static instance() {

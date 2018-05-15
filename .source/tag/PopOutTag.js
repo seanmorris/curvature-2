@@ -1,5 +1,5 @@
-import { Dom } from 'base/Dom';
-import { Tag } from 'base/Tag';
+import { Dom } from 'curvature/base/Dom';
+import { Tag } from 'curvature/base/Tag';
 
 export class PopOutTag extends Tag
 {

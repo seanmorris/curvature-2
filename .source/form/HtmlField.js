@@ -1,4 +1,4 @@
-import { View } from 'base/View';
+import { View } from 'curvature/base/View';
 
 export class HtmlField extends View {
 	constructor(values, form, parent, key) {

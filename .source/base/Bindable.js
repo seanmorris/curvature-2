@@ -73,6 +73,11 @@ export class Bindable {
 			, writable: true
 		});
 
+		Object.defineProperty(object, 'setCount', {
+			enumerable: false
+			, writable: true
+		});
+
 		object.isBindable = Bindable;
 		object.binding    = {};
 		object.bindingAll = [];
@@ -100,10 +105,12 @@ export class Bindable {
 		object.stackTime  = [];
 		object.before     = [];
 		object.after      = [];
+		object.setCount   = {};
 
 		object.toString = ((object) => () => {
 			if(typeof object == 'object')
 			{
+				return JSON.stringify(object);
 				return '[object]'
 			}
 
@@ -150,14 +157,42 @@ export class Bindable {
 				object.bindingAll[i](value, key, target, false);
 			}
 
+			let stop = false;
+
 			if(key in object.binding) {
 				for(let i in object.binding[key])
 				{
-					object.binding[key][i](value, key, target, false);
+					if(object.binding[key][i](value, key, target, false) === false)
+					{
+						stop = true;
+					}
 				}
 			}
 
-			target[key] = value;
+			if(!stop)
+			{
+				target[key] = value;				
+			}
+
+			if(!target.setCount[key])
+			{
+				target.setCount[key] = 0;
+			}
+
+			target.setCount[key]++;
+
+			const warnOn = 10;
+
+			if(target.setCount[key] > warnOn && value instanceof Object)
+			{
+				console.log(
+					'Warning: Resetting bindable reference "'
+						+ key
+						+ '" to object '
+						+ target.setCount[key]
+						+ ' times.'
+				);
+			}
 
 			return true;
 		})(object);
@@ -198,19 +233,19 @@ export class Bindable {
 
 					target.stack.unshift(key);
 					target.stackTime.unshift((new Date).getTime());
-					
+
 					// console.log(`Start ${key}()`);
 
 					for(let i in target.before)
 					{
-						target.before[i](target);
+						target.before[i](target, key, object);
 					}
 
 					let ret = target[key].apply(target, arguments);
 
 					for(let i in target.after)
 					{
-						target.after[i](target);
+						target.after[i](target, key, object);
 					}
 
 					target.executing = null;

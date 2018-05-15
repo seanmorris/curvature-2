@@ -57,7 +57,9 @@ export class Repository
 		}).join('&');
 
 		let fullUri    = uri;
-		let postString = ''; 
+		let postString = '';
+
+		cache = false;
 
 		if(post) {
 			cache = false;
@@ -71,11 +73,8 @@ export class Repository
 				+ '='
 				+ encodeURIComponent(post[arg])
 			}).join('&');
-			console.log(postString);
 		}
-		else
-		{
-		}
+
 		fullUri = uri + '?' + queryString;
 
 		let xhr = new XMLHttpRequest();
@@ -92,7 +91,7 @@ export class Repository
 		if(!post) {
 			this.xhrs.push(xhr);
 		}
-		
+
 		return new Promise(((xhrId) => (resolve, reject) => {
 			xhr.onreadystatechange = () => {
 				let DONE = 4;
@@ -110,18 +109,18 @@ export class Repository
 
 						if(response = JSON.parse(xhr.responseText)) {
 							if(response.code == 0) {
-								Repository.lastResponse = response;
+								// Repository.lastResponse = response;
 
-								if(!post) {
+								if(!post && cache) {
 									this.cache[fullUri] = response;
 								}
 
 								// console.log(response.body);
-								
+
 								resolve(response);
 							}
 							else {
-								if(!post) {
+								if(!post && cache) {
 									this.cache[fullUri] = response;
 								}
 
@@ -129,9 +128,9 @@ export class Repository
 							}
 						}
 						else {
-							Repository.lastResponse = xhr.responseText;
+							// Repository.lastResponse = xhr.responseText;
 
-							if(!post) {
+							if(!post && cache) {
 								this.cache[fullUri] = xhr.responseText;
 							}
 
@@ -144,8 +143,9 @@ export class Repository
 					this.xhrs[xhrId] = null;
 				}
 			};
+
 			xhr.open(type, fullUri);
-			
+
 			if(post)
 			{
 				xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -164,4 +164,4 @@ export class Repository
 	}
 }
 
-Repository.lastResponse = null;
+// Repository.lastResponse = null;

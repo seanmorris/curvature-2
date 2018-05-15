@@ -91,6 +91,8 @@ var Repository = exports.Repository = function () {
 			var fullUri = uri;
 			var postString = '';
 
+			cache = false;
+
 			if (post) {
 				cache = false;
 				type = 'POST';
@@ -101,8 +103,8 @@ var Repository = exports.Repository = function () {
 				postString = Object.keys(post).map(function (arg) {
 					return encodeURIComponent(arg) + '=' + encodeURIComponent(post[arg]);
 				}).join('&');
-				console.log(postString);
-			} else {}
+			}
+
 			fullUri = uri + '?' + queryString;
 
 			var xhr = new XMLHttpRequest();
@@ -138,9 +140,9 @@ var Repository = exports.Repository = function () {
 
 								if (response = JSON.parse(xhr.responseText)) {
 									if (response.code == 0) {
-										Repository.lastResponse = response;
+										// Repository.lastResponse = response;
 
-										if (!post) {
+										if (!post && cache) {
 											_this.cache[fullUri] = response;
 										}
 
@@ -148,16 +150,16 @@ var Repository = exports.Repository = function () {
 
 										resolve(response);
 									} else {
-										if (!post) {
+										if (!post && cache) {
 											_this.cache[fullUri] = response;
 										}
 
 										reject(response);
 									}
 								} else {
-									Repository.lastResponse = xhr.responseText;
+									// Repository.lastResponse = xhr.responseText;
 
-									if (!post) {
+									if (!post && cache) {
 										_this.cache[fullUri] = xhr.responseText;
 									}
 
@@ -169,6 +171,7 @@ var Repository = exports.Repository = function () {
 							_this.xhrs[xhrId] = null;
 						}
 					};
+
 					xhr.open(type, fullUri);
 
 					if (post) {
@@ -204,4 +207,4 @@ var Repository = exports.Repository = function () {
 	return Repository;
 }();
 
-Repository.lastResponse = null;
+// Repository.lastResponse = null;

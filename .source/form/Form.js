@@ -1,4 +1,4 @@
-import { View } from 'base/View';
+import { View } from 'curvature/base/View';
 
 import { Field       } from './Field';
 import { FieldSet    } from './FieldSet';
@@ -40,7 +40,7 @@ export class Form extends View
 				method  = "[[method]]"
 				cv-each = "fields:field"
 				cv-on   = "submit:submit(event)"
-				cv-ref  = "formTag:base/Tag"
+				cv-ref  = "formTag:curvature/base/Tag"
 			>
 				[[field]]
 			</form>

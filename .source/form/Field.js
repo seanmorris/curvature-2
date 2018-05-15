@@ -1,4 +1,4 @@
-import { View } from 'base/View';
+import { View } from 'curvature/base/View';
 
 export class Field extends View {
 	constructor(values, form, parent, key) {
@@ -52,13 +52,13 @@ export class Field extends View {
 		});
 
 		this.template = `
-			<label cv-ref = "label:base/Tag">
-				<span cv-if = "title" cv-ref = "title:base/Tag">[[title]]:</span>
+			<label cv-ref = "label:curvature/base/Tag">
+				<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>
 				<input
 					name    = "${this.args.name}"
 					type    = "${this.args.attrs.type||'text'}"
 					cv-bind = "value"
-					cv-ref  = "input:base/Tag"
+					cv-ref  = "input:curvature/base/Tag"
 				/>
 			</label>
 		`;

@@ -1,5 +1,5 @@
 import { Config     } from 'Config';
-import { Repository } from 'base/Repository';
+import { Repository } from 'curvature/base/Repository';
 
 export class UserRepository extends Repository {
 	static get uri() { return Config.backend + '/user/'; }
@@ -8,8 +8,6 @@ export class UserRepository extends Repository {
 			this.uri + 'current?api=json'
 			, false, false, false
 		).then((user) => {
-			console.log(user);
-
 			return user;
 		})
 	}

@@ -62,6 +62,7 @@ export class View
 			, time:     time
 			, fired:    false
 			, created:  (new Date).getTime()
+			, paused:   false
 		});
 
 		return timeout;
@@ -84,6 +85,7 @@ export class View
 			timeout:    timeout
 			, callback: callback
 			, time:     time
+			, paused:   false
 		});
 
 		return timeout;
@@ -142,6 +144,13 @@ export class View
 
 			for(let i in this.intervals)
 			{
+				if(!this.intervals[i].timeout.paused)
+				{
+					continue;
+				}
+
+				this.intervals[i].timeout.paused = false;
+
 				this.intervals[i].timeout = setInterval(
 					this.intervals[i].callback
 					, this.intervals[i].time
@@ -684,52 +693,7 @@ ${tag.outerHTML}`
 			}
 		});
 
-		Dom.mapTags(subDoc, '[cv-if]', (tag)=>{
-			let ifProperty = tag.getAttribute('cv-if');
-
-			let ifDoc = document.createRange().createContextualFragment('');
-
-			this.args.bindTo(
-				ifProperty
-				, ((tag, ifDoc) => (v) => {
-					let detachEvent = new Event('cvDomDetached');
-					let attachEvent = new Event('cvDomAttached');
-
-					if(v)
-					{
-						while(ifDoc.firstChild)
-						{
-							let moveTag = ifDoc.firstChild;
-
-							tag.prepend(moveTag);
-
-							moveTag.dispatchEvent(detachEvent);
-
-							Dom.mapTags(moveTag, false, (node) => {
-								node.dispatchEvent(detachEvent);
-							});
-						}
-					}
-					else
-					{
-						while(tag.firstChild)
-						{
-							let moveTag = tag.firstChild;
-
-							ifDoc.prepend(moveTag);
-
-							moveTag.dispatchEvent(attachEvent);
-
-							Dom.mapTags(moveTag, false, (node) => {
-								node.dispatchEvent(attachEvent);
-							});
-						}
-					}
-				})(tag, ifDoc)
-			);
-
-			tag.removeAttribute('cv-if');
-		});
+		Dom.mapTags(subDoc, '[cv-if]', this.mapIfTags.bind(this));
 
 		this.nodes = [];
 
@@ -799,6 +763,69 @@ ${tag.outerHTML}`
 		this.postRender(parentNode);
 
 		// return this.nodes;
+	}
+	
+	mapIfTags(tag)
+	{
+		let ifProperty = tag.getAttribute('cv-if');
+
+		let inverted = false;
+
+		if(ifProperty.substr(0, 1) === '!')
+		{
+			inverted   = true;
+			ifProperty = ifProperty.substr(1);
+		}
+
+		let ifDoc = document.createRange().createContextualFragment('');
+
+		this.args.bindTo(
+			ifProperty
+			, ((tag, ifDoc) => (v) => {
+				let detachEvent = new Event('cvDomDetached');
+				let attachEvent = new Event('cvDomAttached');
+
+				if(inverted)
+				{
+					v = !v;
+				}
+
+				Dom.mapTags(tag, '[cv-if]', this.mapIfTags.bind(this));
+
+				if(v)
+				{
+					while(ifDoc.firstChild)
+					{
+						let moveTag = ifDoc.firstChild;
+
+						tag.prepend(moveTag);
+
+						moveTag.dispatchEvent(detachEvent);
+
+						Dom.mapTags(moveTag, false, (node) => {
+							node.dispatchEvent(detachEvent);
+						});
+					}
+				}
+				else
+				{
+					while(tag.firstChild)
+					{
+						let moveTag = tag.firstChild;
+
+						ifDoc.prepend(moveTag);
+
+						moveTag.dispatchEvent(attachEvent);
+
+						Dom.mapTags(moveTag, false, (node) => {
+							node.dispatchEvent(attachEvent);
+						});
+					}
+				}
+			})(tag, ifDoc)
+		);
+
+		tag.removeAttribute('cv-if');
 	}
 
 	postRender(parentNode)

@@ -43,9 +43,11 @@ export class Router {
 			this.query[ pair[0] ] = pair[1]; 
 		}
 
+		forceRefresh = true;
+
 		let result;
 
-		if(result = Cache.load(this.path, false, 'page'))
+		if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
 		{
 			// console.log('Using cache!');
 
@@ -123,6 +125,7 @@ export class Router {
 			{
 				result.pause(false);
 			}
+
 			result.update(args, forceRefresh);
 
 			if(view.args.content instanceof View)
