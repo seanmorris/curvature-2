@@ -29,7 +29,7 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 	_createClass(UserRepository, null, [{
 		key: 'getCurrentUser',
 		value: function getCurrentUser(refresh) {
-			return this.request(this.uri + 'current?api=json', false, false, false).then(function (user) {
+			return this.request(this.uri + 'current', false, false, false).then(function (user) {
 				return user;
 			});
 		}

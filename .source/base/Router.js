@@ -119,7 +119,12 @@ export class Router {
 				view.args.content = current;
 			}
 
-			let result = new routes[i](args);
+			let result = routes[i];
+
+			if(routes[i] instanceof Object)
+			{
+				result = new routes[i](args);
+			}
 
 			if(result instanceof View)
 			{
@@ -153,20 +158,25 @@ export class Router {
 				view.args.content = routes[false];
 			}
 
-			let result = new routes[false](args);
+			let result = routes[false];
+
+			if(routes[false] instanceof Object)
+			{
+				result = new routes[false](args);
+			}
 
 			// result.update(args, forceRefresh);
 
 			if(view.args.content instanceof View)
 			{
 				view.args.content.pause(true);
+
+				view.args.content = result;
+
+				view.args.content.pause(false);
 			}
 
 			Cache.store(this.path, result, 3600, 'page');
-
-			view.args.content = result;
-
-			view.args.content.pause(false);
 		}
 
 		return false;

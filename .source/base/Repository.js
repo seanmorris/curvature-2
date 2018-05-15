@@ -2,7 +2,6 @@ var objects = {};
 
 export class Repository
 {
-	static get uri()  { return '//api.laptop.thewhtrbt.com/location'; }
 	static get xhrs() { return this.xhrList = this.xhrList || [];   }
 
 	static loadPage(args = {}, refresh = false) {

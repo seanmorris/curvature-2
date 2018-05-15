@@ -5,7 +5,7 @@ export class UserRepository extends Repository {
 	static get uri() { return Config.backend + '/user/'; }
 	static getCurrentUser(refresh) {
 		return this.request(
-			this.uri + 'current?api=json'
+			this.uri + 'current'
 			, false, false, false
 		).then((user) => {
 			return user;

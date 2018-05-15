@@ -148,7 +148,11 @@ var Router = exports.Router = function () {
 					view.args.content = current;
 				}
 
-				var _result = new routes[_i](args);
+				var _result = routes[_i];
+
+				if (routes[_i] instanceof Object) {
+					_result = new routes[_i](args);
+				}
 
 				if (_result instanceof _View.View) {
 					_result.pause(false);
@@ -177,19 +181,23 @@ var Router = exports.Router = function () {
 					view.args.content = routes[false];
 				}
 
-				var _result2 = new routes[false](args);
+				var _result2 = routes[false];
+
+				if (routes[false] instanceof Object) {
+					_result2 = new routes[false](args);
+				}
 
 				// result.update(args, forceRefresh);
 
 				if (view.args.content instanceof _View.View) {
 					view.args.content.pause(true);
+
+					view.args.content = _result2;
+
+					view.args.content.pause(false);
 				}
 
 				_Cache.Cache.store(this.path, _result2, 3600, 'page');
-
-				view.args.content = _result2;
-
-				view.args.content.pause(false);
 			}
 
 			return false;

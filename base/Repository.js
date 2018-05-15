@@ -193,11 +193,6 @@ var Repository = exports.Repository = function () {
 			this.xhrList = [];
 		}
 	}, {
-		key: 'uri',
-		get: function get() {
-			return '//api.laptop.thewhtrbt.com/location';
-		}
-	}, {
 		key: 'xhrs',
 		get: function get() {
 			return this.xhrList = this.xhrList || [];

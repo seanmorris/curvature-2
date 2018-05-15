@@ -50,15 +50,16 @@ export class View
 	}
 
 	onTimeout(time, callback) {
-		let timeout = setTimeout(callback, time)
+		let wrappedCallback = () => {
+			this.timeouts[index].fired = true;
+			callback();
+		};
+		let timeout = setTimeout(wrappedCallback, time)
 		let index   = this.timeouts.length;
 
 		this.timeouts.push({
 			timeout:    timeout
-			, callback: () => {
-				this.timeouts[index].fired = true;
-				callback();
-			}
+			, callback: wrappedCallback
 			, time:     time
 			, fired:    false
 			, created:  (new Date).getTime()
@@ -116,6 +117,7 @@ export class View
 			{
 				if(this.timeouts[i].fired)
 				{
+					delete this.timeouts[i];
 					continue;
 				}
 
@@ -131,8 +133,14 @@ export class View
 		{
 			for(let i in this.timeouts)
 			{
+				if(!this.timeouts[i].timeout.paused)
+				{
+					continue;
+				}
+
 				if(this.timeouts[i].fired)
 				{
+					delete this.timeouts[i];
 					continue;
 				}
 

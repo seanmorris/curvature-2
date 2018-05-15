@@ -73,18 +73,19 @@ var View = exports.View = function () {
 		}
 	}, {
 		key: 'onTimeout',
-		value: function onTimeout(time, _callback) {
+		value: function onTimeout(time, callback) {
 			var _this = this;
 
-			var timeout = setTimeout(_callback, time);
+			var wrappedCallback = function wrappedCallback() {
+				_this.timeouts[index].fired = true;
+				callback();
+			};
+			var timeout = setTimeout(wrappedCallback, time);
 			var index = this.timeouts.length;
 
 			this.timeouts.push({
 				timeout: timeout,
-				callback: function callback() {
-					_this.timeouts[index].fired = true;
-					_callback();
-				},
+				callback: wrappedCallback,
 				time: time,
 				fired: false,
 				created: new Date().getTime(),
@@ -153,6 +154,7 @@ var View = exports.View = function () {
 			if (this.paused) {
 				for (var i in this.timeouts) {
 					if (this.timeouts[i].fired) {
+						delete this.timeouts[i];
 						continue;
 					}
 
@@ -164,7 +166,12 @@ var View = exports.View = function () {
 				}
 			} else {
 				for (var _i2 in this.timeouts) {
+					if (!this.timeouts[_i2].timeout.paused) {
+						continue;
+					}
+
 					if (this.timeouts[_i2].fired) {
+						delete this.timeouts[_i2];
 						continue;
 					}
 
