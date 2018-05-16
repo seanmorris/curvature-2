@@ -5,12 +5,14 @@ export class ButtonField extends Field {
 		super(values, form, parent, key);
 		this.args.title = this.args.title || this.args.value;
 		this.template = `
-			<input
-				name  = "${this.args.name}"
-				type  = "${this.args.attrs.type}"
-				value = "[[title]]"
-				on    = "click:clicked(event)"
-			/>
+			<label cv-ref = "label:curvature/base/Tag">
+				<input
+					name  = "${this.args.name}"
+					type  = "${this.args.attrs.type}"
+					value = "[[title]]"
+					on    = "click:clicked(event)"
+				/>
+			</label>
 		`;
 	}
 	clicked(event) {

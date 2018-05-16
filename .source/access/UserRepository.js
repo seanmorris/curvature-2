@@ -9,6 +9,14 @@ export class UserRepository extends Repository {
 			, false, false, false
 		).then((user) => {
 			return user;
-		})
+		});
+	}
+	static logout() {
+		return this.request(
+			this.uri + 'logout'
+			, false, {}, false
+		).then((user) => {
+			return user;
+		});
 	}
 }

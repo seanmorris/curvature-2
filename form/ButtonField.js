@@ -24,7 +24,7 @@ var ButtonField = exports.ButtonField = function (_Field) {
 		var _this = _possibleConstructorReturn(this, (ButtonField.__proto__ || Object.getPrototypeOf(ButtonField)).call(this, values, form, parent, key));
 
 		_this.args.title = _this.args.title || _this.args.value;
-		_this.template = '\n\t\t\t<input\n\t\t\t\tname  = "' + _this.args.name + '"\n\t\t\t\ttype  = "' + _this.args.attrs.type + '"\n\t\t\t\tvalue = "[[title]]"\n\t\t\t\ton    = "click:clicked(event)"\n\t\t\t/>\n\t\t';
+		_this.template = '\n\t\t\t<label cv-ref = "label:curvature/base/Tag">\n\t\t\t\t<input\n\t\t\t\t\tname  = "' + _this.args.name + '"\n\t\t\t\t\ttype  = "' + _this.args.attrs.type + '"\n\t\t\t\t\tvalue = "[[title]]"\n\t\t\t\t\ton    = "click:clicked(event)"\n\t\t\t\t/>\n\t\t\t</label>\n\t\t';
 		return _this;
 	}
 

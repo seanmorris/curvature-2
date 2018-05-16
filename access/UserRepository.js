@@ -34,6 +34,13 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 			});
 		}
 	}, {
+		key: 'logout',
+		value: function logout() {
+			return this.request(this.uri + 'logout', false, {}, false).then(function (user) {
+				return user;
+			});
+		}
+	}, {
 		key: 'uri',
 		get: function get() {
 			return _Config.Config.backend + '/user/';

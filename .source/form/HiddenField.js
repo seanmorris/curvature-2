@@ -4,7 +4,7 @@ export class HiddenField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
 		this.template = `
-			<label cv-ref = "label:curvature/base/Tag">
+			<label style = "display:none" cv-ref = "label:curvature/base/Tag">
 				<input
 						name    = "${this.args.name}"
 						type    = "${this.args.attrs.type}"
