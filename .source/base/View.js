@@ -228,6 +228,10 @@ export class View
 
 		// console.log(subDoc);
 
+		Dom.mapTags(subDoc, '[cv-prerender]', (tag) => {
+			tag.parentNode.removeChild(tag);
+		});
+
 		Dom.mapTags(subDoc, '[cv-each]', (tag) => {
 			let eachAttr = tag.getAttribute('cv-each');
 			let carryAttr = tag.getAttribute('cv-carry');

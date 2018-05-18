@@ -24,4 +24,11 @@ export class Tag
 
 		Bindable.clearBindings(this);
 	}
+	clear()
+	{
+		while(this.element.firstChild)
+		{
+			this.element.removeChild(this.element.firstChild);
+		}
+	}
 }

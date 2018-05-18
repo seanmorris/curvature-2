@@ -248,6 +248,10 @@ var View = exports.View = function () {
 
 			// console.log(subDoc);
 
+			_Dom.Dom.mapTags(subDoc, '[cv-prerender]', function (tag) {
+				tag.parentNode.removeChild(tag);
+			});
+
 			_Dom.Dom.mapTags(subDoc, '[cv-each]', function (tag) {
 				var eachAttr = tag.getAttribute('cv-each');
 				var carryAttr = tag.getAttribute('cv-carry');

@@ -37,6 +37,13 @@ var Tag = exports.Tag = function () {
 
 			_Bindable.Bindable.clearBindings(this);
 		}
+	}, {
+		key: 'clear',
+		value: function clear() {
+			while (this.element.firstChild) {
+				this.element.removeChild(this.element.firstChild);
+			}
+		}
 	}]);
 
 	return Tag;
