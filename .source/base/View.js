@@ -1,6 +1,7 @@
 import { Bindable } from './Bindable';
 import { ViewList } from './ViewList';
 import { Router   } from './Router';
+import { Cookie   } from './Cookie';
 import { Dom      } from './Dom';
 import { Tag      } from './Tag';
 
@@ -226,10 +227,15 @@ export class View
 			subDoc = document.createRange().createContextualFragment(this.template);
 		}
 
-		// console.log(subDoc);
-
 		Dom.mapTags(subDoc, '[cv-prerender]', (tag) => {
-			tag.parentNode.removeChild(tag);
+			let prerenderAttr = tag.getAttribute('cv-prerender');
+			let prerendering  = Cookie.get('prerenderer');
+
+			if(prerenderAttr == 'never' && prerendering
+				|| prerenderAttr == 'only' && !prerendering
+			){
+				tag.parentNode.removeChild(tag);
+			}
 		});
 
 		Dom.mapTags(subDoc, '[cv-each]', (tag) => {

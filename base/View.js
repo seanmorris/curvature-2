@@ -15,6 +15,8 @@ var _ViewList = require('./ViewList');
 
 var _Router = require('./Router');
 
+var _Cookie = require('./Cookie');
+
 var _Dom = require('./Dom');
 
 var _Tag = require('./Tag');
@@ -246,10 +248,13 @@ var View = exports.View = function () {
 				subDoc = document.createRange().createContextualFragment(this.template);
 			}
 
-			// console.log(subDoc);
-
 			_Dom.Dom.mapTags(subDoc, '[cv-prerender]', function (tag) {
-				tag.parentNode.removeChild(tag);
+				var prerenderAttr = tag.getAttribute('cv-prerender');
+				var prerendering = _Cookie.Cookie.get('prerenderer');
+
+				if (prerenderAttr == 'never' && prerendering || prerenderAttr == 'only' && !prerendering) {
+					tag.parentNode.removeChild(tag);
+				}
 			});
 
 			_Dom.Dom.mapTags(subDoc, '[cv-each]', function (tag) {

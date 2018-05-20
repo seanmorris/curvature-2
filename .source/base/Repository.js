@@ -1,3 +1,5 @@
+import { Cookie } from './Cookie';
+
 var objects = {};
 
 export class Repository
@@ -9,6 +11,12 @@ export class Repository
 			return response;
 			// return response.map((skeleton) => new Model(skeleton));
 		});
+	}
+	static domCache(uri, content)
+	{
+		console.log(uri, content);
+
+
 	}
 	static load(id, refresh = false) {
 		this.objects           = this.objects           || {};
@@ -58,8 +66,6 @@ export class Repository
 		let fullUri    = uri;
 		let postString = '';
 
-		cache = false;
-
 		if(post) {
 			cache = false;
 			type = 'POST';
@@ -80,6 +86,18 @@ export class Repository
 
 		if(!post && cache && this.cache && this.cache[fullUri]) {
 			return Promise.resolve(this.cache[fullUri]);
+		}
+
+		let tagCacheSelector = 'script[data-uri="'
+			+ fullUri
+			+ '"]';
+
+		let tagCache = document.querySelector(tagCacheSelector);
+
+		if(!post && cache && tagCache) {
+			let tagCacheContent = JSON.parse(tagCache.innerText);
+			
+			return Promise.resolve(tagCacheContent);
 		}
 
 		xhr.withCredentials = true;
@@ -114,7 +132,28 @@ export class Repository
 									this.cache[fullUri] = response;
 								}
 
-								// console.log(response.body);
+								let tagCache = document.querySelector(
+									'script[data-uri="'
+									+ fullUri
+									+ '"]'
+								);
+
+								let prerendering  = Cookie.get('prerenderer');
+								
+								console.log(prerendering);
+
+								if(prerendering)
+								{
+									if(!tagCache)
+									{
+										tagCache  = document.createElement('script');
+										document.querySelector('head').appendChild(tagCache);
+									}
+									
+									tagCache.type = 'text/json';
+									tagCache.setAttribute('data-uri', fullUri);
+									tagCache.innerText = JSON.stringify(response);
+								}
 
 								resolve(response);
 							}

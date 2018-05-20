@@ -3,8 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+exports.Repository = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Cookie = require('./Cookie');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -25,6 +28,11 @@ var Repository = exports.Repository = function () {
 				return response;
 				// return response.map((skeleton) => new Model(skeleton));
 			});
+		}
+	}, {
+		key: 'domCache',
+		value: function domCache(uri, content) {
+			console.log(uri, content);
 		}
 	}, {
 		key: 'load',
@@ -91,8 +99,6 @@ var Repository = exports.Repository = function () {
 			var fullUri = uri;
 			var postString = '';
 
-			cache = false;
-
 			if (post) {
 				cache = false;
 				type = 'POST';
@@ -111,6 +117,16 @@ var Repository = exports.Repository = function () {
 
 			if (!post && cache && this.cache && this.cache[fullUri]) {
 				return Promise.resolve(this.cache[fullUri]);
+			}
+
+			var tagCacheSelector = 'script[data-uri="' + fullUri + '"]';
+
+			var tagCache = document.querySelector(tagCacheSelector);
+
+			if (!post && cache && tagCache) {
+				var tagCacheContent = JSON.parse(tagCache.innerText);
+
+				return Promise.resolve(tagCacheContent);
 			}
 
 			xhr.withCredentials = true;
@@ -146,7 +162,22 @@ var Repository = exports.Repository = function () {
 											_this.cache[fullUri] = response;
 										}
 
-										// console.log(response.body);
+										var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
+
+										var prerendering = _Cookie.Cookie.get('prerenderer');
+
+										console.log(prerendering);
+
+										if (prerendering) {
+											if (!_tagCache) {
+												_tagCache = document.createElement('script');
+												document.querySelector('head').appendChild(_tagCache);
+											}
+
+											_tagCache.type = 'text/json';
+											_tagCache.setAttribute('data-uri', fullUri);
+											_tagCache.innerText = JSON.stringify(response);
+										}
 
 										resolve(response);
 									} else {
