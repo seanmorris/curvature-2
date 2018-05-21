@@ -1,4 +1,4 @@
-import { View } from 'curvature/base/View';
+import { View } from '../base/View';
 
 export class Field extends View {
 	constructor(values, form, parent, key) {

@@ -1,6 +1,6 @@
-import { Tag      } from 'curvature/base/Tag';
-import { Dom      } from 'curvature/base/Dom';
-import { Bindable } from 'curvature/base/Bindable';
+import { Tag      } from '../base/Tag';
+import { Dom      } from '../base/Dom';
+import { Bindable } from '../base/Bindable';
 
 export class ScrollTag extends Tag
 {

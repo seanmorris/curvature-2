@@ -1,5 +1,5 @@
-import { View  }   from 'curvature/base/View';
-import { Cache }   from 'curvature/base/Cache';
+import { View  }   from './View';
+import { Cache }   from './Cache';
 
 export class Router {
 	static listen(mainView)

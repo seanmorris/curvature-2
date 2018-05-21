@@ -1,13 +1,13 @@
 import { Config         } from 'Config';
 
-import { View           } from 'curvature/base/View';
-import { Router         } from 'curvature/base/Router';
-import { Repository     } from 'curvature/base/Repository';
+import { View           } from '../base/View';
+import { Router         } from '../base/Router';
+import { Repository     } from '../base/Repository';
 
 import { UserRepository } from './UserRepository';
 
-import { Toast      } from 'curvature/toast/Toast';
-import { ToastAlert } from 'curvature/toast/ToastAlert';
+import { Toast      } from '../toast/Toast';
+import { ToastAlert } from '../toast/ToastAlert';
 
 export class LoginView extends View{
 	constructor() {

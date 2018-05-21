@@ -1,22 +1,21 @@
+// See http://brunch.io for documentation.
 exports.files = {
-  javascripts: {
-    joinTo: {
-      'curvature.js': /^app/
-    }
-  },
-  stylesheets: {joinTo: 'curvature.css'}
+  javascripts: {joinTo: 'curvature.js'},
 };
 
-// exports.paths = {
-//   watched: ['.source', 'test', 'vendor']
-// };
-
-// exports.modules = {
-//   nameCleaner: (path) => path.replace(/^\.source\//, '')
-// }
-
 exports.plugins = {
-  babel: {
-    presets: ['latest']
+  babel: {presets: ['latest']},
+  raw: {
+    pattern: /\.(html|jss)$/,
+    wrapper: content => `module.exports = ${JSON.stringify(content)}`
   }
+};
+
+exports.watcher = {
+    awaitWriteFinish: true,
+    usePolling: true
+};
+
+exports.paths = {
+  public: '.dist', watched: ['app']
 };

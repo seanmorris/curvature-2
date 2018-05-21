@@ -1,4 +1,4 @@
-import { View } from 'curvature/base/View';
+import { View } from '../base/View';
 
 export class ToastAlert extends View {
 	constructor(args) {

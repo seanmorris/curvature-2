@@ -1,5 +1,5 @@
 import { Config     } from 'Config';
-import { Repository } from 'curvature/base/Repository';
+import { Repository } from '../base/Repository';
 
 export class UserRepository extends Repository {
 	static get uri() { return Config.backend + '/user/'; }

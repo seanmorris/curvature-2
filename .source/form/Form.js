@@ -1,4 +1,4 @@
-import { View } from 'curvature/base/View';
+import { View } from '../base/View';
 
 import { Field       } from './Field';
 import { FieldSet    } from './FieldSet';
