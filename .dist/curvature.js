@@ -716,36 +716,36 @@ var Cookie = exports.Cookie = function () {
 
 Cookie.jar = Cookie.jar || _Bindable.Bindable.makeBindable({});
 
-document.cookie.split(';').map(function (c) {
-	var _c$split = c.split('='),
-	    _c$split2 = _slicedToArray(_c$split, 2),
-	    key = _c$split2[0],
-	    value = _c$split2[1];
+if (window.location.href.substr(0, 4) !== 'data') {
+	document.cookie.split(';').map(function (c) {
+		var _c$split = c.split('='),
+		    _c$split2 = _slicedToArray(_c$split, 2),
+		    key = _c$split2[0],
+		    value = _c$split2[1];
 
-	try {
-		value = JSON.parse(value);
-	} catch (error) {
-		value = value;
-	}
+		try {
+			value = JSON.parse(value);
+		} catch (error) {
+			value = value;
+		}
 
-	Cookie.jar[decodeURIComponent(key)] = value;
+		Cookie.jar[decodeURIComponent(key)] = value;
+	});
+
+	Cookie.jar.bindTo(function (v, k, t, d) {
+		t[k] = v;
+
+		if (d) {
+			t[k] = null;
+		}
+
+		var cookieString = encodeURIComponent(k) + '=' + JSON.stringify(t[k]);
+		document.cookie = cookieString;
+	});
+}
 });
 
-Cookie.jar.bindTo(function (v, k, t, d) {
-	t[k] = v;
-
-	if (d) {
-		t[k] = null;
-	}
-
-	var cookieString = encodeURIComponent(k) + '=' + JSON.stringify(t[k]);
-	document.cookie = cookieString;
-
-	console.log(document.cookie);
-});
-});
-
-require.register("base/Dom.js", function(exports, require, module) {
+;require.register("base/Dom.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

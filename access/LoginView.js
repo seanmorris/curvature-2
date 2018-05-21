@@ -9,17 +9,17 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _Config = require('Config');
 
-var _View2 = require('curvature/base/View');
+var _View2 = require('../base/View');
 
-var _Router = require('curvature/base/Router');
+var _Router = require('../base/Router');
 
-var _Repository = require('curvature/base/Repository');
+var _Repository = require('../base/Repository');
 
 var _UserRepository = require('./UserRepository');
 
-var _Toast = require('curvature/toast/Toast');
+var _Toast = require('../toast/Toast');
 
-var _ToastAlert = require('curvature/toast/ToastAlert');
+var _ToastAlert = require('../toast/ToastAlert');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
