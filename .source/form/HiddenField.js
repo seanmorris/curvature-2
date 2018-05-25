@@ -1,10 +1,10 @@
 import { Field } from './Field';
 
-export class HiddenField extends Field {
+export class FileField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
 		this.template = `
-			<label style = "display:none" cv-ref = "label:curvature/base/Tag">
+			<label cv-ref = "label:curvature/base/Tag">
 				<input
 						name    = "${this.args.name}"
 						type    = "${this.args.attrs.type}"

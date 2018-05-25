@@ -156,24 +156,111 @@ Object.defineProperty(exports, "__esModule", {
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Config = exports.Config = function (_View) {
-  _inherits(Config, _View);
-
-  function Config() {
-    _classCallCheck(this, Config);
-
-    return _possibleConstructorReturn(this, (Config.__proto__ || Object.getPrototypeOf(Config)).apply(this, arguments));
-  }
-
-  return Config;
-}(View);
+var Config = exports.Config = function Config() {
+  _classCallCheck(this, Config);
+};
 });
 
-;require.register("access/LoginView.js", function(exports, require, module) {
+;require.register("Curvature.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.toast = exports.tag = exports.form = exports.access = exports.base = undefined;
+
+var _Bindable = require('base/Bindable');
+
+var _Cache = require('base/Cache');
+
+var _Cookie = require('base/Cookie');
+
+var _Dom = require('base/Dom');
+
+var _Repository = require('base/Repository');
+
+var _Router = require('base/Router');
+
+var _Tag = require('base/Tag');
+
+var _Theme = require('base/Theme');
+
+var _View = require('base/View');
+
+var _LoginView = require('access/LoginView');
+
+var _UserRepository = require('access/UserRepository');
+
+var _ButtonField = require('form/ButtonField');
+
+var _Field = require('form/Field');
+
+var _FieldSet = require('form/FieldSet');
+
+var _FileField = require('form/FileField');
+
+var _Form = require('form/Form');
+
+var _HiddenField = require('form/HiddenField');
+
+var _HtmlField = require('form/HtmlField');
+
+var _SelectField = require('form/SelectField');
+
+var _PopOutTag = require('tag/PopOutTag');
+
+var _ScrollTag = require('tag/ScrollTag');
+
+var _Toast = require('toast/Toast');
+
+var _ToastAlert = require('toast/ToastAlert');
+
+var base = {
+	Bindable: _Bindable.Bindable,
+	Cache: _Cache.Cache,
+	Cookie: _Cookie.Cookie,
+	Dom: _Dom.Dom,
+	Repository: _Repository.Repository,
+	Router: _Router.Router,
+	Tag: _Tag.Tag,
+	Theme: _Theme.Theme,
+	View: _View.View
+};
+
+var access = {
+	LoginView: _LoginView.LoginView,
+	UserRepository: _UserRepository.UserRepository
+};
+
+var form = {
+	ButtonField: _ButtonField.ButtonField,
+	Field: _Field.Field,
+	FieldSet: _FieldSet.FieldSet,
+	FileField: _FileField.FileField,
+	Form: _Form.Form,
+	HiddenField: _HiddenField.HiddenField,
+	HtmlField: _HtmlField.HtmlField,
+	SelectField: _SelectField.SelectField
+};
+
+var tag = {
+	PopOutTag: _PopOutTag.PopOutTag,
+	ScrollTag: _ScrollTag.ScrollTag
+};
+
+var toast = {
+	Toast: _Toast.Toast,
+	ToastAlert: _ToastAlert.ToastAlert
+};
+
+exports.base = base;
+exports.access = access;
+exports.form = form;
+exports.tag = tag;
+exports.toast = toast;
+});
+
+require.register("access/LoginView.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2917,7 +3004,7 @@ var Form = exports.Form = function (_View) {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.HiddenField = undefined;
+exports.FileField = undefined;
 
 var _Field2 = require('./Field');
 
@@ -2927,19 +3014,19 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var HiddenField = exports.HiddenField = function (_Field) {
-	_inherits(HiddenField, _Field);
+var FileField = exports.FileField = function (_Field) {
+	_inherits(FileField, _Field);
 
-	function HiddenField(values, form, parent, key) {
-		_classCallCheck(this, HiddenField);
+	function FileField(values, form, parent, key) {
+		_classCallCheck(this, FileField);
 
-		var _this = _possibleConstructorReturn(this, (HiddenField.__proto__ || Object.getPrototypeOf(HiddenField)).call(this, values, form, parent, key));
+		var _this = _possibleConstructorReturn(this, (FileField.__proto__ || Object.getPrototypeOf(FileField)).call(this, values, form, parent, key));
 
-		_this.template = '\n\t\t\t<label style = "display:none" cv-ref = "label:curvature/base/Tag">\n\t\t\t\t<input\n\t\t\t\t\t\tname    = "' + _this.args.name + '"\n\t\t\t\t\t\ttype    = "' + _this.args.attrs.type + '"\n\t\t\t\t\t\tcv-bind = "value"\n\t\t\t\t\t\tcv-ref  = "input:curvature/base/Tag"\n\t\t\t\t/>\n\t\t\t\t<span style = "display:none" cv-if = "value">[[[value]]]</span>\n\t\t\t</label>\n\t\t';
+		_this.template = '\n\t\t\t<label cv-ref = "label:curvature/base/Tag">\n\t\t\t\t<input\n\t\t\t\t\t\tname    = "' + _this.args.name + '"\n\t\t\t\t\t\ttype    = "' + _this.args.attrs.type + '"\n\t\t\t\t\t\tcv-bind = "value"\n\t\t\t\t\t\tcv-ref  = "input:curvature/base/Tag"\n\t\t\t\t/>\n\t\t\t\t<span style = "display:none" cv-if = "value">[[[value]]]</span>\n\t\t\t</label>\n\t\t';
 		return _this;
 	}
 
-	return HiddenField;
+	return FileField;
 }(_Field2.Field);
 });
 
@@ -3020,6 +3107,10 @@ var SelectField = exports.SelectField = function (_Field) {
 
 	return SelectField;
 }(_Field2.Field);
+});
+
+;require.register("index.js", function(exports, require, module) {
+"use strict";
 });
 
 ;require.register("tag/PopOutTag.js", function(exports, require, module) {

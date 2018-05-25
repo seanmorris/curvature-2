@@ -1,1 +1,1 @@
-export class Config extends View{}
+export class Config {}
