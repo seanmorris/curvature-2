@@ -1,6 +1,6 @@
 import { Field } from './Field';
 
-export class FileField extends Field {
+export class HiddenField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
 		this.template = `
