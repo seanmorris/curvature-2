@@ -15,8 +15,6 @@ export class Repository
 	static domCache(uri, content)
 	{
 		console.log(uri, content);
-
-
 	}
 	static load(id, refresh = false) {
 		this.objects           = this.objects           || {};

@@ -183,19 +183,21 @@ var Router = exports.Router = function () {
 
 				var _result2 = routes[false];
 
+				if (_result2 instanceof _View.View) {
+					_result2.pause(false);
+				}
+
 				if (routes[false] instanceof Object) {
 					_result2 = new routes[false](args);
 				}
 
-				// result.update(args, forceRefresh);
+				_result2.update(args, forceRefresh);
 
 				if (view.args.content instanceof _View.View) {
 					view.args.content.pause(true);
-
-					view.args.content = _result2;
-
-					view.args.content.pause(false);
 				}
+
+				view.args.content = _result2;
 
 				_Cache.Cache.store(this.path, _result2, 3600, 'page');
 			}

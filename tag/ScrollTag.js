@@ -39,12 +39,11 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 
 		_this.scrollListener = function (event) {
 			var tag = event.target;
-			for (var i in tag.scrollSubTags) {
-				tag.scrollSubTags[i].scrolled(tag);
-			}
+
+			_this.scrolled(tag);
 		};
 
-		_this.resizeListenr = function (event) {
+		_this.resizeListener = function (event) {
 			for (var i in _this.resizeTags) {
 				_this.resizeTags[i].scrolled(event.target);
 			}
@@ -54,24 +53,22 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 			if (e.path[e.path.length - 1] !== window) {
 				return;
 			}
-			var current = e.target;
-			while (current) {
-				current = _Bindable.Bindable.makeBindable(current);
 
-				_this.addScrollListener(current);
+			console.log(e.target);
 
-				_this.scrolled(current);
+			var current = _Bindable.Bindable.makeBindable(e.target);
 
-				current = current.parentNode;
-			}
+			_this.addScrollListener(current);
+
+			_this.scrolled(current);
+
+			_this.element.removeEventListener('cvDomAttached', _this.attachListener);
 		};
 
 		_this.element.addEventListener('cvDomAttached', _this.attachListener);
 
 		_this.cleanup.push(function (element) {
-			return function () {
-				element.removeEventListener('cvDomAttached', _this.attachListener);
-			};
+			return function () {};
 		}(_this.element));
 
 		ScrollTag.addResizeListener(_this);
@@ -110,67 +107,19 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 			var current = this.element;
 
 			var offsetTop = 0,
-			    subOffsetTop = 0,
-			    offsetBottom = 0,
-			    subOffsetBottom = 0;
-
-			while (current) {
-				if (offsetTop - current.scrollTop < subOffsetTop) {
-					subOffsetTop = offsetTop - current.scrollTop;
-				}
-
-				if (current.offsetTop) {
-					offsetTop += current.offsetTop;
-				}
-
-				if (typeof current.scrollTop !== 'undefined') {
-					offsetTop -= current.scrollTop;
-					offsetBottom = offsetTop + this.element.clientHeight - current.clientHeight;
-				}
-
-				if (current.parentNode && current.parentNode.offsetTop && current.parentNode !== current.offsetParent) {
-					offsetTop -= current.parentNode.offsetTop;
-				}
-
-				if (offsetBottom > subOffsetBottom) {
-					subOffsetBottom = offsetBottom;
-				}
-
-				current = current.parentNode;
-			}
-
-			if (offsetTop < -this.threshold || subOffsetTop < -this.threshold) {
-				this.topEdge = false;
-			} else {
-				this.topEdge = true;
-
-				if (offsetBottom - this.element.clientHeight > this.threshold) {
-					this.topEdge = false;
-				}
-			}
-
-			this.bottomEdge = false;
-
-			if (offsetBottom <= this.threshold) {
-				this.bottomEdge = true;
-
-				if (offsetTop + this.element.clientHeight < -this.threshold) {
-					this.bottomEdge = false;
-				}
-			}
-
-			// this.offsetTop    = offsetTop;
-			// this.offsetBottom = this.offsetBottom
+			    offsetBottom = 0;
 
 			var visible = false;
 
-			if (offsetBottom <= this.element.clientHeight && offsetTop > -this.element.clientHeight) {
+			var rect = this.element.getBoundingClientRect();
+
+			if (rect.bottom > 0 && rect.top < window.innerHeight) {
 				visible = true;
 			}
 
 			this.proxy.visible = visible;
-			this.proxy.offsetTop = offsetTop;
-			this.proxy.offsetBottom = offsetBottom;
+			this.proxy.offsetTop = rect.top || 0;
+			this.proxy.offsetBottom = rect.bottom || 0;
 		}
 	}, {
 		key: 'addScrollListener',
@@ -183,20 +132,13 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 					writable: true
 				});
 
-				Object.defineProperty(tag, 'scrollSubTags', {
-					enumerable: false,
-					writable: true
-				});
-
 				tag.scrollListener = true;
-				tag.scrollSubTags = [];
 
-				tag.addEventListener('scroll', this.scrollListener);
+				window.addEventListener('scroll', this.scrollListener);
 
 				this.cleanup.push(function (element) {
 					return function () {
-						element.removeEventListener('scroll', _this2.scrollListener);
-						element.scrollSubTags = undefined;
+						window.removeEventListener('scroll', _this2.scrollListener);
 					};
 				}(tag));
 			}

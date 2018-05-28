@@ -160,21 +160,24 @@ export class Router {
 
 			let result = routes[false];
 
+			if(result instanceof View)
+			{
+				result.pause(false);
+			}
+
 			if(routes[false] instanceof Object)
 			{
 				result = new routes[false](args);
 			}
 
-			// result.update(args, forceRefresh);
+			result.update(args, forceRefresh);
 
 			if(view.args.content instanceof View)
 			{
 				view.args.content.pause(true);
-
-				view.args.content = result;
-
-				view.args.content.pause(false);
 			}
+
+			view.args.content = result;
 
 			Cache.store(this.path, result, 3600, 'page');
 		}
