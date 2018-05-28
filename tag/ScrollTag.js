@@ -54,7 +54,9 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 				return;
 			}
 
-			console.log(e.target);
+			if (e.target !== element) {
+				return;
+			}
 
 			var current = _Bindable.Bindable.makeBindable(e.target);
 

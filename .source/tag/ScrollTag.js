@@ -36,8 +36,11 @@ export class ScrollTag extends Tag
 			{
 				return;
 			}
-			
-			console.log(e.target);
+
+			if(e.target !== element)
+			{
+				return;
+			}
 
 			let current = Bindable.makeBindable(e.target);
 

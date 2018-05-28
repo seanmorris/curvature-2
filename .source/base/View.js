@@ -818,10 +818,10 @@ ${tag.outerHTML}`
 
 						tag.prepend(moveTag);
 
-						moveTag.dispatchEvent(detachEvent);
+						moveTag.dispatchEvent(attachEvent);
 
 						Dom.mapTags(moveTag, false, (node) => {
-							node.dispatchEvent(detachEvent);
+							node.dispatchEvent(attachEvent);
 						});
 					}
 				}
@@ -833,10 +833,10 @@ ${tag.outerHTML}`
 
 						ifDoc.prepend(moveTag);
 
-						moveTag.dispatchEvent(attachEvent);
+						moveTag.dispatchEvent(detachEvent);
 
 						Dom.mapTags(moveTag, false, (node) => {
-							node.dispatchEvent(attachEvent);
+							node.dispatchEvent(detachEvent);
 						});
 					}
 				}

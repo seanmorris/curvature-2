@@ -788,10 +788,10 @@ var View = exports.View = function () {
 
 							tag.prepend(moveTag);
 
-							moveTag.dispatchEvent(detachEvent);
+							moveTag.dispatchEvent(attachEvent);
 
 							_Dom.Dom.mapTags(moveTag, false, function (node) {
-								node.dispatchEvent(detachEvent);
+								node.dispatchEvent(attachEvent);
 							});
 						}
 					} else {
@@ -800,10 +800,10 @@ var View = exports.View = function () {
 
 							ifDoc.prepend(_moveTag);
 
-							_moveTag.dispatchEvent(attachEvent);
+							_moveTag.dispatchEvent(detachEvent);
 
 							_Dom.Dom.mapTags(_moveTag, false, function (node) {
-								node.dispatchEvent(attachEvent);
+								node.dispatchEvent(detachEvent);
 							});
 						}
 					}
