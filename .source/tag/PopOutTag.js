@@ -22,13 +22,21 @@ export class PopOutTag extends Tag
 
 		this.scrollStyle;
 
-		//this.ps = new PerfectScrollbar(element, {wheelPropagation: true});
 		this.rect;
 		this.clickListener  = (event) => {
+			let leftDuration = 0.333;
+			
 			if(!this.poppedOut || ! this.rect)
 			{
 				this.rect = element.getBoundingClientRect();
-			}			
+
+				this.distance = Math.sqrt(
+					this.rect.top ** 2
+					+ this.rect.left ** 2
+				);
+
+				this.leftDuration = 1 - (1 / this.distance);
+			}
 
 			if(!this.element.contains(event.target))
 			{
@@ -38,7 +46,6 @@ export class PopOutTag extends Tag
 			event.preventDefault();
 			event.stopPropagation();
 
-			let leftDuration = 0.333;
 
 			if(this.moving)
 			{
@@ -49,7 +56,7 @@ export class PopOutTag extends Tag
 			{
 				this.previousScroll = window.scrollY;
 
-				if(leftDuration)
+				if(!this.leftDuration)
 				{
 					this.leftDuration = leftDuration;
 				}
@@ -87,8 +94,7 @@ export class PopOutTag extends Tag
 
 					element.classList.add('popped');
 					element.classList.remove('unpopped');
-					
-					// element.setAttribute('style', style + ';position:absolute');
+
 					setTimeout(()=>{
 						element.setAttribute(
 							'style'
@@ -120,7 +126,7 @@ export class PopOutTag extends Tag
 			{
 				window.scrollTo(0,this.previousScroll);
 				setTimeout(()=>{
-					
+
 				}, 1);
 
 				let style = this.style
@@ -135,10 +141,10 @@ export class PopOutTag extends Tag
 
 					window.scrollTo(0, this.bodyScroll);
 				}
-				
+
 
 				element.classList.add('unpopped');
-				
+
 				element.setAttribute('style', style);
 
 				this.moving = true;
