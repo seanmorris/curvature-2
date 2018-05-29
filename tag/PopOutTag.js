@@ -35,6 +35,9 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.unpoppedStyle = '';
 		_this.previousScroll = 0;
 
+		_this.bodyStyle = '';
+		_this.bodyScroll = 0;
+
 		element.classList.add('unpopped');
 
 		_this.scrollStyle;
@@ -82,17 +85,19 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 					element.classList.add('unpopped');
 
-					setTimeout(function () {
-						element.classList.add('popped');
-						element.classList.remove('unpopped');
-					}, _this.leftDuration * 333);
+					element.classList.add('popped');
+					element.classList.remove('unpopped');
 
 					// element.setAttribute('style', style + ';position:absolute');
 					setTimeout(function () {
 						element.setAttribute('style', style + (';transition: ' + _this.leftDuration + 's;'));
-					}, 10);
+					}, 0);
+					console.log(_this.leftDuration * 1000);
 					setTimeout(function () {
 						PopOutTag.popLevel();
+						_this.bodyStyle = document.body.getAttribute('style');
+						_this.bodyScroll = window.scrollY;
+						console.log(_this.bodyScroll);
 						document.body.setAttribute('style', 'height:0px;overflow:hidden;');
 						window.scrollTo(0, 0);
 						_this.moving = false;
@@ -114,7 +119,11 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				var _style = _this.style + _this.unpoppedStyle + (';transition: ' + _this.leftDuration + 's;');
 
 				if (0 === PopOutTag.unpopLevel()) {
+					document.body.setAttribute('style', _this.bodyStyle);
 					document.body.setAttribute('style', '');
+					console.log('!!!');
+
+					window.scrollTo(0, _this.bodyScroll);
 				}
 
 				element.classList.add('unpopped');
@@ -155,7 +164,9 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		key: 'pause',
 		value: function pause() {
 			_get(PopOutTag.prototype.__proto__ || Object.getPrototypeOf(PopOutTag.prototype), 'pause', this).call(this);
+			document.body.setAttribute('style', this.bodyStyle);
 			document.body.setAttribute('style', '');
+			window.scrollTo(0, this.bodyScroll);
 
 			console.log('!!!');
 		}

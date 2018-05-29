@@ -43,24 +43,24 @@ export class Router {
 			this.query[ pair[0] ] = pair[1]; 
 		}
 
-		forceRefresh = true;
+		// forceRefresh = true;
 
 		let result;
 
-		if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
-		{
-			// console.log('Using cache!');
+		// if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
+		// {
+		// 	// console.log('Using cache!');
 
-			view.args.content.pause(true);
+		// 	view.args.content.pause(true);
 
-			view.args.content = result;
+		// 	view.args.content = result;
 
-			result.pause(false);
+		// 	result.pause(false);
 
-			result.update(this.query);
+		// 	result.update(this.query);
 
-			return;
-		}
+		// 	return;
+		// }
 
 		path = path.substr(1).split('/');
 
@@ -117,6 +117,8 @@ export class Router {
 				&& current.update(args)
 			) {
 				view.args.content = current;
+
+				return true;
 			}
 
 			let result = routes[i];
@@ -138,7 +140,7 @@ export class Router {
 				view.args.content.pause(true);
 			}			
 
-			Cache.store(this.path, result, 3600, 'page');
+			// Cache.store(this.path, result, 3600, 'page');
 
 			view.args.content = result;
 			return true;
@@ -149,9 +151,11 @@ export class Router {
 			if(!forceRefresh
 				&& current
 				&& current instanceof routes[false]
-				// && current.update(args)
+				&& current.update(args)
 			) {
 				view.args.content = current;
+
+				return false;
 			}
 
 			if(typeof routes[false] !== 'function') {

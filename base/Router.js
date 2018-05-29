@@ -68,6 +68,8 @@ var Router = exports.Router = function () {
 
 					this.query[pair[0]] = pair[1];
 				}
+
+				// forceRefresh = true;
 			} catch (err) {
 				_didIteratorError = true;
 				_iteratorError = err;
@@ -83,23 +85,22 @@ var Router = exports.Router = function () {
 				}
 			}
 
-			forceRefresh = true;
-
 			var result = void 0;
 
-			if (!forceRefresh && (result = _Cache.Cache.load(this.path, false, 'page'))) {
-				// console.log('Using cache!');
+			// if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
+			// {
+			// 	// console.log('Using cache!');
 
-				view.args.content.pause(true);
+			// 	view.args.content.pause(true);
 
-				view.args.content = result;
+			// 	view.args.content = result;
 
-				result.pause(false);
+			// 	result.pause(false);
 
-				result.update(this.query);
+			// 	result.update(this.query);
 
-				return;
-			}
+			// 	return;
+			// }
 
 			path = path.substr(1).split('/');
 
@@ -146,6 +147,8 @@ var Router = exports.Router = function () {
 
 				if (!forceRefresh && current && current instanceof routes[_i] && current.update(args)) {
 					view.args.content = current;
+
+					return true;
 				}
 
 				var _result = routes[_i];
@@ -164,18 +167,18 @@ var Router = exports.Router = function () {
 					view.args.content.pause(true);
 				}
 
-				_Cache.Cache.store(this.path, _result, 3600, 'page');
+				// Cache.store(this.path, result, 3600, 'page');
 
 				view.args.content = _result;
 				return true;
 			}
 
 			if (routes && routes[false]) {
-				if (!forceRefresh && current && current instanceof routes[false]
-				// && current.update(args)
-				) {
-						view.args.content = current;
-					}
+				if (!forceRefresh && current && current instanceof routes[false] && current.update(args)) {
+					view.args.content = current;
+
+					return false;
+				}
 
 				if (typeof routes[false] !== 'function') {
 					view.args.content = routes[false];

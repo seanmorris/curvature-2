@@ -15,6 +15,9 @@ export class PopOutTag extends Tag
 		this.unpoppedStyle  = '';
 		this.previousScroll = 0;
 
+		this.bodyStyle  = '';
+		this.bodyScroll = 0;
+
 		element.classList.add('unpopped');
 
 		this.scrollStyle;
@@ -82,20 +85,22 @@ export class PopOutTag extends Tag
 
 					element.classList.add('unpopped');
 
-					setTimeout(()=>{
-						element.classList.add('popped');
-						element.classList.remove('unpopped');
-					}, this.leftDuration*333);
-
+					element.classList.add('popped');
+					element.classList.remove('unpopped');
+					
 					// element.setAttribute('style', style + ';position:absolute');
 					setTimeout(()=>{
 						element.setAttribute(
 							'style'
 							, style + `;transition: ${this.leftDuration}s;`
 						);
-					}, 10);
+					}, 0);
+					console.log(this.leftDuration*1000);
 					setTimeout(()=>{
 						PopOutTag.popLevel();
+						this.bodyStyle = document.body.getAttribute('style');
+						this.bodyScroll = window.scrollY;
+						console.log(this.bodyScroll);
 						document.body.setAttribute('style', 'height:0px;overflow:hidden;');
 						window.scrollTo(0,0);
 						this.moving = false;
@@ -124,7 +129,11 @@ export class PopOutTag extends Tag
 
 				if(0 === PopOutTag.unpopLevel())
 				{
+					document.body.setAttribute('style', this.bodyStyle);
 					document.body.setAttribute('style', '');
+					console.log('!!!');
+
+					window.scrollTo(0, this.bodyScroll);
 				}
 				
 
@@ -159,7 +168,6 @@ export class PopOutTag extends Tag
 		})(element));
 	}
 
-
 	static popLevel()
 	{
 		if(!this.level)
@@ -187,7 +195,9 @@ export class PopOutTag extends Tag
 	pause()
 	{
 		super.pause();
+		document.body.setAttribute('style', this.bodyStyle);
 		document.body.setAttribute('style', '');
+		window.scrollTo(0, this.bodyScroll);
 
 		console.log('!!!');
 	}

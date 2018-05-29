@@ -8,27 +8,16 @@ export class ScrollTag extends Tag
 	{
 		super(element, parent, ref, index);
 
-		this.topEdge         = false;
-		this.resizeListening = false;
 		this.visible         = false;
 		this.offsetTop       = false;
 		this.offsetBottom    = false;
 
-		this.threshold       = 0;
-
-		this.subscribedTo    = [];
-
 		this.scrollListener = (event) => {
-			let tag = event.target;
-
-			this.scrolled(tag);
+			this.scrolled(event.target);
 		};
 
 		this.resizeListener = (event)=>{
-			for(let i in this.resizeTags)
-			{
-				this.resizeTags[i].scrolled(event.target);
-			}
+			this.scrolled(event.target);
 		};
 
 		this.attachListener = (e) => {
@@ -45,6 +34,7 @@ export class ScrollTag extends Tag
 			// let current = Bindable.makeBindable(e.target);
 
 			this.addScrollListener(e.target);
+			this.addResizeListener(e.target);
 
 			this.scrolled(e.target);
 
@@ -53,14 +43,13 @@ export class ScrollTag extends Tag
 
 		this.element.addEventListener('cvDomAttached', this.attachListener);
 
-		this.cleanup.push(((element)=>()=>{
-			
+		this.cleanup.push(((element) => () => {
+			e.target.removeEventListener('cvDomAttached', this.attachListener);
 		})(this.element));
 
-		// ScrollTag.addResizeListener(this);
-
-		this.bindTo('visible', (v)=>{
+		this.bindTo('visible', (v) => {
 			let scrolledEvent;
+
 			if(v)
 			{
 				scrolledEvent = new Event('cvScrolledIn');
@@ -88,6 +77,7 @@ export class ScrollTag extends Tag
 			this.element.dispatchEvent(scrolledEvent);
 		});
 	}
+
 	scrolled(scroller)
 	{
 		let current = this.element;
@@ -108,40 +98,43 @@ export class ScrollTag extends Tag
 		this.proxy.offsetTop    = rect.top    || 0;
 		this.proxy.offsetBottom = rect.bottom || 0;
 	}
+
 	addScrollListener(tag)
 	{
-		if(!tag.scrollListener)
+		if(!tag.___scrollListener___)
 		{
-			Object.defineProperty(tag, 'scrollListener', {
+			Object.defineProperty(tag, '___scrollListener___', {
 				enumerable: false
 				, writable: true
 			});
 
-			tag.scrollListener = this.scrollListener;
+			tag.___scrollListener___ = this.scrollListener;
 
 			window.addEventListener('scroll', this.scrollListener);
 
 			this.cleanup.push(((element)=>()=>{
 				console.log('Cleaning!');
-				window.removeEventListener('scroll', element.scrollListener);
+				window.removeEventListener('scroll', element.___scrollListener___);
 			})(tag));
 		}
 	}
-	// static addResizeListener(tag)
-	// {
-	// 	this.resizeTags = [];
 
-	// 	if(!this.resizeListener)
-	// 	{
-	// 		// window.addEventListener('resize', this.resizeListener);
+	addResizeListener(tag)
+	{
+		if(!tag.___resizeListener___)
+		{
+			Object.defineProperty(tag, '___resizeListener___', {
+				enumerable: false
+				, writable: true
+			});
 
-	// 		// this.cleanup.push(()=>{
-	// 		// 	window.removeEventListener('resize', this.resizeListener);
-	// 		// });
-	// 	}
+			window.addEventListener('resize', this.resizeListener);
 
-	// 	this.resizeListener = true;
+			this.cleanup.push(()=>{
+				window.removeEventListener('resize', element.___resizeListener___);
+			});
 
-	// 	this.resizeTags.push(tag);
-	// }
+			tag.___resizeListener___ = this.resizeListener;
+		}
+	}
 }
