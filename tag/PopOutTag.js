@@ -42,11 +42,16 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 		_this.scrollStyle;
 
-		//this.ps = new PerfectScrollbar(element, {wheelPropagation: true});
 		_this.rect;
 		_this.clickListener = function (event) {
+			var leftDuration = 0.333;
+
 			if (!_this.poppedOut || !_this.rect) {
 				_this.rect = element.getBoundingClientRect();
+
+				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
+
+				_this.leftDuration = 1 - 1 / _this.distance;
 			}
 
 			if (!_this.element.contains(event.target)) {
@@ -56,8 +61,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			event.preventDefault();
 			event.stopPropagation();
 
-			var leftDuration = 0.333;
-
 			if (_this.moving) {
 				return;
 			}
@@ -65,7 +68,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			if (!_this.poppedOut) {
 				_this.previousScroll = window.scrollY;
 
-				if (leftDuration) {
+				if (!_this.leftDuration) {
 					_this.leftDuration = leftDuration;
 				}
 
@@ -88,7 +91,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					element.classList.add('popped');
 					element.classList.remove('unpopped');
 
-					// element.setAttribute('style', style + ';position:absolute');
 					setTimeout(function () {
 						element.setAttribute('style', style + (';transition: ' + _this.leftDuration + 's;'));
 					}, 0);
