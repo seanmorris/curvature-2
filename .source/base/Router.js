@@ -111,15 +111,15 @@ export class Router {
 				return routes[i];
 			}
 
-			if(!forceRefresh
-				&& current
-				&& current instanceof routes[i]
-				&& current.update(args)
-			) {
-				view.args.content = current;
+			// if(!forceRefresh
+			// 	&& current
+			// 	&& current instanceof routes[i]
+			// 	&& current.update(args)
+			// ) {
+			// 	view.args.content = current;
 
-				return true;
-			}
+			// 	return true;
+			// }
 
 			let result = routes[i];
 

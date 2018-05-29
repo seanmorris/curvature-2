@@ -35,7 +35,7 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				this.leftDuration = 1 - (1 / this.distance);
+				this.leftDuration = (1 - (1 / this.distance)) / 4;
 			}
 
 			if(!this.element.contains(event.target))
@@ -98,7 +98,7 @@ export class PopOutTag extends Tag
 					setTimeout(()=>{
 						element.setAttribute(
 							'style'
-							, style + `;transition: ${this.leftDuration}s;`
+							, style + `;transition: ${this.leftDuration}s ease-in;`
 						);
 					}, 0);
 					console.log(this.leftDuration*1000);

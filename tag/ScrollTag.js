@@ -62,7 +62,7 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 
 		_this.cleanup.push(function (element) {
 			return function () {
-				e.target.removeEventListener('cvDomAttached', _this.attachListener);
+				element.removeEventListener('cvDomAttached', _this.attachListener);
 			};
 		}(_this.element));
 
@@ -147,9 +147,11 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 
 				window.addEventListener('resize', this.resizeListener);
 
-				this.cleanup.push(function () {
-					window.removeEventListener('resize', element.___resizeListener___);
-				});
+				this.cleanup.push(function (element) {
+					return function () {
+						window.removeEventListener('resize', element.___resizeListener___);
+					};
+				}(tag));
 
 				tag.___resizeListener___ = this.resizeListener;
 			}

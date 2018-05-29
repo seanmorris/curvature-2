@@ -51,7 +51,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
-				_this.leftDuration = 1 - 1 / _this.distance;
+				_this.leftDuration = (1 - 1 / _this.distance) / 4;
 			}
 
 			if (!_this.element.contains(event.target)) {
@@ -92,7 +92,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					element.classList.remove('unpopped');
 
 					setTimeout(function () {
-						element.setAttribute('style', style + (';transition: ' + _this.leftDuration + 's;'));
+						element.setAttribute('style', style + (';transition: ' + _this.leftDuration + 's ease-in;'));
 					}, 0);
 					console.log(_this.leftDuration * 1000);
 					setTimeout(function () {

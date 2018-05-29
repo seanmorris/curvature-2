@@ -44,7 +44,7 @@ export class ScrollTag extends Tag
 		this.element.addEventListener('cvDomAttached', this.attachListener);
 
 		this.cleanup.push(((element) => () => {
-			e.target.removeEventListener('cvDomAttached', this.attachListener);
+			element.removeEventListener('cvDomAttached', this.attachListener);
 		})(this.element));
 
 		this.bindTo('visible', (v) => {
@@ -130,9 +130,9 @@ export class ScrollTag extends Tag
 
 			window.addEventListener('resize', this.resizeListener);
 
-			this.cleanup.push(()=>{
+			this.cleanup.push(((element)=>()=>{
 				window.removeEventListener('resize', element.___resizeListener___);
-			});
+			})(tag));
 
 			tag.___resizeListener___ = this.resizeListener;
 		}
