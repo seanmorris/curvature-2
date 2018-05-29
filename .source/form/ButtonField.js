@@ -5,7 +5,7 @@ export class ButtonField extends Field {
 		super(values, form, parent, key);
 		this.args.title = this.args.title || this.args.value;
 		this.template = `
-			<label cv-ref = "label:curvature/base/Tag">
+			<label for = "${this.args.name}" cv-ref = "label:curvature/base/Tag">
 				<input
 					name  = "${this.args.name}"
 					type  = "${this.args.attrs.type}"

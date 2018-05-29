@@ -15,19 +15,19 @@ export class ViewList
 		this.tag          = null;
 		this.paused       = false;
 
-		this.args.value.before.push((t)=>{
-			// console.log(t.executing);
-			if(t.executing == 'bindTo')
+		this.args.value.___before___.push((t)=>{
+			// console.log(t.___executing___);
+			if(t.___executing___ == 'bindTo')
 			{
 				return;
 			}
 			this.paused = true;
 		});
 
-		this.args.value.after.push((t)=>{
+		this.args.value.___after___.push((t)=>{
 			if(this.paused)
 			{
-				// console.log(t.executing);
+				// console.log(t.___executing___);
 				this.reRender();
 			}
 			this.paused = false;

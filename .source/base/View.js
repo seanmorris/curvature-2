@@ -890,6 +890,8 @@ ${tag.outerHTML}`
 			}
 			this.tags[i].remove();
 		}
+
+		Bindable.clearBindings(this);
 	}
 
 	update()

@@ -31,17 +31,17 @@ var ViewList = exports.ViewList = function () {
 		this.tag = null;
 		this.paused = false;
 
-		this.args.value.before.push(function (t) {
-			// console.log(t.executing);
-			if (t.executing == 'bindTo') {
+		this.args.value.___before___.push(function (t) {
+			// console.log(t.___executing___);
+			if (t.___executing___ == 'bindTo') {
 				return;
 			}
 			_this.paused = true;
 		});
 
-		this.args.value.after.push(function (t) {
+		this.args.value.___after___.push(function (t) {
 			if (_this.paused) {
-				// console.log(t.executing);
+				// console.log(t.___executing___);
 				_this.reRender();
 			}
 			_this.paused = false;

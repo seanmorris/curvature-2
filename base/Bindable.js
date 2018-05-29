@@ -1,7 +1,7 @@
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+    value: true
 });
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -11,276 +11,290 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Bindable = exports.Bindable = function () {
-	function Bindable() {
-		_classCallCheck(this, Bindable);
-	}
+    function Bindable() {
+        _classCallCheck(this, Bindable);
+    }
 
-	_createClass(Bindable, null, [{
-		key: 'isBindable',
-		value: function isBindable(object) {
-			if (!object.isBindable) {
-				return false;
-			}
+    _createClass(Bindable, null, [{
+        key: 'isBindable',
+        value: function isBindable(object) {
+            if (!object.___binding___) {
+                return false;
+            }
 
-			return object.isBindable === Bindable;
-		}
-	}, {
-		key: 'makeBindable',
-		value: function makeBindable(object) {
+            return object.___binding___ === Bindable;
+        }
+    }, {
+        key: 'makeBindable',
+        value: function makeBindable(object) {
 
-			if (!object || object.isBindable || (typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object' || object instanceof Node) {
-				return object;
-			}
+            if (!object || object.___binding___ || (typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object' || object instanceof Node) {
+                return object;
+            }
 
-			Object.defineProperty(object, 'ref', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___ref___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'bindTo', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, 'bindTo', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'binding', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___binding___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'bindingAll', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___bindingAll___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'isBindable', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___isBindable___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'executing', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___executing___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'stack', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___stack___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'stackTime', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___stackTime___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'before', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___before___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'after', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___after___', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'toString', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, 'toString', {
+                enumerable: false,
+                writable: true
+            });
 
-			Object.defineProperty(object, 'setCount', {
-				enumerable: false,
-				writable: true
-			});
+            Object.defineProperty(object, '___setCount___', {
+                enumerable: false,
+                writable: true
+            });
 
-			object.isBindable = Bindable;
-			object.binding = {};
-			object.bindingAll = [];
-			object.bindTo = function (object) {
-				return function (property) {
-					var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+            Object.defineProperty(object, '___wrapped___', {
+                enumerable: false,
+                writable: true
+            });
 
-					if (callback == null) {
-						callback = property;
-						object.bindingAll.push(callback);
-						for (var i in object) {
-							callback(object[i], i, object, false);
-						}
-						return;
-					}
+            object.___isBindable___ = Bindable;
+            object.___wrapped___ = {};
+            object.___binding___ = {};
+            object.___bindingAll___ = [];
+            object.bindTo = function (object) {
+                return function (property) {
+                    var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-					if (!object.binding[property]) {
-						object.binding[property] = [];
-					}
+                    if (callback == null) {
+                        callback = property;
+                        object.___bindingAll___.push(callback);
+                        for (var i in object) {
+                            callback(object[i], i, object, false);
+                        }
+                        return;
+                    }
 
-					object.binding[property].push(callback);
+                    if (!object.___binding___[property]) {
+                        object.___binding___[property] = [];
+                    }
 
-					callback(object[property], property, object, false);
-				};
-			}(object);
+                    object.___binding___[property].push(callback);
 
-			object.stack = [];
-			object.stackTime = [];
-			object.before = [];
-			object.after = [];
-			object.setCount = {};
+                    callback(object[property], property, object, false);
+                };
+            }(object);
 
-			object.toString = function (object) {
-				return function () {
-					if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) == 'object') {
-						return JSON.stringify(object);
-						return '[object]';
-					}
+            object.___stack___ = [];
+            object.___stackTime___ = [];
+            object.___before___ = [];
+            object.___after___ = [];
+            object.___setCount___ = {};
 
-					return object;
-				};
-			}(object);
+            object.toString = function (object) {
+                return function () {
+                    if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) == 'object') {
+                        return JSON.stringify(object);
+                        return '[object]';
+                    }
 
-			for (var i in object) {
-				if (object[i] && _typeof(object[i]) == 'object' && !object[i] instanceof Node) {
-					object[i] = Bindable.makeBindable(object[i]);
-				}
-			}
+                    return object;
+                };
+            }(object);
 
-			var set = function (object) {
-				return function (target, key, value) {
-					if (target[key] === value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== object) {
-						return true;
-					}
+            for (var i in object) {
+                if (object[i] && _typeof(object[i]) == 'object' && !object[i] instanceof Node) {
+                    object[i] = Bindable.makeBindable(object[i]);
+                }
+            }
 
-					// console.log(`Setting ${key}`, value);
+            var set = function (object) {
+                return function (target, key, value) {
+                    if (target[key] === value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== object) {
+                        return true;
+                    }
 
-					if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object' && !(value instanceof Node)) {
-						if (value.isBindable !== Bindable) {
-							value = Bindable.makeBindable(value);
+                    // console.log(`Setting ${key}`, value);
 
-							for (var _i in value) {
-								if (value[_i] && _typeof(value[_i]) == 'object') {
-									value[_i] = Bindable.makeBindable(value[_i]);
-								}
-							}
-						}
-					}
+                    if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object' && !(value instanceof Node)) {
+                        if (value.___isBindable___ !== Bindable) {
+                            value = Bindable.makeBindable(value);
 
-					for (var _i2 in object.bindingAll) {
-						object.bindingAll[_i2](value, key, target, false);
-					}
+                            for (var _i in value) {
+                                if (value[_i] && _typeof(value[_i]) == 'object') {
+                                    value[_i] = Bindable.makeBindable(value[_i]);
+                                }
+                            }
+                        }
+                    }
 
-					var stop = false;
+                    for (var _i2 in object.___bindingAll___) {
+                        object.___bindingAll___[_i2](value, key, target, false);
+                    }
 
-					if (key in object.binding) {
-						for (var _i3 in object.binding[key]) {
-							if (object.binding[key][_i3](value, key, target, false) === false) {
-								stop = true;
-							}
-						}
-					}
+                    var stop = false;
 
-					if (!stop) {
-						target[key] = value;
-					}
+                    if (key in object.___binding___) {
+                        for (var _i3 in object.___binding___[key]) {
+                            if (object.___binding___[key][_i3](value, key, target, false) === false) {
+                                stop = true;
+                            }
+                        }
+                    }
 
-					if (!target.setCount[key]) {
-						target.setCount[key] = 0;
-					}
+                    if (!stop) {
+                        target[key] = value;
+                    }
 
-					target.setCount[key]++;
+                    if (!target.___setCount___[key]) {
+                        target.___setCount___[key] = 0;
+                    }
 
-					var warnOn = 10;
+                    target.___setCount___[key]++;
 
-					if (target.setCount[key] > warnOn && value instanceof Object) {
-						console.log('Warning: Resetting bindable reference "' + key + '" to object ' + target.setCount[key] + ' times.');
-					}
+                    var warnOn = 10;
 
-					return true;
-				};
-			}(object);
+                    if (target.___setCount___[key] > warnOn && value instanceof Object) {
+                        console.log('Warning: Resetting bindable reference "' + key + '" to object ' + target.___setCount___[key] + ' times.');
+                    }
 
-			var del = function (object) {
-				return function (target, key) {
-					// console.log(key, 'DEL');
+                    return true;
+                };
+            }(object);
 
-					if (!(key in target)) {
-						return false;
-					}
+            var del = function (object) {
+                return function (target, key) {
+                    // console.log(key, 'DEL');
 
-					for (var _i4 in object.bindingAll) {
-						object.bindingAll[_i4](undefined, key, target, true);
-					}
+                    if (!(key in target)) {
+                        return false;
+                    }
 
-					if (key in object.binding) {
-						for (var _i5 in object.binding[key]) {
-							object.binding[key][_i5](undefined, key, target, true);
-						}
-					}
+                    for (var _i4 in object.___bindingAll___) {
+                        object.___bindingAll___[_i4](undefined, key, target, true);
+                    }
 
-					if (Array.isArray(target)) {
-						target.splice(key, 1);
-					} else {
-						delete target[key];
-					}
+                    if (key in object.___binding___) {
+                        for (var _i5 in object.___binding___[key]) {
+                            object.___binding___[key][_i5](undefined, key, target, true);
+                        }
+                    }
 
-					return true;
-				};
-			}(object);
+                    if (Array.isArray(target)) {
+                        target.splice(key, 1);
+                    } else {
+                        delete target[key];
+                    }
 
-			var get = function (object) {
-				return function (target, key) {
-					if (typeof target[key] == 'function') {
-						var newFunc = function newFunc() {
-							target.executing = key;
+                    return true;
+                };
+            }(object);
 
-							target.stack.unshift(key);
-							target.stackTime.unshift(new Date().getTime());
+            var get = function (object) {
+                return function (target, key) {
+                    if (typeof target[key] == 'function') {
 
-							// console.log(`Start ${key}()`);
+                        if (target.___wrapped___[key]) {
+                            return target.___wrapped___[key];
+                        }
 
-							for (var _i6 in target.before) {
-								target.before[_i6](target, key, object);
-							}
+                        target.___wrapped___[key] = function () {
+                            target.___executing___ = key;
 
-							var ret = target[key].apply(target, arguments);
+                            target.___stack___.unshift(key);
+                            target.___stackTime___.unshift(new Date().getTime());
 
-							for (var _i7 in target.after) {
-								target.after[_i7](target, key, object);
-							}
+                            // console.log(`Start ${key}()`);
 
-							target.executing = null;
+                            for (var _i6 in target.___before___) {
+                                target.___before___[_i6](target, key, object);
+                            }
 
-							var execTime = new Date().getTime() - target.stackTime[0];
+                            var ret = target[key].apply(target, arguments);
 
-							if (execTime > 150) {
-								// console.log(`End ${key}(), took ${execTime} ms`);
-							}
+                            for (var _i7 in target.___after___) {
+                                target.___after___[_i7](target, key, object);
+                            }
 
-							target.stack.shift();
-							target.stackTime.shift();
+                            target.___executing___ = null;
 
-							return ret;
-						};
+                            var execTime = new Date().getTime() - target.___stackTime___[0];
 
-						return newFunc;
-					}
+                            if (execTime > 150) {
+                                // console.log(`End ${key}(), took ${execTime} ms`);
+                            }
 
-					// console.log(`Getting ${key}`);
+                            target.___stack___.shift();
+                            target.___stackTime___.shift();
 
-					return target[key];
-				};
-			}(object);
+                            return ret;
+                        };
 
-			object.ref = new Proxy(object, {
-				deleteProperty: del,
-				get: get,
-				set: set
-			});
+                        return target.___wrapped___[key];
+                    }
 
-			return object.ref;
-		}
-	}, {
-		key: 'clearBindings',
-		value: function clearBindings(object) {
-			object.binding = {};
-		}
-	}]);
+                    // console.log(`Getting ${key}`);
 
-	return Bindable;
+                    return target[key];
+                };
+            }(object);
+
+            object.___ref___ = new Proxy(object, {
+                deleteProperty: del,
+                get: get,
+                set: set
+            });
+
+            return object.___ref___;
+        }
+    }, {
+        key: 'clearBindings',
+        value: function clearBindings(object) {
+            object.___wrapped___ = {};
+            object.___binding___ = {};
+            object.___before___ = {};
+            object.___after___ = {};
+        }
+    }]);
+
+    return Bindable;
 }();

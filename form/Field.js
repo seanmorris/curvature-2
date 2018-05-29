@@ -64,7 +64,7 @@ var Field = exports.Field = function (_View) {
 			setting = null;
 		});
 
-		_this.template = '\n\t\t\t<label cv-ref = "label:curvature/base/Tag">\n\t\t\t\t<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>\n\t\t\t\t<input\n\t\t\t\t\tname    = "' + _this.args.name + '"\n\t\t\t\t\ttype    = "' + (_this.args.attrs.type || 'text') + '"\n\t\t\t\t\tcv-bind = "value"\n\t\t\t\t\tcv-ref  = "input:curvature/base/Tag"\n\t\t\t\t/>\n\t\t\t</label>\n\t\t';
+		_this.template = '\n\t\t\t<label for = "' + _this.args.name + '" cv-ref = "label:curvature/base/Tag">\n\t\t\t\t<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>\n\t\t\t\t<input\n\t\t\t\t\tname    = "' + _this.args.name + '"\n\t\t\t\t\ttype    = "' + (_this.args.attrs.type || 'text') + '"\n\t\t\t\t\tcv-bind = "value"\n\t\t\t\t\tcv-ref  = "input:curvature/base/Tag"\n\t\t\t\t/>\n\t\t\t</label>\n\t\t';
 		//type    = "${this.args.attrs.type||'text'}"
 		return _this;
 	}

@@ -159,7 +159,7 @@ var Repository = exports.Repository = function () {
 										// Repository.lastResponse = response;
 
 										if (!post && cache) {
-											_this.cache[fullUri] = response;
+											// this.cache[fullUri] = response;
 										}
 
 										var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
@@ -182,7 +182,7 @@ var Repository = exports.Repository = function () {
 										resolve(response);
 									} else {
 										if (!post && cache) {
-											_this.cache[fullUri] = response;
+											// this.cache[fullUri] = response;
 										}
 
 										reject(response);
@@ -191,7 +191,7 @@ var Repository = exports.Repository = function () {
 									// Repository.lastResponse = xhr.responseText;
 
 									if (!post && cache) {
-										_this.cache[fullUri] = xhr.responseText;
+										// this.cache[fullUri] = xhr.responseText;
 									}
 
 									resolve(xhr.responseText);

@@ -9,7 +9,7 @@ export class FieldSet extends Field
 		this.args.value  = {};
 		this.args.fields = Form.renderFields(values.children, this);
 		this.template    = `
-			<label>
+			<label for = "${this.args.name}">
 				<span cv-if = "title">[[title]]:</span>
 				<fieldset name = "${this.args.name}">
 					<div cv-each = "fields:field">

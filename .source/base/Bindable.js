@@ -1,286 +1,278 @@
 export class Bindable {
-	static isBindable(object)
-	{
-		if(!object.isBindable)
-		{
-			return false;
-		}
+    static isBindable(object) {
+        if (!object.___binding___) {
+            return false;
+        }
 
-		return object.isBindable === Bindable;
-	}
-	static makeBindable(object) {
+        return object.___binding___ === Bindable;
+    }
+    static makeBindable(object) {
 
-		if(!object
-			|| object.isBindable
-			|| typeof object !== 'object'
-			|| object instanceof Node
-		) {
-			return object;
-		}
+        if (!object ||
+            object.___binding___ ||
+            typeof object !== 'object' ||
+            object instanceof Node
+        ) {
+            return object;
+        }
 
-		Object.defineProperty(object, 'ref', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___ref___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'bindTo', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, 'bindTo', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'binding', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___binding___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'bindingAll', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___bindingAll___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'isBindable', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___isBindable___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'executing', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___executing___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'stack', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___stack___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'stackTime', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___stackTime___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'before', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___before___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'after', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___after___', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'toString', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, 'toString', {
+            enumerable: false,
+            writable: true
+        });
 
-		Object.defineProperty(object, 'setCount', {
-			enumerable: false
-			, writable: true
-		});
+        Object.defineProperty(object, '___setCount___', {
+            enumerable: false,
+            writable: true
+        });
 
-		object.isBindable = Bindable;
-		object.binding    = {};
-		object.bindingAll = [];
-		object.bindTo     = ((object) => (property, callback = null) => {
-			if(callback == null) {
-				callback = property;
-				object.bindingAll.push(callback);
-				for(let i in object) {
-					callback(object[i], i, object, false);
-				}
-				return;
-			}
+        Object.defineProperty(object, '___wrapped___', {
+            enumerable: false,
+            writable: true
+        });
 
-			if(!object.binding[property]) {
-				object.binding[property] = [];
-			}
+        object.___isBindable___ = Bindable;
+        object.___wrapped___    = {};
+        object.___binding___    = {};
+        object.___bindingAll___ = [];
+        object.bindTo = ((object) => (property, callback = null) => {
+            if (callback == null) {
+                callback = property;
+                object.___bindingAll___.push(callback);
+                for (let i in object) {
+                    callback(object[i], i, object, false);
+                }
+                return;
+            }
 
-			object.binding[property].push(callback);
+            if (!object.___binding___[property]) {
+                object.___binding___[property] = [];
+            }
 
-			callback(object[property], property, object, false);
+            object.___binding___[property].push(callback);
 
-		})(object);
+            callback(object[property], property, object, false);
 
-		object.stack      = [];
-		object.stackTime  = [];
-		object.before     = [];
-		object.after      = [];
-		object.setCount   = {};
+        })(object);
 
-		object.toString = ((object) => () => {
-			if(typeof object == 'object')
-			{
-				return JSON.stringify(object);
-				return '[object]'
-			}
+        object.___stack___ = [];
+        object.___stackTime___ = [];
+        object.___before___ = [];
+        object.___after___ = [];
+        object.___setCount___ = {};
 
-			return object;
-		})(object);
+        object.toString = ((object) => () => {
+            if (typeof object == 'object') {
+                return JSON.stringify(object);
+                return '[object]'
+            }
 
-		for(let i in object)
-		{
-			if(object[i]
-				&& typeof object[i] == 'object'
-				&& !object[i] instanceof Node
-			){
-				object[i] = Bindable.makeBindable(object[i]);
-			}
-		}
+            return object;
+        })(object);
 
-		let set = ((object) => (target, key, value) =>
-		{
-			if(target[key] === value && typeof value !== object)
-			{
-				return true;
-			}
+        for (let i in object) {
+            if (object[i] &&
+                typeof object[i] == 'object' &&
+                !object[i] instanceof Node
+            ) {
+                object[i] = Bindable.makeBindable(object[i]);
+            }
+        }
 
-			// console.log(`Setting ${key}`, value);
+        let set = ((object) => (target, key, value) => {
+            if (target[key] === value && typeof value !== object) {
+                return true;
+            }
 
-			if(value && typeof value == 'object' && !(value instanceof Node))
-			{
-				if(value.isBindable !== Bindable)
-				{
-					value = Bindable.makeBindable(value);
+            // console.log(`Setting ${key}`, value);
 
-					for(let i in value)
-					{
-						if(value[i] && typeof value[i] == 'object')
-						{
-							value[i] = Bindable.makeBindable(value[i]);
-						}
-					}
-				}
-			}
+            if (value && typeof value == 'object' && !(value instanceof Node)) {
+                if (value.___isBindable___ !== Bindable) {
+                    value = Bindable.makeBindable(value);
 
-			for(let i in object.bindingAll)
-			{
-				object.bindingAll[i](value, key, target, false);
-			}
+                    for (let i in value) {
+                        if (value[i] && typeof value[i] == 'object') {
+                            value[i] = Bindable.makeBindable(value[i]);
+                        }
+                    }
+                }
+            }
 
-			let stop = false;
+            for (let i in object.___bindingAll___) {
+                object.___bindingAll___[i](value, key, target, false);
+            }
 
-			if(key in object.binding) {
-				for(let i in object.binding[key])
-				{
-					if(object.binding[key][i](value, key, target, false) === false)
-					{
-						stop = true;
-					}
-				}
-			}
+            let stop = false;
 
-			if(!stop)
-			{
-				target[key] = value;				
-			}
+            if (key in object.___binding___) {
+                for (let i in object.___binding___[key]) {
+                    if (object.___binding___[key][i](value, key, target, false) === false) {
+                        stop = true;
+                    }
+                }
+            }
 
-			if(!target.setCount[key])
-			{
-				target.setCount[key] = 0;
-			}
+            if (!stop) {
+                target[key] = value;
+            }
 
-			target.setCount[key]++;
+            if (!target.___setCount___[key]) {
+                target.___setCount___[key] = 0;
+            }
 
-			const warnOn = 10;
+            target.___setCount___[key]++;
 
-			if(target.setCount[key] > warnOn && value instanceof Object)
-			{
-				console.log(
-					'Warning: Resetting bindable reference "'
-						+ key
-						+ '" to object '
-						+ target.setCount[key]
-						+ ' times.'
-				);
-			}
+            const warnOn = 10;
 
-			return true;
-		})(object);
+            if (target.___setCount___[key] > warnOn && value instanceof Object) {
+                console.log(
+                    'Warning: Resetting bindable reference "' +
+                    key +
+                    '" to object ' +
+                    target.___setCount___[key] +
+                    ' times.'
+                );
+            }
 
-		let del = ((object) => (target, key) => {
-			// console.log(key, 'DEL');
+            return true;
+        })(object);
 
-			if(!(key in target)) {
-				return false;
-			}
+        let del = ((object) => (target, key) => {
+            // console.log(key, 'DEL');
 
-			for(let i in object.bindingAll) {
-				object.bindingAll[i](undefined, key, target, true);
-			}
+            if (!(key in target)) {
+                return false;
+            }
 
-			if(key in object.binding) {
-				for(let i in object.binding[key]) {
-					object.binding[key][i](undefined, key, target, true);
-				}
-			}
+            for (let i in object.___bindingAll___) {
+                object.___bindingAll___[i](undefined, key, target, true);
+            }
 
-			if(Array.isArray(target)) {
-				target.splice(key, 1);
-			}
-			else {
-				delete target[key];
-			}
+            if (key in object.___binding___) {
+                for (let i in object.___binding___[key]) {
+                    object.___binding___[key][i](undefined, key, target, true);
+                }
+            }
 
-			return true;
-		})(object);
+            if (Array.isArray(target)) {
+                target.splice(key, 1);
+            } else {
+                delete target[key];
+            }
 
-		let get = ((object) => (target, key) =>
-		{
-			if(typeof target[key] == 'function')
-			{
-				let newFunc = function() {
-					target.executing = key;
+            return true;
+        })(object);
 
-					target.stack.unshift(key);
-					target.stackTime.unshift((new Date).getTime());
+        let get = ((object) => (target, key) => {
+            if (typeof target[key] == 'function') {
 
-					// console.log(`Start ${key}()`);
+            	if(target.___wrapped___[key])
+            	{
+            		return target.___wrapped___[key];
+            	}
 
-					for(let i in target.before)
-					{
-						target.before[i](target, key, object);
-					}
+                target.___wrapped___[key] = function() {
+                    target.___executing___ = key;
 
-					let ret = target[key].apply(target, arguments);
+                    target.___stack___.unshift(key);
+                    target.___stackTime___.unshift((new Date).getTime());
 
-					for(let i in target.after)
-					{
-						target.after[i](target, key, object);
-					}
+                    // console.log(`Start ${key}()`);
 
-					target.executing = null;
+                    for (let i in target.___before___) {
+                        target.___before___[i](target, key, object);
+                    }
 
-					let execTime = (new Date).getTime() - target.stackTime[0];
+                    let ret = target[key].apply(target, arguments);
 
-					if(execTime > 150)
-					{
-						// console.log(`End ${key}(), took ${execTime} ms`);
-					}
+                    for (let i in target.___after___) {
+                        target.___after___[i](target, key, object);
+                    }
 
-					target.stack.shift();
-					target.stackTime.shift();
+                    target.___executing___ = null;
 
-					return ret;
-				};
+                    let execTime = (new Date).getTime() - target.___stackTime___[0];
 
-				return newFunc;
-			}
+                    if (execTime > 150) {
+                        // console.log(`End ${key}(), took ${execTime} ms`);
+                    }
 
-			// console.log(`Getting ${key}`);
+                    target.___stack___.shift();
+                    target.___stackTime___.shift();
 
-			return target[key];
-		})(object);
+                    return ret;
+                };
 
-		object.ref = new Proxy(object, {
-			deleteProperty: del
-			, get:          get
-			, set:          set
-		});
+                return target.___wrapped___[key];
+            }
 
-		return object.ref;
-	}
-	static clearBindings(object)
-	{
-		object.binding = {};
-	}
+            // console.log(`Getting ${key}`);
+
+            return target[key];
+        })(object);
+
+        object.___ref___ = new Proxy(object, {
+            deleteProperty: del,
+            get: get,
+            set: set
+        });
+
+        return object.___ref___;
+    }
+    static clearBindings(object) {
+        object.___wrapped___ = {};
+        object.___binding___ = {};
+        object.___before___  = {};
+        object.___after___   = {};
+    }
 }

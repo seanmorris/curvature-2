@@ -4,7 +4,7 @@ export class SelectField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
 		this.template = `
-			<label cv-ref = "label:curvature/base/Tag">
+			<label for = "${this.args.name}" cv-ref = "label:curvature/base/Tag">
 				<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>
 				<select
 					name    = "${this.args.name}"
@@ -17,11 +17,11 @@ export class SelectField extends Field {
 			</label>
 		`;
 	}
-	getLabel(value)
+	getLabel()
 	{
 		for(let i in this.args.options)
 		{
-			if(this.args.options[i] == value)
+			if(this.args.options[i] == this.args.value)
 			{
 				return i;
 			}

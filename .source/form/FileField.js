@@ -4,7 +4,7 @@ export class FileField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
 		this.template = `
-			<label>
+			<label for = "${this.args.name}">
 				<input
 						name    = "${this.args.name}"
 						type    = "${this.args.attrs.type}"

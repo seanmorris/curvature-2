@@ -58,13 +58,13 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 				return;
 			}
 
-			var current = _Bindable.Bindable.makeBindable(e.target);
+			// let current = Bindable.makeBindable(e.target);
 
-			_this.addScrollListener(current);
+			_this.addScrollListener(e.target);
 
-			_this.scrolled(current);
+			_this.scrolled(e.target);
 
-			_this.element.removeEventListener('cvDomAttached', _this.attachListener);
+			e.target.removeEventListener('cvDomAttached', _this.attachListener);
 		};
 
 		_this.element.addEventListener('cvDomAttached', _this.attachListener);
@@ -73,7 +73,7 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 			return function () {};
 		}(_this.element));
 
-		ScrollTag.addResizeListener(_this);
+		// ScrollTag.addResizeListener(this);
 
 		_this.bindTo('visible', function (v) {
 			var scrolledEvent = void 0;
@@ -126,52 +126,42 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 	}, {
 		key: 'addScrollListener',
 		value: function addScrollListener(tag) {
-			var _this2 = this;
-
 			if (!tag.scrollListener) {
 				Object.defineProperty(tag, 'scrollListener', {
 					enumerable: false,
 					writable: true
 				});
 
-				tag.scrollListener = true;
+				tag.scrollListener = this.scrollListener;
 
 				window.addEventListener('scroll', this.scrollListener);
 
 				this.cleanup.push(function (element) {
 					return function () {
-						window.removeEventListener('scroll', _this2.scrollListener);
+						console.log('Cleaning!');
+						window.removeEventListener('scroll', element.scrollListener);
 					};
 				}(tag));
 			}
-
-			for (var i in this.subscribedTo) {
-				if (this.subscribedTo[i] === tag) {
-					return;
-				}
-			}
-
-			if (tag.scrollSubTags) {
-				tag.scrollSubTags.push(this);
-			}
 		}
-	}], [{
-		key: 'addResizeListener',
-		value: function addResizeListener(tag) {
-			this.resizeTags = [];
+		// static addResizeListener(tag)
+		// {
+		// 	this.resizeTags = [];
 
-			if (!this.resizeListener) {
-				// window.addEventListener('resize', this.resizeListener);
+		// 	if(!this.resizeListener)
+		// 	{
+		// 		// window.addEventListener('resize', this.resizeListener);
 
-				// this.cleanup.push(()=>{
-				// 	window.removeEventListener('resize', this.resizeListener);
-				// });
-			}
+		// 		// this.cleanup.push(()=>{
+		// 		// 	window.removeEventListener('resize', this.resizeListener);
+		// 		// });
+		// 	}
 
-			this.resizeListener = true;
+		// 	this.resizeListener = true;
 
-			this.resizeTags.push(tag);
-		}
+		// 	this.resizeTags.push(tag);
+		// }
+
 	}]);
 
 	return ScrollTag;

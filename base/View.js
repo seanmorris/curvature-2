@@ -849,6 +849,8 @@ var View = exports.View = function () {
 				}
 				this.tags[_i12].remove();
 			}
+
+			_Bindable.Bindable.clearBindings(this);
 		}
 	}, {
 		key: 'update',

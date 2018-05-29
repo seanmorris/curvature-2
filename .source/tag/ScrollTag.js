@@ -42,13 +42,13 @@ export class ScrollTag extends Tag
 				return;
 			}
 
-			let current = Bindable.makeBindable(e.target);
+			// let current = Bindable.makeBindable(e.target);
 
-			this.addScrollListener(current);
+			this.addScrollListener(e.target);
 
-			this.scrolled(current);
+			this.scrolled(e.target);
 
-			this.element.removeEventListener('cvDomAttached', this.attachListener);
+			e.target.removeEventListener('cvDomAttached', this.attachListener);
 		};
 
 		this.element.addEventListener('cvDomAttached', this.attachListener);
@@ -57,7 +57,7 @@ export class ScrollTag extends Tag
 			
 		})(this.element));
 
-		ScrollTag.addResizeListener(this);
+		// ScrollTag.addResizeListener(this);
 
 		this.bindTo('visible', (v)=>{
 			let scrolledEvent;
@@ -117,43 +117,31 @@ export class ScrollTag extends Tag
 				, writable: true
 			});
 
-			tag.scrollListener = true;
+			tag.scrollListener = this.scrollListener;
 
 			window.addEventListener('scroll', this.scrollListener);
 
 			this.cleanup.push(((element)=>()=>{
-				window.removeEventListener('scroll', this.scrollListener);
+				console.log('Cleaning!');
+				window.removeEventListener('scroll', element.scrollListener);
 			})(tag));
 		}
-
-		for(let i in this.subscribedTo)
-		{
-			if(this.subscribedTo[i] === tag)
-			{
-				return;
-			}
-		}
-
-		if(tag.scrollSubTags)
-		{
-			tag.scrollSubTags.push(this);
-		}
 	}
-	static addResizeListener(tag)
-	{
-		this.resizeTags = [];
+	// static addResizeListener(tag)
+	// {
+	// 	this.resizeTags = [];
 
-		if(!this.resizeListener)
-		{
-			// window.addEventListener('resize', this.resizeListener);
+	// 	if(!this.resizeListener)
+	// 	{
+	// 		// window.addEventListener('resize', this.resizeListener);
 
-			// this.cleanup.push(()=>{
-			// 	window.removeEventListener('resize', this.resizeListener);
-			// });
-		}
+	// 		// this.cleanup.push(()=>{
+	// 		// 	window.removeEventListener('resize', this.resizeListener);
+	// 		// });
+	// 	}
 
-		this.resizeListener = true;
+	// 	this.resizeListener = true;
 
-		this.resizeTags.push(tag);
-	}
+	// 	this.resizeTags.push(tag);
+	// }
 }

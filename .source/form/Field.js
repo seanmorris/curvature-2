@@ -52,7 +52,7 @@ export class Field extends View {
 		});
 
 		this.template = `
-			<label cv-ref = "label:curvature/base/Tag">
+			<label for = "${this.args.name}" cv-ref = "label:curvature/base/Tag">
 				<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>
 				<input
 					name    = "${this.args.name}"

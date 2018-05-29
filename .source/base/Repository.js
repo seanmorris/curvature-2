@@ -127,7 +127,7 @@ export class Repository
 								// Repository.lastResponse = response;
 
 								if(!post && cache) {
-									this.cache[fullUri] = response;
+									// this.cache[fullUri] = response;
 								}
 
 								let tagCache = document.querySelector(
@@ -157,7 +157,7 @@ export class Repository
 							}
 							else {
 								if(!post && cache) {
-									this.cache[fullUri] = response;
+									// this.cache[fullUri] = response;
 								}
 
 								reject(response);
@@ -167,7 +167,7 @@ export class Repository
 							// Repository.lastResponse = xhr.responseText;
 
 							if(!post && cache) {
-								this.cache[fullUri] = xhr.responseText;
+								// this.cache[fullUri] = xhr.responseText;
 							}
 
 							resolve(xhr.responseText);
