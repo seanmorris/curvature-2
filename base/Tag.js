@@ -13,6 +13,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Tag = exports.Tag = function () {
 	function Tag(element, parent, ref, index) {
+		var _this = this;
+
 		_classCallCheck(this, Tag);
 
 		this.element = _Bindable.Bindable.makeBindable(element);
@@ -22,6 +24,15 @@ var Tag = exports.Tag = function () {
 
 		this.proxy = _Bindable.Bindable.makeBindable(this);
 		this.cleanup = [];
+
+		this.detachListener = function (event) {
+			_this.clear();
+			_this.remove();
+			_this.element.removeEventListener('cvDomDetached', _this.detachListener);
+			_this.element = _this.ref = _this.parent = null;
+		};
+
+		this.element.addEventListener('cvDomDetached', this.detachListener);
 
 		return this.proxy;
 	}
@@ -40,7 +51,10 @@ var Tag = exports.Tag = function () {
 	}, {
 		key: 'clear',
 		value: function clear() {
+			var detachEvent = new Event('cvDomDetached');
+
 			while (this.element.firstChild) {
+				this.element.firstChild.dispatchEvent(detachEvent);
 				this.element.removeChild(this.element.firstChild);
 			}
 		}

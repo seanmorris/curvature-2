@@ -51,7 +51,9 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
-				_this.leftDuration = (1 - 1 / _this.distance) / 4;
+				if (!_this.leftDuration) {
+					_this.leftDuration = (1 - 1 / _this.distance) / 4;
+				}
 			}
 
 			if (!_this.element.contains(event.target)) {
@@ -68,10 +70,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			if (!_this.poppedOut) {
 				_this.previousScroll = window.scrollY;
 
-				if (!_this.leftDuration) {
-					_this.leftDuration = leftDuration;
-				}
-
 				_this.unpoppedStyle = '\n\t\t\t\t\t;position:  fixed;\n\t\t\t\t\tleft:       ' + _this.rect.x + 'px;\n\t\t\t\t\ttop:        ' + _this.rect.y + 'px;\n\t\t\t\t\twidth:      ' + _this.rect.width + 'px;\n\t\t\t\t\theight:     ' + _this.rect.height + 'px;\n\t\t\t\t\tz-index:    99999;\n\n\t\t\t\t\toverflow: hidden;\n\t\t\t\t';
 
 				var style = _this.style + _this.unpoppedStyle;
@@ -82,7 +80,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				document.body.style.overflowY = 'hidden';
 
 				setTimeout(function () {
-					style += '\n\t\t\t\t\t\t;top:   0px;\n\t\t\t\t\t\tleft:   0px;\n\t\t\t\t\t\twidth:  100%;\n\t\t\t\t\t\theight: 100%;\n\t\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\t';
+					style += '\n\t\t\t\t\t\t;top:   0px;\n\t\t\t\t\t\tleft:   0px;\n\t\t\t\t\t\twidth:  100%;\n\t\t\t\t\t\theight: 100%;\n\t\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\t\ttransition: ' + _this.leftDuration + 's ease-in;\n\t\t\t\t\t';
 
 					_this.moving = true;
 
@@ -92,7 +90,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					element.classList.remove('unpopped');
 
 					setTimeout(function () {
-						element.setAttribute('style', style + (';transition: ' + _this.leftDuration + 's ease-in;'));
+						element.setAttribute('style', style);
 					}, 0);
 					console.log(_this.leftDuration * 1000);
 					setTimeout(function () {
@@ -118,17 +116,19 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				window.scrollTo(0, _this.previousScroll);
 				setTimeout(function () {}, 1);
 
-				var _style = _this.style + _this.unpoppedStyle + (';transition: ' + _this.leftDuration + 's;');
+				var _style = _this.style + _this.unpoppedStyle + (';transition: ' + _this.leftDuration + 's; ease-out');
+
+				console.log(_this.leftDuration);
 
 				if (0 === PopOutTag.unpopLevel()) {
 					document.body.setAttribute('style', _this.bodyStyle);
 					document.body.setAttribute('style', '');
-					console.log('!!!');
 
 					window.scrollTo(0, _this.bodyScroll);
 				}
 
 				element.classList.add('unpopped');
+				element.classList.remove('popped');
 
 				element.setAttribute('style', _style);
 
@@ -136,8 +136,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				setTimeout(function () {
 					element.setAttribute('style', _this.style);
-					element.classList.remove('popped');
-				}, _this.leftDuration * 500);
+				}, _this.leftDuration * 1000);
 				setTimeout(function () {
 					element.setAttribute('style', _this.style);
 					_this.moving = false;

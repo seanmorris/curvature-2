@@ -80,6 +80,7 @@ var View = exports.View = function () {
 
 			var wrappedCallback = function wrappedCallback() {
 				_this.timeouts[index].fired = true;
+				_this.timeouts[index].callback = null;
 				callback();
 			};
 			var timeout = setTimeout(wrappedCallback, time);
@@ -285,29 +286,25 @@ var View = exports.View = function () {
 
 				var viewList = void 0;
 
-				_this2.args.bindTo(eachProp, function (v, k, t) {
-					if (viewList) {
-						viewList.remove();
-					}
-
-					viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
-
-					_this2.cleanup.push(function (viewList) {
-						return function () {
+				_this2.args.bindTo(eachProp, function (viewList) {
+					return function (v, k, t) {
+						if (viewList) {
 							viewList.remove();
-						};
-					}(viewList));
+						}
 
-					viewList.parent = _this2;
+						viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
 
-					viewList.render(tag);
+						viewList.parent = _this2;
 
-					for (var _i6 in carryProps) {
-						_this2.args.bindTo(carryProps[_i6], function (v, k) {
-							viewList.args.subArgs[k] = v;
-						});
-					}
-				});
+						viewList.render(tag);
+
+						for (var _i6 in carryProps) {
+							_this2.args.bindTo(carryProps[_i6], function (v, k) {
+								viewList.args.subArgs[k] = v;
+							});
+						}
+					};
+				}(viewList));
 
 				_this2.viewLists[eachProp] = viewList;
 			});
@@ -334,7 +331,7 @@ var View = exports.View = function () {
 
 				_this2.cleanup.push(function (view) {
 					return function () {
-						// view.remove();
+						view.remove();
 					};
 				}(view));
 
@@ -830,7 +827,10 @@ var View = exports.View = function () {
 	}, {
 		key: 'remove',
 		value: function remove() {
+			var detachEvent = new Event('cvDomDetached');
+
 			for (var i in this.nodes) {
+				this.nodes[i].dispatchEvent(detachEvent);
 				this.nodes[i].remove();
 			}
 
@@ -840,14 +840,20 @@ var View = exports.View = function () {
 				cleanup();
 			}
 
-			for (var _i12 in this.tags) {
-				if (Array.isArray(this.tags[_i12])) {
-					for (var j in this.tags[_i12]) {
-						this.tags[_i12][j].remove();
+			for (var _i12 in this.viewLists) {
+				this.viewLists[_i12].remove();
+			}
+
+			this.viewLists = [];
+
+			for (var _i13 in this.tags) {
+				if (Array.isArray(this.tags[_i13])) {
+					for (var j in this.tags[_i13]) {
+						this.tags[_i13][j].remove();
 					}
 					continue;
 				}
-				this.tags[_i12].remove();
+				this.tags[_i13].remove();
 			}
 
 			_Bindable.Bindable.clearBindings(this);

@@ -130,7 +130,6 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 
 				this.cleanup.push(function (element) {
 					return function () {
-						console.log('Cleaning!');
 						window.removeEventListener('scroll', element.___scrollListener___);
 					};
 				}(tag));
@@ -145,6 +144,8 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 					writable: true
 				});
 
+				tag.___resizeListener___ = this.resizeListener;
+
 				window.addEventListener('resize', this.resizeListener);
 
 				this.cleanup.push(function (element) {
@@ -152,8 +153,6 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 						window.removeEventListener('resize', element.___resizeListener___);
 					};
 				}(tag));
-
-				tag.___resizeListener___ = this.resizeListener;
 			}
 		}
 	}]);

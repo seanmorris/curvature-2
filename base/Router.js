@@ -145,15 +145,11 @@ var Router = exports.Router = function () {
 					return routes[_i];
 				}
 
-				// if(!forceRefresh
-				// 	&& current
-				// 	&& current instanceof routes[i]
-				// 	&& current.update(args)
-				// ) {
-				// 	view.args.content = current;
+				if (!forceRefresh && current && current instanceof routes[_i] && current.update(args)) {
+					view.args.content = current;
 
-				// 	return true;
-				// }
+					return true;
+				}
 
 				var _result = routes[_i];
 

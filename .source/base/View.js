@@ -52,7 +52,8 @@ export class View
 
 	onTimeout(time, callback) {
 		let wrappedCallback = () => {
-			this.timeouts[index].fired = true;
+			this.timeouts[index].fired    = true;
+			this.timeouts[index].callback = null;
 			callback();
 		};
 		let timeout = setTimeout(wrappedCallback, time)
@@ -264,17 +265,13 @@ export class View
 
 			let viewList;
 
-			this.args.bindTo(eachProp, (v, k, t)=>{
+			this.args.bindTo(eachProp, ((viewList) => (v, k, t)=>{
 				if(viewList)
 				{
 					viewList.remove();
 				}
 
 				viewList = new ViewList(subTemplate, asProp, v, keyProp);
-
-				this.cleanup.push(((viewList)=>()=>{
-					viewList.remove();
-				})(viewList));
 
 				viewList.parent = this;
 
@@ -286,7 +283,7 @@ export class View
 						viewList.args.subArgs[k] = v;
 					});
 				}
-			});
+			})(viewList));
 
 			this.viewLists[eachProp] = viewList;
 		});
@@ -314,7 +311,7 @@ export class View
 			let view = new View();
 
 			this.cleanup.push(((view)=>()=>{
-				// view.remove();
+				view.remove();
 			})(view));
 
 			view.template = subTemplate;
@@ -866,8 +863,11 @@ ${tag.outerHTML}`
 	}
 	remove()
 	{
+		let detachEvent = new Event('cvDomDetached');
+
 		for(let i in this.nodes)
 		{
+			this.nodes[i].dispatchEvent(detachEvent);
 			this.nodes[i].remove();
 		}
 
@@ -877,6 +877,13 @@ ${tag.outerHTML}`
 		{
 			cleanup();
 		}
+
+		for(let i in this.viewLists)
+		{
+			this.viewLists[i].remove();
+		}
+
+		this.viewLists = [];
 
 		for(let i in this.tags)
 		{

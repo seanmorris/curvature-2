@@ -113,7 +113,6 @@ export class ScrollTag extends Tag
 			window.addEventListener('scroll', this.scrollListener);
 
 			this.cleanup.push(((element)=>()=>{
-				console.log('Cleaning!');
 				window.removeEventListener('scroll', element.___scrollListener___);
 			})(tag));
 		}
@@ -128,13 +127,13 @@ export class ScrollTag extends Tag
 				, writable: true
 			});
 
+			tag.___resizeListener___ = this.resizeListener;
+
 			window.addEventListener('resize', this.resizeListener);
 
 			this.cleanup.push(((element)=>()=>{
 				window.removeEventListener('resize', element.___resizeListener___);
 			})(tag));
-
-			tag.___resizeListener___ = this.resizeListener;
 		}
 	}
 }

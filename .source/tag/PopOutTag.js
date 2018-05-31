@@ -35,7 +35,10 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				this.leftDuration = (1 - (1 / this.distance)) / 4;
+				if(!this.leftDuration)
+				{
+					this.leftDuration = (1 - (1 / this.distance)) / 4;
+				}
 			}
 
 			if(!this.element.contains(event.target))
@@ -55,11 +58,6 @@ export class PopOutTag extends Tag
 			if(!this.poppedOut)
 			{
 				this.previousScroll = window.scrollY;
-
-				if(!this.leftDuration)
-				{
-					this.leftDuration = leftDuration;
-				}
 
 				this.unpoppedStyle = `
 					;position:  fixed;
@@ -86,6 +84,7 @@ export class PopOutTag extends Tag
 						width:  100%;
 						height: 100%;
 						overflow-y: auto;
+						transition: ${this.leftDuration}s ease-in;
 					`;
 
 					this.moving = true;
@@ -96,10 +95,7 @@ export class PopOutTag extends Tag
 					element.classList.remove('unpopped');
 
 					setTimeout(()=>{
-						element.setAttribute(
-							'style'
-							, style + `;transition: ${this.leftDuration}s ease-in;`
-						);
+						element.setAttribute('style', style);
 					}, 0);
 					console.log(this.leftDuration*1000);
 					setTimeout(()=>{
@@ -131,19 +127,21 @@ export class PopOutTag extends Tag
 
 				let style = this.style
 					+ this.unpoppedStyle
-					+ `;transition: ${this.leftDuration}s;`;
+					+ `;transition: ${this.leftDuration}s; ease-out`;
+
+				console.log(this.leftDuration);
 
 				if(0 === PopOutTag.unpopLevel())
 				{
 					document.body.setAttribute('style', this.bodyStyle);
 					document.body.setAttribute('style', '');
-					console.log('!!!');
 
 					window.scrollTo(0, this.bodyScroll);
 				}
 
 
 				element.classList.add('unpopped');
+				element.classList.remove('popped');
 
 				element.setAttribute('style', style);
 
@@ -151,8 +149,7 @@ export class PopOutTag extends Tag
 
 				setTimeout(()=>{
 					element.setAttribute('style', this.style);
-					element.classList.remove('popped');
-				}, this.leftDuration*500);
+				}, this.leftDuration*1000);
 				setTimeout(()=>{
 					element.setAttribute('style', this.style);
 					this.moving = false;

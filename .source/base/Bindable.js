@@ -270,9 +270,12 @@ export class Bindable {
         return object.___ref___;
     }
     static clearBindings(object) {
-        object.___wrapped___ = {};
-        object.___binding___ = {};
-        object.___before___  = {};
-        object.___after___   = {};
+        object.___wrapped___    = {};
+        object.___bindingAll___ = {};
+        object.___binding___    = {};
+        object.___before___     = {};
+        object.___after___      = {};
+        object.___ref___        = {};
+        object.toString         = ()=>'{}';
     }
 }
