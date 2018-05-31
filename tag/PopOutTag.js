@@ -80,7 +80,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				document.body.style.overflowY = 'hidden';
 
 				setTimeout(function () {
-					style += '\n\t\t\t\t\t\t;top:   0px;\n\t\t\t\t\t\tleft:   0px;\n\t\t\t\t\t\twidth:  100%;\n\t\t\t\t\t\theight: 100%;\n\t\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\t\ttransition: ' + _this.leftDuration + 's ease-in;\n\t\t\t\t\t';
+					style += '\n\t\t\t\t\t\t;top:   0px;\n\t\t\t\t\t\tleft:   0px;\n\t\t\t\t\t\twidth:  100%;\n\t\t\t\t\t\theight: 100%;\n\t\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\t\ttransition: ' + _this.leftDuration + 's ease-out;\n\t\t\t\t\t';
 
 					_this.moving = true;
 
@@ -88,10 +88,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 					element.classList.add('popped');
 					element.classList.remove('unpopped');
+					element.setAttribute('style', style);
 
-					setTimeout(function () {
-						element.setAttribute('style', style);
-					}, 0);
 					console.log(_this.leftDuration * 1000);
 					setTimeout(function () {
 						PopOutTag.popLevel();
@@ -116,7 +114,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				window.scrollTo(0, _this.previousScroll);
 				setTimeout(function () {}, 1);
 
-				var _style = _this.style + _this.unpoppedStyle + (';transition: ' + _this.leftDuration + 's; ease-out');
+				var _style = _this.style + _this.unpoppedStyle + (';transition: ' + _this.leftDuration + 's; ease-in');
 
 				console.log(_this.leftDuration);
 
@@ -127,16 +125,15 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					window.scrollTo(0, _this.bodyScroll);
 				}
 
-				element.classList.add('unpopped');
-				element.classList.remove('popped');
-
 				element.setAttribute('style', _style);
 
 				_this.moving = true;
 
 				setTimeout(function () {
-					element.setAttribute('style', _this.style);
-				}, _this.leftDuration * 1000);
+					element.classList.add('unpopped');
+					element.classList.remove('popped');
+					// element.setAttribute('style', this.style);
+				}, _this.leftDuration * 500);
 				setTimeout(function () {
 					element.setAttribute('style', _this.style);
 					_this.moving = false;

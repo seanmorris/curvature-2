@@ -239,6 +239,56 @@ export class View
 			}
 		});
 
+		Dom.mapTags(subDoc, '[cv-with]', (tag) => {
+			let withAttr = tag.getAttribute('cv-with');
+			let carryAttr = tag.getAttribute('cv-carry');
+			tag.removeAttribute('cv-with');
+			tag.removeAttribute('cv-carry');
+
+			let subTemplate = tag.innerHTML;
+
+			let carryProps = [];
+
+			if(carryAttr)
+			{
+				carryProps = carryAttr.split(',');
+			}
+
+			while(tag.firstChild)
+			{
+				tag.removeChild(tag.firstChild);
+			}
+
+			let view = new View();
+
+			this.cleanup.push(((view)=>()=>{
+				view.remove();
+			})(view));
+
+			view.template = subTemplate;
+			view.parent   = this;
+
+			// console.log(carryProps);
+
+			for(let i in carryProps)
+			{
+				this.args.bindTo(carryProps[i], ((view) => (v, k) => {
+					view.args[k] = v;
+				})(view));
+			}
+
+			for(let i in this.args[withAttr])
+			{
+				this.args[withAttr].bindTo(i, ((view) => (v, k) => {
+					view.args[k] = v;
+				})(view));
+			}
+
+			// console.log(view);
+
+			view.render(tag);
+		});
+
 		Dom.mapTags(subDoc, '[cv-each]', (tag) => {
 			let eachAttr = tag.getAttribute('cv-each');
 			let carryAttr = tag.getAttribute('cv-carry');
@@ -286,56 +336,6 @@ export class View
 			})(viewList));
 
 			this.viewLists[eachProp] = viewList;
-		});
-
-		Dom.mapTags(subDoc, '[cv-with]', (tag) => {
-			let withAttr = tag.getAttribute('cv-with');
-			let carryAttr = tag.getAttribute('cv-carry');
-			tag.removeAttribute('cv-with');
-			tag.removeAttribute('cv-carry');
-
-			let subTemplate = tag.innerHTML;
-
-			let carryProps = [];
-
-			if(carryAttr)
-			{
-				carryProps = carryAttr.split(',');
-			}
-
-			while(tag.firstChild)
-			{
-				tag.removeChild(tag.firstChild);
-			}
-
-			let view = new View();
-
-			this.cleanup.push(((view)=>()=>{
-				view.remove();
-			})(view));
-
-			view.template = subTemplate;
-			view.parent   = this;
-
-			// console.log(carryProps);
-
-			for(let i in carryProps)
-			{
-				this.args.bindTo(carryProps[i], (v, k) => {
-					view.args[k] = v;
-				});
-			}
-
-			for(let i in this.args[withAttr])
-			{
-				this.args[withAttr].bindTo(i, (v, k) => {
-					view.args[k] = v;
-				});
-			}
-
-			// console.log(view);
-
-			view.render(tag);
 		});
 
 		Dom.mapTags(subDoc, '[cv-link]', (tag) => {

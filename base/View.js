@@ -258,6 +258,58 @@ var View = exports.View = function () {
 				}
 			});
 
+			_Dom.Dom.mapTags(subDoc, '[cv-with]', function (tag) {
+				var withAttr = tag.getAttribute('cv-with');
+				var carryAttr = tag.getAttribute('cv-carry');
+				tag.removeAttribute('cv-with');
+				tag.removeAttribute('cv-carry');
+
+				var subTemplate = tag.innerHTML;
+
+				var carryProps = [];
+
+				if (carryAttr) {
+					carryProps = carryAttr.split(',');
+				}
+
+				while (tag.firstChild) {
+					tag.removeChild(tag.firstChild);
+				}
+
+				var view = new View();
+
+				_this2.cleanup.push(function (view) {
+					return function () {
+						view.remove();
+					};
+				}(view));
+
+				view.template = subTemplate;
+				view.parent = _this2;
+
+				// console.log(carryProps);
+
+				for (var _i6 in carryProps) {
+					_this2.args.bindTo(carryProps[_i6], function (view) {
+						return function (v, k) {
+							view.args[k] = v;
+						};
+					}(view));
+				}
+
+				for (var _i7 in _this2.args[withAttr]) {
+					_this2.args[withAttr].bindTo(_i7, function (view) {
+						return function (v, k) {
+							view.args[k] = v;
+						};
+					}(view));
+				}
+
+				// console.log(view);
+
+				view.render(tag);
+			});
+
 			_Dom.Dom.mapTags(subDoc, '[cv-each]', function (tag) {
 				var eachAttr = tag.getAttribute('cv-each');
 				var carryAttr = tag.getAttribute('cv-carry');
@@ -298,8 +350,8 @@ var View = exports.View = function () {
 
 						viewList.render(tag);
 
-						for (var _i6 in carryProps) {
-							_this2.args.bindTo(carryProps[_i6], function (v, k) {
+						for (var _i8 in carryProps) {
+							_this2.args.bindTo(carryProps[_i8], function (v, k) {
 								viewList.args.subArgs[k] = v;
 							});
 						}
@@ -307,54 +359,6 @@ var View = exports.View = function () {
 				}(viewList));
 
 				_this2.viewLists[eachProp] = viewList;
-			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-with]', function (tag) {
-				var withAttr = tag.getAttribute('cv-with');
-				var carryAttr = tag.getAttribute('cv-carry');
-				tag.removeAttribute('cv-with');
-				tag.removeAttribute('cv-carry');
-
-				var subTemplate = tag.innerHTML;
-
-				var carryProps = [];
-
-				if (carryAttr) {
-					carryProps = carryAttr.split(',');
-				}
-
-				while (tag.firstChild) {
-					tag.removeChild(tag.firstChild);
-				}
-
-				var view = new View();
-
-				_this2.cleanup.push(function (view) {
-					return function () {
-						view.remove();
-					};
-				}(view));
-
-				view.template = subTemplate;
-				view.parent = _this2;
-
-				// console.log(carryProps);
-
-				for (var _i7 in carryProps) {
-					_this2.args.bindTo(carryProps[_i7], function (v, k) {
-						view.args[k] = v;
-					});
-				}
-
-				for (var _i8 in _this2.args[withAttr]) {
-					_this2.args[withAttr].bindTo(_i8, function (v, k) {
-						view.args[k] = v;
-					});
-				}
-
-				// console.log(view);
-
-				view.render(tag);
 			});
 
 			_Dom.Dom.mapTags(subDoc, '[cv-link]', function (tag) {

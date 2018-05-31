@@ -182,8 +182,6 @@ export class ViewList
 	}
 	remove()
 	{
-		let detachEvent = new Event('cvDomDetached');
-
 		for(let i in this.views)
 		{
 			this.views[i].remove();
@@ -193,7 +191,6 @@ export class ViewList
 
 		while(this.tag.firstChild)
 		{
-			this.tag.firstChild.dispatchEvent(detachEvent);
 			this.tag.removeChild(this.tag.firstChild);
 		}
 	}

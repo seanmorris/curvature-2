@@ -185,8 +185,6 @@ var ViewList = exports.ViewList = function () {
 	}, {
 		key: 'remove',
 		value: function remove() {
-			var detachEvent = new Event('cvDomDetached');
-
 			for (var i in this.views) {
 				this.views[i].remove();
 			}
@@ -194,7 +192,6 @@ var ViewList = exports.ViewList = function () {
 			this.views = [];
 
 			while (this.tag.firstChild) {
-				this.tag.firstChild.dispatchEvent(detachEvent);
 				this.tag.removeChild(this.tag.firstChild);
 			}
 		}

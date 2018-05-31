@@ -84,7 +84,7 @@ export class PopOutTag extends Tag
 						width:  100%;
 						height: 100%;
 						overflow-y: auto;
-						transition: ${this.leftDuration}s ease-in;
+						transition: ${this.leftDuration}s ease-out;
 					`;
 
 					this.moving = true;
@@ -93,10 +93,8 @@ export class PopOutTag extends Tag
 
 					element.classList.add('popped');
 					element.classList.remove('unpopped');
+					element.setAttribute('style', style);
 
-					setTimeout(()=>{
-						element.setAttribute('style', style);
-					}, 0);
 					console.log(this.leftDuration*1000);
 					setTimeout(()=>{
 						PopOutTag.popLevel();
@@ -127,7 +125,7 @@ export class PopOutTag extends Tag
 
 				let style = this.style
 					+ this.unpoppedStyle
-					+ `;transition: ${this.leftDuration}s; ease-out`;
+					+ `;transition: ${this.leftDuration}s; ease-in`;
 
 				console.log(this.leftDuration);
 
@@ -140,16 +138,16 @@ export class PopOutTag extends Tag
 				}
 
 
-				element.classList.add('unpopped');
-				element.classList.remove('popped');
 
 				element.setAttribute('style', style);
 
 				this.moving = true;
 
 				setTimeout(()=>{
-					element.setAttribute('style', this.style);
-				}, this.leftDuration*1000);
+					element.classList.add('unpopped');
+					element.classList.remove('popped');
+					// element.setAttribute('style', this.style);
+				}, this.leftDuration*500);
 				setTimeout(()=>{
 					element.setAttribute('style', this.style);
 					this.moving = false;
