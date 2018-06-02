@@ -206,7 +206,7 @@ var Bindable = exports.Bindable = function () {
                     // console.log(key, 'DEL');
 
                     if (!(key in target)) {
-                        return false;
+                        return true;
                     }
 
                     for (var _i4 in object.___bindingAll___) {

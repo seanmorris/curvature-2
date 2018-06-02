@@ -191,7 +191,7 @@ export class Bindable {
             // console.log(key, 'DEL');
 
             if (!(key in target)) {
-                return false;
+                return true;
             }
 
             for (let i in object.___bindingAll___) {

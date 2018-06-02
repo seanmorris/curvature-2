@@ -228,487 +228,40 @@ export class View
 			subDoc = document.createRange().createContextualFragment(this.template);
 		}
 
-		Dom.mapTags(subDoc, '[cv-prerender]', (tag) => {
-			let prerenderAttr = tag.getAttribute('cv-prerender');
-			let prerendering  = Cookie.get('prerenderer');
-
-			if(prerenderAttr == 'never' && prerendering
-				|| prerenderAttr == 'only' && !prerendering
-			){
-				tag.parentNode.removeChild(tag);
-			}
-		});
-
-		Dom.mapTags(subDoc, '[cv-with]', (tag) => {
-			let withAttr = tag.getAttribute('cv-with');
-			let carryAttr = tag.getAttribute('cv-carry');
-			tag.removeAttribute('cv-with');
-			tag.removeAttribute('cv-carry');
-
-			let subTemplate = tag.innerHTML;
-
-			let carryProps = [];
-
-			if(carryAttr)
+		Dom.mapTags(subDoc, false, (tag)=>{
+			if(tag.matches)
 			{
-				carryProps = carryAttr.split(',');
-			}
+				this.mapInterpolatableTags(tag);
 
-			while(tag.firstChild)
-			{
-				tag.removeChild(tag.firstChild);
-			}
+				tag.matches('[cv-each]')
+					&& this.mapEachTags(tag);
 
-			let view = new View();
+				tag.matches('[cv-with]')
+					&& this.mapWithTags(tag);
 
-			this.cleanup.push(((view)=>()=>{
-				view.remove();
-			})(view));
+				tag.matches('[cv-prerender]')
+					&& this.mapPrendererTags(tag);
 
-			view.template = subTemplate;
-			view.parent   = this;
+				tag.matches('[cv-link]')
+					&& this.mapLinkTags(tag);
 
-			// console.log(carryProps);
+				tag.matches('[cv-on]')
+					&& this.mapOnTags(tag);
 
-			for(let i in carryProps)
-			{
-				this.args.bindTo(carryProps[i], ((view) => (v, k) => {
-					view.args[k] = v;
-				})(view));
-			}
+				tag.matches('[cv-bind]')
+					&& this.mapBindTags(tag);
 
-			for(let i in this.args[withAttr])
-			{
-				this.args[withAttr].bindTo(i, ((view) => (v, k) => {
-					view.args[k] = v;
-				})(view));
-			}
+				tag.matches('[cv-ref]')
+					&& this.mapRefTags(tag);
 
-			// console.log(view);
-
-			view.render(tag);
-		});
-
-		Dom.mapTags(subDoc, '[cv-each]', (tag) => {
-			let eachAttr = tag.getAttribute('cv-each');
-			let carryAttr = tag.getAttribute('cv-carry');
-			tag.removeAttribute('cv-each');
-			tag.removeAttribute('cv-carry');
-
-			let subTemplate = tag.innerHTML;
-
-			while(tag.firstChild)
-			{
-				tag.removeChild(tag.firstChild);
-			}
-
-			let carryProps = [];
-
-			if(carryAttr)
-			{
-				carryProps = carryAttr.split(',');
-			}
-
-			let [eachProp, asProp, keyProp] = eachAttr.split(':');
-
-			// console.log(this, eachProp);
-
-			let viewList;
-
-			this.args.bindTo(eachProp, ((viewList) => (v, k, t)=>{
-				if(viewList)
-				{
-					viewList.remove();
-				}
-
-				viewList = new ViewList(subTemplate, asProp, v, keyProp);
-
-				viewList.parent = this;
-
-				viewList.render(tag);
-
-				for(let i in carryProps)
-				{
-					this.args.bindTo(carryProps[i], (v, k) => {
-						viewList.args.subArgs[k] = v;
-					});
-				}
-			})(viewList));
-
-			this.viewLists[eachProp] = viewList;
-		});
-
-		Dom.mapTags(subDoc, '[cv-link]', (tag) => {
-			let LinkAttr = tag.getAttribute('cv-link');
-
-			tag.setAttribute('href', LinkAttr);
-
-			let linkClick = (event) => {
-				event.preventDefault();
-
-				Router.go(tag.getAttribute('href'));
-			};
-
-			tag.addEventListener('click', linkClick);
-
-			this.cleanup.push( ((tag, eventListener) => ()=>{
-				tag.removeEventListener('click', eventListener);
-				tag           = undefined;
-				eventListener = undefined;
-			})(tag, linkClick));
-
-			tag.removeAttribute('cv-link');
-		});
-
-		Dom.mapTags(subDoc, '[cv-on]', (tag)=>{
-			let action = String(tag.getAttribute('cv-on'))
-				.split(/;/)
-				.map((a) => a.split(':'))
-				.map(((object, tag) => (a) => {
-					var eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
-					var callbackName = a[1];
-					var argList      = [];
-					var groups = /(\w+)(?:\(([\w\s,]+)\))?/.exec(callbackName);
-					if(groups.length) {
-						callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
-						if(groups[2]) {
-							argList = groups[2].split(',').map(s => s.trim());
-						}
-					}
-
-					let eventMethod;
-					let parent = this;
-
-					while(parent)
-					{
-						if(parent[ callbackName ])
-						{
-							eventMethod = (...args) => {
-								parent[ callbackName ](...args);
-							};
-						}
-
-						if(parent.viewList && parent.viewList.parent)
-						{
-							parent = parent.viewList.parent;
-						}
-						else if(parent.parent)
-						{
-							parent = parent.parent;
-						}
-						else
-						{
-							break;
-						}
-					}
-
-					let eventListener = ((object) => (event) => {
-						let argRefs = argList.map((arg) => {
-							if(arg === 'event') {
-								return event;
-							}
-							if(arg in object.args) {
-								return object.args[arg];
-							}
-						});
-						// console.log(argList, argRefs);
-						if(!(typeof eventMethod == 'function')) {
-							// console.log(object);
-							// console.trace();
-							// console.log(this);
-							throw new Error(
-								`${callbackName} is not defined on View object.
-
-Tag:
-
-${tag.outerHTML}`
-							);
-						}
-						eventMethod(...argRefs);
-					})(object);
-
-
-					switch(eventName)
-					{
-						case '_init':
-							eventListener();
-							break;
-
-						case '_attach':
-							this.attach.push(eventListener);
-							break;
-
-						case '_detach':
-							this.detach.push(eventListener);
-							break;
-
-						default:
-							tag.addEventListener(eventName, eventListener);
-
-							this.cleanup.push(
-								((tag, eventName, eventListener) => ()=>{
-									tag.removeEventListener(eventName, eventListener);
-									tag           = undefined;
-									eventListener = undefined;
-								}
-							)(tag, eventName, eventListener));
-							break;
-					}
-
-					return [eventName, callbackName, argList];
-				})(this, tag));
-
-			tag.removeAttribute('cv-on');
-		});
-
-		Dom.mapTags(subDoc, '[cv-bind]', (tag) => {
-			let bindArg = tag.getAttribute('cv-bind');
-			this.args.bindTo(bindArg, (v,k,t) => {
-				if(t[k] === v)
-				{
-					// return;
-				}
-
-				if(t[k] instanceof View)
-				{
-					t[k].remove();
-				}
-
-
-				if(tag.tagName == 'INPUT' || tag.tagName == 'SELECT') {
-					let type = tag.getAttribute('type');
-					if(type && type.toLowerCase() == 'checkbox') {
-						if(v) {
-							tag.checked = true;
-						}
-						else {
-							tag.checked = false;
-						}
-					}
-					else if(type !== 'file') {
-						tag.value = v || '';
-					}
-					return;
-				}
-
-				if(v instanceof View)
-				{
-					v.render(tag);
-				}
-				else
-				{
-					tag.innerText = v;
-				}
-			});
-
-			let inputListener = (event) => {
-				if(event.target.getAttribute('type') !== 'password')
-				{
-					console.log(event.target.value);
-				}
-
-				if(event.target !== tag) {
-					return;
-				}
-
-				// console.log(event.target.value);
-
-				this.args[bindArg] = event.target.value;
-			};
-
-			tag.addEventListener('input',         inputListener);
-			tag.addEventListener('change',        inputListener);
-			tag.addEventListener('value-changed', inputListener);
-
-			this.cleanup.push( ((tag, eventListener) => ()=>{
-				tag.removeEventListener('input',         inputListener);
-				tag.removeEventListener('change',        inputListener);
-				tag.removeEventListener('value-changed', inputListener);
-				tag           = undefined;
-				eventListener = undefined;
-			})(tag, inputListener));
-
-			tag.removeAttribute('cv-bind');
-		});
-
-		Dom.mapTags(subDoc, false, (tag) => {
-			let regex    = /(\[\[(\$?\w+)\]\])/g;
-
-			if(tag.nodeType == Node.TEXT_NODE)
-			{
-				let original = tag.nodeValue;
-
-				if(!this.interpolatable(original))
-				{
-					return;
-				}
-
-				let header   = 0;
-				let match;
-
-				while(match = regex.exec(original))
-				{
-					let bindProperty = match[2];
-
-					let unsafeHtml = false;
-
-					if(bindProperty.substr(0, 1) === '$')
-					{
-						unsafeHtml   = true;
-						bindProperty = bindProperty.substr(1);
-					}
-
-					let staticPrefix = original.substring(header, match.index);
-
-					header = match.index + match[1].length;
-
-					let staticNode = document.createTextNode(staticPrefix);
-
-					tag.parentNode.insertBefore(staticNode, tag);
-
-					let dynamicNode;
-					
-					if(unsafeHtml)
-					{
-						dynamicNode = document.createElement('div');
-					}
-					else
-					{
-						dynamicNode = document.createTextNode('');
-					}
-
-
-					tag.parentNode.insertBefore(dynamicNode, tag);
-
-					this.args.bindTo(bindProperty, ((dynamicNode,unsafeHtml) => (v,k,t) => {
-						// console.log(`Setting ${k} to ${v}`, dynamicNode);
-						if(t[k] instanceof View)
-						{
-							t[k].remove();
-						}
-
-						dynamicNode.nodeValue = '';
-
-						if(v instanceof View)
-						{
-
-							v.render(tag.parentNode, dynamicNode);
-						}
-						else
-						{
-							// console.log(dynamicNode);
-							if(unsafeHtml)
-							{
-								dynamicNode.innerHTML = v;
-							}
-							else
-							{
-								dynamicNode.nodeValue = v;
-							}
-						}
-					})(dynamicNode,unsafeHtml));
-				}
-
-				let staticSuffix = original.substring(header)
-
-				let staticNode = document.createTextNode(staticSuffix);
-
-				tag.parentNode.insertBefore(staticNode, tag);
-
-				tag.nodeValue = '';
-			}
-
-			if(tag.nodeType == Node.ELEMENT_NODE)
-			{
-				for (let i = 0; i < tag.attributes.length; i++)
-				{
-					if(!this.interpolatable(tag.attributes[i].value))
-					{
-						continue;
-					}
-
-					let header    = 0;
-					let match;
-					let original  = tag.attributes[i].value;
-					let attribute = tag.attributes[i];
-
-					let bindProperties = {};
-					let segments       = [];
-
-					while(match = regex.exec(original))
-					{
-						segments.push(original.substring(header, match.index));
-
-						if(!bindProperties[match[2]])
-						{
-							bindProperties[match[2]] = [];
-						}
-
-						bindProperties[match[2]].push(segments.length);
-
-						segments.push(match[1]);
-
-						header = match.index + match[1].length;
-					}
-
-					segments.push(original.substring(header));
-
-					for(let j in bindProperties)
-					{
-						this.args.bindTo(j, (v, k, t, d) => {
-							for(let i in bindProperties)
-							{
-								for(let j in bindProperties[i])
-								{
-									segments[ bindProperties[i][j] ] = t[i];
-
-									if(k === i)
-									{
-										segments[ bindProperties[i][j] ] = v;
-									}
-								}
-							}
-							tag.setAttribute(attribute.name, segments.join(''));
-						});
-					}
-
-					// console.log(bindProperties, segments);
-
-					// console.log(tag.attributes[i].name, tag.attributes[i].value);
-				}
-			}
-		});
-
-		Dom.mapTags(subDoc, '[cv-ref]', (tag) => {
-			let refAttr                         = tag.getAttribute('cv-ref');
-			let [refProp, refClassname, refKey] = refAttr.split(':');
-
-			let refClass = this.stringToClass(refClassname);
-
-			tag.removeAttribute('cv-ref');
-
-			if(this.viewList)
-			{
-				if(!this.viewList.parent.tags[refProp])
-				{
-					this.viewList.parent.tags[refProp] = [];
-				}
-
-				let refKeyVal = this.args[refKey];
-
-				this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
-					tag, this, refProp, refKeyVal
-				);
+				tag.matches('[cv-if]')
+					&& this.mapIfTags(tag);
 			}
 			else
 			{
-				this.tags[refProp] = new refClass(
-					tag, this, refProp
-				);
+				this.mapInterpolatableTags(tag);
 			}
 		});
-
-		Dom.mapTags(subDoc, '[cv-if]', this.mapIfTags.bind(this));
 
 		this.nodes = [];
 
@@ -779,6 +332,494 @@ ${tag.outerHTML}`
 
 		// return this.nodes;
 	}
+
+	mapInterpolatableTags(tag)
+	{
+		let regex    = /(\[\[(\$?\w+)\]\])/g;
+
+		if(tag.nodeType == Node.TEXT_NODE)
+		{
+			let original = tag.nodeValue;
+
+			if(!this.interpolatable(original))
+			{
+				return;
+			}
+
+			let header   = 0;
+			let match;
+
+			while(match = regex.exec(original))
+			{
+				let bindProperty = match[2];
+
+				let unsafeHtml = false;
+
+				if(bindProperty.substr(0, 1) === '$')
+				{
+					unsafeHtml   = true;
+					bindProperty = bindProperty.substr(1);
+				}
+
+				let staticPrefix = original.substring(header, match.index);
+
+				header = match.index + match[1].length;
+
+				let staticNode = document.createTextNode(staticPrefix);
+
+				tag.parentNode.insertBefore(staticNode, tag);
+
+				let dynamicNode;
+				
+				if(unsafeHtml)
+				{
+					dynamicNode = document.createElement('div');
+				}
+				else
+				{
+					dynamicNode = document.createTextNode('');
+				}
+
+
+				tag.parentNode.insertBefore(dynamicNode, tag);
+
+				this.args.bindTo(bindProperty, ((dynamicNode,unsafeHtml) => (v,k,t) => {
+					// console.log(`Setting ${k} to ${v}`, dynamicNode);
+					if(t[k] instanceof View)
+					{
+						t[k].remove();
+					}
+
+					dynamicNode.nodeValue = '';
+
+					if(v instanceof View)
+					{
+
+						v.render(tag.parentNode, dynamicNode);
+					}
+					else
+					{
+						// console.log(dynamicNode);
+						if(unsafeHtml)
+						{
+							dynamicNode.innerHTML = v;
+						}
+						else
+						{
+							dynamicNode.nodeValue = v;
+						}
+					}
+				})(dynamicNode,unsafeHtml));
+			}
+
+			let staticSuffix = original.substring(header)
+
+			let staticNode = document.createTextNode(staticSuffix);
+
+			tag.parentNode.insertBefore(staticNode, tag);
+
+			tag.nodeValue = '';
+		}
+
+		if(tag.nodeType == Node.ELEMENT_NODE)
+		{
+			for (let i = 0; i < tag.attributes.length; i++)
+			{
+				if(!this.interpolatable(tag.attributes[i].value))
+				{
+					continue;
+				}
+
+				let header    = 0;
+				let match;
+				let original  = tag.attributes[i].value;
+				let attribute = tag.attributes[i];
+
+				let bindProperties = {};
+				let segments       = [];
+
+				while(match = regex.exec(original))
+				{
+					segments.push(original.substring(header, match.index));
+
+					if(!bindProperties[match[2]])
+					{
+						bindProperties[match[2]] = [];
+					}
+
+					bindProperties[match[2]].push(segments.length);
+
+					segments.push(match[1]);
+
+					header = match.index + match[1].length;
+				}
+
+				segments.push(original.substring(header));
+
+				for(let j in bindProperties)
+				{
+					this.args.bindTo(j, (v, k, t, d) => {
+						for(let i in bindProperties)
+						{
+							for(let j in bindProperties[i])
+							{
+								segments[ bindProperties[i][j] ] = t[i];
+
+								if(k === i)
+								{
+									segments[ bindProperties[i][j] ] = v;
+								}
+							}
+						}
+						tag.setAttribute(attribute.name, segments.join(''));
+					});
+				}
+
+				// console.log(bindProperties, segments);
+
+				// console.log(tag.attributes[i].name, tag.attributes[i].value);
+			}
+		}
+	}
+
+	mapRefTags(tag)
+	{
+		let refAttr                         = tag.getAttribute('cv-ref');
+		let [refProp, refClassname, refKey] = refAttr.split(':');
+
+		let refClass = this.stringToClass(refClassname);
+
+		tag.removeAttribute('cv-ref');
+
+		if(this.viewList)
+		{
+			if(!this.viewList.parent.tags[refProp])
+			{
+				this.viewList.parent.tags[refProp] = [];
+			}
+
+			let refKeyVal = this.args[refKey];
+
+			this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
+				tag, this, refProp, refKeyVal
+			);
+		}
+		else
+		{
+			this.tags[refProp] = new refClass(
+				tag, this, refProp
+			);
+		}
+	}
+
+	mapBindTags(tag)
+	{
+		let bindArg = tag.getAttribute('cv-bind');
+		this.args.bindTo(bindArg, (v,k,t) => {
+			if(t[k] === v)
+			{
+				// return;
+			}
+
+			if(t[k] instanceof View)
+			{
+				t[k].remove();
+			}
+
+
+			if(tag.tagName == 'INPUT' || tag.tagName == 'SELECT') {
+				let type = tag.getAttribute('type');
+				if(type && type.toLowerCase() == 'checkbox') {
+					if(v) {
+						tag.checked = true;
+					}
+					else {
+						tag.checked = false;
+					}
+				}
+				else if(type !== 'file') {
+					tag.value = v || '';
+				}
+				return;
+			}
+
+			if(v instanceof View)
+			{
+				v.render(tag);
+			}
+			else
+			{
+				tag.innerText = v;
+			}
+		});
+
+		let inputListener = (event) => {
+			if(event.target.getAttribute('type') !== 'password')
+			{
+				console.log(event.target.value);
+			}
+
+			if(event.target !== tag) {
+				return;
+			}
+
+			// console.log(event.target.value);
+
+			this.args[bindArg] = event.target.value;
+		};
+
+		tag.addEventListener('input',         inputListener);
+		tag.addEventListener('change',        inputListener);
+		tag.addEventListener('value-changed', inputListener);
+
+		this.cleanup.push( ((tag, eventListener) => ()=>{
+			tag.removeEventListener('input',         inputListener);
+			tag.removeEventListener('change',        inputListener);
+			tag.removeEventListener('value-changed', inputListener);
+			tag           = undefined;
+			eventListener = undefined;
+		})(tag, inputListener));
+
+		tag.removeAttribute('cv-bind');
+	}
+
+	mapOnTags(tag)
+	{
+		let action = String(tag.getAttribute('cv-on'))
+			.split(/;/)
+			.map((a) => a.split(':'))
+			.map(((object, tag) => (a) => {
+				var eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+				var callbackName = a[1];
+				var argList      = [];
+				var groups = /(\w+)(?:\(([\w\s,]+)\))?/.exec(callbackName);
+				if(groups.length) {
+					callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+					if(groups[2]) {
+						argList = groups[2].split(',').map(s => s.trim());
+					}
+				}
+
+				let eventMethod;
+				let parent = this;
+
+				while(parent)
+				{
+					if(parent[ callbackName ])
+					{
+						eventMethod = (...args) => {
+							parent[ callbackName ](...args);
+						};
+					}
+
+					if(parent.viewList && parent.viewList.parent)
+					{
+						parent = parent.viewList.parent;
+					}
+					else if(parent.parent)
+					{
+						parent = parent.parent;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				let eventListener = ((object) => (event) => {
+					let argRefs = argList.map((arg) => {
+						if(arg === 'event') {
+							return event;
+						}
+						if(arg in object.args) {
+							return object.args[arg];
+						}
+					});
+					// console.log(argList, argRefs);
+					if(!(typeof eventMethod == 'function')) {
+						// console.log(object);
+						// console.trace();
+						// console.log(this);
+						throw new Error(
+							`${callbackName} is not defined on View object.
+
+Tag:
+
+${tag.outerHTML}`
+						);
+					}
+					eventMethod(...argRefs);
+				})(object);
+
+
+				switch(eventName)
+				{
+					case '_init':
+						eventListener();
+						break;
+
+					case '_attach':
+						this.attach.push(eventListener);
+						break;
+
+					case '_detach':
+						this.detach.push(eventListener);
+						break;
+
+					default:
+						tag.addEventListener(eventName, eventListener);
+
+						this.cleanup.push(
+							((tag, eventName, eventListener) => ()=>{
+								tag.removeEventListener(eventName, eventListener);
+								tag           = undefined;
+								eventListener = undefined;
+							}
+						)(tag, eventName, eventListener));
+						break;
+				}
+
+				return [eventName, callbackName, argList];
+			})(this, tag));
+
+		tag.removeAttribute('cv-on');
+	}
+
+	mapLinkTags(tag)
+	{
+		let LinkAttr = tag.getAttribute('cv-link');
+
+		tag.setAttribute('href', LinkAttr);
+
+		let linkClick = (event) => {
+			event.preventDefault();
+
+			Router.go(tag.getAttribute('href'));
+		};
+
+		tag.addEventListener('click', linkClick);
+
+		this.cleanup.push( ((tag, eventListener) => ()=>{
+			tag.removeEventListener('click', eventListener);
+			tag           = undefined;
+			eventListener = undefined;
+		})(tag, linkClick));
+
+		tag.removeAttribute('cv-link');
+	}
+
+	mapPrendererTags(tag)
+	{
+		let prerenderAttr = tag.getAttribute('cv-prerender');
+		let prerendering  = Cookie.get('prerenderer');
+
+		if(prerenderAttr == 'never' && prerendering
+			|| prerenderAttr == 'only' && !prerendering
+		){
+			tag.parentNode.removeChild(tag);
+		}
+	}
+
+	mapWithTags(tag)
+	{
+		let withAttr = tag.getAttribute('cv-with');
+		let carryAttr = tag.getAttribute('cv-carry');
+		tag.removeAttribute('cv-with');
+		tag.removeAttribute('cv-carry');
+
+		let subTemplate = tag.innerHTML;
+
+		let carryProps = [];
+
+		if(carryAttr)
+		{
+			carryProps = carryAttr.split(',');
+		}
+
+		while(tag.firstChild)
+		{
+			tag.removeChild(tag.firstChild);
+		}
+
+		let view = new View();
+
+		this.cleanup.push(((view)=>()=>{
+			view.remove();
+		})(view));
+
+		view.template = subTemplate;
+		view.parent   = this;
+
+		// console.log(carryProps);
+
+		for(let i in carryProps)
+		{
+			this.args.bindTo(carryProps[i], ((view) => (v, k) => {
+				view.args[k] = v;
+			})(view));
+		}
+
+		for(let i in this.args[withAttr])
+		{
+			this.args[withAttr].bindTo(i, ((view) => (v, k) => {
+				view.args[k] = v;
+			})(view));
+		}
+
+		// console.log(view);
+
+		view.render(tag);
+	}
+
+	mapEachTags(tag)
+	{
+		let eachAttr = tag.getAttribute('cv-each');
+		let carryAttr = tag.getAttribute('cv-carry');
+		tag.removeAttribute('cv-each');
+		tag.removeAttribute('cv-carry');
+
+		let subTemplate = tag.innerHTML;
+
+		while(tag.firstChild)
+		{
+			tag.removeChild(tag.firstChild);
+		}
+
+		let carryProps = [];
+
+		if(carryAttr)
+		{
+			carryProps = carryAttr.split(',');
+		}
+
+		let [eachProp, asProp, keyProp] = eachAttr.split(':');
+
+		// console.log(this, eachProp);
+
+		let viewList;
+
+		this.args.bindTo(eachProp, ((viewList) => (v, k, t)=>{
+			if(viewList)
+			{
+				viewList.remove();
+			}
+
+			viewList = new ViewList(subTemplate, asProp, v, keyProp);
+
+			viewList.parent = this;
+
+			viewList.render(tag);
+
+			for(let i in carryProps)
+			{
+				this.args.bindTo(carryProps[i], (v, k) => {
+					viewList.args.subArgs[k] = v;
+				});
+			}
+		})(viewList));
+
+		this.viewLists[eachProp] = viewList;
+	}
 	
 	mapIfTags(tag)
 	{
@@ -792,7 +833,27 @@ ${tag.outerHTML}`
 			ifProperty = ifProperty.substr(1);
 		}
 
+		let subTemplate = tag.innerHTML;
+
+		while(tag.firstChild)
+		{
+			tag.removeChild(tag.firstChild);
+		}
+
 		let ifDoc = document.createRange().createContextualFragment('');
+
+		let view = new View();
+
+		view.args = this.args;
+
+		this.cleanup.push(((view)=>()=>{
+			view.remove();
+		})(view));
+
+		view.template = subTemplate;
+		view.parent   = this;
+
+		view.render(tag);
 
 		this.args.bindTo(
 			ifProperty
@@ -804,8 +865,6 @@ ${tag.outerHTML}`
 				{
 					v = !v;
 				}
-
-				Dom.mapTags(tag, '[cv-if]', this.mapIfTags.bind(this));
 
 				if(v)
 				{

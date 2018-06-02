@@ -249,457 +249,29 @@ var View = exports.View = function () {
 				subDoc = document.createRange().createContextualFragment(this.template);
 			}
 
-			_Dom.Dom.mapTags(subDoc, '[cv-prerender]', function (tag) {
-				var prerenderAttr = tag.getAttribute('cv-prerender');
-				var prerendering = _Cookie.Cookie.get('prerenderer');
-
-				if (prerenderAttr == 'never' && prerendering || prerenderAttr == 'only' && !prerendering) {
-					tag.parentNode.removeChild(tag);
-				}
-			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-with]', function (tag) {
-				var withAttr = tag.getAttribute('cv-with');
-				var carryAttr = tag.getAttribute('cv-carry');
-				tag.removeAttribute('cv-with');
-				tag.removeAttribute('cv-carry');
-
-				var subTemplate = tag.innerHTML;
-
-				var carryProps = [];
-
-				if (carryAttr) {
-					carryProps = carryAttr.split(',');
-				}
-
-				while (tag.firstChild) {
-					tag.removeChild(tag.firstChild);
-				}
-
-				var view = new View();
-
-				_this2.cleanup.push(function (view) {
-					return function () {
-						view.remove();
-					};
-				}(view));
-
-				view.template = subTemplate;
-				view.parent = _this2;
-
-				// console.log(carryProps);
-
-				for (var _i6 in carryProps) {
-					_this2.args.bindTo(carryProps[_i6], function (view) {
-						return function (v, k) {
-							view.args[k] = v;
-						};
-					}(view));
-				}
-
-				for (var _i7 in _this2.args[withAttr]) {
-					_this2.args[withAttr].bindTo(_i7, function (view) {
-						return function (v, k) {
-							view.args[k] = v;
-						};
-					}(view));
-				}
-
-				// console.log(view);
-
-				view.render(tag);
-			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-each]', function (tag) {
-				var eachAttr = tag.getAttribute('cv-each');
-				var carryAttr = tag.getAttribute('cv-carry');
-				tag.removeAttribute('cv-each');
-				tag.removeAttribute('cv-carry');
-
-				var subTemplate = tag.innerHTML;
-
-				while (tag.firstChild) {
-					tag.removeChild(tag.firstChild);
-				}
-
-				var carryProps = [];
-
-				if (carryAttr) {
-					carryProps = carryAttr.split(',');
-				}
-
-				var _eachAttr$split = eachAttr.split(':'),
-				    _eachAttr$split2 = _slicedToArray(_eachAttr$split, 3),
-				    eachProp = _eachAttr$split2[0],
-				    asProp = _eachAttr$split2[1],
-				    keyProp = _eachAttr$split2[2];
-
-				// console.log(this, eachProp);
-
-				var viewList = void 0;
-
-				_this2.args.bindTo(eachProp, function (viewList) {
-					return function (v, k, t) {
-						if (viewList) {
-							viewList.remove();
-						}
-
-						viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
-
-						viewList.parent = _this2;
-
-						viewList.render(tag);
-
-						for (var _i8 in carryProps) {
-							_this2.args.bindTo(carryProps[_i8], function (v, k) {
-								viewList.args.subArgs[k] = v;
-							});
-						}
-					};
-				}(viewList));
-
-				_this2.viewLists[eachProp] = viewList;
-			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-link]', function (tag) {
-				var LinkAttr = tag.getAttribute('cv-link');
-
-				tag.setAttribute('href', LinkAttr);
-
-				var linkClick = function linkClick(event) {
-					event.preventDefault();
-
-					_Router.Router.go(tag.getAttribute('href'));
-				};
-
-				tag.addEventListener('click', linkClick);
-
-				_this2.cleanup.push(function (tag, eventListener) {
-					return function () {
-						tag.removeEventListener('click', eventListener);
-						tag = undefined;
-						eventListener = undefined;
-					};
-				}(tag, linkClick));
-
-				tag.removeAttribute('cv-link');
-			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-on]', function (tag) {
-				var action = String(tag.getAttribute('cv-on')).split(/;/).map(function (a) {
-					return a.split(':');
-				}).map(function (object, tag) {
-					return function (a) {
-						var eventName = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
-						var callbackName = a[1];
-						var argList = [];
-						var groups = /(\w+)(?:\(([\w\s,]+)\))?/.exec(callbackName);
-						if (groups.length) {
-							callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
-							if (groups[2]) {
-								argList = groups[2].split(',').map(function (s) {
-									return s.trim();
-								});
-							}
-						}
-
-						var eventMethod = void 0;
-						var parent = _this2;
-
-						while (parent) {
-							if (parent[callbackName]) {
-								eventMethod = function eventMethod() {
-									var _parent;
-
-									(_parent = parent)[callbackName].apply(_parent, arguments);
-								};
-							}
-
-							if (parent.viewList && parent.viewList.parent) {
-								parent = parent.viewList.parent;
-							} else if (parent.parent) {
-								parent = parent.parent;
-							} else {
-								break;
-							}
-						}
-
-						var eventListener = function (object) {
-							return function (event) {
-								var argRefs = argList.map(function (arg) {
-									if (arg === 'event') {
-										return event;
-									}
-									if (arg in object.args) {
-										return object.args[arg];
-									}
-								});
-								// console.log(argList, argRefs);
-								if (!(typeof eventMethod == 'function')) {
-									// console.log(object);
-									// console.trace();
-									// console.log(this);
-									throw new Error(callbackName + ' is not defined on View object.\n\nTag:\n\n' + tag.outerHTML);
-								}
-								eventMethod.apply(undefined, _toConsumableArray(argRefs));
-							};
-						}(object);
-
-						switch (eventName) {
-							case '_init':
-								eventListener();
-								break;
-
-							case '_attach':
-								_this2.attach.push(eventListener);
-								break;
-
-							case '_detach':
-								_this2.detach.push(eventListener);
-								break;
-
-							default:
-								tag.addEventListener(eventName, eventListener);
-
-								_this2.cleanup.push(function (tag, eventName, eventListener) {
-									return function () {
-										tag.removeEventListener(eventName, eventListener);
-										tag = undefined;
-										eventListener = undefined;
-									};
-								}(tag, eventName, eventListener));
-								break;
-						}
-
-						return [eventName, callbackName, argList];
-					};
-				}(_this2, tag));
-
-				tag.removeAttribute('cv-on');
-			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-bind]', function (tag) {
-				var bindArg = tag.getAttribute('cv-bind');
-				_this2.args.bindTo(bindArg, function (v, k, t) {
-					if (t[k] === v) {
-						// return;
-					}
-
-					if (t[k] instanceof View) {
-						t[k].remove();
-					}
-
-					if (tag.tagName == 'INPUT' || tag.tagName == 'SELECT') {
-						var type = tag.getAttribute('type');
-						if (type && type.toLowerCase() == 'checkbox') {
-							if (v) {
-								tag.checked = true;
-							} else {
-								tag.checked = false;
-							}
-						} else if (type !== 'file') {
-							tag.value = v || '';
-						}
-						return;
-					}
-
-					if (v instanceof View) {
-						v.render(tag);
-					} else {
-						tag.innerText = v;
-					}
-				});
-
-				var inputListener = function inputListener(event) {
-					if (event.target.getAttribute('type') !== 'password') {
-						console.log(event.target.value);
-					}
-
-					if (event.target !== tag) {
-						return;
-					}
-
-					// console.log(event.target.value);
-
-					_this2.args[bindArg] = event.target.value;
-				};
-
-				tag.addEventListener('input', inputListener);
-				tag.addEventListener('change', inputListener);
-				tag.addEventListener('value-changed', inputListener);
-
-				_this2.cleanup.push(function (tag, eventListener) {
-					return function () {
-						tag.removeEventListener('input', inputListener);
-						tag.removeEventListener('change', inputListener);
-						tag.removeEventListener('value-changed', inputListener);
-						tag = undefined;
-						eventListener = undefined;
-					};
-				}(tag, inputListener));
-
-				tag.removeAttribute('cv-bind');
-			});
-
 			_Dom.Dom.mapTags(subDoc, false, function (tag) {
-				var regex = /(\[\[(\$?\w+)\]\])/g;
+				if (tag.matches) {
+					_this2.mapInterpolatableTags(tag);
 
-				if (tag.nodeType == Node.TEXT_NODE) {
-					var original = tag.nodeValue;
+					tag.matches('[cv-each]') && _this2.mapEachTags(tag);
 
-					if (!_this2.interpolatable(original)) {
-						return;
-					}
+					tag.matches('[cv-with]') && _this2.mapWithTags(tag);
 
-					var header = 0;
-					var match = void 0;
+					tag.matches('[cv-prerender]') && _this2.mapPrendererTags(tag);
 
-					while (match = regex.exec(original)) {
-						var bindProperty = match[2];
+					tag.matches('[cv-link]') && _this2.mapLinkTags(tag);
 
-						var unsafeHtml = false;
+					tag.matches('[cv-on]') && _this2.mapOnTags(tag);
 
-						if (bindProperty.substr(0, 1) === '$') {
-							unsafeHtml = true;
-							bindProperty = bindProperty.substr(1);
-						}
+					tag.matches('[cv-bind]') && _this2.mapBindTags(tag);
 
-						var staticPrefix = original.substring(header, match.index);
+					tag.matches('[cv-ref]') && _this2.mapRefTags(tag);
 
-						header = match.index + match[1].length;
-
-						var _staticNode = document.createTextNode(staticPrefix);
-
-						tag.parentNode.insertBefore(_staticNode, tag);
-
-						var dynamicNode = void 0;
-
-						if (unsafeHtml) {
-							dynamicNode = document.createElement('div');
-						} else {
-							dynamicNode = document.createTextNode('');
-						}
-
-						tag.parentNode.insertBefore(dynamicNode, tag);
-
-						_this2.args.bindTo(bindProperty, function (dynamicNode, unsafeHtml) {
-							return function (v, k, t) {
-								// console.log(`Setting ${k} to ${v}`, dynamicNode);
-								if (t[k] instanceof View) {
-									t[k].remove();
-								}
-
-								dynamicNode.nodeValue = '';
-
-								if (v instanceof View) {
-
-									v.render(tag.parentNode, dynamicNode);
-								} else {
-									// console.log(dynamicNode);
-									if (unsafeHtml) {
-										dynamicNode.innerHTML = v;
-									} else {
-										dynamicNode.nodeValue = v;
-									}
-								}
-							};
-						}(dynamicNode, unsafeHtml));
-					}
-
-					var staticSuffix = original.substring(header);
-
-					var staticNode = document.createTextNode(staticSuffix);
-
-					tag.parentNode.insertBefore(staticNode, tag);
-
-					tag.nodeValue = '';
-				}
-
-				if (tag.nodeType == Node.ELEMENT_NODE) {
-					var _loop2 = function _loop2(_i9) {
-						if (!_this2.interpolatable(tag.attributes[_i9].value)) {
-							return 'continue';
-						}
-
-						var header = 0;
-						var match = void 0;
-						var original = tag.attributes[_i9].value;
-						var attribute = tag.attributes[_i9];
-
-						var bindProperties = {};
-						var segments = [];
-
-						while (match = regex.exec(original)) {
-							segments.push(original.substring(header, match.index));
-
-							if (!bindProperties[match[2]]) {
-								bindProperties[match[2]] = [];
-							}
-
-							bindProperties[match[2]].push(segments.length);
-
-							segments.push(match[1]);
-
-							header = match.index + match[1].length;
-						}
-
-						segments.push(original.substring(header));
-
-						for (var j in bindProperties) {
-							_this2.args.bindTo(j, function (v, k, t, d) {
-								for (var _i10 in bindProperties) {
-									for (var _j in bindProperties[_i10]) {
-										segments[bindProperties[_i10][_j]] = t[_i10];
-
-										if (k === _i10) {
-											segments[bindProperties[_i10][_j]] = v;
-										}
-									}
-								}
-								tag.setAttribute(attribute.name, segments.join(''));
-							});
-						}
-
-						// console.log(bindProperties, segments);
-
-						// console.log(tag.attributes[i].name, tag.attributes[i].value);
-					};
-
-					for (var _i9 = 0; _i9 < tag.attributes.length; _i9++) {
-						var _ret2 = _loop2(_i9);
-
-						if (_ret2 === 'continue') continue;
-					}
-				}
-			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-ref]', function (tag) {
-				var refAttr = tag.getAttribute('cv-ref');
-
-				var _refAttr$split = refAttr.split(':'),
-				    _refAttr$split2 = _slicedToArray(_refAttr$split, 3),
-				    refProp = _refAttr$split2[0],
-				    refClassname = _refAttr$split2[1],
-				    refKey = _refAttr$split2[2];
-
-				var refClass = _this2.stringToClass(refClassname);
-
-				tag.removeAttribute('cv-ref');
-
-				if (_this2.viewList) {
-					if (!_this2.viewList.parent.tags[refProp]) {
-						_this2.viewList.parent.tags[refProp] = [];
-					}
-
-					var refKeyVal = _this2.args[refKey];
-
-					_this2.viewList.parent.tags[refProp][refKeyVal] = new refClass(tag, _this2, refProp, refKeyVal);
+					tag.matches('[cv-if]') && _this2.mapIfTags(tag);
 				} else {
-					_this2.tags[refProp] = new refClass(tag, _this2, refProp);
+					_this2.mapInterpolatableTags(tag);
 				}
 			});
-
-			_Dom.Dom.mapTags(subDoc, '[cv-if]', this.mapIfTags.bind(this));
 
 			this.nodes = [];
 
@@ -748,8 +320,8 @@ var View = exports.View = function () {
 				}
 			}
 
-			for (var _i11 in this.attach) {
-				this.attach[_i11]();
+			for (var _i6 in this.attach) {
+				this.attach[_i6]();
 			}
 
 			this.postRender(parentNode);
@@ -757,10 +329,474 @@ var View = exports.View = function () {
 			// return this.nodes;
 		}
 	}, {
-		key: 'mapIfTags',
-		value: function mapIfTags(tag) {
+		key: 'mapInterpolatableTags',
+		value: function mapInterpolatableTags(tag) {
 			var _this3 = this;
 
+			var regex = /(\[\[(\$?\w+)\]\])/g;
+
+			if (tag.nodeType == Node.TEXT_NODE) {
+				var original = tag.nodeValue;
+
+				if (!this.interpolatable(original)) {
+					return;
+				}
+
+				var header = 0;
+				var match = void 0;
+
+				while (match = regex.exec(original)) {
+					var bindProperty = match[2];
+
+					var unsafeHtml = false;
+
+					if (bindProperty.substr(0, 1) === '$') {
+						unsafeHtml = true;
+						bindProperty = bindProperty.substr(1);
+					}
+
+					var staticPrefix = original.substring(header, match.index);
+
+					header = match.index + match[1].length;
+
+					var _staticNode = document.createTextNode(staticPrefix);
+
+					tag.parentNode.insertBefore(_staticNode, tag);
+
+					var dynamicNode = void 0;
+
+					if (unsafeHtml) {
+						dynamicNode = document.createElement('div');
+					} else {
+						dynamicNode = document.createTextNode('');
+					}
+
+					tag.parentNode.insertBefore(dynamicNode, tag);
+
+					this.args.bindTo(bindProperty, function (dynamicNode, unsafeHtml) {
+						return function (v, k, t) {
+							// console.log(`Setting ${k} to ${v}`, dynamicNode);
+							if (t[k] instanceof View) {
+								t[k].remove();
+							}
+
+							dynamicNode.nodeValue = '';
+
+							if (v instanceof View) {
+
+								v.render(tag.parentNode, dynamicNode);
+							} else {
+								// console.log(dynamicNode);
+								if (unsafeHtml) {
+									dynamicNode.innerHTML = v;
+								} else {
+									dynamicNode.nodeValue = v;
+								}
+							}
+						};
+					}(dynamicNode, unsafeHtml));
+				}
+
+				var staticSuffix = original.substring(header);
+
+				var staticNode = document.createTextNode(staticSuffix);
+
+				tag.parentNode.insertBefore(staticNode, tag);
+
+				tag.nodeValue = '';
+			}
+
+			if (tag.nodeType == Node.ELEMENT_NODE) {
+				var _loop2 = function _loop2(i) {
+					if (!_this3.interpolatable(tag.attributes[i].value)) {
+						return 'continue';
+					}
+
+					var header = 0;
+					var match = void 0;
+					var original = tag.attributes[i].value;
+					var attribute = tag.attributes[i];
+
+					var bindProperties = {};
+					var segments = [];
+
+					while (match = regex.exec(original)) {
+						segments.push(original.substring(header, match.index));
+
+						if (!bindProperties[match[2]]) {
+							bindProperties[match[2]] = [];
+						}
+
+						bindProperties[match[2]].push(segments.length);
+
+						segments.push(match[1]);
+
+						header = match.index + match[1].length;
+					}
+
+					segments.push(original.substring(header));
+
+					for (var j in bindProperties) {
+						_this3.args.bindTo(j, function (v, k, t, d) {
+							for (var _i7 in bindProperties) {
+								for (var _j in bindProperties[_i7]) {
+									segments[bindProperties[_i7][_j]] = t[_i7];
+
+									if (k === _i7) {
+										segments[bindProperties[_i7][_j]] = v;
+									}
+								}
+							}
+							tag.setAttribute(attribute.name, segments.join(''));
+						});
+					}
+
+					// console.log(bindProperties, segments);
+
+					// console.log(tag.attributes[i].name, tag.attributes[i].value);
+				};
+
+				for (var i = 0; i < tag.attributes.length; i++) {
+					var _ret2 = _loop2(i);
+
+					if (_ret2 === 'continue') continue;
+				}
+			}
+		}
+	}, {
+		key: 'mapRefTags',
+		value: function mapRefTags(tag) {
+			var refAttr = tag.getAttribute('cv-ref');
+
+			var _refAttr$split = refAttr.split(':'),
+			    _refAttr$split2 = _slicedToArray(_refAttr$split, 3),
+			    refProp = _refAttr$split2[0],
+			    refClassname = _refAttr$split2[1],
+			    refKey = _refAttr$split2[2];
+
+			var refClass = this.stringToClass(refClassname);
+
+			tag.removeAttribute('cv-ref');
+
+			if (this.viewList) {
+				if (!this.viewList.parent.tags[refProp]) {
+					this.viewList.parent.tags[refProp] = [];
+				}
+
+				var refKeyVal = this.args[refKey];
+
+				this.viewList.parent.tags[refProp][refKeyVal] = new refClass(tag, this, refProp, refKeyVal);
+			} else {
+				this.tags[refProp] = new refClass(tag, this, refProp);
+			}
+		}
+	}, {
+		key: 'mapBindTags',
+		value: function mapBindTags(tag) {
+			var _this4 = this;
+
+			var bindArg = tag.getAttribute('cv-bind');
+			this.args.bindTo(bindArg, function (v, k, t) {
+				if (t[k] === v) {
+					// return;
+				}
+
+				if (t[k] instanceof View) {
+					t[k].remove();
+				}
+
+				if (tag.tagName == 'INPUT' || tag.tagName == 'SELECT') {
+					var type = tag.getAttribute('type');
+					if (type && type.toLowerCase() == 'checkbox') {
+						if (v) {
+							tag.checked = true;
+						} else {
+							tag.checked = false;
+						}
+					} else if (type !== 'file') {
+						tag.value = v || '';
+					}
+					return;
+				}
+
+				if (v instanceof View) {
+					v.render(tag);
+				} else {
+					tag.innerText = v;
+				}
+			});
+
+			var inputListener = function inputListener(event) {
+				if (event.target.getAttribute('type') !== 'password') {
+					console.log(event.target.value);
+				}
+
+				if (event.target !== tag) {
+					return;
+				}
+
+				// console.log(event.target.value);
+
+				_this4.args[bindArg] = event.target.value;
+			};
+
+			tag.addEventListener('input', inputListener);
+			tag.addEventListener('change', inputListener);
+			tag.addEventListener('value-changed', inputListener);
+
+			this.cleanup.push(function (tag, eventListener) {
+				return function () {
+					tag.removeEventListener('input', inputListener);
+					tag.removeEventListener('change', inputListener);
+					tag.removeEventListener('value-changed', inputListener);
+					tag = undefined;
+					eventListener = undefined;
+				};
+			}(tag, inputListener));
+
+			tag.removeAttribute('cv-bind');
+		}
+	}, {
+		key: 'mapOnTags',
+		value: function mapOnTags(tag) {
+			var _this5 = this;
+
+			var action = String(tag.getAttribute('cv-on')).split(/;/).map(function (a) {
+				return a.split(':');
+			}).map(function (object, tag) {
+				return function (a) {
+					var eventName = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+					var callbackName = a[1];
+					var argList = [];
+					var groups = /(\w+)(?:\(([\w\s,]+)\))?/.exec(callbackName);
+					if (groups.length) {
+						callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+						if (groups[2]) {
+							argList = groups[2].split(',').map(function (s) {
+								return s.trim();
+							});
+						}
+					}
+
+					var eventMethod = void 0;
+					var parent = _this5;
+
+					while (parent) {
+						if (parent[callbackName]) {
+							eventMethod = function eventMethod() {
+								var _parent;
+
+								(_parent = parent)[callbackName].apply(_parent, arguments);
+							};
+						}
+
+						if (parent.viewList && parent.viewList.parent) {
+							parent = parent.viewList.parent;
+						} else if (parent.parent) {
+							parent = parent.parent;
+						} else {
+							break;
+						}
+					}
+
+					var eventListener = function (object) {
+						return function (event) {
+							var argRefs = argList.map(function (arg) {
+								if (arg === 'event') {
+									return event;
+								}
+								if (arg in object.args) {
+									return object.args[arg];
+								}
+							});
+							// console.log(argList, argRefs);
+							if (!(typeof eventMethod == 'function')) {
+								// console.log(object);
+								// console.trace();
+								// console.log(this);
+								throw new Error(callbackName + ' is not defined on View object.\n\nTag:\n\n' + tag.outerHTML);
+							}
+							eventMethod.apply(undefined, _toConsumableArray(argRefs));
+						};
+					}(object);
+
+					switch (eventName) {
+						case '_init':
+							eventListener();
+							break;
+
+						case '_attach':
+							_this5.attach.push(eventListener);
+							break;
+
+						case '_detach':
+							_this5.detach.push(eventListener);
+							break;
+
+						default:
+							tag.addEventListener(eventName, eventListener);
+
+							_this5.cleanup.push(function (tag, eventName, eventListener) {
+								return function () {
+									tag.removeEventListener(eventName, eventListener);
+									tag = undefined;
+									eventListener = undefined;
+								};
+							}(tag, eventName, eventListener));
+							break;
+					}
+
+					return [eventName, callbackName, argList];
+				};
+			}(this, tag));
+
+			tag.removeAttribute('cv-on');
+		}
+	}, {
+		key: 'mapLinkTags',
+		value: function mapLinkTags(tag) {
+			var LinkAttr = tag.getAttribute('cv-link');
+
+			tag.setAttribute('href', LinkAttr);
+
+			var linkClick = function linkClick(event) {
+				event.preventDefault();
+
+				_Router.Router.go(tag.getAttribute('href'));
+			};
+
+			tag.addEventListener('click', linkClick);
+
+			this.cleanup.push(function (tag, eventListener) {
+				return function () {
+					tag.removeEventListener('click', eventListener);
+					tag = undefined;
+					eventListener = undefined;
+				};
+			}(tag, linkClick));
+
+			tag.removeAttribute('cv-link');
+		}
+	}, {
+		key: 'mapPrendererTags',
+		value: function mapPrendererTags(tag) {
+			var prerenderAttr = tag.getAttribute('cv-prerender');
+			var prerendering = _Cookie.Cookie.get('prerenderer');
+
+			if (prerenderAttr == 'never' && prerendering || prerenderAttr == 'only' && !prerendering) {
+				tag.parentNode.removeChild(tag);
+			}
+		}
+	}, {
+		key: 'mapWithTags',
+		value: function mapWithTags(tag) {
+			var withAttr = tag.getAttribute('cv-with');
+			var carryAttr = tag.getAttribute('cv-carry');
+			tag.removeAttribute('cv-with');
+			tag.removeAttribute('cv-carry');
+
+			var subTemplate = tag.innerHTML;
+
+			var carryProps = [];
+
+			if (carryAttr) {
+				carryProps = carryAttr.split(',');
+			}
+
+			while (tag.firstChild) {
+				tag.removeChild(tag.firstChild);
+			}
+
+			var view = new View();
+
+			this.cleanup.push(function (view) {
+				return function () {
+					view.remove();
+				};
+			}(view));
+
+			view.template = subTemplate;
+			view.parent = this;
+
+			// console.log(carryProps);
+
+			for (var i in carryProps) {
+				this.args.bindTo(carryProps[i], function (view) {
+					return function (v, k) {
+						view.args[k] = v;
+					};
+				}(view));
+			}
+
+			for (var _i8 in this.args[withAttr]) {
+				this.args[withAttr].bindTo(_i8, function (view) {
+					return function (v, k) {
+						view.args[k] = v;
+					};
+				}(view));
+			}
+
+			// console.log(view);
+
+			view.render(tag);
+		}
+	}, {
+		key: 'mapEachTags',
+		value: function mapEachTags(tag) {
+			var _this6 = this;
+
+			var eachAttr = tag.getAttribute('cv-each');
+			var carryAttr = tag.getAttribute('cv-carry');
+			tag.removeAttribute('cv-each');
+			tag.removeAttribute('cv-carry');
+
+			var subTemplate = tag.innerHTML;
+
+			while (tag.firstChild) {
+				tag.removeChild(tag.firstChild);
+			}
+
+			var carryProps = [];
+
+			if (carryAttr) {
+				carryProps = carryAttr.split(',');
+			}
+
+			var _eachAttr$split = eachAttr.split(':'),
+			    _eachAttr$split2 = _slicedToArray(_eachAttr$split, 3),
+			    eachProp = _eachAttr$split2[0],
+			    asProp = _eachAttr$split2[1],
+			    keyProp = _eachAttr$split2[2];
+
+			// console.log(this, eachProp);
+
+			var viewList = void 0;
+
+			this.args.bindTo(eachProp, function (viewList) {
+				return function (v, k, t) {
+					if (viewList) {
+						viewList.remove();
+					}
+
+					viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
+
+					viewList.parent = _this6;
+
+					viewList.render(tag);
+
+					for (var i in carryProps) {
+						_this6.args.bindTo(carryProps[i], function (v, k) {
+							viewList.args.subArgs[k] = v;
+						});
+					}
+				};
+			}(viewList));
+
+			this.viewLists[eachProp] = viewList;
+		}
+	}, {
+		key: 'mapIfTags',
+		value: function mapIfTags(tag) {
 			var ifProperty = tag.getAttribute('cv-if');
 
 			var inverted = false;
@@ -770,7 +806,28 @@ var View = exports.View = function () {
 				ifProperty = ifProperty.substr(1);
 			}
 
+			var subTemplate = tag.innerHTML;
+
+			while (tag.firstChild) {
+				tag.removeChild(tag.firstChild);
+			}
+
 			var ifDoc = document.createRange().createContextualFragment('');
+
+			var view = new View();
+
+			view.args = this.args;
+
+			this.cleanup.push(function (view) {
+				return function () {
+					view.remove();
+				};
+			}(view));
+
+			view.template = subTemplate;
+			view.parent = this;
+
+			view.render(tag);
 
 			this.args.bindTo(ifProperty, function (tag, ifDoc) {
 				return function (v) {
@@ -780,8 +837,6 @@ var View = exports.View = function () {
 					if (inverted) {
 						v = !v;
 					}
-
-					_Dom.Dom.mapTags(tag, '[cv-if]', _this3.mapIfTags.bind(_this3));
 
 					if (v) {
 						while (ifDoc.firstChild) {
@@ -844,20 +899,20 @@ var View = exports.View = function () {
 				cleanup();
 			}
 
-			for (var _i12 in this.viewLists) {
-				this.viewLists[_i12].remove();
+			for (var _i9 in this.viewLists) {
+				this.viewLists[_i9].remove();
 			}
 
 			this.viewLists = [];
 
-			for (var _i13 in this.tags) {
-				if (Array.isArray(this.tags[_i13])) {
-					for (var j in this.tags[_i13]) {
-						this.tags[_i13][j].remove();
+			for (var _i10 in this.tags) {
+				if (Array.isArray(this.tags[_i10])) {
+					for (var j in this.tags[_i10]) {
+						this.tags[_i10][j].remove();
 					}
 					continue;
 				}
-				this.tags[_i13].remove();
+				this.tags[_i10].remove();
 			}
 
 			_Bindable.Bindable.clearBindings(this);
