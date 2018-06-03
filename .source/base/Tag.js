@@ -11,12 +11,12 @@ export class Tag
 		this.proxy   = Bindable.makeBindable(this)
 		this.cleanup = [];
 
-		this.detachListener = (event) => {
-			this.clear();
-			this.remove();
-			this.element.removeEventListener('cvDomDetached', this.detachListener);
-			this.element = this.ref = this.parent = null;
-		};
+		// this.detachListener = (event) => {
+		// 	this.clear();
+		// 	this.remove();
+		// 	this.element.removeEventListener('cvDomDetached', this.detachListener);
+		// 	this.element = this.ref = this.parent = null;
+		// };
 
 		this.element.addEventListener('cvDomDetached', this.detachListener);
 

@@ -228,6 +228,10 @@ export class View
 			subDoc = document.createRange().createContextualFragment(this.template);
 		}
 
+		// Dom.mapTags(subDoc, '[cv-ref]', (tag)=>{
+		// 	this.mapRefTags(tag)
+		// });
+
 		Dom.mapTags(subDoc, false, (tag)=>{
 			if(tag.matches)
 			{
@@ -491,24 +495,37 @@ export class View
 
 		tag.removeAttribute('cv-ref');
 
-		if(this.viewList)
+		// if(this.viewList)
+		// {
+		// 	if(!this.viewList.parent.tags[refProp])
+		// 	{
+		// 		this.viewList.parent.tags[refProp] = [];
+		// 	}
+
+		// 	let refKeyVal = this.args[refKey];
+
+		// 	this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
+		// 		tag, this, refProp, refKeyVal
+		// 	);
+		// }
+		// else
+		// {
+		// 	this.tags[refProp] = new refClass(
+		// 		tag, this, refProp
+		// 	);
+		// }
+
+		let parent = this;
+
+		while(parent)
 		{
-			if(!this.viewList.parent.tags[refProp])
+			if(!parent.parent)
 			{
-				this.viewList.parent.tags[refProp] = [];
+				parent.tags[refProp] = new refClass(
+					tag, this, refProp
+				);
 			}
-
-			let refKeyVal = this.args[refKey];
-
-			this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
-				tag, this, refProp, refKeyVal
-			);
-		}
-		else
-		{
-			this.tags[refProp] = new refClass(
-				tag, this, refProp
-			);
+			parent = parent.parent;
 		}
 	}
 
@@ -605,11 +622,12 @@ export class View
 
 				while(parent)
 				{
-					if(parent[ callbackName ])
+					if(typeof parent[callbackName] == 'function')
 					{
 						eventMethod = (...args) => {
 							parent[ callbackName ](...args);
 						};
+						break;
 					}
 
 					if(parent.viewList && parent.viewList.parent)
@@ -639,7 +657,7 @@ export class View
 					if(!(typeof eventMethod == 'function')) {
 						// console.log(object);
 						// console.trace();
-						// console.log(this);
+						console.log(this, parent);
 						throw new Error(
 							`${callbackName} is not defined on View object.
 
@@ -733,7 +751,7 @@ ${tag.outerHTML}`
 
 		if(carryAttr)
 		{
-			carryProps = carryAttr.split(',');
+			carryProps = carryAttr.split(',').map(s=>s.trim());
 		}
 
 		while(tag.firstChild)
@@ -765,8 +783,6 @@ ${tag.outerHTML}`
 				view.args[k] = v;
 			})(view));
 		}
-
-		// console.log(view);
 
 		view.render(tag);
 	}
@@ -939,6 +955,10 @@ ${tag.outerHTML}`
 
 		for(let i in this.viewLists)
 		{
+			if(!this.viewLists[i])
+			{
+				continue;
+			}
 			this.viewLists[i].remove();
 		}
 

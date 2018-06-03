@@ -249,6 +249,10 @@ var View = exports.View = function () {
 				subDoc = document.createRange().createContextualFragment(this.template);
 			}
 
+			// Dom.mapTags(subDoc, '[cv-ref]', (tag)=>{
+			// 	this.mapRefTags(tag)
+			// });
+
 			_Dom.Dom.mapTags(subDoc, false, function (tag) {
 				if (tag.matches) {
 					_this2.mapInterpolatableTags(tag);
@@ -478,16 +482,33 @@ var View = exports.View = function () {
 
 			tag.removeAttribute('cv-ref');
 
-			if (this.viewList) {
-				if (!this.viewList.parent.tags[refProp]) {
-					this.viewList.parent.tags[refProp] = [];
+			// if(this.viewList)
+			// {
+			// 	if(!this.viewList.parent.tags[refProp])
+			// 	{
+			// 		this.viewList.parent.tags[refProp] = [];
+			// 	}
+
+			// 	let refKeyVal = this.args[refKey];
+
+			// 	this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
+			// 		tag, this, refProp, refKeyVal
+			// 	);
+			// }
+			// else
+			// {
+			// 	this.tags[refProp] = new refClass(
+			// 		tag, this, refProp
+			// 	);
+			// }
+
+			var parent = this;
+
+			while (parent) {
+				if (!parent.parent) {
+					parent.tags[refProp] = new refClass(tag, this, refProp);
 				}
-
-				var refKeyVal = this.args[refKey];
-
-				this.viewList.parent.tags[refProp][refKeyVal] = new refClass(tag, this, refProp, refKeyVal);
-			} else {
-				this.tags[refProp] = new refClass(tag, this, refProp);
+				parent = parent.parent;
 			}
 		}
 	}, {
@@ -582,12 +603,13 @@ var View = exports.View = function () {
 					var parent = _this5;
 
 					while (parent) {
-						if (parent[callbackName]) {
+						if (typeof parent[callbackName] == 'function') {
 							eventMethod = function eventMethod() {
 								var _parent;
 
 								(_parent = parent)[callbackName].apply(_parent, arguments);
 							};
+							break;
 						}
 
 						if (parent.viewList && parent.viewList.parent) {
@@ -613,7 +635,7 @@ var View = exports.View = function () {
 							if (!(typeof eventMethod == 'function')) {
 								// console.log(object);
 								// console.trace();
-								// console.log(this);
+								console.log(_this5, parent);
 								throw new Error(callbackName + ' is not defined on View object.\n\nTag:\n\n' + tag.outerHTML);
 							}
 							eventMethod.apply(undefined, _toConsumableArray(argRefs));
@@ -700,7 +722,9 @@ var View = exports.View = function () {
 			var carryProps = [];
 
 			if (carryAttr) {
-				carryProps = carryAttr.split(',');
+				carryProps = carryAttr.split(',').map(function (s) {
+					return s.trim();
+				});
 			}
 
 			while (tag.firstChild) {
@@ -735,8 +759,6 @@ var View = exports.View = function () {
 					};
 				}(view));
 			}
-
-			// console.log(view);
 
 			view.render(tag);
 		}
@@ -900,6 +922,9 @@ var View = exports.View = function () {
 			}
 
 			for (var _i9 in this.viewLists) {
+				if (!this.viewLists[_i9]) {
+					continue;
+				}
 				this.viewLists[_i9].remove();
 			}
 

@@ -108,13 +108,23 @@ export class ScrollTag extends Tag
 				, writable: true
 			});
 
-			tag.___scrollListener___ = this.scrollListener;
+			let node = tag;
 
-			window.addEventListener('scroll', this.scrollListener);
+			while(node.parentNode)
+			{
+				node = node.parentNode;
 
-			this.cleanup.push(((element)=>()=>{
-				window.removeEventListener('scroll', element.___scrollListener___);
-			})(tag));
+				node.___scrollListener___ = this.scrollListener;
+
+				node.addEventListener('scroll', this.scrollListener);
+
+				this.cleanup.push(((element)=>()=>{
+					node.removeEventListener('scroll', element.___scrollListener___);
+				})(tag));
+
+				console.log(node);
+			}
+
 		}
 	}
 

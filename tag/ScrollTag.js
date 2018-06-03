@@ -118,21 +118,33 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 	}, {
 		key: 'addScrollListener',
 		value: function addScrollListener(tag) {
+			var _this2 = this;
+
 			if (!tag.___scrollListener___) {
-				Object.defineProperty(tag, '___scrollListener___', {
-					enumerable: false,
-					writable: true
-				});
+				(function () {
+					Object.defineProperty(tag, '___scrollListener___', {
+						enumerable: false,
+						writable: true
+					});
 
-				tag.___scrollListener___ = this.scrollListener;
+					var node = tag;
 
-				window.addEventListener('scroll', this.scrollListener);
+					while (node.parentNode) {
+						node = node.parentNode;
 
-				this.cleanup.push(function (element) {
-					return function () {
-						window.removeEventListener('scroll', element.___scrollListener___);
-					};
-				}(tag));
+						node.___scrollListener___ = _this2.scrollListener;
+
+						node.addEventListener('scroll', _this2.scrollListener);
+
+						_this2.cleanup.push(function (element) {
+							return function () {
+								node.removeEventListener('scroll', element.___scrollListener___);
+							};
+						}(tag));
+
+						console.log(node);
+					}
+				})();
 			}
 		}
 	}, {

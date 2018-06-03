@@ -74,8 +74,8 @@ export class PopOutTag extends Tag
 
 				element.setAttribute('style', style);
 
-				document.body.style.overflow = 'hidden !important';
-				// document.body.style.overflowY = 'hidden';
+				document.body.style.overflow = 'hidden';
+				document.body.style.overflowY = 'hidden';
 
 				setTimeout(()=>{
 					style += `
@@ -136,8 +136,6 @@ export class PopOutTag extends Tag
 
 					window.scrollTo(0, this.bodyScroll);
 				}
-
-
 
 				element.setAttribute('style', style);
 
