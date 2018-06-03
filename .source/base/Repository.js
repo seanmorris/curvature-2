@@ -138,8 +138,6 @@ export class Repository
 
 								let prerendering  = Cookie.get('prerenderer');
 								
-								console.log(prerendering);
-
 								if(prerendering)
 								{
 									if(!tagCache)

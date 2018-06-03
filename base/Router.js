@@ -25,8 +25,6 @@ var Router = exports.Router = function () {
 
 			window.addEventListener('popstate', function (event) {
 				event.preventDefault();
-				//this.route(location.pathname);
-				// console.log(location.pathname);
 
 				_this.match(location.pathname, mainView);
 			});
@@ -103,8 +101,6 @@ var Router = exports.Router = function () {
 			// }
 
 			path = path.substr(1).split('/');
-
-			// console.log(path, routes);
 
 			var args = {};
 			for (var i in this.query) {

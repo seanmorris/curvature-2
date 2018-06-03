@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
+var _Bindable = require('../base/Bindable');
+
 var _Dom = require('../base/Dom');
 
 var _Tag2 = require('../base/Tag');
@@ -38,6 +40,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.bodyStyle = '';
 		_this.bodyScroll = 0;
 
+		element = _Bindable.Bindable.makeBindable(element);
+
 		element.classList.add('unpopped');
 
 		_this.scrollStyle;
@@ -51,8 +55,14 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
+				if (!_this.distance) {
+					_this.distance = 200;
+				}
+
 				if (!_this.leftDuration) {
 					_this.leftDuration = (1 - 1 / _this.distance) / 4;
+
+					console.log(_this.distance);
 				}
 			}
 
@@ -90,7 +100,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					element.classList.remove('unpopped');
 					element.setAttribute('style', style);
 
-					console.log(_this.leftDuration * 1000);
+					console.log(_this.leftDuration);
 					setTimeout(function () {
 						PopOutTag.popLevel();
 						_this.bodyStyle = document.body.getAttribute('style');
@@ -148,11 +158,13 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			}
 		};
 
-		element.addEventListener('click', _this.clickListener);
+		element.___clickListener___ = _this.clickListener;
+
+		element.addEventListener('click', element.___clickListener___);
 
 		_this.cleanup.push(function (element) {
 			return function () {
-				element.removeEventListener('click', _this.clickListener);
+				element.removeEventListener('click', element.___clickListener___);
 			};
 		}(element));
 		return _this;

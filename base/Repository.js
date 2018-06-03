@@ -166,8 +166,6 @@ var Repository = exports.Repository = function () {
 
 										var prerendering = _Cookie.Cookie.get('prerenderer');
 
-										console.log(prerendering);
-
 										if (prerendering) {
 											if (!_tagCache) {
 												_tagCache = document.createElement('script');

@@ -118,33 +118,28 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 	}, {
 		key: 'addScrollListener',
 		value: function addScrollListener(tag) {
-			var _this2 = this;
+			if (!tag.___scrollListeners___) {
+				Object.defineProperty(tag, '___scrollListeners___', {
+					enumerable: false,
+					writable: true
+				});
 
-			if (!tag.___scrollListener___) {
-				(function () {
-					Object.defineProperty(tag, '___scrollListener___', {
-						enumerable: false,
-						writable: true
-					});
+				tag.___scrollListener___ = this.scrollListener;
 
-					var node = tag;
+				var node = tag;
 
-					while (node.parentNode) {
-						node = node.parentNode;
+				while (node.parentNode) {
+					node = node.parentNode;
 
-						node.___scrollListener___ = _this2.scrollListener;
+					node.addEventListener('scroll', tag.___scrollListener___);
 
-						node.addEventListener('scroll', _this2.scrollListener);
-
-						_this2.cleanup.push(function (element) {
-							return function () {
-								node.removeEventListener('scroll', element.___scrollListener___);
-							};
-						}(tag));
-
-						console.log(node);
-					}
-				})();
+					this.cleanup.push(function (node, tag) {
+						return function () {
+							node.removeEventListener('scroll', tag.___scrollListener___);
+							tag = node = null;
+						};
+					}(node, tag));
+				}
 			}
 		}
 	}, {
@@ -163,6 +158,8 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 				this.cleanup.push(function (element) {
 					return function () {
 						window.removeEventListener('resize', element.___resizeListener___);
+						tag.___resizeListener___ = null;
+						tag = null;
 					};
 				}(tag));
 			}

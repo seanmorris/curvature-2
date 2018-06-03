@@ -8,8 +8,6 @@ export class Router {
 			'popstate'
 			, (event) => {
 				event.preventDefault();
-				//this.route(location.pathname);
-				// console.log(location.pathname);
 
 				this.match(location.pathname, mainView);
 			}
@@ -63,8 +61,6 @@ export class Router {
 		// }
 
 		path = path.substr(1).split('/');
-
-		// console.log(path, routes);
 
 		let args = {};
 		for(let i in this.query)

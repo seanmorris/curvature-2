@@ -101,12 +101,14 @@ export class ScrollTag extends Tag
 
 	addScrollListener(tag)
 	{
-		if(!tag.___scrollListener___)
+		if(!tag.___scrollListeners___)
 		{
-			Object.defineProperty(tag, '___scrollListener___', {
+			Object.defineProperty(tag, '___scrollListeners___', {
 				enumerable: false
 				, writable: true
 			});
+
+			tag.___scrollListener___ = this.scrollListener;
 
 			let node = tag;
 
@@ -114,17 +116,13 @@ export class ScrollTag extends Tag
 			{
 				node = node.parentNode;
 
-				node.___scrollListener___ = this.scrollListener;
+				node.addEventListener('scroll', tag.___scrollListener___);
 
-				node.addEventListener('scroll', this.scrollListener);
-
-				this.cleanup.push(((element)=>()=>{
-					node.removeEventListener('scroll', element.___scrollListener___);
-				})(tag));
-
-				console.log(node);
+				this.cleanup.push(((node, tag)=>()=>{
+					node.removeEventListener('scroll', tag.___scrollListener___);
+					tag = node = null;
+				})(node, tag));
 			}
-
 		}
 	}
 
@@ -143,6 +141,8 @@ export class ScrollTag extends Tag
 
 			this.cleanup.push(((element)=>()=>{
 				window.removeEventListener('resize', element.___resizeListener___);
+				tag.___resizeListener___ = null;
+				tag = null;
 			})(tag));
 		}
 	}

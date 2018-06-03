@@ -1,5 +1,6 @@
-import { Dom } from '../base/Dom';
-import { Tag } from '../base/Tag';
+import { Bindable } from '../base/Bindable';
+import { Dom      } from '../base/Dom';
+import { Tag      } from '../base/Tag';
 
 export class PopOutTag extends Tag
 {
@@ -18,6 +19,8 @@ export class PopOutTag extends Tag
 		this.bodyStyle  = '';
 		this.bodyScroll = 0;
 
+		element = Bindable.makeBindable(element);
+
 		element.classList.add('unpopped');
 
 		this.scrollStyle;
@@ -35,9 +38,16 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
+				if(!this.distance)
+				{
+					this.distance = 200;
+				}
+
 				if(!this.leftDuration)
 				{
 					this.leftDuration = (1 - (1 / this.distance)) / 4;
+
+					console.log(this.distance);
 				}
 			}
 
@@ -95,7 +105,7 @@ export class PopOutTag extends Tag
 					element.classList.remove('unpopped');
 					element.setAttribute('style', style);
 
-					console.log(this.leftDuration*1000);
+					console.log(this.leftDuration);
 					setTimeout(()=>{
 						PopOutTag.popLevel();
 						this.bodyStyle = document.body.getAttribute('style');
@@ -160,10 +170,12 @@ export class PopOutTag extends Tag
 			}
 		};
 
-		element.addEventListener('click',  this.clickListener);
+		element.___clickListener___ = this.clickListener;
+
+		element.addEventListener('click',  element.___clickListener___);
 
 		this.cleanup.push(((element)=>()=>{
-			element.removeEventListener('click',  this.clickListener);
+			element.removeEventListener('click',  element.___clickListener___);
 		})(element));
 	}
 
