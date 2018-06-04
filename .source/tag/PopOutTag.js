@@ -19,20 +19,21 @@ export class PopOutTag extends Tag
 		this.bodyStyle  = '';
 		this.bodyScroll = 0;
 
-		element = Bindable.makeBindable(element);
-
-		element.classList.add('unpopped');
+		this.element.classList.add('unpopped');
 
 		this.scrollStyle;
 
 		this.rect;
 		this.clickListener  = (event) => {
 			let leftDuration = 0.333;
-			
-			if(!this.poppedOut || ! this.rect)
-			{
-				this.rect = element.getBoundingClientRect();
 
+			if(!this.rect)
+			{
+				this.rect = this.element.getBoundingClientRect();
+			}
+			
+			if(!this.poppedOut)
+			{
 				this.distance = Math.sqrt(
 					this.rect.top ** 2
 					+ this.rect.left ** 2
@@ -46,8 +47,6 @@ export class PopOutTag extends Tag
 				if(!this.leftDuration)
 				{
 					this.leftDuration = (1 - (1 / this.distance)) / 4;
-
-					console.log(this.distance);
 				}
 			}
 
@@ -56,9 +55,8 @@ export class PopOutTag extends Tag
 				return;
 			}
 
-			event.preventDefault();
 			event.stopPropagation();
-
+			event.preventDefault();
 
 			if(this.moving)
 			{
@@ -67,116 +65,29 @@ export class PopOutTag extends Tag
 
 			if(!this.poppedOut)
 			{
-				this.previousScroll = window.scrollY;
-
-				this.unpoppedStyle = `
-					;position:  fixed;
-					left:       ${this.rect.x}px;
-					top:        ${this.rect.y}px;
-					width:      ${this.rect.width}px;
-					height:     ${this.rect.height}px;
-					z-index:    99999;
-
-					overflow: hidden;
-				`;
-
-				let style = this.style + this.unpoppedStyle;
-
-				element.setAttribute('style', style);
-
-				document.body.style.overflow = 'hidden';
-				document.body.style.overflowY = 'hidden';
-
-				setTimeout(()=>{
-					style += `
-						;top:   0px;
-						left:   0px;
-						width:  100%;
-						height: 100%;
-						overflow-y: auto;
-						transition: ${this.leftDuration}s ease-out;
-					`;
-
-					this.moving = true;
-
-					element.classList.add('unpopped');
-
-					element.classList.add('popped');
-					element.classList.remove('unpopped');
-					element.setAttribute('style', style);
-
-					console.log(this.leftDuration);
-					setTimeout(()=>{
-						PopOutTag.popLevel();
-						this.bodyStyle = document.body.getAttribute('style');
-						this.bodyScroll = window.scrollY;
-						console.log(this.bodyScroll);
-						document.body.setAttribute('style', 'height:0px;overflow:hidden;');
-						window.scrollTo(0,0);
-						this.moving = false;
-						Dom.mapTags(element, false, (tag)=>{
-							let event = new Event('cvPopped');
-
-							tag.dispatchEvent(event);
-
-							this.scrollStyle = element.getAttribute('style');
-						});
-					}, this.leftDuration*1000);
-				}, 1);
-
-				this.poppedOut = !this.poppedOut;
+				this.pop();
 			}
 			else if(event.target.matches('.closeButton') && this.poppedOut)
 			{
-				window.scrollTo(0,this.previousScroll);
-				setTimeout(()=>{
-
-				}, 1);
-
-				let style = this.style
-					+ this.unpoppedStyle
-					+ `;transition: ${this.leftDuration}s; ease-in`;
-
-				console.log(this.leftDuration);
-
-				if(0 === PopOutTag.unpopLevel())
-				{
-					document.body.setAttribute('style', this.bodyStyle);
-					document.body.setAttribute('style', '');
-
-					window.scrollTo(0, this.bodyScroll);
-				}
-
-				element.setAttribute('style', style);
-
-				this.moving = true;
-
-				setTimeout(()=>{
-					element.classList.add('unpopped');
-					element.classList.remove('popped');
-					// element.setAttribute('style', this.style);
-				}, this.leftDuration*500);
-				setTimeout(()=>{
-					element.setAttribute('style', this.style);
-					this.moving = false;
-					Dom.mapTags(element, false, (tag)=>{
-						let event = new Event('cvUnpopped');
-
-						tag.dispatchEvent(event);
-					});
-				}, this.leftDuration*1000);
-
-				this.poppedOut = !this.poppedOut;
+				this.unpop();
 			}
 		};
 
-		element.___clickListener___ = this.clickListener;
+		if(!this.element.___clickListener___)
+		{
+			Object.defineProperty(this.element, '___scrollListeners___', {
+				enumerable: false
+				, writable: true
+			});
 
-		element.addEventListener('click',  element.___clickListener___);
+			this.element.___clickListener___ = this.clickListener;
 
-		this.cleanup.push(((element)=>()=>{
-			element.removeEventListener('click',  element.___clickListener___);
-		})(element));
+			this.element.addEventListener('click',  element.___clickListener___);
+
+			this.cleanup.push(((element)=>()=>{
+				element.removeEventListener('click',  element.___clickListener___);
+			})(element));
+		}
 	}
 
 	static popLevel()
@@ -200,6 +111,11 @@ export class PopOutTag extends Tag
 
 		this.level--;
 
+		if(this.level < 0)
+		{
+			this.level = 0;
+		}
+
 		return this.level;
 	}
 
@@ -209,7 +125,150 @@ export class PopOutTag extends Tag
 		document.body.setAttribute('style', this.bodyStyle);
 		document.body.setAttribute('style', '');
 		window.scrollTo(0, this.bodyScroll);
+	}
 
-		console.log('!!!');
+	pop()
+	{
+		PopOutTag.popLevel();
+
+		if(!this.rect)
+		{
+			this.rect = this.element.getBoundingClientRect();
+		}
+
+		this.previousScroll = window.scrollY;
+
+		this.unpoppedStyle = `
+			;position:  fixed;
+			left:       ${this.rect.x}px;
+			top:        ${this.rect.y}px;
+			width:      ${this.rect.width}px;
+			height:     ${this.rect.height}px;
+			z-index:    99999;
+
+			overflow: hidden;
+		`;
+
+		let style = this.style + this.unpoppedStyle;
+
+		this.element.setAttribute('style', style);
+
+		document.body.style.overflow = 'hidden';
+		document.body.style.overflowY = 'hidden';
+
+		setTimeout(()=>{
+			style += `
+				;top:   0px;
+				left:   0px;
+				width:  100%;
+				height: 100%;
+				overflow-y: auto;
+				transition: ${this.leftDuration}s ease-out;
+			`;
+
+			this.moving = true;
+
+			this.element.classList.add('unpopped');
+
+			this.element.classList.add('popped');
+			this.element.classList.remove('unpopped');
+			this.element.setAttribute('style', style);
+
+			setTimeout(()=>{
+				if(!this.element)
+				{
+					return;
+				}
+				this.bodyStyle = document.body.getAttribute('style');
+				this.bodyScroll = window.scrollY;
+				document.body.setAttribute('style', 'height:0px;overflow:hidden;');
+				window.scrollTo(0,0);
+				this.moving = false;
+				Dom.mapTags(this.element, false, (tag)=>{
+					let event = new CustomEvent('cvPopped');
+
+					tag.dispatchEvent(event);
+
+					this.scrollStyle = this.element.getAttribute('style');
+				});
+				let event = new CustomEvent('cvPop', {
+					bubbles: true
+					, detail: {
+						tag: this
+						, view: this.parent
+						, publicId: this.parent.args.publicId
+					}
+				});
+				this.element.dispatchEvent(event);
+
+			}, this.leftDuration*1000);
+		}, 1);
+
+		this.poppedOut = true;
+	}
+
+	unpop()
+	{
+		PopOutTag.unpopLevel();
+
+		if(!this.rect)
+		{
+			this.rect = this.element.getBoundingClientRect();
+		}
+
+		window.scrollTo(0,this.previousScroll);
+
+		let style = this.style
+			+ this.unpoppedStyle
+			+ `;transition: ${this.leftDuration}s; ease-in`;
+
+		document.body.setAttribute('style', this.bodyStyle);
+
+		console.log(PopOutTag.level);
+
+		if(PopOutTag.level == 0)
+		{
+			document.body.setAttribute('style', '');
+		}
+
+		window.scrollTo(0, this.bodyScroll);
+
+		this.element.setAttribute('style', style);
+
+		this.moving = true;
+
+		setTimeout(()=>{
+			if(!this.element)
+			{
+				return;
+			}
+			this.element.classList.add('unpopped');
+			this.element.classList.remove('popped');
+			// element.setAttribute('style', this.style);
+		}, this.leftDuration*500);
+		setTimeout(()=>{
+			if(!this.element)
+			{
+				return;
+			}
+			this.element.setAttribute('style', this.style);
+			this.moving = false;
+			Dom.mapTags(this.element, false, (tag)=>{
+				let event = new CustomEvent('cvUnpopped');
+
+				tag.dispatchEvent(event);
+			});
+			let event = new CustomEvent('cvUnpop', {
+				bubbles: true
+				, detail: {
+					tag: this
+					, view: this.parent
+					, publicId: this.parent.args.publicId
+				}
+			});
+			this.element.dispatchEvent(event);
+		}, this.leftDuration*1000);
+
+		this.poppedOut = false;
 	}
 }

@@ -17,13 +17,7 @@ var Keyboard = exports.Keyboard = function () {
 
 		_classCallCheck(this, Keyboard);
 
-		if (this.listening) {
-			// return;
-		}
-
 		this.maxDecay = 60;
-
-		console.log('listening');
 
 		this.listening = true;
 

@@ -40,9 +40,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.bodyStyle = '';
 		_this.bodyScroll = 0;
 
-		element = _Bindable.Bindable.makeBindable(element);
-
-		element.classList.add('unpopped');
+		_this.element.classList.add('unpopped');
 
 		_this.scrollStyle;
 
@@ -50,9 +48,11 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.clickListener = function (event) {
 			var leftDuration = 0.333;
 
-			if (!_this.poppedOut || !_this.rect) {
-				_this.rect = element.getBoundingClientRect();
+			if (!_this.rect) {
+				_this.rect = _this.element.getBoundingClientRect();
+			}
 
+			if (!_this.poppedOut) {
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
 				if (!_this.distance) {
@@ -61,8 +61,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				if (!_this.leftDuration) {
 					_this.leftDuration = (1 - 1 / _this.distance) / 4;
-
-					console.log(_this.distance);
 				}
 			}
 
@@ -70,103 +68,36 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				return;
 			}
 
-			event.preventDefault();
 			event.stopPropagation();
+			event.preventDefault();
 
 			if (_this.moving) {
 				return;
 			}
 
 			if (!_this.poppedOut) {
-				_this.previousScroll = window.scrollY;
-
-				_this.unpoppedStyle = '\n\t\t\t\t\t;position:  fixed;\n\t\t\t\t\tleft:       ' + _this.rect.x + 'px;\n\t\t\t\t\ttop:        ' + _this.rect.y + 'px;\n\t\t\t\t\twidth:      ' + _this.rect.width + 'px;\n\t\t\t\t\theight:     ' + _this.rect.height + 'px;\n\t\t\t\t\tz-index:    99999;\n\n\t\t\t\t\toverflow: hidden;\n\t\t\t\t';
-
-				var style = _this.style + _this.unpoppedStyle;
-
-				element.setAttribute('style', style);
-
-				document.body.style.overflow = 'hidden';
-				document.body.style.overflowY = 'hidden';
-
-				setTimeout(function () {
-					style += '\n\t\t\t\t\t\t;top:   0px;\n\t\t\t\t\t\tleft:   0px;\n\t\t\t\t\t\twidth:  100%;\n\t\t\t\t\t\theight: 100%;\n\t\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\t\ttransition: ' + _this.leftDuration + 's ease-out;\n\t\t\t\t\t';
-
-					_this.moving = true;
-
-					element.classList.add('unpopped');
-
-					element.classList.add('popped');
-					element.classList.remove('unpopped');
-					element.setAttribute('style', style);
-
-					console.log(_this.leftDuration);
-					setTimeout(function () {
-						PopOutTag.popLevel();
-						_this.bodyStyle = document.body.getAttribute('style');
-						_this.bodyScroll = window.scrollY;
-						console.log(_this.bodyScroll);
-						document.body.setAttribute('style', 'height:0px;overflow:hidden;');
-						window.scrollTo(0, 0);
-						_this.moving = false;
-						_Dom.Dom.mapTags(element, false, function (tag) {
-							var event = new Event('cvPopped');
-
-							tag.dispatchEvent(event);
-
-							_this.scrollStyle = element.getAttribute('style');
-						});
-					}, _this.leftDuration * 1000);
-				}, 1);
-
-				_this.poppedOut = !_this.poppedOut;
+				_this.pop();
 			} else if (event.target.matches('.closeButton') && _this.poppedOut) {
-				window.scrollTo(0, _this.previousScroll);
-				setTimeout(function () {}, 1);
-
-				var _style = _this.style + _this.unpoppedStyle + (';transition: ' + _this.leftDuration + 's; ease-in');
-
-				console.log(_this.leftDuration);
-
-				if (0 === PopOutTag.unpopLevel()) {
-					document.body.setAttribute('style', _this.bodyStyle);
-					document.body.setAttribute('style', '');
-
-					window.scrollTo(0, _this.bodyScroll);
-				}
-
-				element.setAttribute('style', _style);
-
-				_this.moving = true;
-
-				setTimeout(function () {
-					element.classList.add('unpopped');
-					element.classList.remove('popped');
-					// element.setAttribute('style', this.style);
-				}, _this.leftDuration * 500);
-				setTimeout(function () {
-					element.setAttribute('style', _this.style);
-					_this.moving = false;
-					_Dom.Dom.mapTags(element, false, function (tag) {
-						var event = new Event('cvUnpopped');
-
-						tag.dispatchEvent(event);
-					});
-				}, _this.leftDuration * 1000);
-
-				_this.poppedOut = !_this.poppedOut;
+				_this.unpop();
 			}
 		};
 
-		element.___clickListener___ = _this.clickListener;
+		if (!_this.element.___clickListener___) {
+			Object.defineProperty(_this.element, '___scrollListeners___', {
+				enumerable: false,
+				writable: true
+			});
 
-		element.addEventListener('click', element.___clickListener___);
+			_this.element.___clickListener___ = _this.clickListener;
 
-		_this.cleanup.push(function (element) {
-			return function () {
-				element.removeEventListener('click', element.___clickListener___);
-			};
-		}(element));
+			_this.element.addEventListener('click', element.___clickListener___);
+
+			_this.cleanup.push(function (element) {
+				return function () {
+					element.removeEventListener('click', element.___clickListener___);
+				};
+			}(element));
+		}
 		return _this;
 	}
 
@@ -177,8 +108,130 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			document.body.setAttribute('style', this.bodyStyle);
 			document.body.setAttribute('style', '');
 			window.scrollTo(0, this.bodyScroll);
+		}
+	}, {
+		key: 'pop',
+		value: function pop() {
+			var _this2 = this;
 
-			console.log('!!!');
+			PopOutTag.popLevel();
+
+			if (!this.rect) {
+				this.rect = this.element.getBoundingClientRect();
+			}
+
+			this.previousScroll = window.scrollY;
+
+			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\n\t\t\toverflow: hidden;\n\t\t';
+
+			var style = this.style + this.unpoppedStyle;
+
+			this.element.setAttribute('style', style);
+
+			document.body.style.overflow = 'hidden';
+			document.body.style.overflowY = 'hidden';
+
+			setTimeout(function () {
+				style += '\n\t\t\t\t;top:   0px;\n\t\t\t\tleft:   0px;\n\t\t\t\twidth:  100%;\n\t\t\t\theight: 100%;\n\t\t\t\toverflow-y: auto;\n\t\t\t\ttransition: ' + _this2.leftDuration + 's ease-out;\n\t\t\t';
+
+				_this2.moving = true;
+
+				_this2.element.classList.add('unpopped');
+
+				_this2.element.classList.add('popped');
+				_this2.element.classList.remove('unpopped');
+				_this2.element.setAttribute('style', style);
+
+				setTimeout(function () {
+					if (!_this2.element) {
+						return;
+					}
+					_this2.bodyStyle = document.body.getAttribute('style');
+					_this2.bodyScroll = window.scrollY;
+					document.body.setAttribute('style', 'height:0px;overflow:hidden;');
+					window.scrollTo(0, 0);
+					_this2.moving = false;
+					_Dom.Dom.mapTags(_this2.element, false, function (tag) {
+						var event = new CustomEvent('cvPopped');
+
+						tag.dispatchEvent(event);
+
+						_this2.scrollStyle = _this2.element.getAttribute('style');
+					});
+					var event = new CustomEvent('cvPop', {
+						bubbles: true,
+						detail: {
+							tag: _this2,
+							view: _this2.parent,
+							publicId: _this2.parent.args.publicId
+						}
+					});
+					_this2.element.dispatchEvent(event);
+				}, _this2.leftDuration * 1000);
+			}, 1);
+
+			this.poppedOut = true;
+		}
+	}, {
+		key: 'unpop',
+		value: function unpop() {
+			var _this3 = this;
+
+			PopOutTag.unpopLevel();
+
+			if (!this.rect) {
+				this.rect = this.element.getBoundingClientRect();
+			}
+
+			window.scrollTo(0, this.previousScroll);
+
+			var style = this.style + this.unpoppedStyle + (';transition: ' + this.leftDuration + 's; ease-in');
+
+			document.body.setAttribute('style', this.bodyStyle);
+
+			console.log(PopOutTag.level);
+
+			if (PopOutTag.level == 0) {
+				document.body.setAttribute('style', '');
+			}
+
+			window.scrollTo(0, this.bodyScroll);
+
+			this.element.setAttribute('style', style);
+
+			this.moving = true;
+
+			setTimeout(function () {
+				if (!_this3.element) {
+					return;
+				}
+				_this3.element.classList.add('unpopped');
+				_this3.element.classList.remove('popped');
+				// element.setAttribute('style', this.style);
+			}, this.leftDuration * 500);
+			setTimeout(function () {
+				if (!_this3.element) {
+					return;
+				}
+				_this3.element.setAttribute('style', _this3.style);
+				_this3.moving = false;
+				_Dom.Dom.mapTags(_this3.element, false, function (tag) {
+					var event = new CustomEvent('cvUnpopped');
+
+					tag.dispatchEvent(event);
+				});
+				var event = new CustomEvent('cvUnpop', {
+					bubbles: true,
+					detail: {
+						tag: _this3,
+						view: _this3.parent,
+						publicId: _this3.parent.args.publicId
+					}
+				});
+				_this3.element.dispatchEvent(event);
+			}, this.leftDuration * 1000);
+
+			this.poppedOut = false;
 		}
 	}], [{
 		key: 'popLevel',
@@ -199,6 +252,10 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			}
 
 			this.level--;
+
+			if (this.level < 0) {
+				this.level = 0;
+			}
 
 			return this.level;
 		}

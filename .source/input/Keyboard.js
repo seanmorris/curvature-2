@@ -4,14 +4,7 @@ export class Keyboard
 {
 	constructor()
 	{
-		if(this.listening)
-		{
-			// return;
-		}
-
 		this.maxDecay = 60;
-
-		console.log('listening');
 
 		this.listening = true;
 
