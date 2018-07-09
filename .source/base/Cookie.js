@@ -35,6 +35,7 @@ if(window.location.href.substr(0,4) !== 'data')
 		}
 
 		Cookie.jar[decodeURIComponent(key)] = value;
+		console.log(Cookie.jar);
 	});
 
 	Cookie.jar.bindTo((v,k,t,d) => {
@@ -46,6 +47,7 @@ if(window.location.href.substr(0,4) !== 'data')
 		}
 		
 		const cookieString = `${encodeURIComponent(k)}=${JSON.stringify(t[k])}`;
+		console.log(cookieString);
 		document.cookie = cookieString;
 	});
 }

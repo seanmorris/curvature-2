@@ -164,19 +164,23 @@ var ViewList = exports.ViewList = function () {
 			}
 
 			if (!appendOnly) {
+				for (var _i3 in this.views) {
+					this.views[_i3].remove();
+				}
+
 				while (this.tag.firstChild) {
 					this.tag.removeChild(this.tag.firstChild);
 				}
 
-				for (var _i3 in finalViews) {
-					finalViews[_i3].render(this.tag);
+				for (var _i4 in finalViews) {
+					finalViews[_i4].render(this.tag);
 				}
 			} else {
-				var _i4 = this.views.length || 0;
+				var _i5 = this.views.length || 0;
 
-				while (finalViews[_i4]) {
-					finalViews[_i4].render(this.tag);
-					_i4++;
+				while (finalViews[_i5]) {
+					finalViews[_i5].render(this.tag);
+					_i5++;
 				}
 			}
 

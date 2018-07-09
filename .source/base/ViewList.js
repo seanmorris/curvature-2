@@ -157,6 +157,11 @@ export class ViewList
 
 		if(!appendOnly)
 		{
+			for(let i in this.views)
+			{
+				this.views[i].remove();
+			}
+
 			while(this.tag.firstChild)
 			{
 				this.tag.removeChild(this.tag.firstChild);
