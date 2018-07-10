@@ -495,25 +495,25 @@ export class View
 
 		tag.removeAttribute('cv-ref');
 
-		// if(this.viewList)
-		// {
-		// 	if(!this.viewList.parent.tags[refProp])
-		// 	{
-		// 		this.viewList.parent.tags[refProp] = [];
-		// 	}
+		if(this.viewList)
+		{
+			// if(!this.viewList.parent.tags[refProp])
+			// {
+			// 	this.viewList.parent.tags[refProp] = [];
+			// }
 
-		// 	let refKeyVal = this.args[refKey];
+			// let refKeyVal = this.args[refKey];
 
-		// 	this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
-		// 		tag, this, refProp, refKeyVal
-		// 	);
-		// }
-		// else
-		// {
-		// 	this.tags[refProp] = new refClass(
-		// 		tag, this, refProp
-		// 	);
-		// }
+			// this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
+			// 	tag, this, refProp, refKeyVal
+			// );
+		}
+		else
+		{
+			// this.tags[refProp] = new refClass(
+			// 	tag, this, refProp
+			// );
+		}
 
 		let parent = this;
 
@@ -521,9 +521,25 @@ export class View
 		{
 			if(!parent.parent)
 			{
-				parent.tags[refProp] = new refClass(
-					tag, this, refProp
-				);
+				let refKeyVal = this.args[refKey];
+
+				if(refKeyVal !== undefined)
+				{
+					if(!parent.tags[refProp])
+					{
+						parent.tags[refProp] = [];
+					}
+
+					parent.tags[refProp][refKeyVal] = new refClass(
+						tag, this, refProp
+					);
+				}
+				else
+				{
+					parent.tags[refProp] = new refClass(
+						tag, this, refProp
+					);
+				}
 			}
 			parent = parent.parent;
 		}
@@ -573,7 +589,7 @@ export class View
 		let inputListener = (event) => {
 			if(event.target.getAttribute('type') !== 'password')
 			{
-				console.log(event.target.value);
+				// console.log(event.target.value);
 			}
 
 			if(event.target !== tag) {
