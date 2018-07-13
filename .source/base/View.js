@@ -384,7 +384,6 @@ export class View
 					dynamicNode = document.createTextNode('');
 				}
 
-
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
 				this.args.bindTo(bindProperty, ((dynamicNode,unsafeHtml) => (v,k,t) => {
