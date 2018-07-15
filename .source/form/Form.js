@@ -55,10 +55,14 @@ export class Form extends View
 			}
 		);
 	}
-	submit(event)
+	submitHandler(event)
 	{
 		event.preventDefault();
+		event.stopPropagation();
+	}
 
+	submit(event)
+	{
 		this.args.valueString = JSON.stringify(
 			this.args.value
 			, null
@@ -72,7 +76,7 @@ export class Form extends View
 	}
 	buttonClick(event)
 	{
-		// console.log(event);
+		console.log(event);
 	}
 	onSubmit(callback)
 	{
@@ -132,7 +136,7 @@ export class Form extends View
 				'value'
 				, (v, k ,t, d) => {
 					// console.log(t,v);
-					if(t.type == 'html' && !t.contentEditable)
+					if(t.type == 'html' && !t.contentEditable || t.type == 'fieldset')
 					{
 						return;
 					}

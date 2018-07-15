@@ -38,13 +38,22 @@ export class ScrollTag extends Tag
 
 			this.scrolled(e.target);
 
-			e.target.removeEventListener('cvDomAttached', this.attachListener);
+			e.target.removeEventListener(
+				'cvDomAttached'
+				, this.attachListener
+			);
 		};
 
-		this.element.addEventListener('cvDomAttached', this.attachListener);
+		this.element.addEventListener(
+			'cvDomAttached'
+			, this.attachListener
+		);
 
 		this.cleanup.push(((element) => () => {
-			element.removeEventListener('cvDomAttached', this.attachListener);
+			element.removeEventListener(
+				'cvDomAttached'
+				, this.attachListener
+			);
 		})(this.element));
 
 		this.bindTo('visible', (v) => {
@@ -82,12 +91,17 @@ export class ScrollTag extends Tag
 	{
 		let current = this.element;
 
+		if(!current)
+		{
+			return;
+		}
+
 		let offsetTop         = 0
 			, offsetBottom    = 0;
 
 		let visible = false;
 
-		let rect = this.element.getBoundingClientRect();
+		let rect = current.getBoundingClientRect();
 
 		if(rect.bottom > 0 && rect.top < window.innerHeight)
 		{
@@ -111,17 +125,25 @@ export class ScrollTag extends Tag
 			tag.___scrollListener___ = this.scrollListener;
 
 			let node = tag;
+			let options = {passive: true, capture: true};
 
 			while(node.parentNode)
 			{
 				node = node.parentNode;
 
-				node.addEventListener('scroll', tag.___scrollListener___);
+				node.addEventListener(
+					'scroll'
+					, tag.___scrollListener___
+				);
 
-				this.cleanup.push(((node, tag)=>()=>{
-					node.removeEventListener('scroll', tag.___scrollListener___);
+				this.cleanup.push(((node, tag, options)=>()=>{
+					node.removeEventListener(
+						'scroll'
+						, tag.___scrollListener___
+						, options
+					);
 					tag = node = null;
-				})(node, tag));
+				})(node, tag, options));
 			}
 		}
 	}

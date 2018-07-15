@@ -51,14 +51,26 @@ export class Field extends View {
 			setting = null;
 		});
 
+		let extra = '';
+
+		if(this.args.attrs.type == 'checkbox')
+		{
+			extra = 'value = "1"';
+		}
+
 		this.template = `
-			<label for = "${this.args.name}" cv-ref = "label:curvature/base/Tag">
+			<label
+				for       = "${this.args.name}"
+				data-type = "${this.args.attrs.type}"
+				cv-ref    = "label:curvature/base/Tag"
+			>
 				<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>
 				<input
 					name    = "${this.args.name}"
 					type    = "${this.args.attrs.type||'text'}"
 					cv-bind = "value"
 					cv-ref  = "input:curvature/base/Tag"
+					${extra}
 				/>
 			</label>
 		`;

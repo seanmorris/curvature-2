@@ -255,8 +255,6 @@ var View = exports.View = function () {
 
 			_Dom.Dom.mapTags(subDoc, false, function (tag) {
 				if (tag.matches) {
-					_this2.mapInterpolatableTags(tag);
-
 					tag.matches('[cv-each]') && _this2.mapEachTags(tag);
 
 					tag.matches('[cv-with]') && _this2.mapWithTags(tag);
@@ -268,6 +266,8 @@ var View = exports.View = function () {
 					tag.matches('[cv-on]') && _this2.mapOnTags(tag);
 
 					tag.matches('[cv-bind]') && _this2.mapBindTags(tag);
+
+					_this2.mapInterpolatableTags(tag);
 
 					tag.matches('[cv-ref]') && _this2.mapRefTags(tag);
 
@@ -502,7 +502,7 @@ var View = exports.View = function () {
 			var parent = this;
 
 			while (parent) {
-				if (!parent.parent) {
+				if (1 || !parent.parent) {
 					var refKeyVal = this.args[refKey];
 
 					if (refKeyVal !== undefined) {
@@ -596,7 +596,7 @@ var View = exports.View = function () {
 					var eventName = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 					var callbackName = a[1];
 					var argList = [];
-					var groups = /(\w+)(?:\(([\w\s,]+)\))?/.exec(callbackName);
+					var groups = /(\w+)(?:\(([$\w\s,]+)\))?/.exec(callbackName);
 					if (groups.length) {
 						callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 						if (groups[2]) {
@@ -628,14 +628,23 @@ var View = exports.View = function () {
 						}
 					}
 
-					var eventListener = function (object) {
+					var eventListener = function (object, parent) {
 						return function (event) {
 							var argRefs = argList.map(function (arg) {
-								if (arg === 'event') {
+								var match = void 0;
+								console.log('|' + arg + '|');
+								if (parseInt(arg) == arg) {
+									return arg;
+								} else if (arg === 'event' || arg === '$event') {
 									return event;
-								}
-								if (arg in object.args) {
+								} else if (arg === '$view') {
+									return parent;
+								} else if (arg === '$subview') {
+									return object;
+								} else if (arg in object.args) {
 									return object.args[arg];
+								} else if (match = /^['"](.+?)["']$/.exec(arg)) {
+									return match[1];
 								}
 							});
 							// console.log(argList, argRefs);
@@ -647,7 +656,7 @@ var View = exports.View = function () {
 							}
 							eventMethod.apply(undefined, _toConsumableArray(argRefs));
 						};
-					}(object);
+					}(object, parent);
 
 					switch (eventName) {
 						case '_init':
@@ -966,6 +975,11 @@ var View = exports.View = function () {
 			var refClass = require(refClassname);
 
 			return refClass[refShortClassname];
+		}
+	}], [{
+		key: 'isView',
+		value: function isView() {
+			return View;
 		}
 	}]);
 

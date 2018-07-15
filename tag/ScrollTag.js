@@ -100,12 +100,16 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 		value: function scrolled(scroller) {
 			var current = this.element;
 
+			if (!current) {
+				return;
+			}
+
 			var offsetTop = 0,
 			    offsetBottom = 0;
 
 			var visible = false;
 
-			var rect = this.element.getBoundingClientRect();
+			var rect = current.getBoundingClientRect();
 
 			if (rect.bottom > 0 && rect.top < window.innerHeight) {
 				visible = true;
@@ -127,18 +131,19 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 				tag.___scrollListener___ = this.scrollListener;
 
 				var node = tag;
+				var options = { passive: true, capture: true };
 
 				while (node.parentNode) {
 					node = node.parentNode;
 
 					node.addEventListener('scroll', tag.___scrollListener___);
 
-					this.cleanup.push(function (node, tag) {
+					this.cleanup.push(function (node, tag, options) {
 						return function () {
-							node.removeEventListener('scroll', tag.___scrollListener___);
+							node.removeEventListener('scroll', tag.___scrollListener___, options);
 							tag = node = null;
 						};
-					}(node, tag));
+					}(node, tag, options));
 				}
 			}
 		}

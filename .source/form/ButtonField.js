@@ -5,17 +5,30 @@ export class ButtonField extends Field {
 		super(values, form, parent, key);
 		this.args.title = this.args.title || this.args.value;
 		this.template = `
-			<label for = "${this.args.name}" cv-ref = "label:curvature/base/Tag">
+			<label
+				for = "${this.args.name}"
+				data-type = "${this.args.attrs.type}"
+				cv-ref = "label:curvature/base/Tag">
 				<input
 					name  = "${this.args.name}"
 					type  = "${this.args.attrs.type}"
 					value = "[[title]]"
-					on    = "click:clicked(event)"
+					cv-on = "click:clicked(event)"
 				/>
 			</label>
 		`;
 	}
 	clicked(event) {
-		this.form.buttonClick(this.args.name);
+		if(this.args.attrs.type == 'submit')
+		{
+			event.preventDefault();
+			event.stopPropagation();
+			this.form.tags.formTag.element.dispatchEvent(new Event(
+				'submit', {
+					'cancelable': true
+					, 'bubbles':  true
+				}
+			));
+		}
 	}
 }

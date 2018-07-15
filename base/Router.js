@@ -147,25 +147,42 @@ var Router = exports.Router = function () {
 					return true;
 				}
 
-				var _result = routes[_i];
+				var _result2 = routes[_i];
 
-				if (routes[_i] instanceof Object) {
-					_result = new routes[_i](args);
+				if (routes[_i] instanceof Object && routes[_i].isView && routes[_i].isView()) {
+					_result2 = new routes[_i](args);
+				} else if (routes[_i] instanceof Function) {
+					_result2 = '';
+
+					var _result = routes[_i](args);
+
+					if (_result instanceof Promise) {
+						_result.then(function (x) {
+							view.args.content = x;
+						});
+					} else {
+						_result2 = _result;
+					}
+				} else if (routes[_i] instanceof Object) {
+					_result2 = new routes[_i](args);
+				} else if (typeof routes[_i] == 'string') {
+					_result2 = routes[_i];
 				}
 
-				if (_result instanceof _View.View) {
-					_result.pause(false);
+				if (_result2 instanceof _View.View) {
+					_result2.pause(false);
+
+					_result2.update(args, forceRefresh);
+
+					if (view.args.content instanceof _View.View) {
+						view.args.content.pause(true);
+					}
+
+					// Cache.store(this.path, result, 3600, 'page');
 				}
 
-				_result.update(args, forceRefresh);
+				view.args.content = _result2;
 
-				if (view.args.content instanceof _View.View) {
-					view.args.content.pause(true);
-				}
-
-				// Cache.store(this.path, result, 3600, 'page');
-
-				view.args.content = _result;
 				return true;
 			}
 
@@ -180,25 +197,25 @@ var Router = exports.Router = function () {
 					view.args.content = routes[false];
 				}
 
-				var _result2 = routes[false];
+				var _result3 = routes[false];
 
-				if (_result2 instanceof _View.View) {
-					_result2.pause(false);
+				if (_result3 instanceof _View.View) {
+					_result3.pause(false);
 				}
 
 				if (routes[false] instanceof Object) {
-					_result2 = new routes[false](args);
+					_result3 = new routes[false](args);
 				}
 
-				_result2.update(args, forceRefresh);
+				_result3.update(args, forceRefresh);
 
 				if (view.args.content instanceof _View.View) {
 					view.args.content.pause(true);
 				}
 
-				view.args.content = _result2;
+				view.args.content = _result3;
 
-				_Cache.Cache.store(this.path, _result2, 3600, 'page');
+				_Cache.Cache.store(this.path, _result3, 3600, 'page');
 			}
 
 			return false;

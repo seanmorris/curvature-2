@@ -13,18 +13,6 @@ export class LoginView extends View{
 	constructor() {
 		super();
 		this.template = `
-			<br />
-			<br />
-			<br />
-			<br />
-			<br />
-			<br />
-			<br />
-			<br />
-			<br />
-			<br />
-			<br />
-			
 			<a cv-link = "user">User</a>
 			<br />
 			

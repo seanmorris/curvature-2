@@ -119,26 +119,54 @@ export class Router {
 
 			let result = routes[i];
 
-			if(routes[i] instanceof Object)
+			if(routes[i] instanceof Object
+				&& routes[i].isView
+				&& routes[i].isView()
+			){
+				result = new routes[i](args);
+			}
+			else if(routes[i] instanceof Function)
+			{
+				result = '';
+
+				let _result = routes[i](args);
+
+				if(_result instanceof Promise)
+				{
+					_result.then(x=>{
+						view.args.content = x;
+					});
+				}
+				else
+				{
+					result = _result;
+				}
+			}
+			else if(routes[i] instanceof Object)
 			{
 				result = new routes[i](args);
+			}
+			else if(typeof routes[i] == 'string')
+			{
+				result = routes[i];
 			}
 
 			if(result instanceof View)
 			{
 				result.pause(false);
+
+				result.update(args, forceRefresh);
+
+				if(view.args.content instanceof View)
+				{
+					view.args.content.pause(true);
+				}			
+
+				// Cache.store(this.path, result, 3600, 'page');
 			}
 
-			result.update(args, forceRefresh);
-
-			if(view.args.content instanceof View)
-			{
-				view.args.content.pause(true);
-			}			
-
-			// Cache.store(this.path, result, 3600, 'page');
-
 			view.args.content = result;
+
 			return true;
 		}
 

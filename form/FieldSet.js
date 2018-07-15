@@ -25,7 +25,7 @@ var FieldSet = exports.FieldSet = function (_Field) {
 
 		_this.args.value = {};
 		_this.args.fields = _Form.Form.renderFields(values.children, _this);
-		_this.template = '\n\t\t\t<label for = "' + _this.args.name + '">\n\t\t\t\t<span cv-if = "title">[[title]]:</span>\n\t\t\t\t<fieldset name = "' + _this.args.name + '">\n\t\t\t\t\t<div cv-each = "fields:field">\n\t\t\t\t\t\t<div cv-bind = "field"></div>\n\t\t\t\t\t</div>\n\t\t\t\t</fieldset>\n\t\t\t</label>\n\t\t';
+		_this.template = '\n\t\t\t<label\n\t\t\t\tfor        = "' + _this.args.name + '"\n\t\t\t\tdata-type  = "' + _this.args.attrs.type + '"\n\t\t\t\tdata-multi = "' + (_this.args.attrs['data-multi'] ? 'true' : 'false') + '"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">[[title]]:</span>\n\t\t\t\t<fieldset name = "' + _this.args.name + '">\n\t\t\t\t\t<div cv-each = "fields:field">\n\t\t\t\t\t\t<div cv-bind = "field"></div>\n\t\t\t\t\t</div>\n\t\t\t\t</fieldset>\n\t\t\t</label>\n\t\t';
 		return _this;
 	}
 

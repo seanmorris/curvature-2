@@ -68,10 +68,14 @@ var Form = exports.Form = function (_View) {
 	}
 
 	_createClass(Form, [{
+		key: 'submitHandler',
+		value: function submitHandler(event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+	}, {
 		key: 'submit',
 		value: function submit(event) {
-			event.preventDefault();
-
 			this.args.valueString = JSON.stringify(this.args.value, null, 4);
 
 			for (var i in this._onSubmit) {
@@ -81,7 +85,7 @@ var Form = exports.Form = function (_View) {
 	}, {
 		key: 'buttonClick',
 		value: function buttonClick(event) {
-			// console.log(event);
+			console.log(event);
 		}
 	}, {
 		key: 'onSubmit',
@@ -163,7 +167,7 @@ var Form = exports.Form = function (_View) {
 
 				field.args.bindTo('value', function (v, k, t, d) {
 					// console.log(t,v);
-					if (t.type == 'html' && !t.contentEditable) {
+					if (t.type == 'html' && !t.contentEditable || t.type == 'fieldset') {
 						return;
 					}
 					form.args.flatValue[field.args.name] = v;

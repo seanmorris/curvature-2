@@ -41,6 +41,11 @@ export class View
 		this.frames    = [];
 	}
 
+	static isView()
+	{
+		return View;
+	}
+
 	onFrame(callback) {
 		let c = (timestamp) => {
 			callback(timestamp);
@@ -235,8 +240,6 @@ export class View
 		Dom.mapTags(subDoc, false, (tag)=>{
 			if(tag.matches)
 			{
-				this.mapInterpolatableTags(tag);
-
 				tag.matches('[cv-each]')
 					&& this.mapEachTags(tag);
 
@@ -254,6 +257,8 @@ export class View
 
 				tag.matches('[cv-bind]')
 					&& this.mapBindTags(tag);
+
+				this.mapInterpolatableTags(tag);
 
 				tag.matches('[cv-ref]')
 					&& this.mapRefTags(tag);
@@ -518,7 +523,7 @@ export class View
 
 		while(parent)
 		{
-			if(!parent.parent)
+			if(1 || !parent.parent)
 			{
 				let refKeyVal = this.args[refKey];
 
@@ -624,7 +629,7 @@ export class View
 				var eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 				var callbackName = a[1];
 				var argList      = [];
-				var groups = /(\w+)(?:\(([\w\s,]+)\))?/.exec(callbackName);
+				var groups = /(\w+)(?:\(([$\w\s,]+)\))?/.exec(callbackName);
 				if(groups.length) {
 					callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 					if(groups[2]) {
@@ -659,13 +664,29 @@ export class View
 					}
 				}
 
-				let eventListener = ((object) => (event) => {
+				let eventListener = ((object, parent) => (event) => {
 					let argRefs = argList.map((arg) => {
-						if(arg === 'event') {
+						let match;
+						console.log('|'+arg+'|');
+						if(parseInt(arg) == arg)
+						{
+							return arg;
+						}
+						else if(arg === 'event' || arg === '$event') {
 							return event;
 						}
-						if(arg in object.args) {
+						else if(arg === '$view') {
+							return parent;
+						}
+						else if(arg === '$subview') {
+							return object;
+						}
+						else if(arg in object.args) {
 							return object.args[arg];
+						}
+						else if(match = /^['"](.+?)["']$/.exec(arg))
+						{
+							return match[1];
 						}
 					});
 					// console.log(argList, argRefs);
@@ -682,7 +703,7 @@ ${tag.outerHTML}`
 						);
 					}
 					eventMethod(...argRefs);
-				})(object);
+				})(object, parent);
 
 
 				switch(eventName)
