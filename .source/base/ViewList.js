@@ -185,6 +185,13 @@ export class ViewList
 
 		this.views = finalViews;
 	}
+	pause(pause=true)
+	{
+		for(let i in this.views)
+		{
+			this.views[i].pause(paused);
+		}
+	}
 	remove()
 	{
 		for(let i in this.views)

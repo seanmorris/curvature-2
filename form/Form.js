@@ -116,9 +116,9 @@ var Form = exports.Form = function (_View) {
 
 				subchain.push(i);
 
-				if (field.args.fields[i].hasChildren()) {
+				if (field.args.fields[i] && field.args.fields[i].hasChildren()) {
 					this.formData(append, field.args.fields[i], subchain);
-				} else {
+				} else if (field.args.fields[i]) {
 					console.log(i);
 
 					var fullname = subchain[0];

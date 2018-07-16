@@ -58,4 +58,8 @@ export class Tag
 			this.element.removeChild(this.element.firstChild);
 		}
 	}
+	pause(paused = true)
+	{
+
+	}
 }

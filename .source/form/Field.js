@@ -56,9 +56,7 @@ export class Field extends View {
 			}
 		);
 
-		console.log(this.parent.args.value);
-
-		this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
+		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
 
 		this.parent.args.value.bindTo(key, (v, k)=>{
 			if(setting == k)

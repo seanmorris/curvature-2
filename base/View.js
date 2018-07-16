@@ -191,6 +191,24 @@ var View = exports.View = function () {
 					this.intervals[_i3].timeout = setInterval(this.intervals[_i3].callback, this.intervals[_i3].time);
 				}
 			}
+
+			for (var _i4 in this.viewLists) {
+				if (!this.viewLists[_i4]) {
+					return;
+				}
+
+				this.viewLists[_i4].pause(!!paused);
+			}
+
+			for (var _i5 in this.tags) {
+				if (Array.isArray(this.tags[_i5])) {
+					for (var j in this.tags[_i5]) {
+						this.tags[_i5][j].pause(!!paused);
+					}
+					continue;
+				}
+				this.tags[_i5].pause(!!paused);
+			}
 		}
 	}, {
 		key: 'render',
@@ -205,37 +223,37 @@ var View = exports.View = function () {
 					this.detach[i]();
 				}
 
-				var _loop = function _loop(_i4) {
-					var detachEvent = new Event('cvDomDetached', { bubbles: true, target: _this2.nodes[_i4] });
-					var attachEvent = new Event('cvDomAttached', { bubbles: true, target: _this2.nodes[_i4] });
+				var _loop = function _loop(_i6) {
+					var detachEvent = new Event('cvDomDetached', { bubbles: true, target: _this2.nodes[_i6] });
+					var attachEvent = new Event('cvDomAttached', { bubbles: true, target: _this2.nodes[_i6] });
 
-					_this2.nodes[_i4].dispatchEvent(detachEvent);
+					_this2.nodes[_i6].dispatchEvent(detachEvent);
 
-					_Dom.Dom.mapTags(_this2.nodes[_i4], false, function (node) {
+					_Dom.Dom.mapTags(_this2.nodes[_i6], false, function (node) {
 						node.dispatchEvent(detachEvent);
 					});
 
 					if (parentNode) {
 						if (insertPoint) {
-							parentNode.insertBefore(_this2.nodes[_i4], insertPoint);
+							parentNode.insertBefore(_this2.nodes[_i6], insertPoint);
 						} else {
-							parentNode.appendChild(_this2.nodes[_i4]);
+							parentNode.appendChild(_this2.nodes[_i6]);
 						}
 					}
 
-					_Dom.Dom.mapTags(_this2.nodes[_i4], false, function (node) {
+					_Dom.Dom.mapTags(_this2.nodes[_i6], false, function (node) {
 						node.dispatchEvent(attachEvent);
 					});
 
-					_this2.nodes[_i4].dispatchEvent(attachEvent);
+					_this2.nodes[_i6].dispatchEvent(attachEvent);
 				};
 
-				for (var _i4 in this.nodes) {
-					_loop(_i4);
+				for (var _i6 in this.nodes) {
+					_loop(_i6);
 				}
 
-				for (var _i5 in this.attach) {
-					this.attach[_i5]();
+				for (var _i7 in this.attach) {
+					this.attach[_i7]();
 				}
 
 				return;
@@ -324,8 +342,8 @@ var View = exports.View = function () {
 				}
 			}
 
-			for (var _i6 in this.attach) {
-				this.attach[_i6]();
+			for (var _i8 in this.attach) {
+				this.attach[_i8]();
 			}
 
 			this.postRender(parentNode);
@@ -442,12 +460,12 @@ var View = exports.View = function () {
 
 					for (var j in bindProperties) {
 						_this3.args.bindTo(j, function (v, k, t, d) {
-							for (var _i7 in bindProperties) {
-								for (var _j in bindProperties[_i7]) {
-									segments[bindProperties[_i7][_j]] = t[_i7];
+							for (var _i9 in bindProperties) {
+								for (var _j in bindProperties[_i9]) {
+									segments[bindProperties[_i9][_j]] = t[_i9];
 
-									if (k === _i7) {
-										segments[bindProperties[_i7][_j]] = v;
+									if (k === _i9) {
+										segments[bindProperties[_i9][_j]] = v;
 									}
 								}
 							}
@@ -597,7 +615,7 @@ var View = exports.View = function () {
 					var eventName = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 					var callbackName = a[1];
 					var argList = [];
-					var groups = /(\w+)(?:\(([$\w\s,]+)\))?/.exec(callbackName);
+					var groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
 					if (groups.length) {
 						callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 						if (groups[2]) {
@@ -633,7 +651,6 @@ var View = exports.View = function () {
 						return function (event) {
 							var argRefs = argList.map(function (arg) {
 								var match = void 0;
-								console.log('|' + arg + '|');
 								if (parseInt(arg) == arg) {
 									return arg;
 								} else if (arg === 'event' || arg === '$event') {
@@ -644,7 +661,7 @@ var View = exports.View = function () {
 									return object;
 								} else if (arg in object.args) {
 									return object.args[arg];
-								} else if (match = /^['"](.+?)["']$/.exec(arg)) {
+								} else if (match = /^['"](\w+?)["']$/.exec(arg)) {
 									return match[1];
 								}
 							});
@@ -769,8 +786,8 @@ var View = exports.View = function () {
 				}(view));
 			}
 
-			for (var _i8 in this.args[withAttr]) {
-				this.args[withAttr].bindTo(_i8, function (view) {
+			for (var _i10 in this.args[withAttr]) {
+				this.args[withAttr].bindTo(_i10, function (view) {
 					return function (v, k) {
 						view.args[k] = v;
 					};
@@ -938,24 +955,24 @@ var View = exports.View = function () {
 				cleanup();
 			}
 
-			for (var _i9 in this.viewLists) {
-				if (!this.viewLists[_i9]) {
-					continue;
-				}
-				this.viewLists[_i9].remove();
-			}
-
-			this.viewLists = [];
-
-			for (var _i10 in this.tags) {
-				if (Array.isArray(this.tags[_i10])) {
-					for (var j in this.tags[_i10]) {
-						this.tags[_i10][j].remove();
+			for (var _i11 in this.tags) {
+				if (Array.isArray(this.tags[_i11])) {
+					for (var j in this.tags[_i11]) {
+						this.tags[_i11][j].remove();
 					}
 					continue;
 				}
-				this.tags[_i10].remove();
+				this.tags[_i11].remove();
 			}
+
+			for (var _i12 in this.viewLists) {
+				if (!this.viewLists[_i12]) {
+					continue;
+				}
+				this.viewLists[_i12].remove();
+			}
+
+			this.viewLists = [];
 
 			_Bindable.Bindable.clearBindings(this);
 		}

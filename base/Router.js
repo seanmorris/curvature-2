@@ -174,11 +174,12 @@ var Router = exports.Router = function () {
 
 					_result2.update(args, forceRefresh);
 
-					if (view.args.content instanceof _View.View) {
-						view.args.content.pause(true);
-					}
-
 					// Cache.store(this.path, result, 3600, 'page');
+				}
+
+				if (view.args.content instanceof _View.View) {
+					// view.args.content.pause(true);
+					view.args.content.remove();
 				}
 
 				view.args.content = _result2;

@@ -67,9 +67,7 @@ var Field = exports.Field = function (_View) {
 			setting = null;
 		});
 
-		console.log(_this.parent.args.value);
-
-		_this.parent.args.value = _Bindable.Bindable.makeBindable(_this.parent.args.value);
+		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
 
 		_this.parent.args.value.bindTo(key, function (v, k) {
 			if (setting == k) {

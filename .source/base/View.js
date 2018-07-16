@@ -172,6 +172,29 @@ export class View
 				);
 			}
 		}
+
+		for(let i in this.viewLists)
+		{
+			if(!this.viewLists[i])
+			{
+				return;
+			}
+
+			this.viewLists[i].pause(!!paused);
+		}
+
+		for(let i in this.tags)
+		{
+			if(Array.isArray(this.tags[i]))
+			{
+				for(var j in this.tags[i])
+				{
+					this.tags[i][j].pause(!!paused);
+				}
+				continue;
+			}
+			this.tags[i].pause(!!paused);
+		}
 	}
 
 	render(parentNode = null, insertPoint = null)
@@ -630,7 +653,7 @@ export class View
 				var eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 				var callbackName = a[1];
 				var argList      = [];
-				var groups = /(\w+)(?:\(([$\w\s,]+)\))?/.exec(callbackName);
+				var groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
 				if(groups.length) {
 					callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 					if(groups[2]) {
@@ -668,7 +691,6 @@ export class View
 				let eventListener = ((object, parent) => (event) => {
 					let argRefs = argList.map((arg) => {
 						let match;
-						console.log('|'+arg+'|');
 						if(parseInt(arg) == arg)
 						{
 							return arg;
@@ -685,7 +707,7 @@ export class View
 						else if(arg in object.args) {
 							return object.args[arg];
 						}
-						else if(match = /^['"](.+?)["']$/.exec(arg))
+						else if(match = /^['"](\w+?)["']$/.exec(arg))
 						{
 							return match[1];
 						}
@@ -990,17 +1012,6 @@ ${tag.outerHTML}`
 			cleanup();
 		}
 
-		for(let i in this.viewLists)
-		{
-			if(!this.viewLists[i])
-			{
-				continue;
-			}
-			this.viewLists[i].remove();
-		}
-
-		this.viewLists = [];
-
 		for(let i in this.tags)
 		{
 			if(Array.isArray(this.tags[i]))
@@ -1013,6 +1024,17 @@ ${tag.outerHTML}`
 			}
 			this.tags[i].remove();
 		}
+
+		for(let i in this.viewLists)
+		{
+			if(!this.viewLists[i])
+			{
+				continue;
+			}
+			this.viewLists[i].remove();
+		}
+
+		this.viewLists = [];
 
 		Bindable.clearBindings(this);
 	}

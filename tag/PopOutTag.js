@@ -44,6 +44,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 		_this.scrollStyle;
 
+		_this.element.addEventListener('cvDomDetached', _this.detachListener);
+
 		_this.rect;
 		_this.clickListener = function (event) {
 			var leftDuration = 0.333;
@@ -104,10 +106,15 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 	_createClass(PopOutTag, [{
 		key: 'pause',
 		value: function pause() {
-			_get(PopOutTag.prototype.__proto__ || Object.getPrototypeOf(PopOutTag.prototype), 'pause', this).call(this);
-			document.body.setAttribute('style', this.bodyStyle);
-			document.body.setAttribute('style', '');
-			window.scrollTo(0, this.bodyScroll);
+			var paused = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+			_get(PopOutTag.prototype.__proto__ || Object.getPrototypeOf(PopOutTag.prototype), 'pause', this).call(this, paused);
+
+			if (paused) {
+				document.body.setAttribute('style', this.bodyStyle);
+				document.body.setAttribute('style', '');
+				window.scrollTo(0, this.bodyScroll);
+			}
 		}
 	}, {
 		key: 'pop',
@@ -232,6 +239,12 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			}, this.leftDuration * 1000);
 
 			this.poppedOut = false;
+		}
+	}, {
+		key: 'remove',
+		value: function remove() {
+			document.body.setAttribute('style', this.bodyStyle);
+			_get(PopOutTag.prototype.__proto__ || Object.getPrototypeOf(PopOutTag.prototype), 'remove', this).call(this);
 		}
 	}], [{
 		key: 'popLevel',

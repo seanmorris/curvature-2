@@ -22,7 +22,7 @@ export class Router {
 		}
 		if(!silent)
 		{
-			window.dispatchEvent(new Event('popstate'));			
+			window.dispatchEvent(new Event('popstate'));
 		}
 	}
 	static match(path, view, forceRefresh = false)
@@ -37,8 +37,8 @@ export class Router {
 
 		this.queryString = window.location.search;
 
-		for(let pair of query) { 
-			this.query[ pair[0] ] = pair[1]; 
+		for(let pair of query) {
+			this.query[ pair[0] ] = pair[1];
 		}
 
 		// forceRefresh = true;
@@ -74,7 +74,7 @@ export class Router {
 			{
 				continue;
 			}
-			
+
 			L2: for(let j in route)
 			{
 				if(route[j].substr(0, 1) == '%') {
@@ -157,12 +157,13 @@ export class Router {
 
 				result.update(args, forceRefresh);
 
-				if(view.args.content instanceof View)
-				{
-					view.args.content.pause(true);
-				}			
-
 				// Cache.store(this.path, result, 3600, 'page');
+			}
+
+			if(view.args.content instanceof View)
+			{
+				// view.args.content.pause(true);
+				view.args.content.remove();
 			}
 
 			view.args.content = result;
@@ -241,7 +242,7 @@ export class Router {
 		{
 			finalArgs = this.queryOver(args);
 		}
-		
+
 		for(let i in finalArgs)
 		{
 			if(finalArgs[i] === '')
@@ -258,7 +259,7 @@ export class Router {
 		let args = {};
 
 		args[name] = value;
-		
+
 		this.go(
 			this.path
 				+ '?'

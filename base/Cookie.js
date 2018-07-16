@@ -56,7 +56,7 @@ if (window.location.href.substr(0, 4) !== 'data') {
 		}
 
 		Cookie.jar[decodeURIComponent(key)] = value;
-		console.log(Cookie.jar);
+		// console.log(Cookie.jar);
 	});
 
 	Cookie.jar.bindTo(function (v, k, t, d) {
@@ -67,7 +67,7 @@ if (window.location.href.substr(0, 4) !== 'data') {
 		}
 
 		var cookieString = encodeURIComponent(k) + '=' + JSON.stringify(t[k]);
-		console.log(cookieString);
+		// console.log(cookieString);
 		document.cookie = cookieString;
 	});
 }

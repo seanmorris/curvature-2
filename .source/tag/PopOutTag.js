@@ -23,6 +23,8 @@ export class PopOutTag extends Tag
 
 		this.scrollStyle;
 
+		this.element.addEventListener('cvDomDetached', this.detachListener);
+
 		this.rect;
 		this.clickListener  = (event) => {
 			let leftDuration = 0.333;
@@ -119,12 +121,16 @@ export class PopOutTag extends Tag
 		return this.level;
 	}
 
-	pause()
+	pause(paused = true)
 	{
-		super.pause();
-		document.body.setAttribute('style', this.bodyStyle);
-		document.body.setAttribute('style', '');
-		window.scrollTo(0, this.bodyScroll);
+		super.pause(paused);
+
+		if(paused)
+		{
+			document.body.setAttribute('style', this.bodyStyle);
+			document.body.setAttribute('style', '');
+			window.scrollTo(0, this.bodyScroll);
+		}
 	}
 
 	pop()
@@ -270,5 +276,11 @@ export class PopOutTag extends Tag
 		}, this.leftDuration*1000);
 
 		this.poppedOut = false;
+	}
+
+	remove()
+	{
+		document.body.setAttribute('style', this.bodyStyle);
+		super.remove();
 	}
 }

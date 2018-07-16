@@ -13,7 +13,7 @@ var _View = require('./View');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ViewList = exports.ViewList = function () {
+var ViewList = function () {
 	function ViewList(template, subProperty, list) {
 		var _this = this;
 
@@ -187,6 +187,15 @@ var ViewList = exports.ViewList = function () {
 			this.views = finalViews;
 		}
 	}, {
+		key: 'pause',
+		value: function pause() {
+			var _pause = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+			for (var i in this.views) {
+				this.views[i].pause(paused);
+			}
+		}
+	}, {
 		key: 'remove',
 		value: function remove() {
 			for (var i in this.views) {
@@ -203,3 +212,5 @@ var ViewList = exports.ViewList = function () {
 
 	return ViewList;
 }();
+
+exports.ViewList = ViewList;

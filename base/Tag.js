@@ -70,6 +70,11 @@ var Tag = exports.Tag = function () {
 				this.element.removeChild(this.element.firstChild);
 			}
 		}
+	}, {
+		key: 'pause',
+		value: function pause() {
+			var paused = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+		}
 	}]);
 
 	return Tag;
