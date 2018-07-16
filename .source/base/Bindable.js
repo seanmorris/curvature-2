@@ -175,21 +175,19 @@ export class Bindable {
             const warnOn = 10;
 
             if (target.___setCount___[key] > warnOn && value instanceof Object) {
-                console.log(
-                    'Warning: Resetting bindable reference "' +
-                    key +
-                    '" to object ' +
-                    target.___setCount___[key] +
-                    ' times.'
-                );
+                // console.log(
+                //     'Warning: Resetting bindable reference "' +
+                //     key +
+                //     '" to object ' +
+                //     target.___setCount___[key] +
+                //     ' times.'
+                // );
             }
 
             return true;
         })(object);
 
         let del = ((object) => (target, key) => {
-            // console.log(key, 'DEL');
-
             if (!(key in target)) {
                 return true;
             }

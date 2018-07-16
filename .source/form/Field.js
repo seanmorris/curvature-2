@@ -1,10 +1,16 @@
+import { Bindable } from 'curvature/base/Bindable';
+
 import { View } from '../base/View';
 
 export class Field extends View {
 	constructor(values, form, parent, key) {
+		let skeleton = Object.assign(values);
+		
 		super(values);
+		
 		this.args.title = this.args.title || '';
 		this.args.value = this.args.value || '';
+		this.skeleton   = skeleton;
 
 		this.args.valueString = '';
 
@@ -33,10 +39,26 @@ export class Field extends View {
 
 				setting = key;
 
-				this.parent.args.value[key] = v;
+				if(this.args.attrs.type == 'file')
+				{
+					if(this.tags.input && this.tags.input.element.files)
+					{
+						console.log(this.tags.input.element.files[0]);
+
+						this.parent.args.value[key] = this.tags.input.element.files[0];
+					}
+				}
+				else
+				{
+					this.parent.args.value[key] = v;
+				}
 				setting = null;
 			}
 		);
+
+		console.log(this.parent.args.value);
+
+		this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
 
 		this.parent.args.value.bindTo(key, (v, k)=>{
 			if(setting == k)
@@ -46,7 +68,17 @@ export class Field extends View {
 
 			setting = k;
 
-			this.args.value = v;
+			if(this.args.attrs.type == 'file')
+			{
+				if(this.tags.input && this.tags.input.element.files)
+				{
+					this.args.value = this.tags.input.element.files[0];
+				}
+			}
+			else
+			{
+				this.args.value = v;
+			}
 
 			setting = null;
 		});
@@ -75,5 +107,9 @@ export class Field extends View {
 			</label>
 		`;
 		//type    = "${this.args.attrs.type||'text'}"
-	}	
+	}
+	hasChildren()
+	{
+		return false;
+	}
 }

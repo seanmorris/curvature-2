@@ -5,6 +5,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Field = undefined;
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Bindable = require('curvature/base/Bindable');
+
 var _View2 = require('../base/View');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -19,10 +23,13 @@ var Field = exports.Field = function (_View) {
 	function Field(values, form, parent, key) {
 		_classCallCheck(this, Field);
 
+		var skeleton = Object.assign(values);
+
 		var _this = _possibleConstructorReturn(this, (Field.__proto__ || Object.getPrototypeOf(Field)).call(this, values));
 
 		_this.args.title = _this.args.title || '';
 		_this.args.value = _this.args.value || '';
+		_this.skeleton = skeleton;
 
 		_this.args.valueString = '';
 
@@ -48,9 +55,21 @@ var Field = exports.Field = function (_View) {
 
 			setting = key;
 
-			_this.parent.args.value[key] = v;
+			if (_this.args.attrs.type == 'file') {
+				if (_this.tags.input && _this.tags.input.element.files) {
+					console.log(_this.tags.input.element.files[0]);
+
+					_this.parent.args.value[key] = _this.tags.input.element.files[0];
+				}
+			} else {
+				_this.parent.args.value[key] = v;
+			}
 			setting = null;
 		});
+
+		console.log(_this.parent.args.value);
+
+		_this.parent.args.value = _Bindable.Bindable.makeBindable(_this.parent.args.value);
 
 		_this.parent.args.value.bindTo(key, function (v, k) {
 			if (setting == k) {
@@ -59,7 +78,13 @@ var Field = exports.Field = function (_View) {
 
 			setting = k;
 
-			_this.args.value = v;
+			if (_this.args.attrs.type == 'file') {
+				if (_this.tags.input && _this.tags.input.element.files) {
+					_this.args.value = _this.tags.input.element.files[0];
+				}
+			} else {
+				_this.args.value = v;
+			}
 
 			setting = null;
 		});
@@ -74,6 +99,13 @@ var Field = exports.Field = function (_View) {
 		//type    = "${this.args.attrs.type||'text'}"
 		return _this;
 	}
+
+	_createClass(Field, [{
+		key: 'hasChildren',
+		value: function hasChildren() {
+			return false;
+		}
+	}]);
 
 	return Field;
 }(_View2.View);

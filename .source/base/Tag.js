@@ -12,6 +12,11 @@ export class Tag
 		this.cleanup = [];
 
 		this.detachListener = (event) => {
+			return;
+			if(event.target != this.element)
+			{
+				return;
+			}
 			if(event.path[event.path.length -1] !== window)
 			{
 				return;

@@ -6,5 +6,9 @@ export class HtmlField extends View {
 		this.ignore = this.args.attrs['data-cv-ignore'] || false;
 		this.args.contentEditable = this.args.attrs.contenteditable || false;
 		this.template = `<div contenteditable = "[[contentEditable]]">[[$value]]</div>`;
-	}	
+	}
+	hasChildren()
+	{
+		return false;
+	}
 }

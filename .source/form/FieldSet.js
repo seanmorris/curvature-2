@@ -23,4 +23,12 @@ export class FieldSet extends Field
 			</label>
 		`;
 	}
+	hasChildren()
+	{
+		return !!Object.keys(this.args.fields).length;
+	}
+	wrapSubfield(field)
+	{
+		return field;
+	}
 }

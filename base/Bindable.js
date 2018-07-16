@@ -194,7 +194,13 @@ var Bindable = exports.Bindable = function () {
                     var warnOn = 10;
 
                     if (target.___setCount___[key] > warnOn && value instanceof Object) {
-                        console.log('Warning: Resetting bindable reference "' + key + '" to object ' + target.___setCount___[key] + ' times.');
+                        // console.log(
+                        //     'Warning: Resetting bindable reference "' +
+                        //     key +
+                        //     '" to object ' +
+                        //     target.___setCount___[key] +
+                        //     ' times.'
+                        // );
                     }
 
                     return true;
@@ -203,8 +209,6 @@ var Bindable = exports.Bindable = function () {
 
             var del = function (object) {
                 return function (target, key) {
-                    // console.log(key, 'DEL');
-
                     if (!(key in target)) {
                         return true;
                     }

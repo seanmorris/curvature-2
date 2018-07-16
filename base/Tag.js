@@ -26,6 +26,10 @@ var Tag = exports.Tag = function () {
 		this.cleanup = [];
 
 		this.detachListener = function (event) {
+			return;
+			if (event.target != _this.element) {
+				return;
+			}
 			if (event.path[event.path.length - 1] !== window) {
 				return;
 			}

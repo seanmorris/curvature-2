@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FieldSet = undefined;
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _Field2 = require('./Field');
 
 var _Form = require('./Form');
@@ -28,6 +30,18 @@ var FieldSet = exports.FieldSet = function (_Field) {
 		_this.template = '\n\t\t\t<label\n\t\t\t\tfor        = "' + _this.args.name + '"\n\t\t\t\tdata-type  = "' + _this.args.attrs.type + '"\n\t\t\t\tdata-multi = "' + (_this.args.attrs['data-multi'] ? 'true' : 'false') + '"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">[[title]]:</span>\n\t\t\t\t<fieldset name = "' + _this.args.name + '">\n\t\t\t\t\t<div cv-each = "fields:field">\n\t\t\t\t\t\t<div cv-bind = "field"></div>\n\t\t\t\t\t</div>\n\t\t\t\t</fieldset>\n\t\t\t</label>\n\t\t';
 		return _this;
 	}
+
+	_createClass(FieldSet, [{
+		key: 'hasChildren',
+		value: function hasChildren() {
+			return !!Object.keys(this.args.fields).length;
+		}
+	}, {
+		key: 'wrapSubfield',
+		value: function wrapSubfield(field) {
+			return field;
+		}
+	}]);
 
 	return FieldSet;
 }(_Field2.Field);

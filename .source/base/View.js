@@ -499,8 +499,11 @@ export class View
 
 		tag.removeAttribute('cv-ref');
 
+		let parent = this;
+
 		if(this.viewList)
 		{
+			parent = this.viewList.parent;
 			// if(!this.viewList.parent.tags[refProp])
 			// {
 			// 	this.viewList.parent.tags[refProp] = [];
@@ -518,8 +521,6 @@ export class View
 			// 	tag, this, refProp
 			// );
 		}
-
-		let parent = this;
 
 		while(parent)
 		{

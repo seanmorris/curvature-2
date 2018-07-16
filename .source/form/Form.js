@@ -18,7 +18,7 @@ import { ButtonField } from './ButtonField';
 
 export class Form extends View
 {
-	constructor(skeleton)
+	constructor(skeleton, customFields = {})
 	{
 		super({});
 		this.args.flatValue = this.args.flatValue || {};
@@ -38,15 +38,16 @@ export class Form extends View
 			<form
 				class   = "[[_classes]]"
 				method  = "[[method]]"
-				cv-each = "fields:field"
+				enctype = "multipart/form-data"
 				cv-on   = "submit:submit(event)"
 				cv-ref  = "formTag:curvature/base/Tag"
+				cv-each = "fields:field"
 			>
 				[[field]]
 			</form>
 		`;
 
-		this.args.fields    = Form.renderFields(skeleton, this);
+		this.args.fields    = Form.renderFields(skeleton, this, customFields);
 
 		this.args.bindTo(
 			'value'
@@ -82,7 +83,7 @@ export class Form extends View
 	{
 		this._onSubmit.push(callback);
 	}
-	static renderFields(skeleton, parent = null)
+	static renderFields(skeleton, parent = null, customFields = {})
 	{
 		let fields = {};
 		for(let i in skeleton)
@@ -91,6 +92,7 @@ export class Form extends View
 			{
 				continue;
 			}
+
 			if(i.substr(0,1) == '_')
 			{
 				continue;
@@ -107,28 +109,36 @@ export class Form extends View
 				form = parent.form;
 			}
 
-			switch(skeleton[i].type)
+			if(skeleton[i].name in customFields)
 			{
-				case 'fieldset':
-					field = new FieldSet(skeleton[i], form, parent, i);
-					break;
-				case 'select':
-					field = new SelectField(skeleton[i], form, parent, i);
-					break;
-				case 'html':
-					field = new HtmlField(skeleton[i], form, parent, i);
-					break;
-				case 'submit':
-				case 'button':
-					field = new ButtonField(skeleton[i], form, parent, i);
-					break;
-				case 'hidden':
-					field = new HiddenField(skeleton[i], form, parent, i);
-					break;
-				default :
-					field = new Field(skeleton[i], form, parent, i);
-					break;
+				field = new customFields[ skeleton[i].name ](skeleton[i], form, parent, i)
 			}
+			else
+			{
+				switch(skeleton[i].type)
+				{
+					case 'fieldset':
+						field = new FieldSet(skeleton[i], form, parent, i);
+						break;
+					case 'select':
+						field = new SelectField(skeleton[i], form, parent, i);
+						break;
+					case 'html':
+						field = new HtmlField(skeleton[i], form, parent, i);
+						break;
+					case 'submit':
+					case 'button':
+						field = new ButtonField(skeleton[i], form, parent, i);
+						break;
+					case 'hidden':
+						field = new HiddenField(skeleton[i], form, parent, i);
+						break;
+					default :
+						field = new Field(skeleton[i], form, parent, i);
+						break;
+				}
+			}
+
 
 			fields[i] = field;
 
@@ -145,6 +155,69 @@ export class Form extends View
 			);
 		}
 		return fields;
+	}
+	formData(append = null, field = null, chain = [])
+	{
+		if(!append)
+		{
+			append = new FormData();
+		}
+
+		if(!field)
+		{
+			field = this;
+		}
+
+		let parts = [];
+		
+		for(let i in field.args.fields)
+		{
+			let subchain = chain.slice(0);
+
+			subchain.push(i);
+
+			if(field.args.fields[i].hasChildren())
+			{
+				this.formData(
+					append
+					, field.args.fields[i]
+					, subchain
+				);
+			}
+			else
+			{
+				console.log(i);
+
+				let fullname = subchain[0];
+
+				if(subchain.length > 1)
+				{
+					fullname += `[${subchain.slice(1).join('][')}]`;
+				}
+
+				console.log('>>>', field.args.fields[i].args.type);
+				console.log('>>>', fullname);
+				console.log('>>>', field.args.fields[i].args.value);
+
+				if(field.args.fields[i].args.type == 'file')
+				{
+					append.append(
+						fullname
+						, field.args.fields[i].tags.input.element.files[0]
+					);
+				}
+				else
+				{
+					append.append(
+						fullname
+						, field.args.fields[i].args.value
+					);
+				}
+				console.log('---');
+			}
+		}
+
+		return append;
 	}
 	queryString(args = {})
 	{
@@ -170,5 +243,9 @@ export class Form extends View
 		{
 			this.args.value[i] = values[i];
 		}
+	}
+	hasChildren()
+	{
+		return !!Object.keys(this.args.fields).length;
 	}
 }

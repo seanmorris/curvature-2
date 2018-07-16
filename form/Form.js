@@ -40,6 +40,8 @@ var Form = exports.Form = function (_View) {
 	_inherits(Form, _View);
 
 	function Form(skeleton) {
+		var customFields = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
 		_classCallCheck(this, Form);
 
 		var _this = _possibleConstructorReturn(this, (Form.__proto__ || Object.getPrototypeOf(Form)).call(this, {}));
@@ -57,9 +59,9 @@ var Form = exports.Form = function (_View) {
 
 		_this._onSubmit = [];
 		_this.action = '';
-		_this.template = '\n\t\t\t<form\n\t\t\t\tclass   = "[[_classes]]"\n\t\t\t\tmethod  = "[[method]]"\n\t\t\t\tcv-each = "fields:field"\n\t\t\t\tcv-on   = "submit:submit(event)"\n\t\t\t\tcv-ref  = "formTag:curvature/base/Tag"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t';
+		_this.template = '\n\t\t\t<form\n\t\t\t\tclass   = "[[_classes]]"\n\t\t\t\tmethod  = "[[method]]"\n\t\t\t\tenctype = "multipart/form-data"\n\t\t\t\tcv-on   = "submit:submit(event)"\n\t\t\t\tcv-ref  = "formTag:curvature/base/Tag"\n\t\t\t\tcv-each = "fields:field"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t';
 
-		_this.args.fields = Form.renderFields(skeleton, _this);
+		_this.args.fields = Form.renderFields(skeleton, _this, customFields);
 
 		_this.args.bindTo('value', function (v) {
 			_this.args.valueString = JSON.stringify(v, null, 4);
@@ -93,6 +95,54 @@ var Form = exports.Form = function (_View) {
 			this._onSubmit.push(callback);
 		}
 	}, {
+		key: 'formData',
+		value: function formData() {
+			var append = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+			var field = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+			var chain = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+			if (!append) {
+				append = new FormData();
+			}
+
+			if (!field) {
+				field = this;
+			}
+
+			var parts = [];
+
+			for (var i in field.args.fields) {
+				var subchain = chain.slice(0);
+
+				subchain.push(i);
+
+				if (field.args.fields[i].hasChildren()) {
+					this.formData(append, field.args.fields[i], subchain);
+				} else {
+					console.log(i);
+
+					var fullname = subchain[0];
+
+					if (subchain.length > 1) {
+						fullname += '[' + subchain.slice(1).join('][') + ']';
+					}
+
+					console.log('>>>', field.args.fields[i].args.type);
+					console.log('>>>', fullname);
+					console.log('>>>', field.args.fields[i].args.value);
+
+					if (field.args.fields[i].args.type == 'file') {
+						append.append(fullname, field.args.fields[i].tags.input.element.files[0]);
+					} else {
+						append.append(fullname, field.args.fields[i].args.value);
+					}
+					console.log('---');
+				}
+			}
+
+			return append;
+		}
+	}, {
 		key: 'queryString',
 		value: function queryString() {
 			var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -118,10 +168,16 @@ var Form = exports.Form = function (_View) {
 				this.args.value[i] = values[i];
 			}
 		}
+	}, {
+		key: 'hasChildren',
+		value: function hasChildren() {
+			return !!Object.keys(this.args.fields).length;
+		}
 	}], [{
 		key: 'renderFields',
 		value: function renderFields(skeleton) {
 			var parent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+			var customFields = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			var fields = {};
 
@@ -129,6 +185,7 @@ var Form = exports.Form = function (_View) {
 				if (fields[i]) {
 					return 'continue';
 				}
+
 				if (i.substr(0, 1) == '_') {
 					return 'continue';
 				}
@@ -141,26 +198,30 @@ var Form = exports.Form = function (_View) {
 					form = parent.form;
 				}
 
-				switch (skeleton[i].type) {
-					case 'fieldset':
-						field = new _FieldSet.FieldSet(skeleton[i], form, parent, i);
-						break;
-					case 'select':
-						field = new _SelectField.SelectField(skeleton[i], form, parent, i);
-						break;
-					case 'html':
-						field = new _HtmlField.HtmlField(skeleton[i], form, parent, i);
-						break;
-					case 'submit':
-					case 'button':
-						field = new _ButtonField.ButtonField(skeleton[i], form, parent, i);
-						break;
-					case 'hidden':
-						field = new _HiddenField.HiddenField(skeleton[i], form, parent, i);
-						break;
-					default:
-						field = new _Field.Field(skeleton[i], form, parent, i);
-						break;
+				if (skeleton[i].name in customFields) {
+					field = new customFields[skeleton[i].name](skeleton[i], form, parent, i);
+				} else {
+					switch (skeleton[i].type) {
+						case 'fieldset':
+							field = new _FieldSet.FieldSet(skeleton[i], form, parent, i);
+							break;
+						case 'select':
+							field = new _SelectField.SelectField(skeleton[i], form, parent, i);
+							break;
+						case 'html':
+							field = new _HtmlField.HtmlField(skeleton[i], form, parent, i);
+							break;
+						case 'submit':
+						case 'button':
+							field = new _ButtonField.ButtonField(skeleton[i], form, parent, i);
+							break;
+						case 'hidden':
+							field = new _HiddenField.HiddenField(skeleton[i], form, parent, i);
+							break;
+						default:
+							field = new _Field.Field(skeleton[i], form, parent, i);
+							break;
+					}
 				}
 
 				fields[i] = field;

@@ -102,9 +102,13 @@ var Repository = exports.Repository = function () {
 			if (post) {
 				cache = false;
 				type = 'POST';
-				formData = new FormData();
-				for (var i in post) {
-					formData.append(i, post[i]);
+				if (post instanceof FormData) {
+					formData = post;
+				} else {
+					formData = new FormData();
+					for (var i in post) {
+						formData.append(i, post[i]);
+					}
 				}
 				postString = Object.keys(post).map(function (arg) {
 					return encodeURIComponent(arg) + '=' + encodeURIComponent(post[arg]);
@@ -201,12 +205,13 @@ var Repository = exports.Repository = function () {
 						}
 					};
 
-					xhr.open(type, fullUri);
+					xhr.open(type, fullUri, true);
 
-					if (post) {
-						xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-					}
-					xhr.send(postString);
+					// if(post)
+					// {
+					// 	xhr.setRequestHeader("Content-type", "multipart/form-data");
+					// }
+					xhr.send(formData);
 				};
 			}(xhrId));
 		}
