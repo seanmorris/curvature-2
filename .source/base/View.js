@@ -275,9 +275,6 @@ export class View
 				tag.matches('[cv-link]')
 					&& this.mapLinkTags(tag);
 
-				tag.matches('[cv-on]')
-					&& this.mapOnTags(tag);
-
 				tag.matches('[cv-bind]')
 					&& this.mapBindTags(tag);
 
@@ -288,6 +285,9 @@ export class View
 
 				tag.matches('[cv-if]')
 					&& this.mapIfTags(tag);
+
+				tag.matches('[cv-on]')
+					&& this.mapOnTags(tag);
 			}
 			else
 			{
@@ -688,7 +688,7 @@ export class View
 					}
 				}
 
-				let eventListener = ((object, parent) => (event) => {
+				let eventListener = ((object, parent, eventMethod) => (event) => {
 					let argRefs = argList.map((arg) => {
 						let match;
 						if(parseInt(arg) == arg)
@@ -700,6 +700,9 @@ export class View
 						}
 						else if(arg === '$view') {
 							return parent;
+						}
+						else if(arg === '$parent') {
+							return object.parent;
 						}
 						else if(arg === '$subview') {
 							return object;
@@ -726,7 +729,7 @@ ${tag.outerHTML}`
 						);
 					}
 					eventMethod(...argRefs);
-				})(object, parent);
+				})(object, parent, eventMethod);
 
 
 				switch(eventName)

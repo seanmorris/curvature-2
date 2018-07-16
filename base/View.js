@@ -281,8 +281,6 @@ var View = exports.View = function () {
 
 					tag.matches('[cv-link]') && _this2.mapLinkTags(tag);
 
-					tag.matches('[cv-on]') && _this2.mapOnTags(tag);
-
 					tag.matches('[cv-bind]') && _this2.mapBindTags(tag);
 
 					_this2.mapInterpolatableTags(tag);
@@ -290,6 +288,8 @@ var View = exports.View = function () {
 					tag.matches('[cv-ref]') && _this2.mapRefTags(tag);
 
 					tag.matches('[cv-if]') && _this2.mapIfTags(tag);
+
+					tag.matches('[cv-on]') && _this2.mapOnTags(tag);
 				} else {
 					_this2.mapInterpolatableTags(tag);
 				}
@@ -647,7 +647,7 @@ var View = exports.View = function () {
 						}
 					}
 
-					var eventListener = function (object, parent) {
+					var eventListener = function (object, parent, eventMethod) {
 						return function (event) {
 							var argRefs = argList.map(function (arg) {
 								var match = void 0;
@@ -657,6 +657,8 @@ var View = exports.View = function () {
 									return event;
 								} else if (arg === '$view') {
 									return parent;
+								} else if (arg === '$parent') {
+									return object.parent;
 								} else if (arg === '$subview') {
 									return object;
 								} else if (arg in object.args) {
@@ -674,7 +676,7 @@ var View = exports.View = function () {
 							}
 							eventMethod.apply(undefined, _toConsumableArray(argRefs));
 						};
-					}(object, parent);
+					}(object, parent, eventMethod);
 
 					switch (eventName) {
 						case '_init':
