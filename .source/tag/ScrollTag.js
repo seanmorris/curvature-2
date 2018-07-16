@@ -21,7 +21,14 @@ export class ScrollTag extends Tag
 		};
 
 		this.attachListener = (e) => {
-			if(e.path[e.path.length-1]!==window)
+			let rootNode = e.target;
+
+			while(rootNode.parentNode)
+			{
+				rootNode = rootNode.parentNode;
+			}
+
+			if(rootNode !== window && rootNode !== document)
 			{
 				return;
 			}
@@ -30,8 +37,6 @@ export class ScrollTag extends Tag
 			{
 				return;
 			}
-
-			// let current = Bindable.makeBindable(e.target);
 
 			this.addScrollListener(e.target);
 			this.addResizeListener(e.target);

@@ -26,7 +26,7 @@ var Tag = exports.Tag = function () {
 		this.cleanup = [];
 
 		this.detachListener = function (event) {
-			return;
+			// return;
 			if (event.target != _this.element) {
 				return;
 			}

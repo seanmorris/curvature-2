@@ -309,11 +309,11 @@ var View = exports.View = function () {
 				}
 			}
 
-			while (subDoc.firstChild) {
+			var _loop2 = function _loop2() {
 				var newNode = subDoc.firstChild;
-				var _attachEvent = new Event('cvDomAttached', { bubbles: true, target: newNode });
+				var attachEvent = new Event('cvDomAttached', { bubbles: true, target: newNode });
 
-				this.nodes.push(subDoc.firstChild);
+				_this2.nodes.push(subDoc.firstChild);
 
 				if (parentNode) {
 					if (insertPoint) {
@@ -324,10 +324,14 @@ var View = exports.View = function () {
 				}
 
 				_Dom.Dom.mapTags(newNode, false, function (node) {
-					// node.dispatchEvent(attachEvent);
+					node.dispatchEvent(attachEvent);
 				});
 
-				newNode.dispatchEvent(_attachEvent);
+				newNode.dispatchEvent(attachEvent);
+			};
+
+			while (subDoc.firstChild) {
+				_loop2();
 			}
 
 			this.lastNode = document.createComment('Template ' + this._id + ' End');
@@ -429,7 +433,7 @@ var View = exports.View = function () {
 			}
 
 			if (tag.nodeType == Node.ELEMENT_NODE) {
-				var _loop2 = function _loop2(i) {
+				var _loop3 = function _loop3(i) {
 					if (!_this3.interpolatable(tag.attributes[i].value)) {
 						return 'continue';
 					}
@@ -479,9 +483,9 @@ var View = exports.View = function () {
 				};
 
 				for (var i = 0; i < tag.attributes.length; i++) {
-					var _ret2 = _loop2(i);
+					var _ret3 = _loop3(i);
 
-					if (_ret2 === 'continue') continue;
+					if (_ret3 === 'continue') continue;
 				}
 			}
 		}

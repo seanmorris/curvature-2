@@ -40,15 +40,19 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 		};
 
 		_this.attachListener = function (e) {
-			if (e.path[e.path.length - 1] !== window) {
+			var rootNode = e.target;
+
+			while (rootNode.parentNode) {
+				rootNode = rootNode.parentNode;
+			}
+
+			if (rootNode !== window && rootNode !== document) {
 				return;
 			}
 
 			if (e.target !== element) {
 				return;
 			}
-
-			// let current = Bindable.makeBindable(e.target);
 
 			_this.addScrollListener(e.target);
 			_this.addResizeListener(e.target);

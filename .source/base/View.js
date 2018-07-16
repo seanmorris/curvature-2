@@ -333,7 +333,7 @@ export class View
 			}
 
 			Dom.mapTags(newNode, false, (node) => {
-				// node.dispatchEvent(attachEvent);
+				node.dispatchEvent(attachEvent);
 			});
 
 			newNode.dispatchEvent(attachEvent);

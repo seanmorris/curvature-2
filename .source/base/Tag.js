@@ -12,7 +12,7 @@ export class Tag
 		this.cleanup = [];
 
 		this.detachListener = (event) => {
-			return;
+			// return;
 			if(event.target != this.element)
 			{
 				return;
