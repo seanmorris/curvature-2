@@ -182,7 +182,16 @@ var Router = exports.Router = function () {
 					view.args.content.remove();
 				}
 
-				view.args.content = _result2;
+				var event = new CustomEvent('cvRoute', {
+					cancelable: true,
+					detail: { result: _result2, path: path, view: view }
+				});
+
+				console.log(event);
+
+				if (document.dispatchEvent(event)) {
+					view.args.content = _result2;
+				}
 
 				return true;
 			}
@@ -214,9 +223,18 @@ var Router = exports.Router = function () {
 					view.args.content.pause(true);
 				}
 
-				view.args.content = _result3;
+				var _event = new CustomEvent('cvRoute', {
+					cancelable: true,
+					detail: { result: _result3, path: path, view: view }
+				});
 
-				_Cache.Cache.store(this.path, _result3, 3600, 'page');
+				console.log(_event);
+
+				if (document.dispatchEvent(_event)) {
+					view.args.content = _result3;
+				}
+
+				// Cache.store(this.path, result, 3600, 'page');
 			}
 
 			return false;

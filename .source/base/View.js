@@ -39,6 +39,7 @@ export class View
 		this.intervals = [];
 		this.timeouts  = [];
 		this.frames    = [];
+		this.interpolateRegex = /(\[\[((?:\$)?\w+)\]\])/g
 	}
 
 	static isView()
@@ -280,6 +281,9 @@ export class View
 
 				this.mapInterpolatableTags(tag);
 
+				tag.matches('[cv-expand]')
+					&& this.mapExpandableTags(tag);
+
 				tag.matches('[cv-ref]')
 					&& this.mapRefTags(tag);
 
@@ -365,9 +369,31 @@ export class View
 		// return this.nodes;
 	}
 
+	mapExpandableTags(tag)
+	{
+		let expandProperty = tag.getAttribute('cv-expand');
+		let expandArg = Bindable.makeBindable(
+			this.args[expandProperty] || {}
+		);
+
+		tag.removeAttribute('cv-expand');
+
+		for(let i in expandArg)
+		{
+			if(i == 'name' || i == 'type')
+			{
+				continue;
+			}
+
+			expandArg.bindTo(i, ((tag,i)=>(v)=>{
+				tag.setAttribute(i, v);
+			})(tag,i));
+		}
+	}
+
 	mapInterpolatableTags(tag)
 	{
-		let regex    = /(\[\[(\$?\w+)\]\])/g;
+		let regex = this.interpolateRegex;
 
 		if(tag.nodeType == Node.TEXT_NODE)
 		{
@@ -391,6 +417,14 @@ export class View
 				{
 					unsafeHtml   = true;
 					bindProperty = bindProperty.substr(1);
+				}
+
+				if(bindProperty.substr(0, 3) === '000')
+				{
+					expand       = true;
+					bindProperty = bindProperty.substr(3);
+
+					continue;
 				}
 
 				let staticPrefix = original.substring(header, match.index);
@@ -987,7 +1021,7 @@ ${tag.outerHTML}`
 
 	interpolatable(str)
 	{
-		return !!(String(str).match(/\[\[\$?\w+\??\]\]/));
+		return !!(String(str).match(this.interpolateRegex));
 	}
 
 	uuid() {

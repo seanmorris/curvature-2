@@ -96,10 +96,11 @@ export class Field extends View {
 			>
 				<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>
 				<input
-					name    = "${this.args.name}"
-					type    = "${this.args.attrs.type||'text'}"
-					cv-bind = "value"
-					cv-ref  = "input:curvature/base/Tag"
+					name      = "${this.args.name}"
+					type      = "${this.args.attrs.type||'text'}"
+					cv-bind   = "value"
+					cv-ref    = "input:curvature/base/Tag"
+					cv-expand = "attrs"
 					${extra}
 				/>
 			</label>

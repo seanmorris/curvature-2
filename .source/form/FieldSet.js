@@ -15,7 +15,7 @@ export class FieldSet extends Field
 				data-multi = "${this.args.attrs['data-multi'] ? 'true' : 'false'}"
 			>
 				<span cv-if = "title">[[title]]:</span>
-				<fieldset name = "${this.args.name}">
+				<fieldset name = "${this.args.name}" cv-expand="attrs">
 					<div cv-each = "fields:field">
 						<div cv-bind = "field"></div>
 					</div>

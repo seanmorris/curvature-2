@@ -166,7 +166,17 @@ export class Router {
 				view.args.content.remove();
 			}
 
-			view.args.content = result;
+			let event = new CustomEvent('cvRoute', {
+				cancelable: true
+				, detail:   {result, path, view}
+			});
+
+			console.log(event);
+
+			if(document.dispatchEvent(event))
+			{
+				view.args.content = result;
+			}
 
 			return true;
 		}
@@ -206,9 +216,19 @@ export class Router {
 				view.args.content.pause(true);
 			}
 
-			view.args.content = result;
+			let event = new CustomEvent('cvRoute', {
+				cancelable: true
+				, detail:   {result, path, view}
+			});
 
-			Cache.store(this.path, result, 3600, 'page');
+			console.log(event);
+
+			if(document.dispatchEvent(event))
+			{
+				view.args.content = result;
+			}
+
+			// Cache.store(this.path, result, 3600, 'page');
 		}
 
 		return false;

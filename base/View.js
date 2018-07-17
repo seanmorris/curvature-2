@@ -61,6 +61,7 @@ var View = exports.View = function () {
 		this.intervals = [];
 		this.timeouts = [];
 		this.frames = [];
+		this.interpolateRegex = /(\[\[((?:\$)?\w+)\]\])/g;
 	}
 
 	_createClass(View, [{
@@ -285,6 +286,8 @@ var View = exports.View = function () {
 
 					_this2.mapInterpolatableTags(tag);
 
+					tag.matches('[cv-expand]') && _this2.mapExpandableTags(tag);
+
 					tag.matches('[cv-ref]') && _this2.mapRefTags(tag);
 
 					tag.matches('[cv-if]') && _this2.mapIfTags(tag);
@@ -355,11 +358,31 @@ var View = exports.View = function () {
 			// return this.nodes;
 		}
 	}, {
+		key: 'mapExpandableTags',
+		value: function mapExpandableTags(tag) {
+			var expandProperty = tag.getAttribute('cv-expand');
+			var expandArg = _Bindable.Bindable.makeBindable(this.args[expandProperty] || {});
+
+			tag.removeAttribute('cv-expand');
+
+			for (var i in expandArg) {
+				if (i == 'name' || i == 'type') {
+					continue;
+				}
+
+				expandArg.bindTo(i, function (tag, i) {
+					return function (v) {
+						tag.setAttribute(i, v);
+					};
+				}(tag, i));
+			}
+		}
+	}, {
 		key: 'mapInterpolatableTags',
 		value: function mapInterpolatableTags(tag) {
 			var _this3 = this;
 
-			var regex = /(\[\[(\$?\w+)\]\])/g;
+			var regex = this.interpolateRegex;
 
 			if (tag.nodeType == Node.TEXT_NODE) {
 				var original = tag.nodeValue;
@@ -379,6 +402,13 @@ var View = exports.View = function () {
 					if (bindProperty.substr(0, 1) === '$') {
 						unsafeHtml = true;
 						bindProperty = bindProperty.substr(1);
+					}
+
+					if (bindProperty.substr(0, 3) === '000') {
+						expand = true;
+						bindProperty = bindProperty.substr(3);
+
+						continue;
 					}
 
 					var staticPrefix = original.substring(header, match.index);
@@ -936,7 +966,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'interpolatable',
 		value: function interpolatable(str) {
-			return !!String(str).match(/\[\[\$?\w+\??\]\]/);
+			return !!String(str).match(this.interpolateRegex);
 		}
 	}, {
 		key: 'uuid',
