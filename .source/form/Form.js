@@ -189,28 +189,28 @@ export class Form extends View
 			{
 				console.log(i);
 
-				let fullname = subchain[0];
+				// let fullname = subchain[0];
 
-				if(subchain.length > 1)
-				{
-					fullname += `[${subchain.slice(1).join('][')}]`;
-				}
+				// if(subchain.length > 1)
+				// {
+				// 	fullname += `[${subchain.slice(1).join('][')}]`;
+				// }
 
-				console.log('>>>', field.args.fields[i].args.type);
-				console.log('>>>', fullname);
-				console.log('>>>', field.args.fields[i].args.value);
+				// console.log('>>>', field.args.fields[i].args.type);
+				// console.log('>>>', fullname);
+				// console.log('>>>', field.args.fields[i].args.value);
 
 				if(field.args.fields[i].args.type == 'file')
 				{
 					append.append(
-						fullname
+						field.args.fields[i].args.name
 						, field.args.fields[i].tags.input.element.files[0]
 					);
 				}
 				else
 				{
 					append.append(
-						fullname
+						field.args.fields[i].args.name
 						, field.args.fields[i].args.value
 					);
 				}

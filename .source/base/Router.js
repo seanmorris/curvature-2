@@ -13,11 +13,15 @@ export class Router {
 			}
 		);
 
-		this.go(location.pathname);
+		this.go(location.pathname + location.search);
 	}
 	static go(route, silent)
 	{
-		if(location.pathname !== route) {
+		let currentRoute = location.pathname + location.search;
+
+		console.log(currentRoute);
+
+		if(currentRoute !== route) {
 			history.pushState(null, null, route);
 		}
 		if(!silent)
@@ -33,9 +37,9 @@ export class Router {
 		this.path   = path;
 		this.query  = {};
 
-		let query   = new URLSearchParams(window.location.search);
+		let query   = new URLSearchParams(location.search);
 
-		this.queryString = window.location.search;
+		this.queryString = location.search;
 
 		for(let pair of query) {
 			this.query[ pair[0] ] = pair[1];

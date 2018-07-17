@@ -29,12 +29,16 @@ var Router = exports.Router = function () {
 				_this.match(location.pathname, mainView);
 			});
 
-			this.go(location.pathname);
+			this.go(location.pathname + location.search);
 		}
 	}, {
 		key: 'go',
 		value: function go(route, silent) {
-			if (location.pathname !== route) {
+			var currentRoute = location.pathname + location.search;
+
+			console.log(currentRoute);
+
+			if (currentRoute !== route) {
 				history.pushState(null, null, route);
 			}
 			if (!silent) {
@@ -52,9 +56,9 @@ var Router = exports.Router = function () {
 			this.path = path;
 			this.query = {};
 
-			var query = new URLSearchParams(window.location.search);
+			var query = new URLSearchParams(location.search);
 
-			this.queryString = window.location.search;
+			this.queryString = location.search;
 
 			var _iteratorNormalCompletion = true;
 			var _didIteratorError = false;
