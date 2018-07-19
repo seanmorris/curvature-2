@@ -9,6 +9,7 @@ export class ViewList
 		this.args.value   = Bindable.makeBindable(list || {});
 		this.args.subArgs = Bindable.makeBindable({});
 		this.views        = {};
+		this.cleanup      = [];
 		this.template     = template;
 		this.subProperty  = subProperty;
 		this.keyProperty  = keyProperty;
@@ -199,11 +200,19 @@ export class ViewList
 			this.views[i].remove();
 		}
 
+		let cleanup;
+
+		while(cleanup = this.cleanup.pop())
+		{
+			cleanup();
+		}
+
 		this.views = [];
 
 		while(this.tag.firstChild)
 		{
 			this.tag.removeChild(this.tag.firstChild);
 		}
+
 	}
 }
