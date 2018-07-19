@@ -155,15 +155,6 @@ export class Router {
 				result = routes[i];
 			}
 
-			if(result instanceof View)
-			{
-				result.pause(false);
-
-				result.update(args, forceRefresh);
-
-				// Cache.store(this.path, result, 3600, 'page');
-			}
-
 			if(view.args.content instanceof View)
 			{
 				// view.args.content.pause(true);
@@ -180,6 +171,15 @@ export class Router {
 			if(document.dispatchEvent(event))
 			{
 				view.args.content = result;
+			}
+
+			if(result instanceof View)
+			{
+				result.pause(false);
+
+				result.update(args, forceRefresh);
+
+				// Cache.store(this.path, result, 3600, 'page');
 			}
 
 			return true;
@@ -203,17 +203,10 @@ export class Router {
 
 			let result = routes[false];
 
-			if(result instanceof View)
-			{
-				result.pause(false);
-			}
-
 			if(routes[false] instanceof Object)
 			{
 				result = new routes[false](args);
 			}
-
-			result.update(args, forceRefresh);
 
 			if(view.args.content instanceof View)
 			{
@@ -232,7 +225,15 @@ export class Router {
 				view.args.content = result;
 			}
 
-			// Cache.store(this.path, result, 3600, 'page');
+			if(routes[false] instanceof View)
+			{
+				result.pause(false);
+
+				result.update(args, forceRefresh);
+
+				// Cache.store(this.path, result, 3600, 'page');
+			}
+
 		}
 
 		return false;

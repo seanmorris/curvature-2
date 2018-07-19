@@ -173,14 +173,6 @@ var Router = exports.Router = function () {
 					_result2 = routes[_i];
 				}
 
-				if (_result2 instanceof _View.View) {
-					_result2.pause(false);
-
-					_result2.update(args, forceRefresh);
-
-					// Cache.store(this.path, result, 3600, 'page');
-				}
-
 				if (view.args.content instanceof _View.View) {
 					// view.args.content.pause(true);
 					view.args.content.remove();
@@ -195,6 +187,14 @@ var Router = exports.Router = function () {
 
 				if (document.dispatchEvent(event)) {
 					view.args.content = _result2;
+				}
+
+				if (_result2 instanceof _View.View) {
+					_result2.pause(false);
+
+					_result2.update(args, forceRefresh);
+
+					// Cache.store(this.path, result, 3600, 'page');
 				}
 
 				return true;
@@ -213,15 +213,9 @@ var Router = exports.Router = function () {
 
 				var _result3 = routes[false];
 
-				if (_result3 instanceof _View.View) {
-					_result3.pause(false);
-				}
-
 				if (routes[false] instanceof Object) {
 					_result3 = new routes[false](args);
 				}
-
-				_result3.update(args, forceRefresh);
 
 				if (view.args.content instanceof _View.View) {
 					view.args.content.pause(true);
@@ -238,7 +232,13 @@ var Router = exports.Router = function () {
 					view.args.content = _result3;
 				}
 
-				// Cache.store(this.path, result, 3600, 'page');
+				if (routes[false] instanceof _View.View) {
+					_result3.pause(false);
+
+					_result3.update(args, forceRefresh);
+
+					// Cache.store(this.path, result, 3600, 'page');
+				}
 			}
 
 			return false;
