@@ -189,7 +189,10 @@ export class Router {
 		{
 			if(!forceRefresh
 				&& current
-				&& current instanceof routes[false]
+				&& (
+					typeof current == routes[false]
+					&& current instanceof routes[false]
+				)
 				&& current.update(args)
 			) {
 				view.args.content = current;

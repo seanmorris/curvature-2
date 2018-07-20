@@ -25,6 +25,7 @@ var ViewList = function () {
 		this.args.value = _Bindable.Bindable.makeBindable(list || {});
 		this.args.subArgs = _Bindable.Bindable.makeBindable({});
 		this.views = {};
+		this.cleanup = [];
 		this.template = template;
 		this.subProperty = subProperty;
 		this.keyProperty = keyProperty;
@@ -200,6 +201,12 @@ var ViewList = function () {
 		value: function remove() {
 			for (var i in this.views) {
 				this.views[i].remove();
+			}
+
+			var cleanup = void 0;
+
+			while (cleanup = this.cleanup.pop()) {
+				cleanup();
 			}
 
 			this.views = [];
