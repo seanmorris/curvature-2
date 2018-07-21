@@ -882,17 +882,19 @@ var View = exports.View = function () {
 						_this6.viewLists[eachProp].remove();
 					}
 
-					_this6.viewLists[eachProp] = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
+					var viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
 
-					_this6.viewLists[eachProp].parent = _this6;
+					viewList.parent = _this6;
 
-					_this6.viewLists[eachProp].render(tag);
+					viewList.render(tag);
 
 					for (var i in carryProps) {
 						_this6.args.bindTo(carryProps[i], function (v, k) {
-							_this6.viewLists[eachProp].args.subArgs[k] = v;
+							viewList.args.subArgs[k] = v;
 						});
 					}
+
+					_this6.viewLists[eachProp] = viewList;
 				};
 			}(eachProp, carryProps));
 

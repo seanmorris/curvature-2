@@ -129,7 +129,7 @@ export class PopOutTag extends Tag
 		{
 			document.body.setAttribute('style', this.bodyStyle);
 			document.body.setAttribute('style', '');
-			window.scrollTo(0, this.bodyScroll);
+			// window.scrollTo(0, this.bodyScroll);
 		}
 	}
 
@@ -155,7 +155,10 @@ export class PopOutTag extends Tag
 			overflow: hidden;
 		`;
 
+		this.style = this.element.getAttribute('style');
+
 		let style = this.style + this.unpoppedStyle;
+
 
 		this.element.setAttribute('style', style);
 
@@ -186,9 +189,9 @@ export class PopOutTag extends Tag
 					return;
 				}
 				this.bodyStyle = document.body.getAttribute('style');
-				this.bodyScroll = window.scrollY;
+				// this.bodyScroll = window.scrollY;
 				document.body.setAttribute('style', 'height:0px;overflow:hidden;');
-				window.scrollTo(0,0);
+				// window.scrollTo(0,0);
 				this.moving = false;
 				Dom.mapTags(this.element, false, (tag)=>{
 					let event = new CustomEvent('cvPopped');
@@ -235,7 +238,7 @@ export class PopOutTag extends Tag
 			document.body.setAttribute('style', '');
 		}
 
-		window.scrollTo(0, this.bodyScroll);
+		// window.scrollTo(0, this.bodyScroll);
 
 		this.element.setAttribute('style', style);
 

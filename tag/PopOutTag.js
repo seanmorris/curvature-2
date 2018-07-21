@@ -113,7 +113,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			if (paused) {
 				document.body.setAttribute('style', this.bodyStyle);
 				document.body.setAttribute('style', '');
-				window.scrollTo(0, this.bodyScroll);
+				// window.scrollTo(0, this.bodyScroll);
 			}
 		}
 	}, {
@@ -130,6 +130,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			this.previousScroll = window.scrollY;
 
 			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\n\t\t\toverflow: hidden;\n\t\t';
+
+			this.style = this.element.getAttribute('style');
 
 			var style = this.style + this.unpoppedStyle;
 
@@ -154,9 +156,9 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 						return;
 					}
 					_this2.bodyStyle = document.body.getAttribute('style');
-					_this2.bodyScroll = window.scrollY;
+					// this.bodyScroll = window.scrollY;
 					document.body.setAttribute('style', 'height:0px;overflow:hidden;');
-					window.scrollTo(0, 0);
+					// window.scrollTo(0,0);
 					_this2.moving = false;
 					_Dom.Dom.mapTags(_this2.element, false, function (tag) {
 						var event = new CustomEvent('cvPopped');
@@ -200,7 +202,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				document.body.setAttribute('style', '');
 			}
 
-			window.scrollTo(0, this.bodyScroll);
+			// window.scrollTo(0, this.bodyScroll);
 
 			this.element.setAttribute('style', style);
 

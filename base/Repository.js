@@ -32,7 +32,7 @@ var Repository = exports.Repository = function () {
 	}, {
 		key: 'domCache',
 		value: function domCache(uri, content) {
-			console.log(uri, content);
+			// console.log(uri, content);
 		}
 	}, {
 		key: 'load',

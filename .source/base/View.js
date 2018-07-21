@@ -927,18 +927,21 @@ ${tag.outerHTML}`
 				this.viewLists[eachProp].remove();
 			}
 
-			this.viewLists[eachProp] = new ViewList(subTemplate, asProp, v, keyProp);
+			let viewList = new ViewList(subTemplate, asProp, v, keyProp);
 
-			this.viewLists[eachProp].parent = this;
+			viewList.parent = this;
 
-			this.viewLists[eachProp].render(tag);
+			viewList.render(tag);
 
 			for(let i in carryProps)
 			{
 				this.args.bindTo(carryProps[i], (v, k) => {
-					this.viewLists[eachProp].args.subArgs[k] = v;
+					viewList.args.subArgs[k] = v;
 				});
 			}
+
+			this.viewLists[eachProp] = viewList;
+
 		})(eachProp,carryProps));
 
 		this.viewLists[eachProp] = viewList;

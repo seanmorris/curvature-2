@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _Config = require('Config');
 
+var _Bindable = require('curvature/base/Bindable');
+
 var _Repository2 = require('../base/Repository');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -29,13 +31,19 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 	_createClass(UserRepository, null, [{
 		key: 'getCurrentUser',
 		value: function getCurrentUser(refresh) {
-			return this.request(this.uri + 'current', false, false, false).then(function (user) {
-				return user;
+			var _this2 = this;
+
+			this.args = this.args || _Bindable.Bindable.makeBindable({});
+			return this.request(this.uri + 'current', false, false, false).then(function (response) {
+				_this2.args.current = response.body;
+				return response;
 			});
 		}
 	}, {
 		key: 'logout',
 		value: function logout() {
+			this.args = this.args || _Bindable.Bindable.makeBindable({});
+			this.args.current = null;
 			return this.request(this.uri + 'logout', false, {}, false).then(function (user) {
 				return user;
 			});
