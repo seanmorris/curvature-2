@@ -19,8 +19,6 @@ export class Router {
 	{
 		let currentRoute = location.pathname + location.search;
 
-		console.log(currentRoute);
-
 		if(currentRoute !== route) {
 			history.pushState(null, null, route);
 		}
@@ -47,7 +45,7 @@ export class Router {
 
 		// forceRefresh = true;
 
-		let result;
+		let args = {}, selected = false, result = '';
 
 		// if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
 		// {
@@ -66,7 +64,6 @@ export class Router {
 
 		path = path.substr(1).split('/');
 
-		let args = {};
 		for(let i in this.query)
 		{
 			args[i] = this.query[i];
@@ -121,125 +118,73 @@ export class Router {
 				return true;
 			}
 
-			let result = routes[i];
+			selected = i;
+			result   = routes[i];
 
-			if(routes[i] instanceof Object
-				&& routes[i].isView
-				&& routes[i].isView()
-			){
-				result = new routes[i](args);
-			}
-			else if(routes[i] instanceof Function)
-			{
-				result = '';
-
-				let _result = routes[i](args);
-
-				if(_result instanceof Promise)
-				{
-					_result.then(x=>{
-						view.args.content = x;
-					});
-				}
-				else
-				{
-					result = _result;
-				}
-			}
-			else if(routes[i] instanceof Object)
-			{
-				result = new routes[i](args);
-			}
-			else if(typeof routes[i] == 'string')
-			{
-				result = routes[i];
-			}
-
-			if(view.args.content instanceof View)
-			{
-				// view.args.content.pause(true);
-				view.args.content.remove();
-			}
-
-			let event = new CustomEvent('cvRoute', {
-				cancelable: true
-				, detail:   {result, path, view}
-			});
-
-			console.log(event);
-
-			if(document.dispatchEvent(event))
-			{
-				view.args.content = result;
-			}
-
-			if(result instanceof View)
-			{
-				result.pause(false);
-
-				result.update(args, forceRefresh);
-
-				// Cache.store(this.path, result, 3600, 'page');
-			}
-
-			return true;
+			break;
 		}
 
-		if(routes && routes[false])
+		if(selected in routes
+			&& routes[selected] instanceof Object
+			&& routes[selected].isView
+			&& routes[selected].isView()
+		){
+			result = new routes[selected](args);
+		}
+		else if(routes[selected] instanceof Function)
 		{
-			if(!forceRefresh
-				&& current
-				&& (
-					typeof current == routes[false]
-					&& current instanceof routes[false]
-				)
-				&& current.update(args)
-			) {
-				view.args.content = current;
+			result = '';
 
-				return false;
-			}
+			let _result = routes[selected](args);
 
-			if(typeof routes[false] !== 'function') {
-				view.args.content = routes[false];
-			}
-
-			let result = routes[false];
-
-			if(routes[false] instanceof Object)
+			if(_result instanceof Promise)
 			{
-				result = new routes[false](args);
+				_result.then(x=>{
+					view.args.content = x;
+				});
 			}
-
-			if(view.args.content instanceof View)
+			else
 			{
-				view.args.content.pause(true);
+				result = _result;
 			}
-
-			let event = new CustomEvent('cvRoute', {
-				cancelable: true
-				, detail:   {result, path, view}
-			});
-
-			console.log(event);
-
-			if(document.dispatchEvent(event))
-			{
-				view.args.content = result;
-			}
-
-			if(routes[false] instanceof View)
-			{
-				result.pause(false);
-
-				result.update(args, forceRefresh);
-
-				// Cache.store(this.path, result, 3600, 'page');
-			}
-
+		}
+		else if(routes[selected] instanceof Promise)
+		{
+			// result = Promise;
+		}
+		else if(routes[selected] instanceof Object)
+		{
+			result = new routes[selected](args);
+		}
+		else if(typeof routes[selected] == 'string')
+		{
+			result = routes[selected];
 		}
 
-		return false;
+		if(view.args.content instanceof View)
+		{
+			// view.args.content.pause(true);
+			view.args.content.remove();
+		}
+
+		let event = new CustomEvent('cvRoute', {
+			cancelable: true
+			, detail:   {result, path, view}
+		});
+
+		if(document.dispatchEvent(event))
+		{
+			view.args.content = result;
+		}
+
+		if(result instanceof View)
+		{
+			result.pause(false);
+
+			result.update(args, forceRefresh);
+		}
+
+		return selected !== false;
 	}
 	static clearCache() {
 		// this.cache = {};

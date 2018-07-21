@@ -24,10 +24,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var PopOutTag = exports.PopOutTag = function (_Tag) {
 	_inherits(PopOutTag, _Tag);
 
-	function PopOutTag(element, parent, ref, index) {
+	function PopOutTag(element, parent, ref, index, direct) {
 		_classCallCheck(this, PopOutTag);
 
-		var _this = _possibleConstructorReturn(this, (PopOutTag.__proto__ || Object.getPrototypeOf(PopOutTag)).call(this, element, parent, ref, index));
+		var _this = _possibleConstructorReturn(this, (PopOutTag.__proto__ || Object.getPrototypeOf(PopOutTag)).call(this, element, parent, ref, index, direct));
 
 		_this.poppedOut = false;
 		_this.style = element.getAttribute('style');
@@ -195,8 +195,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			var style = this.style + this.unpoppedStyle + (';transition: ' + this.leftDuration + 's; ease-in');
 
 			document.body.setAttribute('style', this.bodyStyle);
-
-			console.log(PopOutTag.level);
 
 			if (PopOutTag.level == 0) {
 				document.body.setAttribute('style', '');

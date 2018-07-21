@@ -22,22 +22,16 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var ScrollTag = exports.ScrollTag = function (_Tag) {
 	_inherits(ScrollTag, _Tag);
 
-	function ScrollTag(element, parent, ref, index) {
+	function ScrollTag(element, parent, ref, index, direct) {
 		_classCallCheck(this, ScrollTag);
 
-		var _this = _possibleConstructorReturn(this, (ScrollTag.__proto__ || Object.getPrototypeOf(ScrollTag)).call(this, element, parent, ref, index));
+		var _this = _possibleConstructorReturn(this, (ScrollTag.__proto__ || Object.getPrototypeOf(ScrollTag)).call(this, element, parent, ref, index, direct));
+		// parent.cleanup.push(x=>{console.log('Parent cleanup');});
+		// direct.cleanup.push(x=>{console.log('Direct cleanup');});
 
 		_this.visible = false;
 		_this.offsetTop = false;
 		_this.offsetBottom = false;
-
-		_this.scrollListener = function (event) {
-			_this.scrolled(event.target);
-		};
-
-		_this.resizeListener = function (event) {
-			_this.scrolled(event.target);
-		};
 
 		_this.attachListener = function (e) {
 			var rootNode = e.target;
@@ -126,13 +120,17 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 	}, {
 		key: 'addScrollListener',
 		value: function addScrollListener(tag) {
-			if (!tag.___scrollListeners___) {
-				Object.defineProperty(tag, '___scrollListeners___', {
+			var _this2 = this;
+
+			if (!tag.___scrollListener___) {
+				Object.defineProperty(tag, '___scrollListener___', {
 					enumerable: false,
 					writable: true
 				});
 
-				tag.___scrollListener___ = this.scrollListener;
+				tag.___scrollListener___ = function (event) {
+					_this2.scrolled(event.target);
+				};
 
 				var node = tag;
 				var options = { passive: true, capture: true };
@@ -140,9 +138,9 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 				while (node.parentNode) {
 					node = node.parentNode;
 
-					node.addEventListener('scroll', tag.___scrollListener___);
+					node.addEventListener('scroll', tag.___scrollListener___, options);
 
-					this.cleanup.push(function (node, tag, options) {
+					this.direct.cleanup.push(function (node, tag, options) {
 						return function () {
 							node.removeEventListener('scroll', tag.___scrollListener___, options);
 							tag = node = null;
@@ -154,17 +152,21 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 	}, {
 		key: 'addResizeListener',
 		value: function addResizeListener(tag) {
+			var _this3 = this;
+
 			if (!tag.___resizeListener___) {
 				Object.defineProperty(tag, '___resizeListener___', {
 					enumerable: false,
 					writable: true
 				});
 
-				tag.___resizeListener___ = this.resizeListener;
+				tag.___resizeListener___ = function (event) {
+					_this3.scrolled(event.target);
+				};
 
 				window.addEventListener('resize', this.resizeListener);
 
-				this.cleanup.push(function (element) {
+				this.direct.cleanup.push(function (element) {
 					return function () {
 						window.removeEventListener('resize', element.___resizeListener___);
 						tag.___resizeListener___ = null;

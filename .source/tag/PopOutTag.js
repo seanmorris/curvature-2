@@ -4,9 +4,9 @@ import { Tag      } from '../base/Tag';
 
 export class PopOutTag extends Tag
 {
-	constructor(element, parent, ref, index)
+	constructor(element, parent, ref, index, direct)
 	{
-		super(element, parent, ref, index);
+		super(element, parent, ref, index, direct);
 
 		this.poppedOut = false;
 		this.style     = element.getAttribute('style');
@@ -229,8 +229,6 @@ export class PopOutTag extends Tag
 			+ `;transition: ${this.leftDuration}s; ease-in`;
 
 		document.body.setAttribute('style', this.bodyStyle);
-
-		console.log(PopOutTag.level);
 
 		if(PopOutTag.level == 0)
 		{

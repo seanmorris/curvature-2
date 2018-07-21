@@ -1,7 +1,7 @@
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+		value: true
 });
 exports.Tag = undefined;
 
@@ -12,70 +12,75 @@ var _Bindable = require('./Bindable');
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Tag = exports.Tag = function () {
-	function Tag(element, parent, ref, index) {
-		var _this = this;
+		function Tag(element, parent, ref, index, direct) {
+				_classCallCheck(this, Tag);
 
-		_classCallCheck(this, Tag);
+				this.element = _Bindable.Bindable.makeBindable(element);
+				this.parent = parent;
+				this.direct = direct;
+				this.ref = ref;
+				this.index = index;
 
-		this.element = _Bindable.Bindable.makeBindable(element);
-		this.parent = parent;
-		this.ref = ref;
-		this.index = index;
+				this.proxy = _Bindable.Bindable.makeBindable(this);
+				this.cleanup = [];
 
-		this.proxy = _Bindable.Bindable.makeBindable(this);
-		this.cleanup = [];
+				// this.detachListener = (event) => {
+				// 	return;
 
-		this.detachListener = function (event) {
-			return;
-			if (event.target != _this.element) {
-				return;
-			}
-			if (event.path[event.path.length - 1] !== window) {
-				return;
-			}
-			_this.remove();
-			_this.element.removeEventListener('cvDomDetached', _this.detachListener);
-			_this.element = _this.ref = _this.parent = null;
-		};
+				// 	if(event.target != this.element)
+				// 	{
+				// 		return;
+				// 	}
+				// 	if(event.path[event.path.length -1] !== window)
+				// 	{
+				// 		return;
+				// 	}
 
-		this.element.addEventListener('cvDomDetached', this.detachListener);
+				// 	this.element.removeEventListener('cvDomDetached', this.detachListener);
 
-		return this.proxy;
-	}
+				// 	this.remove();
+				// };
 
-	_createClass(Tag, [{
-		key: 'remove',
-		value: function remove() {
-			var cleanup = void 0;
+				// this.element.addEventListener('cvDomDetached', this.detachListener);
 
-			while (cleanup = this.cleanup.shift()) {
-				cleanup();
-			}
-
-			_Bindable.Bindable.clearBindings(this);
-
-			this.clear();
+				return this.proxy;
 		}
-	}, {
-		key: 'clear',
-		value: function clear() {
-			if (!this.element) {
-				return;
-			}
 
-			var detachEvent = new Event('cvDomDetached');
+		_createClass(Tag, [{
+				key: 'remove',
+				value: function remove() {
+						_Bindable.Bindable.clearBindings(this);
 
-			while (this.element.firstChild) {
-				this.element.firstChild.dispatchEvent(detachEvent);
-				this.element.removeChild(this.element.firstChild);
-			}
-		}
-	}, {
-		key: 'pause',
-		value: function pause() {
-			var paused = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-		}
-	}]);
+						var cleanup = void 0;
 
-	return Tag;
+						while (cleanup = this.cleanup.shift()) {
+								cleanup();
+						}
+
+						this.clear();
+
+						this.element = this.ref = this.parent = null;
+				}
+		}, {
+				key: 'clear',
+				value: function clear() {
+						if (!this.element) {
+								return;
+						}
+
+						var detachEvent = new Event('cvDomDetached');
+
+						while (this.element.firstChild) {
+								this.element.firstChild.dispatchEvent(detachEvent);
+								this.element.removeChild(this.element.firstChild);
+						}
+				}
+		}, {
+				key: 'pause',
+				value: function pause() {
+						var paused = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+				}
+		}]);
+
+		return Tag;
 }();

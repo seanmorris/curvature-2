@@ -18,10 +18,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var LazyTag = exports.LazyTag = function (_ScrollTag) {
 	_inherits(LazyTag, _ScrollTag);
 
-	function LazyTag(element, parent, ref, index) {
+	function LazyTag(element, parent, ref, index, direct) {
 		_classCallCheck(this, LazyTag);
 
-		var _this = _possibleConstructorReturn(this, (LazyTag.__proto__ || Object.getPrototypeOf(LazyTag)).call(this, element, parent, ref, index));
+		var _this = _possibleConstructorReturn(this, (LazyTag.__proto__ || Object.getPrototypeOf(LazyTag)).call(this, element, parent, ref, index, direct));
 
 		_this.element.classList.remove('cv-visible');
 		_this.element.classList.add('cv-not-visible');

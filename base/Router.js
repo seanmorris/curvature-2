@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Router = undefined;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _View = require('./View');
@@ -37,8 +35,6 @@ var Router = exports.Router = function () {
 		key: 'go',
 		value: function go(route, silent) {
 			var currentRoute = location.pathname + location.search;
-
-			console.log(currentRoute);
 
 			if (currentRoute !== route) {
 				history.pushState(null, null, route);
@@ -89,7 +85,9 @@ var Router = exports.Router = function () {
 				}
 			}
 
-			var result = void 0;
+			var args = {},
+			    selected = false,
+			    result = '';
 
 			// if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
 			// {
@@ -108,7 +106,6 @@ var Router = exports.Router = function () {
 
 			path = path.substr(1).split('/');
 
-			var args = {};
 			for (var i in this.query) {
 				args[i] = this.query[i];
 			}
@@ -153,97 +150,55 @@ var Router = exports.Router = function () {
 					return true;
 				}
 
-				var _result2 = routes[_i];
+				selected = _i;
+				result = routes[_i];
 
-				if (routes[_i] instanceof Object && routes[_i].isView && routes[_i].isView()) {
-					_result2 = new routes[_i](args);
-				} else if (routes[_i] instanceof Function) {
-					_result2 = '';
-
-					var _result = routes[_i](args);
-
-					if (_result instanceof Promise) {
-						_result.then(function (x) {
-							view.args.content = x;
-						});
-					} else {
-						_result2 = _result;
-					}
-				} else if (routes[_i] instanceof Object) {
-					_result2 = new routes[_i](args);
-				} else if (typeof routes[_i] == 'string') {
-					_result2 = routes[_i];
-				}
-
-				if (view.args.content instanceof _View.View) {
-					// view.args.content.pause(true);
-					view.args.content.remove();
-				}
-
-				var event = new CustomEvent('cvRoute', {
-					cancelable: true,
-					detail: { result: _result2, path: path, view: view }
-				});
-
-				console.log(event);
-
-				if (document.dispatchEvent(event)) {
-					view.args.content = _result2;
-				}
-
-				if (_result2 instanceof _View.View) {
-					_result2.pause(false);
-
-					_result2.update(args, forceRefresh);
-
-					// Cache.store(this.path, result, 3600, 'page');
-				}
-
-				return true;
+				break;
 			}
 
-			if (routes && routes[false]) {
-				if (!forceRefresh && current && (typeof current === 'undefined' ? 'undefined' : _typeof(current)) == routes[false] && current instanceof routes[false] && current.update(args)) {
-					view.args.content = current;
+			if (selected in routes && routes[selected] instanceof Object && routes[selected].isView && routes[selected].isView()) {
+				result = new routes[selected](args);
+			} else if (routes[selected] instanceof Function) {
+				result = '';
 
-					return false;
+				var _result = routes[selected](args);
+
+				if (_result instanceof Promise) {
+					_result.then(function (x) {
+						view.args.content = x;
+					});
+				} else {
+					result = _result;
 				}
-
-				if (typeof routes[false] !== 'function') {
-					view.args.content = routes[false];
-				}
-
-				var _result3 = routes[false];
-
-				if (routes[false] instanceof Object) {
-					_result3 = new routes[false](args);
-				}
-
-				if (view.args.content instanceof _View.View) {
-					view.args.content.pause(true);
-				}
-
-				var _event = new CustomEvent('cvRoute', {
-					cancelable: true,
-					detail: { result: _result3, path: path, view: view }
-				});
-
-				console.log(_event);
-
-				if (document.dispatchEvent(_event)) {
-					view.args.content = _result3;
-				}
-
-				if (routes[false] instanceof _View.View) {
-					_result3.pause(false);
-
-					_result3.update(args, forceRefresh);
-
-					// Cache.store(this.path, result, 3600, 'page');
-				}
+			} else if (routes[selected] instanceof Promise) {
+				// result = Promise;
+			} else if (routes[selected] instanceof Object) {
+				result = new routes[selected](args);
+			} else if (typeof routes[selected] == 'string') {
+				result = routes[selected];
 			}
 
-			return false;
+			if (view.args.content instanceof _View.View) {
+				// view.args.content.pause(true);
+				view.args.content.remove();
+			}
+
+			var event = new CustomEvent('cvRoute', {
+				cancelable: true,
+				detail: { result: result, path: path, view: view }
+			});
+
+			if (document.dispatchEvent(event)) {
+				view.args.content = result;
+			}
+
+			if (result instanceof _View.View) {
+				result.pause(false);
+
+				result.update(args, forceRefresh);
+			}
+
+			return selected !== false;
 		}
 	}, {
 		key: 'clearCache',

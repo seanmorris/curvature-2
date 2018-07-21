@@ -439,8 +439,15 @@ var View = exports.View = function () {
 							dynamicNode.nodeValue = '';
 
 							if (v instanceof View) {
-
 								v.render(tag.parentNode, dynamicNode);
+
+								_this3.cleanup.push(function (view) {
+									return function () {
+										if (view) {
+											view.remove();
+										}
+									};
+								}(v));
 							} else {
 								// console.log(dynamicNode);
 								if (unsafeHtml) {
@@ -534,7 +541,12 @@ var View = exports.View = function () {
 
 			tag.removeAttribute('cv-ref');
 
+			this.cleanup.push(function () {
+				tag.remove();
+			});
+
 			var parent = this;
+			var direct = this;
 
 			if (this.viewList) {
 				parent = this.viewList.parent;
@@ -554,7 +566,7 @@ var View = exports.View = function () {
 					// );
 				}
 
-			while (parent) {
+			if (parent) {
 				if (1 || !parent.parent) {
 					var refKeyVal = this.args[refKey];
 
@@ -563,9 +575,9 @@ var View = exports.View = function () {
 							parent.tags[refProp] = [];
 						}
 
-						parent.tags[refProp][refKeyVal] = new refClass(tag, this, refProp);
+						parent.tags[refProp][refKeyVal] = new refClass(tag, this, refProp, undefined, direct);
 					} else {
-						parent.tags[refProp] = new refClass(tag, this, refProp);
+						parent.tags[refProp] = new refClass(tag, this, refProp, undefined, direct);
 					}
 				}
 				parent = parent.parent;
@@ -705,7 +717,7 @@ var View = exports.View = function () {
 							if (!(typeof eventMethod == 'function')) {
 								// console.log(object);
 								// console.trace();
-								console.log(_this5, parent);
+								// console.log(this, parent);
 								throw new Error(callbackName + ' is not defined on View object.\n\nTag:\n\n' + tag.outerHTML);
 							}
 							eventMethod.apply(undefined, _toConsumableArray(argRefs));
@@ -864,25 +876,25 @@ var View = exports.View = function () {
 
 			var viewList = void 0;
 
-			this.args.bindTo(eachProp, function (viewList) {
+			this.args.bindTo(eachProp, function (eachProp, carryProps) {
 				return function (v, k, t) {
-					if (viewList) {
-						viewList.remove();
+					if (_this6.viewLists[eachProp]) {
+						_this6.viewLists[eachProp].remove();
 					}
 
-					viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
+					_this6.viewLists[eachProp] = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
 
-					viewList.parent = _this6;
+					_this6.viewLists[eachProp].parent = _this6;
 
-					viewList.render(tag);
+					_this6.viewLists[eachProp].render(tag);
 
 					for (var i in carryProps) {
 						_this6.args.bindTo(carryProps[i], function (v, k) {
-							viewList.args.subArgs[k] = v;
+							_this6.viewLists[eachProp].args.subArgs[k] = v;
 						});
 					}
 				};
-			}(viewList));
+			}(eachProp, carryProps));
 
 			this.viewLists[eachProp] = viewList;
 		}
@@ -980,25 +992,27 @@ var View = exports.View = function () {
 		value: function remove() {
 			var detachEvent = new Event('cvDomDetached');
 
-			for (var i in this.nodes) {
-				this.nodes[i].dispatchEvent(detachEvent);
-				this.nodes[i].remove();
+			// console.log(this);
+
+			for (var i in this.tags) {
+				if (Array.isArray(this.tags[i])) {
+					for (var j in this.tags[i]) {
+						this.tags[i][j].remove();
+					}
+					continue;
+				}
+				this.tags[i].remove();
+			}
+
+			for (var _i11 in this.nodes) {
+				this.nodes[_i11].dispatchEvent(detachEvent);
+				this.nodes[_i11].remove();
 			}
 
 			var cleanup = void 0;
 
 			while (cleanup = this.cleanup.shift()) {
 				cleanup();
-			}
-
-			for (var _i11 in this.tags) {
-				if (Array.isArray(this.tags[_i11])) {
-					for (var j in this.tags[_i11]) {
-						this.tags[_i11][j].remove();
-					}
-					continue;
-				}
-				this.tags[_i11].remove();
 			}
 
 			for (var _i12 in this.viewLists) {

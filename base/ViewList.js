@@ -127,11 +127,11 @@ var ViewList = function () {
 
 			var _loop = function _loop(_i) {
 				var found = false;
-				for (var j in views) {
-					if (views[j] && _this2.args.value[_i] === views[j].args[_this2.subProperty]) {
+				for (var _j in views) {
+					if (views[_j] && _this2.args.value[_i] === views[_j].args[_this2.subProperty]) {
 						found = true;
-						finalViews[_i] = views[j];
-						delete views[j];
+						finalViews[_i] = views[_j];
+						delete views[_j];
 						break;
 					}
 				}
@@ -156,32 +156,47 @@ var ViewList = function () {
 				_loop(_i);
 			}
 
+			for (var _i2 in this.views) {
+				var _found = false;
+
+				for (var j in finalViews) {
+					if (this.views[_i2] === finalViews[j]) {
+						_found = true;
+						break;
+					}
+				}
+
+				if (!_found) {
+					this.views[_i2].remove();
+				}
+			}
+
 			var appendOnly = true;
 
-			for (var _i2 in this.views) {
-				if (this.views[_i2] !== finalViews[_i2]) {
+			for (var _i3 in this.views) {
+				if (this.views[_i3] !== finalViews[_i3]) {
 					appendOnly = false;
 				}
 			}
 
 			if (!appendOnly) {
-				for (var _i3 in this.views) {
-					this.views[_i3].remove();
+				for (var _i4 in this.views) {
+					this.views[_i4].remove();
 				}
 
 				while (this.tag.firstChild) {
 					this.tag.removeChild(this.tag.firstChild);
 				}
 
-				for (var _i4 in finalViews) {
-					finalViews[_i4].render(this.tag);
+				for (var _i5 in finalViews) {
+					finalViews[_i5].render(this.tag);
 				}
 			} else {
-				var _i5 = this.views.length || 0;
+				var _i6 = this.views.length || 0;
 
-				while (finalViews[_i5]) {
-					finalViews[_i5].render(this.tag);
-					_i5++;
+				while (finalViews[_i6]) {
+					finalViews[_i6].render(this.tag);
+					_i6++;
 				}
 			}
 
@@ -193,7 +208,7 @@ var ViewList = function () {
 			var _pause = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
 			for (var i in this.views) {
-				this.views[i].pause(paused);
+				this.views[i].pause(_pause);
 			}
 		}
 	}, {
@@ -211,7 +226,7 @@ var ViewList = function () {
 
 			this.views = [];
 
-			while (this.tag.firstChild) {
+			while (this.tag && this.tag.firstChild) {
 				this.tag.removeChild(this.tag.firstChild);
 			}
 		}

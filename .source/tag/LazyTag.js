@@ -3,9 +3,9 @@ import { Dom       } from 'curvature/base/Dom';
 
 export class LazyTag extends ScrollTag
 {
-	constructor(element, parent, ref, index)
+	constructor(element, parent, ref, index, direct)
 	{
-		super(element, parent, ref, index);
+		super(element, parent, ref, index, direct);
 
 		this.element.classList.remove('cv-visible');
 		this.element.classList.add('cv-not-visible');

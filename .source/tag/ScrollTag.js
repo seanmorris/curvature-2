@@ -4,21 +4,16 @@ import { Bindable } from '../base/Bindable';
 
 export class ScrollTag extends Tag
 {
-	constructor(element, parent, ref, index)
+	constructor(element, parent, ref, index, direct)
 	{
-		super(element, parent, ref, index);
+		// parent.cleanup.push(x=>{console.log('Parent cleanup');});
+		// direct.cleanup.push(x=>{console.log('Direct cleanup');});
+
+		super(element, parent, ref, index, direct);
 
 		this.visible         = false;
 		this.offsetTop       = false;
 		this.offsetBottom    = false;
-
-		this.scrollListener = (event) => {
-			this.scrolled(event.target);
-		};
-
-		this.resizeListener = (event)=>{
-			this.scrolled(event.target);
-		};
 
 		this.attachListener = (e) => {
 			let rootNode = e.target;
@@ -120,14 +115,16 @@ export class ScrollTag extends Tag
 
 	addScrollListener(tag)
 	{
-		if(!tag.___scrollListeners___)
+		if(!tag.___scrollListener___)
 		{
-			Object.defineProperty(tag, '___scrollListeners___', {
+			Object.defineProperty(tag, '___scrollListener___', {
 				enumerable: false
 				, writable: true
 			});
 
-			tag.___scrollListener___ = this.scrollListener;
+			tag.___scrollListener___ = (event) => {
+				this.scrolled(event.target);
+			};
 
 			let node = tag;
 			let options = {passive: true, capture: true};
@@ -139,9 +136,10 @@ export class ScrollTag extends Tag
 				node.addEventListener(
 					'scroll'
 					, tag.___scrollListener___
+					, options
 				);
 
-				this.cleanup.push(((node, tag, options)=>()=>{
+				this.direct.cleanup.push(((node, tag, options)=>()=>{
 					node.removeEventListener(
 						'scroll'
 						, tag.___scrollListener___
@@ -162,11 +160,13 @@ export class ScrollTag extends Tag
 				, writable: true
 			});
 
-			tag.___resizeListener___ = this.resizeListener;
+			tag.___resizeListener___ = (event)=>{
+				this.scrolled(event.target);
+			};
 
 			window.addEventListener('resize', this.resizeListener);
 
-			this.cleanup.push(((element)=>()=>{
+			this.direct.cleanup.push(((element)=>()=>{
 				window.removeEventListener('resize', element.___resizeListener___);
 				tag.___resizeListener___ = null;
 				tag = null;

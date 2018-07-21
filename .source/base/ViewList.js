@@ -60,9 +60,9 @@ export class ViewList
 				let view = new View();
 
 				this.views[k] = view;
-				
+
 				this.views[k].template = this.template;
-				
+
 				this.views[k].parent   = this.parent;
 				this.views[k].viewList = this;
 
@@ -146,6 +146,25 @@ export class ViewList
 			}
 		}
 
+		for(let i in this.views)
+		{
+			let found = false;
+
+			for(let j in finalViews)
+			{
+				if(this.views[i] === finalViews[j])
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if(!found)
+			{
+				this.views[i].remove();
+			}
+		}
+
 		let appendOnly = true;
 
 		for(let i in this.views)
@@ -182,7 +201,7 @@ export class ViewList
 				finalViews[i].render(this.tag);
 				i++;
 			}
-		}		
+		}
 
 		this.views = finalViews;
 	}
@@ -190,7 +209,7 @@ export class ViewList
 	{
 		for(let i in this.views)
 		{
-			this.views[i].pause(paused);
+			this.views[i].pause(pause);
 		}
 	}
 	remove()
@@ -209,7 +228,7 @@ export class ViewList
 
 		this.views = [];
 
-		while(this.tag.firstChild)
+		while(this.tag && this.tag.firstChild)
 		{
 			this.tag.removeChild(this.tag.firstChild);
 		}

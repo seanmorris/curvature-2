@@ -459,8 +459,14 @@ export class View
 
 					if(v instanceof View)
 					{
-
 						v.render(tag.parentNode, dynamicNode);
+
+						this.cleanup.push(((view)=>()=>{
+							if(view)
+							{
+								view.remove();
+							}
+						})(v));
 					}
 					else
 					{
@@ -556,7 +562,12 @@ export class View
 
 		tag.removeAttribute('cv-ref');
 
+		this.cleanup.push(()=>{
+			tag.remove()
+		});
+
 		let parent = this;
+		let direct = this;
 
 		if(this.viewList)
 		{
@@ -579,7 +590,7 @@ export class View
 			// );
 		}
 
-		while(parent)
+		if(parent)
 		{
 			if(1 || !parent.parent)
 			{
@@ -593,13 +604,13 @@ export class View
 					}
 
 					parent.tags[refProp][refKeyVal] = new refClass(
-						tag, this, refProp
+						tag, this, refProp, undefined, direct
 					);
 				}
 				else
 				{
 					parent.tags[refProp] = new refClass(
-						tag, this, refProp
+						tag, this, refProp, undefined, direct
 					);
 				}
 			}
@@ -753,7 +764,7 @@ export class View
 					if(!(typeof eventMethod == 'function')) {
 						// console.log(object);
 						// console.trace();
-						console.log(this, parent);
+						// console.log(this, parent);
 						throw new Error(
 							`${callbackName} is not defined on View object.
 
@@ -910,25 +921,25 @@ ${tag.outerHTML}`
 
 		let viewList;
 
-		this.args.bindTo(eachProp, ((viewList) => (v, k, t)=>{
-			if(viewList)
+		this.args.bindTo(eachProp, ((eachProp,carryProps) => (v, k, t)=>{
+			if(this.viewLists[eachProp])
 			{
-				viewList.remove();
+				this.viewLists[eachProp].remove();
 			}
 
-			viewList = new ViewList(subTemplate, asProp, v, keyProp);
+			this.viewLists[eachProp] = new ViewList(subTemplate, asProp, v, keyProp);
 
-			viewList.parent = this;
+			this.viewLists[eachProp].parent = this;
 
-			viewList.render(tag);
+			this.viewLists[eachProp].render(tag);
 
 			for(let i in carryProps)
 			{
 				this.args.bindTo(carryProps[i], (v, k) => {
-					viewList.args.subArgs[k] = v;
+					this.viewLists[eachProp].args.subArgs[k] = v;
 				});
 			}
-		})(viewList));
+		})(eachProp,carryProps));
 
 		this.viewLists[eachProp] = viewList;
 	}
@@ -1036,18 +1047,7 @@ ${tag.outerHTML}`
 	{
 		let detachEvent = new Event('cvDomDetached');
 
-		for(let i in this.nodes)
-		{
-			this.nodes[i].dispatchEvent(detachEvent);
-			this.nodes[i].remove();
-		}
-
-		let cleanup;
-
-		while(cleanup = this.cleanup.shift())
-		{
-			cleanup();
-		}
+		// console.log(this);
 
 		for(let i in this.tags)
 		{
@@ -1060,6 +1060,19 @@ ${tag.outerHTML}`
 				continue;
 			}
 			this.tags[i].remove();
+		}
+
+		for(let i in this.nodes)
+		{
+			this.nodes[i].dispatchEvent(detachEvent);
+			this.nodes[i].remove();
+		}
+
+		let cleanup;
+
+		while(cleanup = this.cleanup.shift())
+		{
+			cleanup();
 		}
 
 		for(let i in this.viewLists)
