@@ -69,7 +69,8 @@ export class Router {
 			args[i] = this.query[i];
 		}
 
-		L1: for(let i in routes) {
+		L1: for(let i in routes)
+		{
 			let route = i.split('/');
 			if(route.length < path.length)
 			{

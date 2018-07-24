@@ -119,25 +119,11 @@ var Form = exports.Form = function (_View) {
 				if (field.args.fields[i] && field.args.fields[i].hasChildren()) {
 					this.formData(append, field.args.fields[i], subchain);
 				} else if (field.args.fields[i]) {
-					console.log(i);
-
-					// let fullname = subchain[0];
-
-					// if(subchain.length > 1)
-					// {
-					// 	fullname += `[${subchain.slice(1).join('][')}]`;
-					// }
-
-					// console.log('>>>', field.args.fields[i].args.type);
-					// console.log('>>>', fullname);
-					// console.log('>>>', field.args.fields[i].args.value);
-
 					if (field.args.fields[i].args.type == 'file') {
 						append.append(field.args.fields[i].args.name, field.args.fields[i].tags.input.element.files[0]);
 					} else {
 						append.append(field.args.fields[i].args.name, field.args.fields[i].args.value);
 					}
-					console.log('---');
 				}
 			}
 

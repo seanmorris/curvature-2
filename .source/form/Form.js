@@ -187,19 +187,6 @@ export class Form extends View
 			}
 			else if(field.args.fields[i])
 			{
-				console.log(i);
-
-				// let fullname = subchain[0];
-
-				// if(subchain.length > 1)
-				// {
-				// 	fullname += `[${subchain.slice(1).join('][')}]`;
-				// }
-
-				// console.log('>>>', field.args.fields[i].args.type);
-				// console.log('>>>', fullname);
-				// console.log('>>>', field.args.fields[i].args.value);
-
 				if(field.args.fields[i].args.type == 'file')
 				{
 					append.append(
@@ -214,7 +201,6 @@ export class Form extends View
 						, field.args.fields[i].args.value
 					);
 				}
-				console.log('---');
 			}
 		}
 
