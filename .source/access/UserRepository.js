@@ -8,7 +8,9 @@ export class UserRepository extends Repository {
 		this.args = this.args || Bindable.makeBindable({});
 		return this.request(
 			this.uri + 'current'
-			, false, false, false
+			, false
+			, false
+			, false
 		).then((response) => {
 			this.args.current = response.body;
 			return response;
@@ -19,9 +21,15 @@ export class UserRepository extends Repository {
 		this.args.current = null;
 		return this.request(
 			this.uri + 'logout'
-			, false, {}, false
+			, false
+			, {}
+			, false
 		).then((user) => {
 			return user;
 		});
+	}
+	static onChange(callback) {
+		this.args = this.args || Bindable.makeBindable({});
+		this.args.bindTo('current', callback);
 	}
 }
