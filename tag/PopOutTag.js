@@ -64,7 +64,11 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				}
 
 				if (!_this.leftDuration) {
-					_this.leftDuration = (1 - 1 / _this.distance) / 4;
+					_this.leftDuration = (1 - 1 / _this.rect.left) / 4;
+					_this.topDuration = (1 - 1 / _this.rect.top) / 4;
+
+					_this.leftDuration = Math.round(_this.leftDuration * 1000) / 1000;
+					_this.topDuration = Math.round(_this.topDuration * 1000) / 1000;
 				}
 			}
 
@@ -131,7 +135,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			this.previousScroll = window.scrollY;
 
-			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\n\t\t\toverflow: hidden;\n\t\t';
+			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\t\t\ttransition: width ' + this.leftDuration + 's ease-out\n\t\t\t\t\t\t, height ' + this.topDuration + 's ease-out\n\t\t\t\t\t\t, all ' + this.leftDuration + 's ease-out;\n\t\t\toverflow: hidden;\n\t\t';
 
 			this.style = this.element.getAttribute('style');
 
@@ -143,11 +147,9 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			// document.body.style.overflowY = 'hidden';
 
 			this.popTimeout = setTimeout(function () {
-				style += '\n\t\t\t\t;top:   0px;\n\t\t\t\tleft:   0px;\n\t\t\t\twidth:  100%;\n\t\t\t\theight: 100%;\n\t\t\t\toverflow-y: auto;\n\t\t\t\ttransition: ' + _this2.leftDuration + 's ease-out;\n\t\t\t';
+				style += '\n\t\t\t\t;top:   0px;\n\t\t\t\tleft:   0px;\n\t\t\t\twidth:  100%;\n\t\t\t\theight: 100%;\n\t\t\t\toverflow-y: auto;\n\t\t\t\ttransition: width ' + _this2.leftDuration + 's ease-out\n\t\t\t\t\t, height ' + _this2.topDuration + 's ease-out\n\t\t\t\t\t, all ' + _this2.leftDuration + 's ease-out;\n\t\t\t';
 
 				_this2.moving = true;
-
-				_this2.element.classList.add('unpopped');
 
 				_this2.element.classList.add('popped');
 				_this2.element.classList.remove('unpopped');
@@ -159,7 +161,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					}
 					_this2.bodyStyle = document.body.getAttribute('style');
 					// this.bodyScroll = window.scrollY;
-					document.body.setAttribute('style', 'height:0px;overflow:hidden;');
+					document.body.setAttribute('style', 'height:100%;overflow:hidden;');
 					// window.scrollTo(0,0);
 					_this2.moving = false;
 					_Dom.Dom.mapTags(_this2.element, false, function (tag) {
@@ -187,6 +189,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		key: 'unpop',
 		value: function unpop() {
 			var _this3 = this;
+
+			this.element.classList.add('unpopping');
 
 			if (this.popTimeout) {
 				clearTimeout(this.popTimeout);
@@ -218,11 +222,12 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				if (!_this3.element) {
 					return;
 				}
-				_this3.element.classList.add('unpopped');
 				_this3.element.classList.remove('popped');
 				// element.setAttribute('style', this.style);
 			}, this.leftDuration * 500);
 			setTimeout(function () {
+				_this3.element.classList.add('unpopped');
+				_this3.element.classList.remove('unpopping');
 				if (!_this3.element) {
 					return;
 				}

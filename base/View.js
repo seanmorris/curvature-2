@@ -541,7 +541,13 @@ var View = exports.View = function () {
 
 			tag.removeAttribute('cv-ref');
 
+			Object.defineProperty(tag, '___tag___', {
+				enumerable: false,
+				writable: true
+			});
+
 			this.cleanup.push(function () {
+				tag.___tag___ = null;
 				tag.remove();
 			});
 
@@ -566,6 +572,10 @@ var View = exports.View = function () {
 					// );
 				}
 
+			var tagObject = new refClass(tag, this, refProp, undefined, direct);
+
+			tag.___tag___ = tagObject;
+
 			if (parent) {
 				if (1 || !parent.parent) {
 					var refKeyVal = this.args[refKey];
@@ -575,9 +585,9 @@ var View = exports.View = function () {
 							parent.tags[refProp] = [];
 						}
 
-						parent.tags[refProp][refKeyVal] = new refClass(tag, this, refProp, undefined, direct);
+						parent.tags[refProp][refKeyVal] = tagObject;
 					} else {
-						parent.tags[refProp] = new refClass(tag, this, refProp, undefined, direct);
+						parent.tags[refProp] = tagObject;
 					}
 				}
 				parent = parent.parent;
@@ -598,7 +608,7 @@ var View = exports.View = function () {
 					t[k].remove();
 				}
 
-				if (tag.tagName == 'INPUT' || tag.tagName == 'SELECT') {
+				if (tag.tagName == 'INPUT' || tag.tagName == 'SELECT' || tag.tagName == 'TEXTAREA') {
 					var type = tag.getAttribute('type');
 					if (type && type.toLowerCase() == 'checkbox') {
 						if (v) {
@@ -693,7 +703,7 @@ var View = exports.View = function () {
 						}
 					}
 
-					var eventListener = function (object, parent, eventMethod) {
+					var eventListener = function (object, parent, eventMethod, tag) {
 						return function (event) {
 							var argRefs = argList.map(function (arg) {
 								var match = void 0;
@@ -703,6 +713,8 @@ var View = exports.View = function () {
 									return event;
 								} else if (arg === '$view') {
 									return parent;
+								} else if (arg === '$tag') {
+									return tag;
 								} else if (arg === '$parent') {
 									return object.parent;
 								} else if (arg === '$subview') {
@@ -722,7 +734,7 @@ var View = exports.View = function () {
 							}
 							eventMethod.apply(undefined, _toConsumableArray(argRefs));
 						};
-					}(object, parent, eventMethod);
+					}(object, parent, eventMethod, tag);
 
 					switch (eventName) {
 						case '_init':
@@ -759,12 +771,18 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapLinkTags',
 		value: function mapLinkTags(tag) {
-			var LinkAttr = tag.getAttribute('cv-link');
+			var linkAttr = tag.getAttribute('cv-link');
 
-			tag.setAttribute('href', LinkAttr);
+			tag.setAttribute('href', linkAttr);
 
 			var linkClick = function linkClick(event) {
 				event.preventDefault();
+
+				if (linkAttr.substring(0, 4) == 'http' || linkAttr.substring(0, 2) == '//') {
+					window.open(tag.getAttribute('href', linkAttr));
+
+					return;
+				}
 
 				_Router.Router.go(tag.getAttribute('href'));
 			};

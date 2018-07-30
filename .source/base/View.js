@@ -562,7 +562,13 @@ export class View
 
 		tag.removeAttribute('cv-ref');
 
-		this.cleanup.push(()=>{
+		Object.defineProperty(tag, '___tag___', {
+            enumerable: false,
+            writable: true
+        });
+
+        this.cleanup.push(()=>{
+        	tag.___tag___ = null;
 			tag.remove()
 		});
 
@@ -590,6 +596,12 @@ export class View
 			// );
 		}
 
+		let tagObject = new refClass(
+			tag, this, refProp, undefined, direct
+		);
+
+		tag.___tag___ = tagObject;
+
 		if(parent)
 		{
 			if(1 || !parent.parent)
@@ -603,15 +615,11 @@ export class View
 						parent.tags[refProp] = [];
 					}
 
-					parent.tags[refProp][refKeyVal] = new refClass(
-						tag, this, refProp, undefined, direct
-					);
+					parent.tags[refProp][refKeyVal] = tagObject;
 				}
 				else
 				{
-					parent.tags[refProp] = new refClass(
-						tag, this, refProp, undefined, direct
-					);
+					parent.tags[refProp] = tagObject;
 				}
 			}
 			parent = parent.parent;
@@ -632,8 +640,10 @@ export class View
 				t[k].remove();
 			}
 
-
-			if(tag.tagName == 'INPUT' || tag.tagName == 'SELECT') {
+			if(tag.tagName == 'INPUT'
+				|| tag.tagName == 'SELECT'
+				|| tag.tagName == 'TEXTAREA'
+			) {
 				let type = tag.getAttribute('type');
 				if(type && type.toLowerCase() == 'checkbox') {
 					if(v) {
@@ -733,7 +743,7 @@ export class View
 					}
 				}
 
-				let eventListener = ((object, parent, eventMethod) => (event) => {
+				let eventListener = ((object, parent, eventMethod, tag) => (event) => {
 					let argRefs = argList.map((arg) => {
 						let match;
 						if(parseInt(arg) == arg)
@@ -745,6 +755,9 @@ export class View
 						}
 						else if(arg === '$view') {
 							return parent;
+						}
+						else if(arg === '$tag') {
+							return tag;
 						}
 						else if(arg === '$parent') {
 							return object.parent;
@@ -774,7 +787,7 @@ ${tag.outerHTML}`
 						);
 					}
 					eventMethod(...argRefs);
-				})(object, parent, eventMethod);
+				})(object, parent, eventMethod, tag);
 
 
 				switch(eventName)
@@ -812,12 +825,20 @@ ${tag.outerHTML}`
 
 	mapLinkTags(tag)
 	{
-		let LinkAttr = tag.getAttribute('cv-link');
+		let linkAttr = tag.getAttribute('cv-link');
 
-		tag.setAttribute('href', LinkAttr);
+		tag.setAttribute('href', linkAttr);
 
 		let linkClick = (event) => {
 			event.preventDefault();
+
+			if(linkAttr.substring(0, 4) == 'http'
+				|| linkAttr.substring(0, 2) == '//'
+			){
+				window.open(tag.getAttribute('href', linkAttr));
+
+				return;
+			}
 
 			Router.go(tag.getAttribute('href'));
 		};

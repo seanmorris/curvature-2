@@ -11,6 +11,8 @@ var _View = require('./View');
 
 var _Cache = require('./Cache');
 
+var _Config = require('Config');
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Router = exports.Router = function () {
@@ -34,19 +36,29 @@ var Router = exports.Router = function () {
 	}, {
 		key: 'go',
 		value: function go(route, silent) {
-			var currentRoute = location.pathname + location.search;
+			var currentRoute = void 0;
 
 			if (currentRoute !== route) {
-				history.pushState(null, null, route);
-			}
-			if (!silent) {
-				window.dispatchEvent(new Event('popstate'));
+				setTimeout(function () {
+
+					document.title = _Config.Config.title;
+					history.pushState(null, null, route);
+					if (!silent) {
+						window.dispatchEvent(new Event('popstate'));
+					}
+				}, 0);
+
+				currentRoute = location.pathname + location.search;
 			}
 		}
 	}, {
 		key: 'match',
 		value: function match(path, view) {
 			var forceRefresh = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+			if (this.path == path && !forceRefresh) {
+				// return;
+			}
 
 			var current = view.args.content;
 			var routes = view.routes;

@@ -50,7 +50,11 @@ export class PopOutTag extends Tag
 
 				if(!this.leftDuration)
 				{
-					this.leftDuration = (1 - (1 / this.distance)) / 4;
+					this.leftDuration = (1 - (1 / this.rect.left)) / 4;
+					this.topDuration = (1 - (1 / this.rect.top)) / 4;
+
+					this.leftDuration = Math.round(this.leftDuration * 1000) / 1000;
+					this.topDuration = Math.round(this.topDuration * 1000) / 1000;
 				}
 			}
 
@@ -153,7 +157,9 @@ export class PopOutTag extends Tag
 			width:      ${this.rect.width}px;
 			height:     ${this.rect.height}px;
 			z-index:    99999;
-
+			transition: width ${this.leftDuration}s ease-out
+						, height ${this.topDuration}s ease-out
+						, all ${this.leftDuration}s ease-out;
 			overflow: hidden;
 		`;
 
@@ -173,12 +179,12 @@ export class PopOutTag extends Tag
 				width:  100%;
 				height: 100%;
 				overflow-y: auto;
-				transition: ${this.leftDuration}s ease-out;
+				transition: width ${this.leftDuration}s ease-out
+					, height ${this.topDuration}s ease-out
+					, all ${this.leftDuration}s ease-out;
 			`;
 
 			this.moving = true;
-
-			this.element.classList.add('unpopped');
 
 			this.element.classList.add('popped');
 			this.element.classList.remove('unpopped');
@@ -191,7 +197,7 @@ export class PopOutTag extends Tag
 				}
 				this.bodyStyle = document.body.getAttribute('style');
 				// this.bodyScroll = window.scrollY;
-				document.body.setAttribute('style', 'height:0px;overflow:hidden;');
+				document.body.setAttribute('style', 'height:100%;overflow:hidden;');
 				// window.scrollTo(0,0);
 				this.moving = false;
 				Dom.mapTags(this.element, false, (tag)=>{
@@ -219,6 +225,8 @@ export class PopOutTag extends Tag
 
 	unpop()
 	{
+		this.element.classList.add('unpopping');
+
 		if(this.popTimeout)
 		{
 			clearTimeout(this.popTimeout);
@@ -258,11 +266,12 @@ export class PopOutTag extends Tag
 			{
 				return;
 			}
-			this.element.classList.add('unpopped');
 			this.element.classList.remove('popped');
 			// element.setAttribute('style', this.style);
 		}, this.leftDuration*500);
 		setTimeout(()=>{
+			this.element.classList.add('unpopped');
+			this.element.classList.remove('unpopping');
 			if(!this.element)
 			{
 				return;

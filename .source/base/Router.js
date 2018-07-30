@@ -1,5 +1,6 @@
 import { View  }   from './View';
 import { Cache }   from './Cache';
+import { Config }   from 'Config';
 
 export class Router {
 	static listen(mainView)
@@ -17,18 +18,33 @@ export class Router {
 	}
 	static go(route, silent)
 	{
-		let currentRoute = location.pathname + location.search;
+		let currentRoute;
 
-		if(currentRoute !== route) {
-			history.pushState(null, null, route);
-		}
-		if(!silent)
+		if(currentRoute !== route)
 		{
-			window.dispatchEvent(new Event('popstate'));
+			setTimeout(
+				() => {
+					
+					document.title = Config.title;
+					history.pushState(null, null, route);
+					if(!silent)
+					{
+						window.dispatchEvent(new Event('popstate'))
+					}
+				}
+				, 0
+			);
+
+			currentRoute = location.pathname + location.search
 		}
 	}
 	static match(path, view, forceRefresh = false)
 	{
+		if(this.path == path && !forceRefresh)
+		{
+			// return;
+		}
+
 		let current = view.args.content;
 		let routes  = view.routes;
 
