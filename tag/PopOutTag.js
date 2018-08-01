@@ -34,6 +34,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.moving = false;
 
 		_this.leftDuration = 0;
+		_this.topDuration = 0;
 		_this.unpoppedStyle = '';
 		_this.previousScroll = 0;
 
@@ -51,6 +52,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.rect;
 		_this.clickListener = function (event) {
 			var leftDuration = 0.333;
+			var topDuration = 0.333;
 
 			if (!_this.rect) {
 				_this.rect = _this.element.getBoundingClientRect();
@@ -210,7 +212,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			window.scrollTo(0, this.previousScroll);
 
-			var style = this.style + this.unpoppedStyle + (';transition: ' + this.leftDuration + 's; ease-in');
+			var style = this.style + this.unpoppedStyle + (';transition: width ' + this.leftDuration + 's ease-out\n\t\t\t\t\t, height ' + this.topDuration + 's ease-out\n\t\t\t\t\t, all ' + this.leftDuration + 's ease-out;');
 
 			// window.scrollTo(0, this.bodyScroll);
 
