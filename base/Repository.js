@@ -166,7 +166,7 @@ var Repository = exports.Repository = function () {
 											// this.cache[fullUri] = response;
 										}
 
-										var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
+										var _tagCache = false;
 
 										var prerendering = _Cookie.Cookie.get('prerenderer');
 
