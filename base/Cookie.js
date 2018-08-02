@@ -55,6 +55,8 @@ if (window.location.href.substr(0, 4) !== 'data') {
 			value = value;
 		}
 
+		key = key.trim();
+
 		Cookie.jar[decodeURIComponent(key)] = value;
 		// console.log(Cookie.jar);
 	});
