@@ -137,7 +137,11 @@ export class Repository
 									// this.cache[fullUri] = response;
 								}
 
-								let tagCache = false;
+								let tagCache = document.querySelector(
+									'script[data-uri="'
+									+ fullUri
+									+ '"]'
+								);
 
 								let prerendering  = Cookie.get('prerenderer');
 								
