@@ -13,6 +13,7 @@ export class PopOutTag extends Tag
 		this.moving    = false;
 
 		this.leftDuration   = 0;
+		this.topDuration   = 0;
 		this.unpoppedStyle  = '';
 		this.previousScroll = 0;
 
@@ -30,6 +31,7 @@ export class PopOutTag extends Tag
 		this.rect;
 		this.clickListener  = (event) => {
 			let leftDuration = 0.333;
+			let topDuration  = 0.333;
 
 			if(!this.rect)
 			{
@@ -252,7 +254,9 @@ export class PopOutTag extends Tag
 
 		let style = this.style
 			+ this.unpoppedStyle
-			+ `;transition: ${this.leftDuration}s; ease-in`;
+			+ `;transition: width ${this.leftDuration}s ease-out
+					, height ${this.topDuration}s ease-out
+					, all ${this.leftDuration}s ease-out;`;
 
 
 		// window.scrollTo(0, this.bodyScroll);
