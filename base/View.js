@@ -803,7 +803,7 @@ var View = exports.View = function () {
 		key: 'mapPrendererTags',
 		value: function mapPrendererTags(tag) {
 			var prerenderAttr = tag.getAttribute('cv-prerender');
-			var prerendering = _Cookie.Cookie.get('prerenderer');
+			var prerendering = window.prerenderer;
 
 			if (prerenderAttr == 'never' && prerendering || prerenderAttr == 'only' && !prerendering) {
 				tag.parentNode.removeChild(tag);

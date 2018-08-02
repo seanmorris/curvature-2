@@ -6,6 +6,10 @@ export class UserRepository extends Repository {
 	static get uri() { return Config.backend + '/user/'; }
 	static getCurrentUser(refresh) {
 		this.args = this.args || Bindable.makeBindable({});
+		if(window.prerenderer)
+		{
+			return;
+		}
 		return this.request(
 			this.uri + 'current'
 			, false

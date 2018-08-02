@@ -168,16 +168,18 @@ var Repository = exports.Repository = function () {
 
 										var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
 
-										var prerendering = _Cookie.Cookie.get('prerenderer');
+										var prerendering = window.prerenderer;
 
 										if (prerendering) {
 											if (!_tagCache) {
 												_tagCache = document.createElement('script');
-												document.querySelector('head').appendChild(_tagCache);
+												_tagCache.type = 'text/json';
+												_tagCache.setAttribute('data-uri', fullUri);
+												document.head.appendChild(_tagCache);
 											}
 
-											_tagCache.type = 'text/json';
-											_tagCache.setAttribute('data-uri', fullUri);
+											console.log(JSON.stringify(response));
+
 											_tagCache.innerText = JSON.stringify(response);
 										}
 

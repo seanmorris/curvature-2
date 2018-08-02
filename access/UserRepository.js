@@ -34,6 +34,9 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 			var _this2 = this;
 
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
+			if (window.prerenderer) {
+				return;
+			}
 			return this.request(this.uri + 'current', false, false, false).then(function (response) {
 				_this2.args.current = response.body;
 				return response;

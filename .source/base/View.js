@@ -857,7 +857,7 @@ ${tag.outerHTML}`
 	mapPrendererTags(tag)
 	{
 		let prerenderAttr = tag.getAttribute('cv-prerender');
-		let prerendering  = Cookie.get('prerenderer');
+		let prerendering  = window.prerenderer;
 
 		if(prerenderAttr == 'never' && prerendering
 			|| prerenderAttr == 'only' && !prerendering

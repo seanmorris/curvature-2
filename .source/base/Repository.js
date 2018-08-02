@@ -143,18 +143,20 @@ export class Repository
 									+ '"]'
 								);
 
-								let prerendering  = Cookie.get('prerenderer');
+								let prerendering  = window.prerenderer;
 								
 								if(prerendering)
 								{
 									if(!tagCache)
 									{
 										tagCache  = document.createElement('script');
-										document.querySelector('head').appendChild(tagCache);
+										tagCache.type = 'text/json';
+										tagCache.setAttribute('data-uri', fullUri);
+										document.head.appendChild(tagCache);
 									}
+
+									console.log(JSON.stringify(response));
 									
-									tagCache.type = 'text/json';
-									tagCache.setAttribute('data-uri', fullUri);
 									tagCache.innerText = JSON.stringify(response);
 								}
 
