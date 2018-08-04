@@ -26,7 +26,7 @@ var Cookie = exports.Cookie = function () {
 	}, {
 		key: 'get',
 		value: function get(name) {
-			return Cookie.jar[name];
+			return JSON.parse(Cookie.jar[name]);
 		}
 	}, {
 		key: 'delete',

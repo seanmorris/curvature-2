@@ -9,7 +9,7 @@ export class Cookie
 
 	static get(name)
 	{
-		return Cookie.jar[name];
+		return JSON.parse(Cookie.jar[name]);
 	}
 
 	static delete(name)
