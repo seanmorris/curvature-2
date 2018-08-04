@@ -26,7 +26,7 @@ var Cookie = exports.Cookie = function () {
 	}, {
 		key: 'get',
 		value: function get(name) {
-			return JSON.parse(Cookie.jar[name]);
+			return Cookie.jar[name];
 		}
 	}, {
 		key: 'delete',
@@ -68,7 +68,7 @@ if (window.location.href.substr(0, 4) !== 'data') {
 			t[k] = null;
 		}
 
-		var cookieString = encodeURIComponent(k) + '=' + JSON.stringify(t[k]);
+		var cookieString = encodeURIComponent(k) + '=' + t[k];
 		// console.log(cookieString);
 		document.cookie = cookieString;
 	});
