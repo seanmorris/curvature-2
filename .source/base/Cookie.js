@@ -9,7 +9,7 @@ export class Cookie
 
 	static get(name)
 	{
-		return JSON.parse(Cookie.jar[name]);
+		return Cookie.jar[name];
 	}
 
 	static delete(name)
@@ -48,7 +48,7 @@ if(window.location.href.substr(0,4) !== 'data')
 			t[k] = null;
 		}
 		
-		const cookieString = `${encodeURIComponent(k)}=${JSON.stringify(t[k])}`;
+		const cookieString = `${encodeURIComponent(k)}=${t[k]}`;
 		// console.log(cookieString);
 		document.cookie = cookieString;
 	});
