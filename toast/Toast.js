@@ -78,6 +78,15 @@ var Toast = exports.Toast = function (_View) {
 				};
 			}(alert));
 		}
+	}, {
+		key: 'alert',
+		value: function alert(title, body, time) {
+			return this.pop(new _ToastAlert.ToastAlert({
+				title: title,
+				body: body,
+				time: time
+			}));
+		}
 	}]);
 
 	return Toast;

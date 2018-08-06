@@ -13,6 +13,7 @@ export class View
 		this._id       = this.uuid();
 		this.args._id  = this._id;
 		this.template  = ``;
+		this.document  = ``;
 		this.parent    = null;
 
 		this.firstNode = null;
@@ -39,7 +40,7 @@ export class View
 		this.intervals = [];
 		this.timeouts  = [];
 		this.frames    = [];
-		this.interpolateRegex = /(\[\[((?:\$)?\w+)\]\])/g
+		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g
 	}
 
 	static isView()
@@ -252,9 +253,14 @@ export class View
 		{
 			subDoc = this.template;
 		}
-		else
+		else if(this.document)
+		{
+			subDoc = this.document;
+		}
 		{
 			subDoc = document.createRange().createContextualFragment(this.template);
+
+			this.document = subDoc;
 		}
 
 		// Dom.mapTags(subDoc, '[cv-ref]', (tag)=>{
@@ -411,6 +417,11 @@ export class View
 			{
 				let bindProperty = match[2];
 
+				if(1||bindProperty.match(/\./))
+				{
+					// console.log(bindProperty);
+				}
+
 				let unsafeHtml = false;
 
 				if(bindProperty.substr(0, 1) === '$')
@@ -446,9 +457,21 @@ export class View
 					dynamicNode = document.createTextNode('');
 				}
 
+				let proxy    = this.args;
+				let property = bindProperty;
+
+				if(bindProperty.match(/\./))
+				{
+					[proxy, property] = Bindable.resolve(
+						this.args
+						, bindProperty
+						, true
+					);
+				}
+
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
-				this.args.bindTo(bindProperty, ((dynamicNode,unsafeHtml) => (v,k,t) => {
+				proxy.bindTo(property, ((dynamicNode,unsafeHtml) => (v,k,t) => {
 					// console.log(`Setting ${k} to ${v}`, dynamicNode);
 					if(t[k] instanceof View)
 					{
@@ -529,21 +552,39 @@ export class View
 
 				for(let j in bindProperties)
 				{
-					this.args.bindTo(j, (v, k, t, d) => {
+					let proxy    = this.args;
+					let property = j
+
+					if(j.match(/\./))
+					{
+						[proxy, property] = Bindable.resolve(
+							this.args
+							, j
+							, true
+						);
+					}
+
+					if(!proxy.bindTo)
+					{
+						console.log(property);
+						console.log(proxy);						
+					}
+
+					proxy.bindTo(property, ((property, longProperty) => (v, k, t, d) => {
 						for(let i in bindProperties)
 						{
-							for(let j in bindProperties[i])
+							for(let j in bindProperties[longProperty])
 							{
-								segments[ bindProperties[i][j] ] = t[i];
+								segments[ bindProperties[longProperty][j] ] = t[i];
 
-								if(k === i)
+								if(k === property)
 								{
-									segments[ bindProperties[i][j] ] = v;
+									segments[ bindProperties[longProperty][j] ] = v;
 								}
 							}
 						}
 						tag.setAttribute(attribute.name, segments.join(''));
-					});
+					})(property, j));
 				}
 
 				// console.log(bindProperties, segments);
@@ -1002,7 +1043,19 @@ ${tag.outerHTML}`
 
 		view.render(tag);
 
-		this.args.bindTo(
+		let proxy    = this.args;
+		let property = ifProperty;
+
+		if(ifProperty.match(/\./))
+		{
+			[proxy, property] = Bindable.resolve(
+				this.args
+				, ifProperty
+				, true
+			);
+		}
+
+		proxy.bindTo(
 			ifProperty
 			, ((tag, ifDoc) => (v) => {
 				let detachEvent = new Event('cvDomDetached');

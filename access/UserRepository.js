@@ -43,6 +43,11 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 			});
 		}
 	}, {
+		key: 'login',
+		value: function login() {
+			return this.request(_Config.Config.backend + '/user/login');
+		}
+	}, {
 		key: 'logout',
 		value: function logout() {
 			this.args = this.args || _Bindable.Bindable.makeBindable({});

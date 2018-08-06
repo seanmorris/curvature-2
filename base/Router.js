@@ -39,9 +39,8 @@ var Router = exports.Router = function () {
 			var currentRoute = void 0;
 
 			if (currentRoute !== route) {
+				document.title = _Config.Config.title;
 				setTimeout(function () {
-
-					document.title = _Config.Config.title;
 					history.pushState(null, null, route);
 					if (!silent) {
 						window.dispatchEvent(new Event('popstate'));

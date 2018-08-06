@@ -35,6 +35,7 @@ var View = exports.View = function () {
 		this._id = this.uuid();
 		this.args._id = this._id;
 		this.template = '';
+		this.document = '';
 		this.parent = null;
 
 		this.firstNode = null;
@@ -61,7 +62,7 @@ var View = exports.View = function () {
 		this.intervals = [];
 		this.timeouts = [];
 		this.frames = [];
-		this.interpolateRegex = /(\[\[((?:\$)?\w+)\]\])/g;
+		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
 	}
 
 	_createClass(View, [{
@@ -264,8 +265,13 @@ var View = exports.View = function () {
 
 			if (this.template == document) {
 				subDoc = this.template;
-			} else {
+			} else if (this.document) {
+				subDoc = this.document;
+			}
+			{
 				subDoc = document.createRange().createContextualFragment(this.template);
+
+				this.document = subDoc;
 			}
 
 			// Dom.mapTags(subDoc, '[cv-ref]', (tag)=>{
@@ -397,6 +403,10 @@ var View = exports.View = function () {
 				while (match = regex.exec(original)) {
 					var bindProperty = match[2];
 
+					if (1 || bindProperty.match(/\./)) {
+						// console.log(bindProperty);
+					}
+
 					var unsafeHtml = false;
 
 					if (bindProperty.substr(0, 1) === '$') {
@@ -427,9 +437,21 @@ var View = exports.View = function () {
 						dynamicNode = document.createTextNode('');
 					}
 
+					var proxy = this.args;
+					var property = bindProperty;
+
+					if (bindProperty.match(/\./)) {
+						var _Bindable$resolve = _Bindable.Bindable.resolve(this.args, bindProperty, true);
+
+						var _Bindable$resolve2 = _slicedToArray(_Bindable$resolve, 2);
+
+						proxy = _Bindable$resolve2[0];
+						property = _Bindable$resolve2[1];
+					}
+
 					tag.parentNode.insertBefore(dynamicNode, tag);
 
-					this.args.bindTo(bindProperty, function (dynamicNode, unsafeHtml) {
+					proxy.bindTo(property, function (dynamicNode, unsafeHtml) {
 						return function (v, k, t) {
 							// console.log(`Setting ${k} to ${v}`, dynamicNode);
 							if (t[k] instanceof View) {
@@ -500,18 +522,37 @@ var View = exports.View = function () {
 					segments.push(original.substring(header));
 
 					for (var j in bindProperties) {
-						_this3.args.bindTo(j, function (v, k, t, d) {
-							for (var _i9 in bindProperties) {
-								for (var _j in bindProperties[_i9]) {
-									segments[bindProperties[_i9][_j]] = t[_i9];
+						var _proxy = _this3.args;
+						var _property = j;
 
-									if (k === _i9) {
-										segments[bindProperties[_i9][_j]] = v;
+						if (j.match(/\./)) {
+							var _Bindable$resolve3 = _Bindable.Bindable.resolve(_this3.args, j, true);
+
+							var _Bindable$resolve4 = _slicedToArray(_Bindable$resolve3, 2);
+
+							_proxy = _Bindable$resolve4[0];
+							_property = _Bindable$resolve4[1];
+						}
+
+						if (!_proxy.bindTo) {
+							console.log(_property);
+							console.log(_proxy);
+						}
+
+						_proxy.bindTo(_property, function (property, longProperty) {
+							return function (v, k, t, d) {
+								for (var _i9 in bindProperties) {
+									for (var _j in bindProperties[longProperty]) {
+										segments[bindProperties[longProperty][_j]] = t[_i9];
+
+										if (k === property) {
+											segments[bindProperties[longProperty][_j]] = v;
+										}
 									}
 								}
-							}
-							tag.setAttribute(attribute.name, segments.join(''));
-						});
+								tag.setAttribute(attribute.name, segments.join(''));
+							};
+						}(_property, j));
 					}
 
 					// console.log(bindProperties, segments);
@@ -953,7 +994,19 @@ var View = exports.View = function () {
 
 			view.render(tag);
 
-			this.args.bindTo(ifProperty, function (tag, ifDoc) {
+			var proxy = this.args;
+			var property = ifProperty;
+
+			if (ifProperty.match(/\./)) {
+				var _Bindable$resolve5 = _Bindable.Bindable.resolve(this.args, ifProperty, true);
+
+				var _Bindable$resolve6 = _slicedToArray(_Bindable$resolve5, 2);
+
+				proxy = _Bindable$resolve6[0];
+				property = _Bindable$resolve6[1];
+			}
+
+			proxy.bindTo(ifProperty, function (tag, ifDoc) {
 				return function (v) {
 					var detachEvent = new Event('cvDomDetached');
 					var attachEvent = new Event('cvDomAttached');

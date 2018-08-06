@@ -50,4 +50,11 @@ export class Toast extends View {
 			}
 		})(alert));
 	}
+	alert(title, body, time) {
+		return this.pop(new ToastAlert({
+			title: title
+			, body: body
+			, time: time
+		}));
+	}
 }

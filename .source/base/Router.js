@@ -22,10 +22,9 @@ export class Router {
 
 		if(currentRoute !== route)
 		{
+			document.title = Config.title;
 			setTimeout(
 				() => {
-					
-					document.title = Config.title;
 					history.pushState(null, null, route);
 					if(!silent)
 					{

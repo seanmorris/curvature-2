@@ -81,6 +81,11 @@ export class Bindable {
             writable: true
         });
 
+        Object.defineProperty(object, '___object___', {
+            enumerable: false,
+            writable: true
+        });
+        object.___object___     = object;
         object.___isBindable___ = Bindable;
         object.___wrapped___    = {};
         object.___binding___    = {};
@@ -223,7 +228,7 @@ export class Bindable {
                     target.___executing___ = key;
 
                     target.___stack___.unshift(key);
-                    target.___stackTime___.unshift((new Date).getTime());
+                    // target.___stackTime___.unshift((new Date).getTime());
 
                     // console.log(`Start ${key}()`);
 
@@ -239,14 +244,14 @@ export class Bindable {
 
                     target.___executing___ = null;
 
-                    let execTime = (new Date).getTime() - target.___stackTime___[0];
+                    // let execTime = (new Date).getTime() - target.___stackTime___[0];
 
-                    if (execTime > 150) {
-                        // console.log(`End ${key}(), took ${execTime} ms`);
-                    }
+                    // if (execTime > 150) {
+                    //     // console.log(`End ${key}(), took ${execTime} ms`);
+                    // }
 
                     target.___stack___.shift();
-                    target.___stackTime___.shift();
+                    // target.___stackTime___.shift();
 
                     return ret;
                 };
@@ -275,5 +280,28 @@ export class Bindable {
         object.___after___      = {};
         object.___ref___        = {};
         object.toString         = ()=>'{}';
+    }
+    static resolve(object, path, owner = false)
+    {
+        let node;
+        let pathParts = path.split('.');
+
+        while(pathParts.length)
+        {
+            if(owner && pathParts.length === 1)
+            {
+                return [this.makeBindable(object), pathParts.shift()];
+            }
+
+            if(!node in object)
+            {
+                return undefined;
+            }
+
+            node   = pathParts.shift();
+            object = this.makeBindable(object[node]);
+        }
+
+        return this.makeBindable(object);
     }
 }
