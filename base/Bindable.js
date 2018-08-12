@@ -240,7 +240,7 @@ var Bindable = exports.Bindable = function () {
 
             var get = function (object) {
                 return function (target, key) {
-                    if (typeof target[key] == 'function') {
+                    if (target[key] instanceof Function) {
 
                         if (target.___wrapped___[key]) {
                             return target.___wrapped___[key];

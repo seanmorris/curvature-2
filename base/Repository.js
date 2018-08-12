@@ -75,11 +75,12 @@ var Repository = exports.Repository = function () {
 		key: 'request',
 		value: function request(uri) {
 			var args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+			var post = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
 			var _this = this;
 
-			var post = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 			var cache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+			var options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
 
 			var type = 'GET';
 			var queryString = '';
@@ -118,6 +119,10 @@ var Repository = exports.Repository = function () {
 			fullUri = uri + '?' + queryString;
 
 			var xhr = new XMLHttpRequest();
+
+			if ('responseType' in options) {
+				xhr.responseType = options.responseType;
+			}
 
 			if (!post && cache && this.cache && this.cache[fullUri]) {
 				return Promise.resolve(this.cache[fullUri]);
@@ -158,7 +163,8 @@ var Repository = exports.Repository = function () {
 
 							if (xhr.status === OK) {
 
-								if (response = JSON.parse(xhr.responseText)) {
+								if (xhr.getResponseHeader("Content-Type") == 'application/json' || xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8' || xhr.getResponseHeader("Content-Type") == 'text/json' || xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8') {
+									response = JSON.parse(xhr.responseText);
 									if (response.code == 0) {
 										// Repository.lastResponse = response;
 
@@ -198,7 +204,7 @@ var Repository = exports.Repository = function () {
 										// this.cache[fullUri] = xhr.responseText;
 									}
 
-									resolve(xhr.responseText);
+									resolve(xhr);
 								}
 							} else {
 								reject('HTTP' + xhr.status);

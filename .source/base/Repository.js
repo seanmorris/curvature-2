@@ -43,7 +43,7 @@ export class Repository
 			this.objects[this.uri] = {};
 		}
 	}
-	static request(uri, args = null, post = null, cache = true) {
+	static request(uri, args = null, post = null, cache = true, options = {}) {
 		let type = 'GET';
 		let queryString = '';
 		let formData = null;
@@ -89,6 +89,11 @@ export class Repository
 
 		let xhr = new XMLHttpRequest();
 
+		if('responseType' in options)
+		{
+			xhr.responseType = options.responseType;
+		}
+
 		if(!post && cache && this.cache && this.cache[fullUri]) {
 			return Promise.resolve(this.cache[fullUri]);
 		}
@@ -129,7 +134,12 @@ export class Repository
 
 					if (xhr.status === OK) {
 
-						if(response = JSON.parse(xhr.responseText)) {
+						if(xhr.getResponseHeader("Content-Type") == 'application/json'
+							|| xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8'
+							|| xhr.getResponseHeader("Content-Type") == 'text/json'
+							|| xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8'
+						) {
+							response = JSON.parse(xhr.responseText)
 							if(response.code == 0) {
 								// Repository.lastResponse = response;
 
@@ -177,7 +187,7 @@ export class Repository
 								// this.cache[fullUri] = xhr.responseText;
 							}
 
-							resolve(xhr.responseText);
+							resolve(xhr);
 						}
 					}
 					else {

@@ -146,10 +146,14 @@ export class Router {
 			&& routes[selected].isView()
 		){
 			result = new routes[selected](args);
+
+			result.root = ()=>view;
 		}
 		else if(routes[selected] instanceof Function)
 		{
 			result = '';
+
+			console.log(routes[selected]);
 
 			let _result = routes[selected](args);
 

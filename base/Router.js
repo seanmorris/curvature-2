@@ -169,8 +169,14 @@ var Router = exports.Router = function () {
 
 			if (selected in routes && routes[selected] instanceof Object && routes[selected].isView && routes[selected].isView()) {
 				result = new routes[selected](args);
+
+				result.root = function () {
+					return view;
+				};
 			} else if (routes[selected] instanceof Function) {
 				result = '';
+
+				console.log(routes[selected]);
 
 				var _result = routes[selected](args);
 

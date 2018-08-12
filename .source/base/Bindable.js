@@ -217,7 +217,7 @@ export class Bindable {
         })(object);
 
         let get = ((object) => (target, key) => {
-            if (typeof target[key] == 'function') {
+            if (target[key] instanceof Function) {
 
             	if(target.___wrapped___[key])
             	{
