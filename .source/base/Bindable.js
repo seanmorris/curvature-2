@@ -8,10 +8,10 @@ export class Bindable {
     }
     static makeBindable(object) {
 
-        if (!object ||
-            object.___binding___ ||
-            typeof object !== 'object' ||
-            object instanceof Node
+        if (!object
+            || object.___binding___
+            || typeof object !== 'object'
+            || object instanceof Node
         ) {
             return object;
         }
@@ -168,7 +168,21 @@ export class Bindable {
             }
 
             if (!stop) {
-                target[key] = value;
+                let descriptor = Object.getOwnPropertyDescriptor(
+                    target
+                    , key
+                );
+
+                let excluded = (
+                    target instanceof File
+                    && key == 'lastModifiedDate'
+                );
+                
+                if(!excluded
+                    && (!descriptor || descriptor.writable)
+                ){
+                    target[key] = value;
+                }
             }
 
             if (!target.___setCount___[key]) {

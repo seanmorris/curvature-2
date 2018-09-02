@@ -187,7 +187,13 @@ var Bindable = exports.Bindable = function () {
                     }
 
                     if (!stop) {
-                        target[key] = value;
+                        var descriptor = Object.getOwnPropertyDescriptor(target, key);
+
+                        var excluded = target instanceof File && key == 'lastModifiedDate';
+
+                        if (!excluded && (!descriptor || descriptor.writable)) {
+                            target[key] = value;
+                        }
                     }
 
                     if (!target.___setCount___[key]) {

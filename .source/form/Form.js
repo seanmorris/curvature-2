@@ -77,7 +77,7 @@ export class Form extends View
 	}
 	buttonClick(event)
 	{
-		console.log(event);
+		// console.log(event);
 	}
 	onSubmit(callback)
 	{
@@ -100,13 +100,17 @@ export class Form extends View
 
 			let field = null;
 			let form  = null;
-			if(parent instanceof Form)
+
+			if(parent)
 			{
-				form = parent;
-			}
-			else
-			{
-				form = parent.form;
+				if(parent instanceof Form)
+				{
+					form = parent;
+				}
+				else
+				{
+					form = parent.form;
+				}
 			}
 
 			if(skeleton[i].name in customFields)
@@ -139,7 +143,6 @@ export class Form extends View
 				}
 			}
 
-
 			fields[i] = field;
 
 			field.args.bindTo(
@@ -148,6 +151,12 @@ export class Form extends View
 					// console.log(t,v);
 					if(t.type == 'html' && !t.contentEditable || t.type == 'fieldset')
 					{
+						return;
+					}
+					if(t.disabled)
+					{
+						delete form.args.flatValue[ field.args.name ];
+
 						return;
 					}
 					form.args.flatValue[ field.args.name ] = v;
@@ -172,12 +181,19 @@ export class Form extends View
 		
 		for(let i in field.args.fields)
 		{
+
+			if(field.args.fields[i]
+				&& field.args.fields[i].disabled
+			){
+				continue;
+			}
+
 			let subchain = chain.slice(0);
 
 			subchain.push(i);
 
-			if(field.args.fields[i] &&
-				field.args.fields[i].hasChildren()
+			if(field.args.fields[i]
+				&& field.args.fields[i].hasChildren()
 			){
 				this.formData(
 					append

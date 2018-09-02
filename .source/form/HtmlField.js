@@ -11,4 +11,8 @@ export class HtmlField extends View {
 	{
 		return false;
 	}
+	disable()
+	{
+		this.args.disabled = 'disabled';
+	}
 }

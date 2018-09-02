@@ -30,6 +30,7 @@ var Field = exports.Field = function (_View) {
 		_this.args.title = _this.args.title || '';
 		_this.args.value = _this.args.value || '';
 		_this.skeleton = skeleton;
+		_this.disabled = null;
 
 		_this.args.valueString = '';
 
@@ -62,6 +63,10 @@ var Field = exports.Field = function (_View) {
 					_this.parent.args.value[key] = _this.tags.input.element.files[0];
 				}
 			} else {
+				if (!_this.parent.args.value) {
+					_this.parent.args.value = {};
+				}
+
 				_this.parent.args.value[key] = v;
 			}
 			setting = null;
@@ -93,12 +98,23 @@ var Field = exports.Field = function (_View) {
 			extra = 'value = "1"';
 		}
 
-		_this.template = '\n\t\t\t<label\n\t\t\t\tfor       = "' + _this.args.name + '"\n\t\t\t\tdata-type = "' + _this.args.attrs.type + '"\n\t\t\t\tcv-ref    = "label:curvature/base/Tag"\n\t\t\t>\n\t\t\t\t<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>\n\t\t\t\t<input\n\t\t\t\t\tname      = "' + _this.args.name + '"\n\t\t\t\t\ttype      = "' + (_this.args.attrs.type || 'text') + '"\n\t\t\t\t\tcv-bind   = "value"\n\t\t\t\t\tcv-ref    = "input:curvature/base/Tag"\n\t\t\t\t\tcv-expand = "attrs"\n\t\t\t\t\t' + extra + '\n\t\t\t\t/>\n\t\t\t</label>\n\t\t';
+		_this.template = '\n\t\t\t<label\n\t\t\t\tfor           = "' + _this.args.name + '"\n\t\t\t\tdata-type     = "' + _this.args.attrs.type + '"\n\t\t\t\tcv-ref        = "label:curvature/base/Tag"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\t\t\t\t<input\n\t\t\t\t\tname      = "' + _this.args.name + '"\n\t\t\t\t\ttype      = "' + (_this.args.attrs.type || 'text') + '"\n\t\t\t\t\tcv-bind   = "value"\n\t\t\t\t\tcv-ref    = "input:curvature/base/Tag"\n\t\t\t\t\tcv-expand = "attrs"\n\t\t\t\t\t' + extra + '\n\t\t\t\t/>\n\t\t\t</label>\n\t\t';
 		//type    = "${this.args.attrs.type||'text'}"
 		return _this;
 	}
 
 	_createClass(Field, [{
+		key: 'disable',
+		value: function disable() {
+			if (this.hasChildren()) {
+				for (var i in this.args.fields) {
+					this.args.fields[i].disable();
+				}
+			}
+
+			this.disabled = 'disabled';
+		}
+	}, {
 		key: 'hasChildren',
 		value: function hasChildren() {
 			return false;

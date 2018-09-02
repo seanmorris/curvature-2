@@ -87,7 +87,7 @@ var Form = exports.Form = function (_View) {
 	}, {
 		key: 'buttonClick',
 		value: function buttonClick(event) {
-			console.log(event);
+			// console.log(event);
 		}
 	}, {
 		key: 'onSubmit',
@@ -112,6 +112,11 @@ var Form = exports.Form = function (_View) {
 			var parts = [];
 
 			for (var i in field.args.fields) {
+
+				if (field.args.fields[i] && field.args.fields[i].disabled) {
+					continue;
+				}
+
 				var subchain = chain.slice(0);
 
 				subchain.push(i);
@@ -179,10 +184,13 @@ var Form = exports.Form = function (_View) {
 
 				var field = null;
 				var form = null;
-				if (parent instanceof Form) {
-					form = parent;
-				} else {
-					form = parent.form;
+
+				if (parent) {
+					if (parent instanceof Form) {
+						form = parent;
+					} else {
+						form = parent.form;
+					}
 				}
 
 				if (skeleton[i].name in customFields) {
@@ -216,6 +224,11 @@ var Form = exports.Form = function (_View) {
 				field.args.bindTo('value', function (v, k, t, d) {
 					// console.log(t,v);
 					if (t.type == 'html' && !t.contentEditable || t.type == 'fieldset') {
+						return;
+					}
+					if (t.disabled) {
+						delete form.args.flatValue[field.args.name];
+
 						return;
 					}
 					form.args.flatValue[field.args.name] = v;

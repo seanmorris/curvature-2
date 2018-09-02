@@ -34,6 +34,11 @@ var HtmlField = exports.HtmlField = function (_View) {
 		value: function hasChildren() {
 			return false;
 		}
+	}, {
+		key: 'disable',
+		value: function disable() {
+			this.args.disabled = 'disabled';
+		}
 	}]);
 
 	return HtmlField;

@@ -5,12 +5,13 @@ import { View } from '../base/View';
 export class Field extends View {
 	constructor(values, form, parent, key) {
 		let skeleton = Object.assign(values);
-		
+
 		super(values);
-		
+
 		this.args.title = this.args.title || '';
 		this.args.value = this.args.value || '';
 		this.skeleton   = skeleton;
+		this.disabled   = null;
 
 		this.args.valueString = '';
 
@@ -50,6 +51,11 @@ export class Field extends View {
 				}
 				else
 				{
+					if(!this.parent.args.value)
+					{
+						this.parent.args.value = {};
+					}
+
 					this.parent.args.value[key] = v;
 				}
 				setting = null;
@@ -90,11 +96,13 @@ export class Field extends View {
 
 		this.template = `
 			<label
-				for       = "${this.args.name}"
-				data-type = "${this.args.attrs.type}"
-				cv-ref    = "label:curvature/base/Tag"
+				for           = "${this.args.name}"
+				data-type     = "${this.args.attrs.type}"
+				cv-ref        = "label:curvature/base/Tag"
 			>
-				<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>
+				<span cv-if = "title">
+					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
+				</span>
 				<input
 					name      = "${this.args.name}"
 					type      = "${this.args.attrs.type||'text'}"
@@ -107,6 +115,20 @@ export class Field extends View {
 		`;
 		//type    = "${this.args.attrs.type||'text'}"
 	}
+
+	disable()
+	{
+		if(this.hasChildren())
+		{
+			for(let i in this.args.fields)
+			{
+				this.args.fields[i].disable();
+			}
+		}
+
+		this.disabled = 'disabled';
+	}
+
 	hasChildren()
 	{
 		return false;

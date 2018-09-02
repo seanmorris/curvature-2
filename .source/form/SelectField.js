@@ -8,7 +8,9 @@ export class SelectField extends Field {
 				for       = "${this.args.name}"
 				data-type = "${this.args.attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
-				<span cv-if = "title" cv-ref = "title:curvature/base/Tag">[[title]]:</span>
+				<span cv-if = "title">
+					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
+				</span>
 				<select
 					name    = "${this.args.name}"
 					cv-bind = "value"
