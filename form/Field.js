@@ -119,6 +119,15 @@ var Field = exports.Field = function (_View) {
 		value: function hasChildren() {
 			return false;
 		}
+	}, {
+		key: 'getName',
+		value: function getName() {
+			if (this.tags.input) {
+				return this.tags.input.element.getAttribute('name');
+			}
+
+			return this.args.name;
+		}
 	}]);
 
 	return Field;

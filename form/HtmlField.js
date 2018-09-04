@@ -25,7 +25,7 @@ var HtmlField = exports.HtmlField = function (_View) {
 
 		_this.ignore = _this.args.attrs['data-cv-ignore'] || false;
 		_this.args.contentEditable = _this.args.attrs.contenteditable || false;
-		_this.template = '<div contenteditable = "[[contentEditable]]">[[$value]]</div>';
+		_this.template = '<div\n\t\t\tname            = "' + _this.args.name + '"\n\t\t\tcv-ref          = "input:curvature/base/Tag"\n\t\t\tcontenteditable = "[[contentEditable]]"\n\t\t>[[$value]]</div>';
 		return _this;
 	}
 
@@ -38,6 +38,15 @@ var HtmlField = exports.HtmlField = function (_View) {
 		key: 'disable',
 		value: function disable() {
 			this.args.disabled = 'disabled';
+		}
+	}, {
+		key: 'getName',
+		value: function getName() {
+			if (this.tags.input) {
+				return this.tags.input.element.getAttribute('name');
+			}
+
+			return this.args.name;
 		}
 	}]);
 

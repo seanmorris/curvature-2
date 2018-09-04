@@ -149,17 +149,23 @@ export class Form extends View
 				'value'
 				, (v, k ,t, d) => {
 					// console.log(t,v);
-					if(t.type == 'html' && !t.contentEditable || t.type == 'fieldset')
-					{
+					if(t.type == 'html'
+							&& !t.contentEditable
+							|| t.type == 'fieldset'
+					){
 						return;
 					}
+
+					// let fieldName = field.args.name;
+					let fieldName = field.getName();
+
 					if(t.disabled)
 					{
-						delete form.args.flatValue[ field.args.name ];
+						delete form.args.flatValue[ fieldName ];
 
 						return;
 					}
-					form.args.flatValue[ field.args.name ] = v;
+					form.args.flatValue[ fieldName ] = v;
 				}
 			);
 		}
@@ -203,17 +209,21 @@ export class Form extends View
 			}
 			else if(field.args.fields[i])
 			{
+				// let fieldName = field.args.fields[i].args.name;
+				
+				let fieldName = field.args.fields[i].getName();
+
 				if(field.args.fields[i].args.type == 'file')
 				{
 					append.append(
-						field.args.fields[i].args.name
+						fieldName
 						, field.args.fields[i].tags.input.element.files[0]
 					);
 				}
 				else
 				{
 					append.append(
-						field.args.fields[i].args.name
+						fieldName
 						, field.args.fields[i].args.value
 					);
 				}

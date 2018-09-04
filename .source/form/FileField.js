@@ -7,11 +7,13 @@ export class FileField extends Field {
 			<label
 				for       = "${this.args.name}"
 				data-type = "${this.args.attrs.type}"
+				cv-ref    = "label:curvature/base/Tag">
 			>
 				<input
 						name    = "${this.args.name}"
 						type    = "${this.args.attrs.type}"
 						cv-bind = "value"
+						cv-ref  = "input:curvature/base/Tag"
 				/>
 				<span style = "display:none" cv-if = "value">[[[value]]]</span>
 			</label>

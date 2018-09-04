@@ -124,10 +124,14 @@ var Form = exports.Form = function (_View) {
 				if (field.args.fields[i] && field.args.fields[i].hasChildren()) {
 					this.formData(append, field.args.fields[i], subchain);
 				} else if (field.args.fields[i]) {
+					// let fieldName = field.args.fields[i].args.name;
+
+					var fieldName = field.args.fields[i].getName();
+
 					if (field.args.fields[i].args.type == 'file') {
-						append.append(field.args.fields[i].args.name, field.args.fields[i].tags.input.element.files[0]);
+						append.append(fieldName, field.args.fields[i].tags.input.element.files[0]);
 					} else {
-						append.append(field.args.fields[i].args.name, field.args.fields[i].args.value);
+						append.append(fieldName, field.args.fields[i].args.value);
 					}
 				}
 			}
@@ -226,12 +230,16 @@ var Form = exports.Form = function (_View) {
 					if (t.type == 'html' && !t.contentEditable || t.type == 'fieldset') {
 						return;
 					}
+
+					// let fieldName = field.args.name;
+					var fieldName = field.getName();
+
 					if (t.disabled) {
-						delete form.args.flatValue[field.args.name];
+						delete form.args.flatValue[fieldName];
 
 						return;
 					}
-					form.args.flatValue[field.args.name] = v;
+					form.args.flatValue[fieldName] = v;
 				});
 			};
 

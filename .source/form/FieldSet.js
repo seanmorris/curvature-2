@@ -13,11 +13,16 @@ export class FieldSet extends Field
 				for        = "${this.args.name}"
 				data-type  = "${this.args.attrs.type}"
 				data-multi = "${this.args.attrs['data-multi'] ? 'true' : 'false'}"
+				cv-ref     = "label:curvature/base/Tag"
 			>
 				<span cv-if = "title">
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
-				<fieldset name = "${this.args.name}" cv-expand="attrs">
+				<fieldset
+					name   = "${this.args.name}"
+					cv-ref = "input:curvature/base/Tag"
+					cv-expand="attrs"
+				>
 					<div cv-each = "fields:field">
 						<div cv-bind = "field"></div>
 					</div>

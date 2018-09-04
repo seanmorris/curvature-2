@@ -10,10 +10,11 @@ export class ButtonField extends Field {
 				data-type = "${this.args.attrs.type}"
 				cv-ref = "label:curvature/base/Tag">
 				<input
-					name  = "${this.args.name}"
-					type  = "${this.args.attrs.type}"
-					value = "[[title]]"
-					cv-on = "click:clicked(event)"
+					name   = "${this.args.name}"
+					type   = "${this.args.attrs.type}"
+					value  = "[[title]]"
+					cv-on  = "click:clicked(event)"
+					cv-ref = "input:curvature/base/Tag"
 				/>
 			</label>
 		`;

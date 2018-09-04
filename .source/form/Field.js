@@ -133,4 +133,14 @@ export class Field extends View {
 	{
 		return false;
 	}
+
+	getName()
+	{
+		if(this.tags.input)
+		{
+			return this.tags.input.element.getAttribute('name');
+		}
+
+		return this.args.name;
+	}
 }
