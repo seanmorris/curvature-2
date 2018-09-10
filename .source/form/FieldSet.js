@@ -22,10 +22,9 @@ export class FieldSet extends Field
 					name   = "${this.args.name}"
 					cv-ref = "input:curvature/base/Tag"
 					cv-expand="attrs"
+					cv-each = "fields:field"
 				>
-					<div cv-each = "fields:field">
-						<div cv-bind = "field"></div>
-					</div>
+					[[field]]
 				</fieldset>
 			</label>
 		`;

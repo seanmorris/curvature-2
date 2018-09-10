@@ -153,8 +153,6 @@ export class Router {
 		{
 			result = '';
 
-			console.log(routes[selected]);
-
 			let _result = routes[selected](args);
 
 			if(_result instanceof Promise)

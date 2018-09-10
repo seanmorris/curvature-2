@@ -3,6 +3,7 @@ import { Field } from './Field';
 export class HiddenField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
+		this.args.attrs.type = this.args.attrs.type || 'hidden';
 		this.template = `
 			<label
 				for       = "${this.args.name}"

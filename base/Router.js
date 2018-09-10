@@ -176,8 +176,6 @@ var Router = exports.Router = function () {
 			} else if (routes[selected] instanceof Function) {
 				result = '';
 
-				console.log(routes[selected]);
-
 				var _result = routes[selected](args);
 
 				if (_result instanceof Promise) {

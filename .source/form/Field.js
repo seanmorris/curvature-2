@@ -120,13 +120,26 @@ export class Field extends View {
 	{
 		if(this.hasChildren())
 		{
-			for(let i in this.args.fields)
-			{
-				this.args.fields[i].disable();
-			}
+			// for(let i in this.args.fields)
+			// {
+			// 	this.args.fields[i].disable();
+			// }
 		}
 
 		this.disabled = 'disabled';
+	}
+
+	enable()
+	{
+		if(this.hasChildren())
+		{
+			// for(let i in this.args.fields)
+			// {
+			// 	this.args.fields[i].disable();
+			// }
+		}
+
+		this.disabled = false;
 	}
 
 	hasChildren()

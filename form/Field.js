@@ -107,12 +107,25 @@ var Field = exports.Field = function (_View) {
 		key: 'disable',
 		value: function disable() {
 			if (this.hasChildren()) {
-				for (var i in this.args.fields) {
-					this.args.fields[i].disable();
-				}
+				// for(let i in this.args.fields)
+				// {
+				// 	this.args.fields[i].disable();
+				// }
 			}
 
 			this.disabled = 'disabled';
+		}
+	}, {
+		key: 'enable',
+		value: function enable() {
+			if (this.hasChildren()) {
+				// for(let i in this.args.fields)
+				// {
+				// 	this.args.fields[i].disable();
+				// }
+			}
+
+			this.disabled = false;
 		}
 	}, {
 		key: 'hasChildren',
