@@ -26,15 +26,10 @@ export class Field extends View {
 		this.args.bindTo(
 			'value'
 			, (v, k) => {
-				// console.trace();
-				// console.log(this.args.name, v, k);
-
 				if(setting == key)
 				{
 					return;
 				}
-
-				// console.log(this.args.name, v, k);
 
 				this.args.valueString = JSON.stringify(v||'', null, 4);
 

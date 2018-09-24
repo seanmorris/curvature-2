@@ -694,6 +694,15 @@ export class View
 						tag.checked = false;
 					}
 				}
+				else if(type && type.toLowerCase() == 'radio') {
+					console.log(tag, v, tag.value, k);
+					if(v == tag.value) {
+						tag.checked = true;
+					}
+					else {
+						tag.checked = false;
+					}
+				}
 				else if(type !== 'file') {
 					tag.value = v || '';
 				}

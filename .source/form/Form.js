@@ -3,6 +3,7 @@ import { View } from '../base/View';
 import { Field       } from './Field';
 import { FieldSet    } from './FieldSet';
 import { SelectField } from './SelectField';
+import { RadioField  } from './RadioField';
 import { HtmlField   } from './HtmlField';
 import { HiddenField } from './HiddenField';
 import { ButtonField } from './ButtonField';
@@ -126,6 +127,9 @@ export class Form extends View
 						break;
 					case 'select':
 						field = new SelectField(skeleton[i], form, parent, i);
+						break;
+					case 'radios':
+						field = new RadioField(skeleton[i], form, parent, i);
 						break;
 					case 'html':
 						field = new HtmlField(skeleton[i], form, parent, i);

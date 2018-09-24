@@ -34,14 +34,14 @@ export class Router {
 				, 0
 			);
 
-			currentRoute = location.pathname + location.search
+			currentRoute = location.pathname + location.search;
 		}
 	}
 	static match(path, view, forceRefresh = false)
 	{
 		if(this.path == path && !forceRefresh)
 		{
-			// return;
+			return;
 		}
 
 		let current = view.args.content;

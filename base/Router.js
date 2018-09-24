@@ -56,7 +56,7 @@ var Router = exports.Router = function () {
 			var forceRefresh = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
 			if (this.path == path && !forceRefresh) {
-				// return;
+				return;
 			}
 
 			var current = view.args.content;

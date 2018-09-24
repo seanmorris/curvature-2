@@ -43,14 +43,9 @@ var Field = exports.Field = function (_View) {
 		var setting = null;
 
 		_this.args.bindTo('value', function (v, k) {
-			// console.trace();
-			// console.log(this.args.name, v, k);
-
 			if (setting == key) {
 				return;
 			}
-
-			// console.log(this.args.name, v, k);
 
 			_this.args.valueString = JSON.stringify(v || '', null, 4);
 

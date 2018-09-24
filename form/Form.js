@@ -15,6 +15,8 @@ var _FieldSet = require('./FieldSet');
 
 var _SelectField = require('./SelectField');
 
+var _RadioField = require('./RadioField');
+
 var _HtmlField = require('./HtmlField');
 
 var _HiddenField = require('./HiddenField');
@@ -206,6 +208,9 @@ var Form = exports.Form = function (_View) {
 							break;
 						case 'select':
 							field = new _SelectField.SelectField(skeleton[i], form, parent, i);
+							break;
+						case 'radios':
+							field = new _RadioField.RadioField(skeleton[i], form, parent, i);
 							break;
 						case 'html':
 							field = new _HtmlField.HtmlField(skeleton[i], form, parent, i);
