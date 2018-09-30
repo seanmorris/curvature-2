@@ -988,10 +988,6 @@ ${tag.outerHTML}`
 
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		// console.log(this, eachProp);
-
-		let viewList;
-
 		this.args.bindTo(eachProp, ((eachProp,carryProps) => (v, k, t)=>{
 			if(this.viewLists[eachProp])
 			{
@@ -1014,8 +1010,6 @@ ${tag.outerHTML}`
 			this.viewLists[eachProp] = viewList;
 
 		})(eachProp,carryProps));
-
-		this.viewLists[eachProp] = viewList;
 	}
 	
 	mapIfTags(tag)

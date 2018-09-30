@@ -26,7 +26,7 @@ export class PopOutTag extends Tag
 
 		this.popTimeout = null;
 
-		this.element.addEventListener('cvDomDetached', this.detachListener);
+		// this.element.addEventListener('cvDomDetached', this.detachListener);
 
 		this.rect;
 		this.clickListener  = (event) => {

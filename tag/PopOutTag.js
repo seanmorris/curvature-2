@@ -29,6 +29,13 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 		var _this = _possibleConstructorReturn(this, (PopOutTag.__proto__ || Object.getPrototypeOf(PopOutTag)).call(this, element, parent, ref, index, direct));
 
+		console.log(parent);
+
+		parent.cleanup.push(function () {
+			console.log('CLEAN!');
+			document.body.setAttribute('style', '');
+		});
+
 		_this.poppedOut = false;
 		_this.style = element.getAttribute('style');
 		_this.moving = false;
@@ -47,7 +54,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 		_this.popTimeout = null;
 
-		_this.element.addEventListener('cvDomDetached', _this.detachListener);
+		// this.element.addEventListener('cvDomDetached', this.detachListener);
 
 		_this.rect;
 		_this.clickListener = function (event) {

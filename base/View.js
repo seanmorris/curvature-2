@@ -938,10 +938,6 @@ var View = exports.View = function () {
 			    asProp = _eachAttr$split2[1],
 			    keyProp = _eachAttr$split2[2];
 
-			// console.log(this, eachProp);
-
-			var viewList = void 0;
-
 			this.args.bindTo(eachProp, function (eachProp, carryProps) {
 				return function (v, k, t) {
 					if (_this6.viewLists[eachProp]) {
@@ -963,8 +959,6 @@ var View = exports.View = function () {
 					_this6.viewLists[eachProp] = viewList;
 				};
 			}(eachProp, carryProps));
-
-			this.viewLists[eachProp] = viewList;
 		}
 	}, {
 		key: 'mapIfTags',
