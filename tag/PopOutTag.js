@@ -187,7 +187,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					});
 					_this2.element.dispatchEvent(event);
 				}, _this2.horizontalDuration * 1000);
-			}, 1);
+			}, 500);
 
 			this.poppedOut = true;
 		}

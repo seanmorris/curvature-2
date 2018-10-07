@@ -225,7 +225,7 @@ export class PopOutTag extends Tag
 				this.element.dispatchEvent(event);
 
 			}, this.horizontalDuration*1000);
-		}, 1);
+		}, 500);
 
 		this.poppedOut = true;
 	}
