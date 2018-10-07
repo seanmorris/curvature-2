@@ -200,7 +200,6 @@ export class PopOutTag extends Tag
 
 			this.moving = true;
 
-			this.element.setAttribute('style', style);
 			this.element.classList.add('popped');
 			this.element.classList.remove('unpopped');
 			
