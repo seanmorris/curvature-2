@@ -148,6 +148,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			this.previousScroll = window.scrollY;
 
+			this.rect = this.element.getBoundingClientRect();
+
 			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\t\t\ttransition: width ' + this.horizontalDuration + 's  ease-out\n\t\t\t\t\t\t, top ' + this.verticalDuration + 's    ease-out\n\t\t\t\t\t\t, left ' + this.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, height ' + this.verticalDuration + 's ease-out\n\t\t\t\t\t\t, all ' + this.horizontalDuration + 's  ease-out;\n\t\t\toverflow: hidden;\n\t\t';
 
 			var style = this.style + this.unpoppedStyle;
@@ -159,7 +161,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				_this2.moving = true;
 
-				_this2.element.setAttribute('style', style);
 				_this2.element.classList.add('popped');
 				_this2.element.classList.remove('unpopped');
 
