@@ -200,6 +200,7 @@ export class PopOutTag extends Tag
 
 			this.moving = true;
 
+			this.element.setAttribute('style', style);
 			this.element.classList.add('popped');
 			this.element.classList.remove('unpopped');
 			
@@ -231,7 +232,7 @@ export class PopOutTag extends Tag
 				this.element.dispatchEvent(event);
 
 			}, this.horizontalDuration*1000);
-		}, 0);
+		}, 5);
 
 		this.poppedOut = true;
 	}

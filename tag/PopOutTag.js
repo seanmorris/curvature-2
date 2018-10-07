@@ -161,6 +161,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				_this2.moving = true;
 
+				_this2.element.setAttribute('style', style);
 				_this2.element.classList.add('popped');
 				_this2.element.classList.remove('unpopped');
 
@@ -190,7 +191,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					});
 					_this2.element.dispatchEvent(event);
 				}, _this2.horizontalDuration * 1000);
-			}, 0);
+			}, 5);
 
 			this.poppedOut = true;
 		}
