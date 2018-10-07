@@ -62,10 +62,12 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			if (!_this.poppedOut) {
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
-				_this.leftDuration = (1 - 1 / _this.rect.left) / 4;
-				_this.topDuration = (1 - 1 / _this.rect.top) / 4;
-				_this.rightDuration = (1 - 1 / _this.rect.right) / 4;
-				_this.bottomDuration = (1 - 1 / _this.rect.bottom) / 4;
+				var cut = 3;
+
+				_this.leftDuration = (1 - 1 / _this.rect.left) / cut;
+				_this.topDuration = (1 - 1 / _this.rect.top) / cut;
+				_this.rightDuration = (1 - 1 / _this.rect.right) / cut;
+				_this.bottomDuration = (1 - 1 / _this.rect.bottom) / cut;
 
 				_this.leftDuration = Math.round(_this.leftDuration * 1000) / 1000;
 				_this.topDuration = Math.round(_this.topDuration * 1000) / 1000;
@@ -139,7 +141,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			this.previousScroll = window.scrollY;
 
-			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\t\t\ttransition: width ' + this.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, top ' + this.verticalDuration + 's ease-out\n\t\t\t\t\t\t, left ' + this.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, height ' + this.verticalDuration + 's ease-out;\n\t\t\toverflow: hidden;\n\t\t';
+			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\t\t\ttransition: width ' + this.horizontalDuration + 's  ease-out\n\t\t\t\t\t\t, top ' + this.verticalDuration + 's    ease-out\n\t\t\t\t\t\t, left ' + this.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, height ' + this.verticalDuration + 's ease-out\n\t\t\t\t\t\t, all ' + this.horizontalDuration + 's  ease-out;\n\t\t\toverflow: hidden;\n\t\t';
 
 			this.style = this.element.getAttribute('style');
 
@@ -151,7 +153,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			// document.body.style.overflowY = 'hidden';
 
 			this.popTimeout = setTimeout(function () {
-				style += '\n\t\t\t\t;top:   0px;\n\t\t\t\tleft:   0px;\n\t\t\t\twidth:  100%;\n\t\t\t\theight: 100%;\n\t\t\t\toverflow-y: auto;\n\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t, top ' + _this2.verticalDuration + 's ease-out\n\t\t\t\t\t, left ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t, height ' + _this2.verticalDuration + 's ease-out;\n\t\t\t';
+				style += '\n\t\t\t\t;top:   0px;\n\t\t\t\tleft:   0px;\n\t\t\t\twidth:  100%;\n\t\t\t\theight: 100%;\n\t\t\t\toverflow-y: auto;\n\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t, top ' + _this2.verticalDuration + 's           ease-out\n\t\t\t\t\t, left ' + _this2.horizontalDuration + 's        ease-out\n\t\t\t\t\t, height ' + _this2.verticalDuration + 's        ease-out\n\t\t\t\t\t, all ' + _this2.horizontalDuration + 's         ease-out;\n\t\t\t';
 
 				_this2.moving = true;
 
@@ -214,7 +216,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			window.scrollTo(0, this.previousScroll);
 
-			var style = this.style + this.unpoppedStyle + (';transition: width ' + this.horizontalDuration + 's ease-out\n\t\t\t\t\t, height ' + this.verticalDuration + 's ease-out\n\t\t\t\t\t, all ' + this.horizontalDuration + 's ease-out;');
+			var style = this.style + this.unpoppedStyle + (';transition: width ' + this.horizontalDuration + 's ease-in\n\t\t\t\t\t, height ' + this.verticalDuration + 's        ease-in\n\t\t\t\t\t, all ' + this.horizontalDuration + 's         ease-in;');
 
 			// window.scrollTo(0, this.bodyScroll);
 
@@ -228,7 +230,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				}
 				_this3.element.classList.remove('popped');
 				// element.setAttribute('style', this.style);
-			}, this.horizontalDuration * 500);
+			}, this.horizontalDuration * 1000);
 			setTimeout(function () {
 				_this3.element.classList.add('unpopped');
 				_this3.element.classList.remove('unpopping');

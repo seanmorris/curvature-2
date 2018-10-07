@@ -45,10 +45,12 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				this.leftDuration   = (1 - (1 / this.rect.left)) / 4;
-				this.topDuration    = (1 - (1 / this.rect.top)) / 4;
-				this.rightDuration  = (1 - (1 / this.rect.right)) / 4;
-				this.bottomDuration = (1 - (1 / this.rect.bottom)) / 4;
+				const cut = 3;
+
+				this.leftDuration   = (1 - (1 / this.rect.left))   / cut;
+				this.topDuration    = (1 - (1 / this.rect.top))    / cut;
+				this.rightDuration  = (1 - (1 / this.rect.right))  / cut;
+				this.bottomDuration = (1 - (1 / this.rect.bottom)) / cut;
 
 				this.leftDuration   = Math.round(this.leftDuration * 1000) / 1000;
 				this.topDuration    = Math.round(this.topDuration * 1000) / 1000;
@@ -158,10 +160,11 @@ export class PopOutTag extends Tag
 			width:      ${this.rect.width}px;
 			height:     ${this.rect.height}px;
 			z-index:    99999;
-			transition: width ${this.horizontalDuration}s ease-out
-						, top ${this.verticalDuration}s ease-out
+			transition: width ${this.horizontalDuration}s  ease-out
+						, top ${this.verticalDuration}s    ease-out
 						, left ${this.horizontalDuration}s ease-out
-						, height ${this.verticalDuration}s ease-out;
+						, height ${this.verticalDuration}s ease-out
+						, all ${this.horizontalDuration}s  ease-out;
 			overflow: hidden;
 		`;
 
@@ -182,9 +185,10 @@ export class PopOutTag extends Tag
 				height: 100%;
 				overflow-y: auto;
 				transition: width ${this.horizontalDuration}s ease-out
-					, top ${this.verticalDuration}s ease-out
-					, left ${this.horizontalDuration}s ease-out
-					, height ${this.verticalDuration}s ease-out;
+					, top ${this.verticalDuration}s           ease-out
+					, left ${this.horizontalDuration}s        ease-out
+					, height ${this.verticalDuration}s        ease-out
+					, all ${this.horizontalDuration}s         ease-out;
 			`;
 
 			this.moving = true;
@@ -255,9 +259,9 @@ export class PopOutTag extends Tag
 
 		let style = this.style
 			+ this.unpoppedStyle
-			+ `;transition: width ${this.horizontalDuration}s ease-out
-					, height ${this.verticalDuration}s ease-out
-					, all ${this.horizontalDuration}s ease-out;`;
+			+ `;transition: width ${this.horizontalDuration}s ease-in
+					, height ${this.verticalDuration}s        ease-in
+					, all ${this.horizontalDuration}s         ease-in;`;
 
 
 		// window.scrollTo(0, this.bodyScroll);
@@ -273,7 +277,7 @@ export class PopOutTag extends Tag
 			}
 			this.element.classList.remove('popped');
 			// element.setAttribute('style', this.style);
-		}, this.horizontalDuration*500);
+		}, this.horizontalDuration*1000);
 		setTimeout(()=>{
 			this.element.classList.add('unpopped');
 			this.element.classList.remove('unpopping');
