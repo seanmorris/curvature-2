@@ -45,7 +45,7 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				const cut = 3000;
+				const cut = 1750;
 
 				let fromRight  = window.innerWidth  - this.rect.right;
 				let fromBottom = window.innerHeight - this.rect.bottom;
