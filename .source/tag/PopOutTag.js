@@ -165,76 +165,79 @@ export class PopOutTag extends Tag
 
 		this.rect = this.element.getBoundingClientRect();
 
-		this.unpoppedStyle = `
-			;position:  fixed;
-			left:       ${this.rect.x}px;
-			top:        ${this.rect.y}px;
-			width:      ${this.rect.width}px;
-			height:     ${this.rect.height}px;
-			z-index:    99999;
-			transition: width ${this.horizontalDuration}s  ease-out
-						, top ${this.verticalDuration}s    ease-out
-						, left ${this.horizontalDuration}s ease-out
-						, height ${this.verticalDuration}s ease-out
-						, all ${this.horizontalDuration}s  ease-out;
-			overflow: hidden;
-		`;
+		window.requestAnimationFrame(()=>{
 
-		let style = this.style + this.unpoppedStyle;
-
-		this.element.setAttribute('style', style);
-
-		this.popTimeout = setTimeout(()=>{
-			style += `
-				;top:   0px;
-				left:   0px;
-				width:  100%;
-				height: 100%;
-				overflow-y: auto;
-				transition: width ${this.horizontalDuration}s ease-out
-					, top ${this.verticalDuration}s           ease-out
-					, left ${this.horizontalDuration}s        ease-out
-					, height ${this.verticalDuration}s        ease-out
-					, all ${this.horizontalDuration}s         ease-out;
+			this.unpoppedStyle = `
+				;position:  fixed;
+				left:       ${this.rect.x}px;
+				top:        ${this.rect.y}px;
+				width:      ${this.rect.width}px;
+				height:     ${this.rect.height}px;
+				z-index:    99999;
+				transition: width ${this.horizontalDuration}s  ease-out
+							, top ${this.verticalDuration}s    ease-out
+							, left ${this.horizontalDuration}s ease-out
+							, height ${this.verticalDuration}s ease-out
+							, all ${this.horizontalDuration}s  ease-out;
+				overflow: hidden;
 			`;
 
-			this.moving = true;
+			let style = this.style + this.unpoppedStyle;
 
 			this.element.setAttribute('style', style);
-			this.element.classList.add('popped');
-			this.element.classList.remove('unpopped');
-			
-			this.popTimeout = setTimeout(()=>{
-				if(!this.element)
-				{
-					return;
-				}
-				this.bodyStyle = document.body.getAttribute('style');
-				
-				document.body.setAttribute('style', 'height:100%;overflow:hidden;');
-				
-				this.moving = false;
-				Dom.mapTags(this.element, false, (tag)=>{
-					let event = new CustomEvent('cvPopped');
 
-					tag.dispatchEvent(event);
+			window.requestAnimationFrame(()=>{
+				style += `
+					;top:   0px;
+					left:   0px;
+					width:  100%;
+					height: 100%;
+					overflow-y: auto;
+					transition: width ${this.horizontalDuration}s ease-out
+						, top ${this.verticalDuration}s           ease-out
+						, left ${this.horizontalDuration}s        ease-out
+						, height ${this.verticalDuration}s        ease-out
+						, all ${this.horizontalDuration}s         ease-out;
+				`;
 
-					this.scrollStyle = this.element.getAttribute('style');
-				});
-				let event = new CustomEvent('cvPop', {
-					bubbles: true
-					, detail: {
-						tag: this
-						, view: this.parent
-						, publicId: this.parent.args.publicId
+				this.moving = true;
+
+				this.element.setAttribute('style', style);
+				this.element.classList.add('popped');
+				this.element.classList.remove('unpopped');
+				
+				this.popTimeout = setTimeout(()=>{
+					if(!this.element)
+					{
+						return;
 					}
-				});
-				this.element.dispatchEvent(event);
+					this.bodyStyle = document.body.getAttribute('style');
+					
+					document.body.setAttribute('style', 'height:100%;overflow:hidden;');
+					
+					this.moving = false;
+					Dom.mapTags(this.element, false, (tag)=>{
+						let event = new CustomEvent('cvPopped');
 
-			}, this.horizontalDuration*1000);
-		}, 5);
+						tag.dispatchEvent(event);
 
-		this.poppedOut = true;
+						this.scrollStyle = this.element.getAttribute('style');
+					});
+					let event = new CustomEvent('cvPop', {
+						bubbles: true
+						, detail: {
+							tag: this
+							, view: this.parent
+							, publicId: this.parent.args.publicId
+						}
+					});
+					this.element.dispatchEvent(event);
+
+				}, this.horizontalDuration*1000);
+			});
+
+			this.poppedOut = true;
+		});
 	}
 
 	unpop()
