@@ -56,6 +56,16 @@ export class PopOutTag extends Tag
 				this.horizontalDuration = horizontalAverage / cut;
 				this.verticalDuration   = vericalAverage / cut;
 
+				if(this.horizontalDuration < 0.1)
+				{
+					this.horizontalDuration = 0.2;
+				}
+				if(this.verticalDuration < 0.1)
+				{
+					this.verticalDuration = 0.2;
+				}
+
+				console.log(this.horizontalDuration, this.verticalDuration);
 			}
 
 			if(!this.element.contains(event.target))

@@ -62,7 +62,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			if (!_this.poppedOut) {
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
-				var cut = 3000;
+				var cut = 1750;
 
 				var fromRight = window.innerWidth - _this.rect.right;
 				var fromBottom = window.innerHeight - _this.rect.bottom;
@@ -73,11 +73,14 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				_this.horizontalDuration = horizontalAverage / cut;
 				_this.verticalDuration = vericalAverage / cut;
 
-				console.log(horizontalAverage, cut, _this.horizontalDuration);
+				if (_this.horizontalDuration < 0.1) {
+					_this.horizontalDuration = 0.2;
+				}
+				if (_this.verticalDuration < 0.1) {
+					_this.verticalDuration = 0.2;
+				}
 
-				console.log(_this.rect.left, fromRight, _this.horizontalDuration);
-
-				console.log(_this.rect.top, fromBottom, _this.verticalDuration);
+				console.log(_this.horizontalDuration, _this.verticalDuration);
 			}
 
 			if (!_this.element.contains(event.target)) {
