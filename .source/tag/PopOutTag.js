@@ -65,6 +65,15 @@ export class PopOutTag extends Tag
 					this.verticalDuration = 0.2;
 				}
 
+				if(this.horizontalDuration > 0.4)
+				{
+					this.horizontalDuration = 0.4;
+				}
+				if(this.verticalDuration > 0.4)
+				{
+					this.verticalDuration = 0.4;
+				}
+
 				console.log(this.horizontalDuration, this.verticalDuration);
 			}
 
@@ -168,8 +177,6 @@ export class PopOutTag extends Tag
 						, all ${this.horizontalDuration}s  ease-out;
 			overflow: hidden;
 		`;
-
-		this.style = this.element.getAttribute('style');
 
 		let style = this.style + this.unpoppedStyle;
 
