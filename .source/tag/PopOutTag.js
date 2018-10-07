@@ -45,20 +45,17 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				const cut = 3;
+				const cut = 3000;
 
-				this.leftDuration   = (1 - (1 / this.rect.left))   / cut;
-				this.topDuration    = (1 - (1 / this.rect.top))    / cut;
-				this.rightDuration  = (1 - (1 / this.rect.right))  / cut;
-				this.bottomDuration = (1 - (1 / this.rect.bottom)) / cut;
+				let fromRight  = window.innerWidth  - this.rect.right;
+				let fromBottom = window.innerHeight - this.rect.bottom;
 
-				this.leftDuration   = Math.round(this.leftDuration * 1000) / 1000;
-				this.topDuration    = Math.round(this.topDuration * 1000) / 1000;
-				this.rightDuration  = Math.round(this.rightDuration * 1000) / 1000;
-				this.bottomDuration = Math.round(this.bottomDuration * 1000) / 1000;
+				let horizontalAverage = (this.rect.left + fromRight)  / 2;
+				let vericalAverage    = (this.rect.top  + fromBottom) / 2;
 
-				this.horizontalDuration = (this.leftDuration + this.rightDuration) / 2;
-				this.verticalDuration   = (this.topDuration + this.bottomDuration) / 2;
+				this.horizontalDuration = horizontalAverage / cut;
+				this.verticalDuration   = vericalAverage / cut;
+
 			}
 
 			if(!this.element.contains(event.target))
@@ -146,11 +143,6 @@ export class PopOutTag extends Tag
 	{
 		PopOutTag.popLevel();
 
-		if(!this.rect)
-		{
-			this.rect = this.element.getBoundingClientRect();
-		}
-
 		this.previousScroll = window.scrollY;
 
 		this.unpoppedStyle = `
@@ -191,6 +183,8 @@ export class PopOutTag extends Tag
 					, all ${this.horizontalDuration}s         ease-out;
 			`;
 
+			// console.log(this.horizontalDuration, this.verticalDuration);
+
 			this.moving = true;
 
 			this.element.classList.add('popped');
@@ -225,7 +219,7 @@ export class PopOutTag extends Tag
 				this.element.dispatchEvent(event);
 
 			}, this.horizontalDuration*1000);
-		}, 500);
+		}, 5);
 
 		this.poppedOut = true;
 	}

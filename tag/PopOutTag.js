@@ -62,20 +62,22 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			if (!_this.poppedOut) {
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
-				var cut = 3;
+				var cut = 3000;
 
-				_this.leftDuration = (1 - 1 / _this.rect.left) / cut;
-				_this.topDuration = (1 - 1 / _this.rect.top) / cut;
-				_this.rightDuration = (1 - 1 / _this.rect.right) / cut;
-				_this.bottomDuration = (1 - 1 / _this.rect.bottom) / cut;
+				var fromRight = window.innerWidth - _this.rect.right;
+				var fromBottom = window.innerHeight - _this.rect.bottom;
 
-				_this.leftDuration = Math.round(_this.leftDuration * 1000) / 1000;
-				_this.topDuration = Math.round(_this.topDuration * 1000) / 1000;
-				_this.rightDuration = Math.round(_this.rightDuration * 1000) / 1000;
-				_this.bottomDuration = Math.round(_this.bottomDuration * 1000) / 1000;
+				var horizontalAverage = (_this.rect.left + fromRight) / 2;
+				var vericalAverage = (_this.rect.top + fromBottom) / 2;
 
-				_this.horizontalDuration = (_this.leftDuration + _this.rightDuration) / 2;
-				_this.verticalDuration = (_this.topDuration + _this.bottomDuration) / 2;
+				_this.horizontalDuration = horizontalAverage / cut;
+				_this.verticalDuration = vericalAverage / cut;
+
+				console.log(horizontalAverage, cut, _this.horizontalDuration);
+
+				console.log(_this.rect.left, fromRight, _this.horizontalDuration);
+
+				console.log(_this.rect.top, fromBottom, _this.verticalDuration);
 			}
 
 			if (!_this.element.contains(event.target)) {
@@ -135,10 +137,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			PopOutTag.popLevel();
 
-			if (!this.rect) {
-				this.rect = this.element.getBoundingClientRect();
-			}
-
 			this.previousScroll = window.scrollY;
 
 			this.unpoppedStyle = '\n\t\t\t;position:  fixed;\n\t\t\tleft:       ' + this.rect.x + 'px;\n\t\t\ttop:        ' + this.rect.y + 'px;\n\t\t\twidth:      ' + this.rect.width + 'px;\n\t\t\theight:     ' + this.rect.height + 'px;\n\t\t\tz-index:    99999;\n\t\t\ttransition: width ' + this.horizontalDuration + 's  ease-out\n\t\t\t\t\t\t, top ' + this.verticalDuration + 's    ease-out\n\t\t\t\t\t\t, left ' + this.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, height ' + this.verticalDuration + 's ease-out\n\t\t\t\t\t\t, all ' + this.horizontalDuration + 's  ease-out;\n\t\t\toverflow: hidden;\n\t\t';
@@ -154,6 +152,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			this.popTimeout = setTimeout(function () {
 				style += '\n\t\t\t\t;top:   0px;\n\t\t\t\tleft:   0px;\n\t\t\t\twidth:  100%;\n\t\t\t\theight: 100%;\n\t\t\t\toverflow-y: auto;\n\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t, top ' + _this2.verticalDuration + 's           ease-out\n\t\t\t\t\t, left ' + _this2.horizontalDuration + 's        ease-out\n\t\t\t\t\t, height ' + _this2.verticalDuration + 's        ease-out\n\t\t\t\t\t, all ' + _this2.horizontalDuration + 's         ease-out;\n\t\t\t';
+
+				// console.log(this.horizontalDuration, this.verticalDuration);
 
 				_this2.moving = true;
 
@@ -187,7 +187,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					});
 					_this2.element.dispatchEvent(event);
 				}, _this2.horizontalDuration * 1000);
-			}, 500);
+			}, 5);
 
 			this.poppedOut = true;
 		}
