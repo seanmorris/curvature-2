@@ -4,7 +4,7 @@ export class Keyboard
 {
 	constructor()
 	{
-		this.maxDecay = 60;
+		this.maxDecay = 120;
 
 		this.listening = true;
 
@@ -23,6 +23,17 @@ export class Keyboard
 			}
 			this.keys[ event.key ]   = 1;
 			this.codes[ event.code ] = 1;
+		});
+
+		window.addEventListener('blur', (event)=>{
+			for(let i in this.keys)
+			{
+				this.keys[i] = -1;
+			}
+			for(let i in this.codes)
+			{
+				this.codes[i] = -1;
+			}
 		});
 	}
 

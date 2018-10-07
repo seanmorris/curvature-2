@@ -17,7 +17,7 @@ var Keyboard = exports.Keyboard = function () {
 
 		_classCallCheck(this, Keyboard);
 
-		this.maxDecay = 60;
+		this.maxDecay = 120;
 
 		this.listening = true;
 
@@ -35,6 +35,15 @@ var Keyboard = exports.Keyboard = function () {
 			}
 			_this.keys[event.key] = 1;
 			_this.codes[event.code] = 1;
+		});
+
+		window.addEventListener('blur', function (event) {
+			for (var i in _this.keys) {
+				_this.keys[i] = -1;
+			}
+			for (var _i in _this.codes) {
+				_this.codes[_i] = -1;
+			}
 		});
 	}
 

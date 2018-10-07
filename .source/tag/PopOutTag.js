@@ -13,7 +13,13 @@ export class PopOutTag extends Tag
 		this.moving    = false;
 
 		this.leftDuration   = 0;
-		this.topDuration   = 0;
+		this.topDuration    = 0;
+		this.rightDuration  = 0;
+		this.bottomDuration = 0;
+
+		this.verticalDuration   = 0;
+		this.horizontalDuration = 0;
+
 		this.unpoppedStyle  = '';
 		this.previousScroll = 0;
 
@@ -37,6 +43,8 @@ export class PopOutTag extends Tag
 			{
 				this.rect = this.element.getBoundingClientRect();
 			}
+
+			console.log(this.rect);
 			
 			if(!this.poppedOut)
 			{
@@ -47,16 +55,35 @@ export class PopOutTag extends Tag
 
 				if(!this.distance)
 				{
-					this.distance = 200;
+					// this.distance = 200;
 				}
+
+				console.log(this.distance);
 
 				if(!this.leftDuration)
 				{
-					this.leftDuration = (1 - (1 / this.rect.left)) / 4;
-					this.topDuration = (1 - (1 / this.rect.top)) / 4;
+					this.leftDuration   = (1 - (1 / this.rect.left)) / 4;
+					this.topDuration    = (1 - (1 / this.rect.top)) / 4;
+					this.rightDuration  = (1 - (1 / this.rect.right)) / 4;
+					this.bottomDuration = (1 - (1 / this.rect.bottom)) / 4;
 
-					this.leftDuration = Math.round(this.leftDuration * 1000) / 1000;
-					this.topDuration = Math.round(this.topDuration * 1000) / 1000;
+					this.leftDuration   = Math.round(this.leftDuration * 1000) / 1000;
+					this.topDuration    = Math.round(this.topDuration * 1000) / 1000;
+					this.rightDuration  = Math.round(this.rightDuration * 1000) / 1000;
+					this.bottomDuration = Math.round(this.bottomDuration * 1000) / 1000;
+
+					this.horizontalDuration = (this.leftDuration + this.rightDuration) / 2;
+					this.verticalDuration   = (this.topDuration + this.bottomDuration) / 2;
+
+					console.log(
+						this.leftDuration
+						, this.rightDuration
+						, this.topDuration
+						, this.bottomDuration
+
+						, this.horizontalDuration
+						, this.verticalDuration
+					);
 				}
 			}
 
@@ -159,9 +186,10 @@ export class PopOutTag extends Tag
 			width:      ${this.rect.width}px;
 			height:     ${this.rect.height}px;
 			z-index:    99999;
-			transition: width ${this.leftDuration}s ease-out
-						, height ${this.topDuration}s ease-out
-						, all ${this.leftDuration}s ease-out;
+			transition: width ${this.horizontalDuration}s ease-out
+						, top ${this.verticalDuration}s ease-out
+						, left ${this.horizontalDuration}s ease-out
+						, height ${this.verticalDuration}s ease-out;
 			overflow: hidden;
 		`;
 
@@ -181,9 +209,10 @@ export class PopOutTag extends Tag
 				width:  100%;
 				height: 100%;
 				overflow-y: auto;
-				transition: width ${this.leftDuration}s ease-out
-					, height ${this.topDuration}s ease-out
-					, all ${this.leftDuration}s ease-out;
+				transition: width ${this.horizontalDuration}s ease-out
+					, top ${this.verticalDuration}s ease-out
+					, left ${this.horizontalDuration}s ease-out
+					, height ${this.verticalDuration}s ease-out;
 			`;
 
 			this.moving = true;
@@ -219,7 +248,7 @@ export class PopOutTag extends Tag
 				});
 				this.element.dispatchEvent(event);
 
-			}, this.leftDuration*1000);
+			}, this.horizontalDuration*1000);
 		}, 1);
 
 		this.poppedOut = true;
@@ -254,9 +283,9 @@ export class PopOutTag extends Tag
 
 		let style = this.style
 			+ this.unpoppedStyle
-			+ `;transition: width ${this.leftDuration}s ease-out
-					, height ${this.topDuration}s ease-out
-					, all ${this.leftDuration}s ease-out;`;
+			+ `;transition: width ${this.horizontalDuration}s ease-out
+					, height ${this.verticalDuration}s ease-out
+					, all ${this.horizontalDuration}s ease-out;`;
 
 
 		// window.scrollTo(0, this.bodyScroll);
@@ -272,7 +301,7 @@ export class PopOutTag extends Tag
 			}
 			this.element.classList.remove('popped');
 			// element.setAttribute('style', this.style);
-		}, this.leftDuration*500);
+		}, this.horizontalDuration*500);
 		setTimeout(()=>{
 			this.element.classList.add('unpopped');
 			this.element.classList.remove('unpopping');
@@ -296,7 +325,7 @@ export class PopOutTag extends Tag
 				}
 			});
 			this.element.dispatchEvent(event);
-		}, this.leftDuration*1000);
+		}, this.horizontalDuration*1000);
 
 		this.poppedOut = false;
 	}

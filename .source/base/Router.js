@@ -14,7 +14,14 @@ export class Router {
 			}
 		);
 
-		this.go(location.pathname + location.search);
+		let route = location.pathname + location.search;
+
+		if(location.hash)
+		{
+			route += location.hash;
+		}
+
+		this.go(route);
 	}
 	static go(route, silent)
 	{
@@ -35,6 +42,11 @@ export class Router {
 			);
 
 			currentRoute = location.pathname + location.search;
+
+			if(location.hash)
+			{
+				currentRoute += location.hash;
+			}
 		}
 	}
 	static match(path, view, forceRefresh = false)
@@ -120,13 +132,11 @@ export class Router {
 				}
 			}
 
-			if(typeof routes[i] !== 'function') {
-				return routes[i];
-			}
-
 			if(!forceRefresh
 				&& current
-				&& current instanceof routes[i]
+				&& (routes[i] instanceof Function)
+				&& (current instanceof routes[i])
+				&& !(routes[i] instanceof Promise)
 				&& current.update(args)
 			) {
 				view.args.content = current;
@@ -153,11 +163,13 @@ export class Router {
 		{
 			result = '';
 
-			let _result = routes[selected](args);
+			const _result = routes[selected](args);
 
 			if(_result instanceof Promise)
 			{
 				_result.then(x=>{
+					view.args.content = x;
+				}).catch(x=>{
 					view.args.content = x;
 				});
 			}
@@ -168,7 +180,13 @@ export class Router {
 		}
 		else if(routes[selected] instanceof Promise)
 		{
-			// result = Promise;
+			routes[selected].then(x => {
+				view.args.content = x;
+			}).catch(x=>{
+				view.args.content = x;
+			});
+
+			result = '';
 		}
 		else if(routes[selected] instanceof Object)
 		{

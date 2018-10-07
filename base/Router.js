@@ -31,7 +31,13 @@ var Router = exports.Router = function () {
 				_this.match(location.pathname, mainView);
 			});
 
-			this.go(location.pathname + location.search);
+			var route = location.pathname + location.search;
+
+			if (location.hash) {
+				route += location.hash;
+			}
+
+			this.go(route);
 		}
 	}, {
 		key: 'go',
@@ -48,6 +54,10 @@ var Router = exports.Router = function () {
 				}, 0);
 
 				currentRoute = location.pathname + location.search;
+
+				if (location.hash) {
+					currentRoute += location.hash;
+				}
 			}
 		}
 	}, {
@@ -151,11 +161,7 @@ var Router = exports.Router = function () {
 					}
 				}
 
-				if (typeof routes[_i] !== 'function') {
-					return routes[_i];
-				}
-
-				if (!forceRefresh && current && current instanceof routes[_i] && current.update(args)) {
+				if (!forceRefresh && current && routes[_i] instanceof Function && current instanceof routes[_i] && !(routes[_i] instanceof Promise) && current.update(args)) {
 					view.args.content = current;
 
 					return true;
@@ -181,12 +187,20 @@ var Router = exports.Router = function () {
 				if (_result instanceof Promise) {
 					_result.then(function (x) {
 						view.args.content = x;
+					}).catch(function (x) {
+						view.args.content = x;
 					});
 				} else {
 					result = _result;
 				}
 			} else if (routes[selected] instanceof Promise) {
-				// result = Promise;
+				routes[selected].then(function (x) {
+					view.args.content = x;
+				}).catch(function (x) {
+					view.args.content = x;
+				});
+
+				result = '';
 			} else if (routes[selected] instanceof Object) {
 				result = new routes[selected](args);
 			} else if (typeof routes[selected] == 'string') {
