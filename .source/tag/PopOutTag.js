@@ -33,18 +33,10 @@ export class PopOutTag extends Tag
 		this.popTimeout = null;
 
 		// this.element.addEventListener('cvDomDetached', this.detachListener);
-
 		this.rect;
-		this.clickListener  = (event) => {
-			let leftDuration = 0.333;
-			let topDuration  = 0.333;
 
-			if(!this.rect)
-			{
-				this.rect = this.element.getBoundingClientRect();
-			}
-
-			console.log(this.rect);
+		this.clickListener = (event) => {
+			this.rect = this.element.getBoundingClientRect();
 			
 			if(!this.poppedOut)
 			{
@@ -53,38 +45,18 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				if(!this.distance)
-				{
-					// this.distance = 200;
-				}
+				this.leftDuration   = (1 - (1 / this.rect.left)) / 4;
+				this.topDuration    = (1 - (1 / this.rect.top)) / 4;
+				this.rightDuration  = (1 - (1 / this.rect.right)) / 4;
+				this.bottomDuration = (1 - (1 / this.rect.bottom)) / 4;
 
-				console.log(this.distance);
+				this.leftDuration   = Math.round(this.leftDuration * 1000) / 1000;
+				this.topDuration    = Math.round(this.topDuration * 1000) / 1000;
+				this.rightDuration  = Math.round(this.rightDuration * 1000) / 1000;
+				this.bottomDuration = Math.round(this.bottomDuration * 1000) / 1000;
 
-				if(!this.leftDuration)
-				{
-					this.leftDuration   = (1 - (1 / this.rect.left)) / 4;
-					this.topDuration    = (1 - (1 / this.rect.top)) / 4;
-					this.rightDuration  = (1 - (1 / this.rect.right)) / 4;
-					this.bottomDuration = (1 - (1 / this.rect.bottom)) / 4;
-
-					this.leftDuration   = Math.round(this.leftDuration * 1000) / 1000;
-					this.topDuration    = Math.round(this.topDuration * 1000) / 1000;
-					this.rightDuration  = Math.round(this.rightDuration * 1000) / 1000;
-					this.bottomDuration = Math.round(this.bottomDuration * 1000) / 1000;
-
-					this.horizontalDuration = (this.leftDuration + this.rightDuration) / 2;
-					this.verticalDuration   = (this.topDuration + this.bottomDuration) / 2;
-
-					console.log(
-						this.leftDuration
-						, this.rightDuration
-						, this.topDuration
-						, this.bottomDuration
-
-						, this.horizontalDuration
-						, this.verticalDuration
-					);
-				}
+				this.horizontalDuration = (this.leftDuration + this.rightDuration) / 2;
+				this.verticalDuration   = (this.topDuration + this.bottomDuration) / 2;
 			}
 
 			if(!this.element.contains(event.target))

@@ -54,43 +54,26 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.popTimeout = null;
 
 		// this.element.addEventListener('cvDomDetached', this.detachListener);
-
 		_this.rect;
+
 		_this.clickListener = function (event) {
-			var leftDuration = 0.333;
-			var topDuration = 0.333;
-
-			if (!_this.rect) {
-				_this.rect = _this.element.getBoundingClientRect();
-			}
-
-			console.log(_this.rect);
+			_this.rect = _this.element.getBoundingClientRect();
 
 			if (!_this.poppedOut) {
 				_this.distance = Math.sqrt(Math.pow(_this.rect.top, 2) + Math.pow(_this.rect.left, 2));
 
-				if (!_this.distance) {
-					// this.distance = 200;
-				}
+				_this.leftDuration = (1 - 1 / _this.rect.left) / 4;
+				_this.topDuration = (1 - 1 / _this.rect.top) / 4;
+				_this.rightDuration = (1 - 1 / _this.rect.right) / 4;
+				_this.bottomDuration = (1 - 1 / _this.rect.bottom) / 4;
 
-				console.log(_this.distance);
+				_this.leftDuration = Math.round(_this.leftDuration * 1000) / 1000;
+				_this.topDuration = Math.round(_this.topDuration * 1000) / 1000;
+				_this.rightDuration = Math.round(_this.rightDuration * 1000) / 1000;
+				_this.bottomDuration = Math.round(_this.bottomDuration * 1000) / 1000;
 
-				if (!_this.leftDuration) {
-					_this.leftDuration = (1 - 1 / _this.rect.left) / 4;
-					_this.topDuration = (1 - 1 / _this.rect.top) / 4;
-					_this.rightDuration = (1 - 1 / _this.rect.right) / 4;
-					_this.bottomDuration = (1 - 1 / _this.rect.bottom) / 4;
-
-					_this.leftDuration = Math.round(_this.leftDuration * 1000) / 1000;
-					_this.topDuration = Math.round(_this.topDuration * 1000) / 1000;
-					_this.rightDuration = Math.round(_this.rightDuration * 1000) / 1000;
-					_this.bottomDuration = Math.round(_this.bottomDuration * 1000) / 1000;
-
-					_this.horizontalDuration = (_this.leftDuration + _this.rightDuration) / 2;
-					_this.verticalDuration = (_this.topDuration + _this.bottomDuration) / 2;
-
-					console.log(_this.leftDuration, _this.rightDuration, _this.topDuration, _this.bottomDuration, _this.horizontalDuration, _this.verticalDuration);
-				}
+				_this.horizontalDuration = (_this.leftDuration + _this.rightDuration) / 2;
+				_this.verticalDuration = (_this.topDuration + _this.bottomDuration) / 2;
 			}
 
 			if (!_this.element.contains(event.target)) {
