@@ -145,7 +145,6 @@ export class PopOutTag extends Tag
 		{
 			document.body.setAttribute('style', this.bodyStyle);
 			document.body.setAttribute('style', '');
-			// window.scrollTo(0, this.bodyScroll);
 		}
 	}
 
@@ -176,9 +175,6 @@ export class PopOutTag extends Tag
 
 		this.element.setAttribute('style', style);
 
-		// document.body.style.overflow = 'hidden';
-		// document.body.style.overflowY = 'hidden';
-
 		this.popTimeout = setTimeout(()=>{
 			style += `
 				;top:   0px;
@@ -193,23 +189,21 @@ export class PopOutTag extends Tag
 					, all ${this.horizontalDuration}s         ease-out;
 			`;
 
-			// console.log(this.horizontalDuration, this.verticalDuration);
-
 			this.moving = true;
 
+			this.element.setAttribute('style', style);
 			this.element.classList.add('popped');
 			this.element.classList.remove('unpopped');
-			this.element.setAttribute('style', style);
-
+			
 			this.popTimeout = setTimeout(()=>{
 				if(!this.element)
 				{
 					return;
 				}
 				this.bodyStyle = document.body.getAttribute('style');
-				// this.bodyScroll = window.scrollY;
+				
 				document.body.setAttribute('style', 'height:100%;overflow:hidden;');
-				// window.scrollTo(0,0);
+				
 				this.moving = false;
 				Dom.mapTags(this.element, false, (tag)=>{
 					let event = new CustomEvent('cvPopped');
@@ -229,7 +223,7 @@ export class PopOutTag extends Tag
 				this.element.dispatchEvent(event);
 
 			}, this.horizontalDuration*1000);
-		}, 5);
+		}, 0);
 
 		this.poppedOut = true;
 	}
@@ -267,9 +261,6 @@ export class PopOutTag extends Tag
 					, height ${this.verticalDuration}s        ease-in
 					, all ${this.horizontalDuration}s         ease-in;`;
 
-
-		// window.scrollTo(0, this.bodyScroll);
-
 		this.element.setAttribute('style', style);
 
 		this.moving = true;
@@ -280,7 +271,7 @@ export class PopOutTag extends Tag
 				return;
 			}
 			this.element.classList.remove('popped');
-			// element.setAttribute('style', this.style);
+
 		}, this.horizontalDuration*1000);
 		setTimeout(()=>{
 			this.element.classList.add('unpopped');
