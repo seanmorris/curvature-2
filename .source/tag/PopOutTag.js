@@ -163,6 +163,8 @@ export class PopOutTag extends Tag
 
 		this.previousScroll = window.scrollY;
 
+		this.rect = this.element.getBoundingClientRect();
+
 		this.unpoppedStyle = `
 			;position:  fixed;
 			left:       ${this.rect.x}px;
