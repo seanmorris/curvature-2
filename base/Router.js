@@ -25,40 +25,30 @@ var Router = exports.Router = function () {
 		value: function listen(mainView) {
 			var _this = this;
 
-			window.addEventListener('popstate', function (event) {
-				event.preventDefault();
-
-				_this.match(location.pathname, mainView);
-			});
-
 			var route = location.pathname + location.search;
 
 			if (location.hash) {
 				route += location.hash;
 			}
 
+			window.addEventListener('popstate', function (event) {
+				event.preventDefault();
+
+				_this.match(location.pathname, mainView);
+			});
+
 			this.go(route);
 		}
 	}, {
 		key: 'go',
 		value: function go(route, silent) {
-			var currentRoute = void 0;
-
-			if (currentRoute !== route) {
-				document.title = _Config.Config.title;
-				setTimeout(function () {
-					history.pushState(null, null, route);
-					if (!silent) {
-						window.dispatchEvent(new Event('popstate'));
-					}
-				}, 0);
-
-				currentRoute = location.pathname + location.search;
-
-				if (location.hash) {
-					currentRoute += location.hash;
+			document.title = _Config.Config.title;
+			setTimeout(function () {
+				history.pushState(null, null, route);
+				if (!silent) {
+					window.dispatchEvent(new Event('popstate'));
 				}
-			}
+			}, 0);
 		}
 	}, {
 		key: 'match',
@@ -89,8 +79,6 @@ var Router = exports.Router = function () {
 
 					this.query[pair[0]] = pair[1];
 				}
-
-				// forceRefresh = true;
 			} catch (err) {
 				_didIteratorError = true;
 				_iteratorError = err;
@@ -109,21 +97,6 @@ var Router = exports.Router = function () {
 			var args = {},
 			    selected = false,
 			    result = '';
-
-			// if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
-			// {
-			// 	// console.log('Using cache!');
-
-			// 	view.args.content.pause(true);
-
-			// 	view.args.content = result;
-
-			// 	result.pause(false);
-
-			// 	result.update(this.query);
-
-			// 	return;
-			// }
 
 			path = path.substr(1).split('/');
 
@@ -161,7 +134,7 @@ var Router = exports.Router = function () {
 					}
 				}
 
-				if (!forceRefresh && current && routes[_i] instanceof Function && current instanceof routes[_i] && !(routes[_i] instanceof Promise) && current.update(args)) {
+				if (!forceRefresh && current && routes[_i] instanceof Object && current instanceof routes[_i] && !(routes[_i] instanceof Promise) && current.update(args)) {
 					view.args.content = current;
 
 					return true;

@@ -5,6 +5,13 @@ import { Config }   from 'Config';
 export class Router {
 	static listen(mainView)
 	{
+		let route = location.pathname + location.search;
+
+		if(location.hash)
+		{
+			route += location.hash;
+		}
+
 		window.addEventListener(
 			'popstate'
 			, (event) => {
@@ -14,40 +21,21 @@ export class Router {
 			}
 		);
 
-		let route = location.pathname + location.search;
-
-		if(location.hash)
-		{
-			route += location.hash;
-		}
-
 		this.go(route);
 	}
 	static go(route, silent)
 	{
-		let currentRoute;
-
-		if(currentRoute !== route)
-		{
-			document.title = Config.title;
-			setTimeout(
-				() => {
-					history.pushState(null, null, route);
-					if(!silent)
-					{
-						window.dispatchEvent(new Event('popstate'))
-					}
+		document.title = Config.title;
+		setTimeout(
+			() => {
+				history.pushState(null, null, route);
+				if(!silent)
+				{
+					window.dispatchEvent(new Event('popstate'))
 				}
-				, 0
-			);
-
-			currentRoute = location.pathname + location.search;
-
-			if(location.hash)
-			{
-				currentRoute += location.hash;
 			}
-		}
+			, 0
+		);
 	}
 	static match(path, view, forceRefresh = false)
 	{
@@ -70,24 +58,7 @@ export class Router {
 			this.query[ pair[0] ] = pair[1];
 		}
 
-		// forceRefresh = true;
-
 		let args = {}, selected = false, result = '';
-
-		// if(!forceRefresh && (result = Cache.load(this.path, false, 'page')))
-		// {
-		// 	// console.log('Using cache!');
-
-		// 	view.args.content.pause(true);
-
-		// 	view.args.content = result;
-
-		// 	result.pause(false);
-
-		// 	result.update(this.query);
-
-		// 	return;
-		// }
 
 		path = path.substr(1).split('/');
 
@@ -134,7 +105,7 @@ export class Router {
 
 			if(!forceRefresh
 				&& current
-				&& (routes[i] instanceof Function)
+				&& (routes[i] instanceof Object)
 				&& (current instanceof routes[i])
 				&& !(routes[i] instanceof Promise)
 				&& current.update(args)

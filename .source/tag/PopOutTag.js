@@ -163,7 +163,8 @@ export class PopOutTag extends Tag
 
 		this.previousScroll = window.scrollY;
 
-		this.rect = this.element.getBoundingClientRect();
+		this.rect  = this.element.getBoundingClientRect();
+		this.style = this.element.getAttribute('style');
 
 		window.requestAnimationFrame(()=>{
 

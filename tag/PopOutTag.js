@@ -149,6 +149,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			this.previousScroll = window.scrollY;
 
 			this.rect = this.element.getBoundingClientRect();
+			this.style = this.element.getAttribute('style');
 
 			window.requestAnimationFrame(function () {
 
