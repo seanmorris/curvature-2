@@ -198,7 +198,7 @@ export class Router {
 	}
 	static queryOver(args = {})
 	{
-		let parts = [], finalArgs = {};
+		let finalArgs = {};
 
 		for(let i in this.query)
 		{

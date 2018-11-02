@@ -184,7 +184,7 @@ var Repository = exports.Repository = function () {
 												document.head.appendChild(_tagCache);
 											}
 
-											console.log(JSON.stringify(response));
+											// console.log(JSON.stringify(response));
 
 											_tagCache.innerText = JSON.stringify(response);
 										}

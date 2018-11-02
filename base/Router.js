@@ -212,8 +212,7 @@ var Router = exports.Router = function () {
 		value: function queryOver() {
 			var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-			var parts = [],
-			    finalArgs = {};
+			var finalArgs = {};
 
 			for (var i in this.query) {
 				finalArgs[i] = this.query[i];

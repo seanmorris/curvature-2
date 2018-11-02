@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -9,3 +9,5 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Config = exports.Config = function Config() {
   _classCallCheck(this, Config);
 };
+
+Config.backend = 'http://dev.sean.letsvue.com/';

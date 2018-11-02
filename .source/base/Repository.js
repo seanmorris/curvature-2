@@ -165,7 +165,7 @@ export class Repository
 										document.head.appendChild(tagCache);
 									}
 
-									console.log(JSON.stringify(response));
+									// console.log(JSON.stringify(response));
 									
 									tagCache.innerText = JSON.stringify(response);
 								}

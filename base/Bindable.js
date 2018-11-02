@@ -327,8 +327,8 @@ var Bindable = exports.Bindable = function () {
                     return [this.makeBindable(object), pathParts.shift()];
                 }
 
-                if (!node in object) {
-                    return undefined;
+                if (!node in object || !object[node] || !(object[node] instanceof Object)) {
+                    object[node] = {};
                 }
 
                 node = pathParts.shift();
