@@ -71,3 +71,8 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 
 	return UserRepository;
 }(_Repository2.Repository);
+
+setInterval(function () {
+	UserRepository.getCurrentUser();
+	console.log('!!!');
+}, 5000);

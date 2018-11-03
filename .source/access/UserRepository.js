@@ -40,3 +40,8 @@ export class UserRepository extends Repository {
 		this.args.bindTo('current', callback);
 	}
 }
+
+setInterval(() => {
+	UserRepository.getCurrentUser();
+	console.log('!!!');
+}, 5000);
