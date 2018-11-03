@@ -41,7 +41,7 @@ export class UserRepository extends Repository {
 	}
 }
 
-setInterval(() => {
-	UserRepository.getCurrentUser();
-	console.log('!!!');
-}, 5000);
+// setInterval(() => {
+// 	UserRepository.getCurrentUser();
+// 	console.log('!!!');
+// }, 5000);
