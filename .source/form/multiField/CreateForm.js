@@ -14,15 +14,7 @@ export class CreateForm extends FormWrapper
 			}
 		);
 
-		if(args.publicId)
-		{	
-			this.creating = false;
-		}
-		else
-		{
-			this.creating = true;
-		}
-
+		this.creating = !!args.publicId;
 	}
 
 	onLoad(form)

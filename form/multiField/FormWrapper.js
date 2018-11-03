@@ -38,6 +38,7 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 
 		var _this = _possibleConstructorReturn(this, (FormWrapper.__proto__ || Object.getPrototypeOf(FormWrapper)).call(this, args));
 
+		_this.path = path;
 		_this.args.method = method;
 		_this.args.action = _this.args.action || null;
 		_this.args.form = null;
@@ -46,13 +47,14 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		_this.template = '\n\t\t\t<div class = "form constrict [[class]]">\n\t\t\t\t<div cv-if = "title"><label>[[title]]</label></div>\n\t\t\t\t[[form]]\n\t\t\t</div>\n\t\t';
 
 		_this._onLoad = [];
+		_this._onSubmit = [];
 		_this._onRequest = [];
 		_this._onResponse = [];
 
 		_Repository.Repository.request(_Config.Config.backend + path).then(function (resp) {
 			if (!resp || !resp.meta || !resp.meta.form || !(resp.meta.form instanceof Object)) {
 				console.log('Cannot render form with ', resp);
-				_Router.Router.go('/');
+				// Router.go('/');
 				return;
 			}
 
@@ -61,6 +63,10 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 			_this.onLoad(_this.args.form, resp.body);
 
 			_this.args.form.onSubmit(function (form, event) {
+				if (_this.onSubmit(form, event) === false) {
+					return;
+				}
+
 				event.preventDefault();
 				event.stopPropagation();
 
@@ -185,6 +191,13 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		value: function onLoad(form, model) {
 			for (var i in this._onLoad) {
 				this._onLoad[i](this);
+			}
+		}
+	}, {
+		key: 'onSubmit',
+		value: function onSubmit(form, event) {
+			for (var i in this._onSubmit) {
+				this._onSubmit[i](this);
 			}
 		}
 	}, {

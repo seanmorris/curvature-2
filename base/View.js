@@ -1007,7 +1007,7 @@ var View = exports.View = function () {
 				property = _Bindable$resolve6[1];
 			}
 
-			proxy.bindTo(ifProperty, function (tag, ifDoc) {
+			proxy.bindTo(property, function (tag, ifDoc) {
 				return function (v) {
 					var detachEvent = new Event('cvDomDetached');
 					var attachEvent = new Event('cvDomAttached');

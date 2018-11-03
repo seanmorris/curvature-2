@@ -8,6 +8,8 @@ import { HtmlField   } from './HtmlField';
 import { HiddenField } from './HiddenField';
 import { ButtonField } from './ButtonField';
 
+import { View as MultiField } from './multiField/View';
+
 // import { Router           } from 'Router';
 
 // import { Repository       } from '../Repository';
@@ -123,7 +125,14 @@ export class Form extends View
 				switch(skeleton[i].type)
 				{
 					case 'fieldset':
-						field = new FieldSet(skeleton[i], form, parent, i);
+						if(skeleton[i].attrs['data-multi'])
+						{
+							field = new MultiField(skeleton[i], form, parent, i);
+						}
+						else
+						{
+							field = new FieldSet(skeleton[i], form, parent, i);
+						}
 						break;
 					case 'select':
 						field = new SelectField(skeleton[i], form, parent, i);

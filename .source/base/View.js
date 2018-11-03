@@ -1059,7 +1059,7 @@ ${tag.outerHTML}`
 		}
 
 		proxy.bindTo(
-			ifProperty
+			property
 			, ((tag, ifDoc) => (v) => {
 				let detachEvent = new Event('cvDomDetached');
 				let attachEvent = new Event('cvDomAttached');

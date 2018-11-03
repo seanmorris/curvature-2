@@ -1,7 +1,9 @@
-import { Form       } from 'curvature/form/Form';
-import { FieldSet   } from 'curvature/form/FieldSet';
-import { CreateForm } from './CreateForm';
-import { Wrapper    } from './Wrapper';
+import { Form        } from 'curvature/form/Form';
+import { FieldSet    } from 'curvature/form/FieldSet';
+import { CreateForm  } from './CreateForm';
+import { SearchForm  } from './SearchForm';
+import { FormWrapper } from './FormWrapper';
+import { Wrapper     } from './Wrapper';
 // import { Loader     } from '../Ui/Loader';
 
 export class View extends FieldSet
@@ -28,6 +30,11 @@ export class View extends FieldSet
 		// this.args.loader = new Loader;
 		// this.args.loader = 'LOADING!!!';
 		this.args.loader = null;
+
+		this.args.createForm = this.args.createForm || '';
+		this.args.searchForm = this.args.searchForm || '';
+
+		this.setCreateForm({view: this});
 
 		this.template = `
 			<label
@@ -72,7 +79,8 @@ export class View extends FieldSet
 								&#215;
 							</div>
 						</div>
-						[[create]]
+						[[createForm]]
+						[[searchForm]]
 					</div>
 
 					<div class = "overlay loading">
@@ -92,11 +100,16 @@ export class View extends FieldSet
 
 	setCreateForm(args)
 	{
-		this.args.create = new CreateForm(
-			args
+		this.args.createForm = new CreateForm(
+			Object.assign({}, args)
 			, args.publicId
 				? `${this.args.attrs['data-endpoint']}/${args.publicId}/edit`
 				: `${this.args.attrs['data-endpoint']}/create`
+		);
+
+		this.args.searchForm = new SearchForm(
+			Object.assign({}, args)
+			, this.args.attrs['data-endpoint']
 		);
 	}
 

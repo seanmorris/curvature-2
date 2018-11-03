@@ -62,6 +62,8 @@ export class Wrapper extends View
 			).then(response=>{
 				this.args.id = v;
 
+				console.log(response);
+
 				let record = response.body[0];
 
 				if(!record)
@@ -114,6 +116,12 @@ export class Wrapper extends View
 
 	getRecordTitle(record)
 	{
+		console.log(record);
+
+		if(record._titleField)
+		{
+			return record[ record._titleField ];
+		}
 		return record.title
 			|| record.publicId
 			|| record.id;

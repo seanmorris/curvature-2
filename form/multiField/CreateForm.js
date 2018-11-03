@@ -32,12 +32,7 @@ var CreateForm = exports.CreateForm = function (_FormWrapper) {
 			// title: HiddenField
 		}));
 
-		if (args.publicId) {
-			_this.creating = false;
-		} else {
-			_this.creating = true;
-		}
-
+		_this.creating = !!args.publicId;
 		return _this;
 	}
 

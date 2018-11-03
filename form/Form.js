@@ -23,6 +23,8 @@ var _HiddenField = require('./HiddenField');
 
 var _ButtonField = require('./ButtonField');
 
+var _View3 = require('./multiField/View');
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -204,7 +206,11 @@ var Form = exports.Form = function (_View) {
 				} else {
 					switch (skeleton[i].type) {
 						case 'fieldset':
-							field = new _FieldSet.FieldSet(skeleton[i], form, parent, i);
+							if (skeleton[i].attrs['data-multi']) {
+								field = new _View3.View(skeleton[i], form, parent, i);
+							} else {
+								field = new _FieldSet.FieldSet(skeleton[i], form, parent, i);
+							}
 							break;
 						case 'select':
 							field = new _SelectField.SelectField(skeleton[i], form, parent, i);

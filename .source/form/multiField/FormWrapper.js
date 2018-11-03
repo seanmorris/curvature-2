@@ -13,6 +13,7 @@ export class FormWrapper extends View
 	{
 		super(args);
 
+		this.path         = path;
 		this.args.method  = method;
 		this.args.action  = this.args.action || null;
 		this.args.form    = null;
@@ -26,6 +27,7 @@ export class FormWrapper extends View
 		`;
 
 		this._onLoad     = [];
+		this._onSubmit   = [];
 		this._onRequest  = [];
 		this._onResponse = [];
 
@@ -36,7 +38,7 @@ export class FormWrapper extends View
 				|| !(resp.meta.form instanceof Object)
 			){
 				console.log('Cannot render form with ', resp);
-				Router.go('/');
+				// Router.go('/');
 				return;
 			}
 
@@ -45,6 +47,11 @@ export class FormWrapper extends View
 			this.onLoad(this.args.form, resp.body);
 
 			this.args.form.onSubmit((form, event)=>{
+				if(this.onSubmit(form, event) === false)
+				{
+					return;
+				}
+
 				event.preventDefault();
 				event.stopPropagation();
 
@@ -173,6 +180,14 @@ export class FormWrapper extends View
 		for(let i in this._onLoad)
 		{
 			this._onLoad[i](this);
+		}
+	}
+
+	onSubmit(form, event)
+	{
+		for(let i in this._onSubmit)
+		{
+			this._onSubmit[i](this);
 		}
 	}
 
