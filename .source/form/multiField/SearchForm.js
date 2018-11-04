@@ -24,6 +24,7 @@ export class SearchForm extends FormWrapper
 			<div cv-each = "records:record:r" class = "dropdown-results">
 				<div
 					cv-on         = "click:select(event)"
+					data-index    = "[[r]]"
 					data-publicId = "[[record.publicId]]"
 					class         = "[[record.classes]]"
 				>
@@ -120,7 +121,17 @@ export class SearchForm extends FormWrapper
 
 	select(event)
 	{
+		let index    = event.target.getAttribute('data-index');
 		let publicId = event.target.getAttribute('data-publicId');
+
+		let record   = this.args.records[index];
+
+		console.log(record);
+
+		this.args.view.addRecord(record);
+		this.args.view.addButtonClicked();
+
+		return;
 
 		Repository.request(
 			Config.backend

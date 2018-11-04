@@ -103,11 +103,17 @@ var View = exports.View = function (_FieldSet) {
 
 			this.args.fields[name] = newField;
 
-			newField.args.value.id = record.id;
+			console.log(record, newField);
+
+			newField.args.value.id = record.id || '';
+			newField.args.value.class = record.class || '';
+			newField.args.value.title = record.title || '';
 
 			var newWrap = this.wrapSubfield(newField);
 
 			this.args._fields.push(newWrap);
+
+			newWrap.refresh(record);
 		}
 	}, {
 		key: 'editRecord',

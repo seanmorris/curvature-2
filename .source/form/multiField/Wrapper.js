@@ -9,20 +9,19 @@ export class Wrapper extends View
 		super(args);
 
 		this.template = `
-			<div class = "wrapped-field [[classes]]">
+			<div
+				class = "wrapped-field [[classes]]"
+				cv-on = "click:editRecord(event, key)"
+				title = "[[fieldName]]: [[id]]"
+			>
 				<div
 					cv-on = "click:deleteImage(event, key)"
 					style = "display: inline; cursor:pointer;"
 				>
 					[[icon]]
 				</div>
-				<div
-					cv-on = "click:editRecord(event, key)"
-					class = "field-content"
-				>
-					<span title = "[[fieldName]]: [[id]]">
-						[[title]]
-					</span>
+				<div class = "field-content">
+					[[title]]
 				</div>
 			</div>
 			<div style = "display:none">[[field]]</div>
@@ -95,6 +94,8 @@ export class Wrapper extends View
 
 	deleteImage(event, index)
 	{
+		event.stopPropagation();
+
 		if(!this.deleted)
 		{
 			this.args.icon = '↺';
@@ -122,6 +123,7 @@ export class Wrapper extends View
 		{
 			return record[ record._titleField ];
 		}
+
 		return record.title
 			|| record.publicId
 			|| record.id;

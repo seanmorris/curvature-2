@@ -39,7 +39,7 @@ var SearchForm = exports.SearchForm = function (_FormWrapper) {
 		_this.args.records = [];
 		_this.selected = null;
 
-		_this.template = '\n\t\t\t' + _this.superTemplate + '\n\t\t\t<div cv-each = "records:record:r" class = "dropdown-results">\n\t\t\t\t<div\n\t\t\t\t\tcv-on         = "click:select(event)"\n\t\t\t\t\tdata-publicId = "[[record.publicId]]"\n\t\t\t\t\tclass         = "[[record.classes]]"\n\t\t\t\t>\n\t\t\t\t\t[[record.title]]\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t';
+		_this.template = '\n\t\t\t' + _this.superTemplate + '\n\t\t\t<div cv-each = "records:record:r" class = "dropdown-results">\n\t\t\t\t<div\n\t\t\t\t\tcv-on         = "click:select(event)"\n\t\t\t\t\tdata-index    = "[[r]]"\n\t\t\t\t\tdata-publicId = "[[record.publicId]]"\n\t\t\t\t\tclass         = "[[record.classes]]"\n\t\t\t\t>\n\t\t\t\t\t[[record.title]]\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t';
 		return _this;
 	}
 
@@ -125,7 +125,17 @@ var SearchForm = exports.SearchForm = function (_FormWrapper) {
 		value: function select(event) {
 			var _this3 = this;
 
+			var index = event.target.getAttribute('data-index');
 			var publicId = event.target.getAttribute('data-publicId');
+
+			var record = this.args.records[index];
+
+			console.log(record);
+
+			this.args.view.addRecord(record);
+			this.args.view.addButtonClicked();
+
+			return;
 
 			_Repository.Repository.request(_Config.Config.backend + this.path + '/' + publicId).then(function (response) {
 				console.log(response.body);

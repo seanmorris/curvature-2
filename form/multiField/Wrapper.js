@@ -27,7 +27,7 @@ var Wrapper = exports.Wrapper = function (_View) {
 
 		var _this = _possibleConstructorReturn(this, (Wrapper.__proto__ || Object.getPrototypeOf(Wrapper)).call(this, args));
 
-		_this.template = '\n\t\t\t<div class = "wrapped-field [[classes]]">\n\t\t\t\t<div\n\t\t\t\t\tcv-on = "click:deleteImage(event, key)"\n\t\t\t\t\tstyle = "display: inline; cursor:pointer;"\n\t\t\t\t>\n\t\t\t\t\t[[icon]]\n\t\t\t\t</div>\n\t\t\t\t<div\n\t\t\t\t\tcv-on = "click:editRecord(event, key)"\n\t\t\t\t\tclass = "field-content"\n\t\t\t\t>\n\t\t\t\t\t<span title = "[[fieldName]]: [[id]]">\n\t\t\t\t\t\t[[title]]\n\t\t\t\t\t</span>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div style = "display:none">[[field]]</div>\n\t\t';
+		_this.template = '\n\t\t\t<div\n\t\t\t\tclass = "wrapped-field [[classes]]"\n\t\t\t\tcv-on = "click:editRecord(event, key)"\n\t\t\t\ttitle = "[[fieldName]]: [[id]]"\n\t\t\t>\n\t\t\t\t<div\n\t\t\t\t\tcv-on = "click:deleteImage(event, key)"\n\t\t\t\t\tstyle = "display: inline; cursor:pointer;"\n\t\t\t\t>\n\t\t\t\t\t[[icon]]\n\t\t\t\t</div>\n\t\t\t\t<div class = "field-content">\n\t\t\t\t\t[[title]]\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div style = "display:none">[[field]]</div>\n\t\t';
 
 		_this.args.field = _this.args.field || '!';
 		_this.args.keyword = '';
@@ -89,6 +89,8 @@ var Wrapper = exports.Wrapper = function (_View) {
 	}, {
 		key: 'deleteImage',
 		value: function deleteImage(event, index) {
+			event.stopPropagation();
+
 			if (!this.deleted) {
 				this.args.icon = '↺';
 				this.args.parent.deleteImage(index);
@@ -112,6 +114,7 @@ var Wrapper = exports.Wrapper = function (_View) {
 			if (record._titleField) {
 				return record[record._titleField];
 			}
+
 			return record.title || record.publicId || record.id;
 		}
 	}, {
