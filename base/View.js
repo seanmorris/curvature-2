@@ -21,6 +21,8 @@ var _Dom = require('./Dom');
 
 var _Tag = require('./Tag');
 
+var _RuleSet = require('./RuleSet');
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -317,6 +319,8 @@ var View = exports.View = function () {
 					parentNode.appendChild(this.firstNode);
 				}
 			}
+
+			_RuleSet.RuleSet.apply(subDoc);
 
 			var _loop2 = function _loop2() {
 				var newNode = subDoc.firstChild;
@@ -1008,9 +1012,13 @@ var View = exports.View = function () {
 			}
 
 			proxy.bindTo(property, function (tag, ifDoc) {
-				return function (v) {
+				return function (v, k) {
 					var detachEvent = new Event('cvDomDetached');
 					var attachEvent = new Event('cvDomAttached');
+
+					if (Array.isArray(v)) {
+						v = !!v.length;
+					}
 
 					if (inverted) {
 						v = !v;

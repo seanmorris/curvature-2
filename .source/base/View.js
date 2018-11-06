@@ -4,6 +4,7 @@ import { Router   } from './Router';
 import { Cookie   } from './Cookie';
 import { Dom      } from './Dom';
 import { Tag      } from './Tag';
+import { RuleSet  } from './RuleSet';
 
 export class View
 {
@@ -322,6 +323,8 @@ export class View
 				parentNode.appendChild(this.firstNode);
 			}
 		}
+
+		RuleSet.apply(subDoc);
 
 		while(subDoc.firstChild)
 		{
@@ -1060,9 +1063,14 @@ ${tag.outerHTML}`
 
 		proxy.bindTo(
 			property
-			, ((tag, ifDoc) => (v) => {
+			, ((tag, ifDoc) => (v,k) => {
 				let detachEvent = new Event('cvDomDetached');
 				let attachEvent = new Event('cvDomAttached');
+
+				if(Array.isArray(v))
+				{
+					v = !!v.length;
+				}
 
 				if(inverted)
 				{

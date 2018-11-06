@@ -3,6 +3,12 @@ import { Cache }   from './Cache';
 import { Config }   from 'Config';
 
 export class Router {
+	static wait(view, event = 'DOMContentLoaded', node = document)
+	{
+		node.addEventListener(event, () => {
+			this.listen(view);
+		});
+	}
 	static listen(mainView)
 	{
 		let route = location.pathname + location.search;

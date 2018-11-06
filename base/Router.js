@@ -21,9 +21,21 @@ var Router = exports.Router = function () {
 	}
 
 	_createClass(Router, null, [{
+		key: 'wait',
+		value: function wait(view) {
+			var _this = this;
+
+			var event = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'DOMContentLoaded';
+			var node = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : document;
+
+			node.addEventListener(event, function () {
+				_this.listen(view);
+			});
+		}
+	}, {
 		key: 'listen',
 		value: function listen(mainView) {
-			var _this = this;
+			var _this2 = this;
 
 			var route = location.pathname + location.search;
 
@@ -34,7 +46,7 @@ var Router = exports.Router = function () {
 			window.addEventListener('popstate', function (event) {
 				event.preventDefault();
 
-				_this.match(location.pathname, mainView);
+				_this2.match(location.pathname, mainView);
 			});
 
 			this.go(route);

@@ -59,6 +59,11 @@ var Tag = exports.Tag = function () {
 
 						this.clear();
 
+						var detachEvent = new Event('cvDomDetached');
+
+						this.element.dispatchEvent(detachEvent);
+						this.element.remove();
+
 						this.element = this.ref = this.parent = null;
 				}
 		}, {
