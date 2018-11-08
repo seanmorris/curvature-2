@@ -11,7 +11,7 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _FormWrapper2 = require('./FormWrapper');
 
-var _HiddenField = require('curvature/form/HiddenField');
+var _HiddenField = require('../../form/HiddenField');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 

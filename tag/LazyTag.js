@@ -7,7 +7,7 @@ exports.LazyTag = undefined;
 
 var _ScrollTag2 = require('./ScrollTag');
 
-var _Dom = require('curvature/base/Dom');
+var _Dom = require('../base/Dom');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 

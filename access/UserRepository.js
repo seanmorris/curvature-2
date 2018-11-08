@@ -9,7 +9,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _Config = require('Config');
 
-var _Bindable = require('curvature/base/Bindable');
+var _Bindable = require('../base/Bindable');
 
 var _Repository2 = require('../base/Repository');
 
@@ -38,6 +38,13 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 				return;
 			}
 			return this.request(this.uri + 'current', false, false, false).then(function (response) {
+				if (response.body.roles) {
+					for (var i in response.body.roles) {
+						if (response.body.roles[i].class == 'SeanMorris\\Access\\Role\\Administrator') {
+							response.body.isAdmin = true;
+						}
+					}
+				}
 				_this2.args.current = response.body;
 				return response;
 			});

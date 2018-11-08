@@ -1,5 +1,5 @@
 import { Config     } from 'Config';
-import { Bindable   } from 'curvature/base/Bindable';
+import { Bindable   } from '../base/Bindable';
 import { Repository } from '../base/Repository';
 
 export class UserRepository extends Repository {
@@ -16,6 +16,16 @@ export class UserRepository extends Repository {
 			, false
 			, false
 		).then((response) => {
+			if(response.body.roles)
+			{
+				for(let i in response.body.roles)
+				{
+					if(response.body.roles[i].class == 'SeanMorris\\Access\\Role\\Administrator')
+					{
+						response.body.isAdmin = true;
+					}
+				}
+			}
 			this.args.current = response.body;
 			return response;
 		});

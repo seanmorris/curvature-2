@@ -28,7 +28,6 @@ export class RuleSet
 
 				for(let node of nodes)
 				{
-					console.log(node);
 					wrapped(node);
 				}
 			}
@@ -61,7 +60,6 @@ export class RuleSet
 
 				for(let node of nodes)
 				{
-					console.log(node);
 					wrapped(node);
 				}
 			}

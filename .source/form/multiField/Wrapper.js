@@ -1,6 +1,6 @@
 import { Config     } from 'Config';
-import { Repository } from 'curvature/base/Repository';
-import { View } from 'curvature/base/View';
+import { View       } from '../../base/View';
+import { Repository } from '../../base/Repository';
 
 export class Wrapper extends View
 {

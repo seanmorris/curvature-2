@@ -1,10 +1,91 @@
-import { Cookie } from './Cookie';
+import { Bindable } from './Bindable';
+import { Cache    } from './Cache';
+import { Model    } from './Model';
 
 var objects = {};
 
 export class Repository
 {
-	static get xhrs() { return this.xhrList = this.xhrList || [];   }
+	constructor(uri)
+	{
+		this.uri = uri;
+	}
+
+	get(id)
+	{
+		let resourceUri = this.uri + '/' + id;
+
+		let cached = Cache.load(
+			resourceUri
+			, false
+			, 'model-uri-repo'
+		);
+
+		if(cached)
+		{
+			return Promise.resolve(cached);
+		}
+
+		return Repository.request(resourceUri).then((response) => {
+			return this.extractModel(response.body);
+		});
+	}
+
+	page(page = 0, args)
+	{
+		return Repository.request(this.uri, args).then((response) => {
+			let records = [];
+
+			for(let record of response.body)
+			{
+				records.push(this.extractModel(record));
+			}
+
+			return records;
+		});
+	}
+
+	extractModel(rawData)
+	{
+		let model = Bindable.makeBindable(new Model(this));
+
+		model.consume(rawData);
+
+		let resourceUri = this.uri + '/' + model.id;
+
+		Cache.store(
+			resourceUri
+			, model
+			, 60*60
+			, 'model-uri-repo'
+		);
+
+		if(model.class)
+		{
+			let cacheKey = `${model.class}::${model.publidId}`;
+
+			let cached = Cache.load(cacheKey, false, 'model-type-repo');
+
+			if(cached)
+			{
+				cached.consume(rawData);
+				return cached;
+			}
+
+			Cache.store(
+				cacheKey
+				, model
+				, 0
+				, 'model-type-repo'
+			);
+		}
+
+		return model;
+	}
+
+	static get xhrs(){
+		return this.xhrList = this.xhrList || [];
+	}
 
 	static loadPage(args = {}, refresh = false) {
 		return this.request(this.uri, args).then((response) => {

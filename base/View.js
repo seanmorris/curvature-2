@@ -33,6 +33,13 @@ var View = exports.View = function () {
 
 		_classCallCheck(this, View);
 
+		Object.defineProperty(this, '___VIEW___', {
+			enumerable: false,
+			writable: true
+		});
+
+		this.___VIEW___ = View;
+
 		this.args = _Bindable.Bindable.makeBindable(args);
 		this._id = this.uuid();
 		this.args._id = this._id;
@@ -58,6 +65,8 @@ var View = exports.View = function () {
 		this.parent = null;
 		this.viewList = null;
 		this.viewLists = {};
+
+		this.withViews = {};
 
 		this.tags = {};
 
@@ -864,6 +873,8 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapWithTags',
 		value: function mapWithTags(tag) {
+			var _this6 = this;
+
 			var withAttr = tag.getAttribute('cv-with');
 			var carryAttr = tag.getAttribute('cv-carry');
 			tag.removeAttribute('cv-with');
@@ -879,45 +890,54 @@ var View = exports.View = function () {
 				});
 			}
 
-			while (tag.firstChild) {
-				tag.removeChild(tag.firstChild);
-			}
+			this.args.bindTo(withAttr, function (v, k, t, d) {
+				if (_this6.withViews[k]) {
+					_this6.withViews[k].remove();
+				}
 
-			var view = new View();
+				while (tag.firstChild) {
+					tag.removeChild(tag.firstChild);
+				}
 
-			this.cleanup.push(function (view) {
-				return function () {
-					view.remove();
-				};
-			}(view));
+				var view = new View();
 
-			view.template = subTemplate;
-			view.parent = this;
-
-			// console.log(carryProps);
-
-			for (var i in carryProps) {
-				this.args.bindTo(carryProps[i], function (view) {
-					return function (v, k) {
-						view.args[k] = v;
+				_this6.cleanup.push(function (view) {
+					return function () {
+						view.remove();
 					};
 				}(view));
-			}
 
-			for (var _i10 in this.args[withAttr]) {
-				this.args[withAttr].bindTo(_i10, function (view) {
-					return function (v, k) {
-						view.args[k] = v;
-					};
-				}(view));
-			}
+				view.template = subTemplate;
+				view.parent = _this6;
 
-			view.render(tag);
+				// console.log(carryProps);
+
+				for (var i in carryProps) {
+					_this6.args.bindTo(carryProps[i], function (view) {
+						return function (v, k) {
+							view.args[k] = v;
+						};
+					}(view));
+				}
+
+				for (var _i10 in v) {
+					v.bindTo(_i10, function (view) {
+						return function (v, k) {
+							// console.log(v);
+							view.args[k] = v;
+						};
+					}(view));
+				}
+
+				view.render(tag);
+
+				_this6.withViews[k] = view;
+			});
 		}
 	}, {
 		key: 'mapEachTags',
 		value: function mapEachTags(tag) {
-			var _this6 = this;
+			var _this7 = this;
 
 			var eachAttr = tag.getAttribute('cv-each');
 			var carryAttr = tag.getAttribute('cv-carry');
@@ -944,23 +964,23 @@ var View = exports.View = function () {
 
 			this.args.bindTo(eachProp, function (eachProp, carryProps) {
 				return function (v, k, t) {
-					if (_this6.viewLists[eachProp]) {
-						_this6.viewLists[eachProp].remove();
+					if (_this7.viewLists[eachProp]) {
+						_this7.viewLists[eachProp].remove();
 					}
 
 					var viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
 
-					viewList.parent = _this6;
+					viewList.parent = _this7;
 
 					viewList.render(tag);
 
 					for (var i in carryProps) {
-						_this6.args.bindTo(carryProps[i], function (v, k) {
+						_this7.args.bindTo(carryProps[i], function (v, k) {
 							viewList.args.subArgs[k] = v;
 						});
 					}
 
-					_this6.viewLists[eachProp] = viewList;
+					_this7.viewLists[eachProp] = viewList;
 				};
 			}(eachProp, carryProps));
 		}

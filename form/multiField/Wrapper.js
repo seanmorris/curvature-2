@@ -9,9 +9,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _Config = require('Config');
 
-var _Repository = require('curvature/base/Repository');
+var _View2 = require('../../base/View');
 
-var _View2 = require('curvature/base/View');
+var _Repository = require('../../base/Repository');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 

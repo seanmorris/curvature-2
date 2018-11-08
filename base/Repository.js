@@ -7,18 +7,107 @@ exports.Repository = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _Cookie = require('./Cookie');
+var _Bindable = require('./Bindable');
+
+var _Cache = require('./Cache');
+
+var _Model = require('./Model');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var objects = {};
 
-var Repository = exports.Repository = function () {
-	function Repository() {
+var Repository = function () {
+	function Repository(uri) {
 		_classCallCheck(this, Repository);
+
+		this.uri = uri;
 	}
 
-	_createClass(Repository, null, [{
+	_createClass(Repository, [{
+		key: 'get',
+		value: function get(id) {
+			var _this = this;
+
+			var resourceUri = this.uri + '/' + id;
+
+			var cached = _Cache.Cache.load(resourceUri, false, 'model-uri-repo');
+
+			if (cached) {
+				return Promise.resolve(cached);
+			}
+
+			return Repository.request(resourceUri).then(function (response) {
+				return _this.extractModel(response.body);
+			});
+		}
+	}, {
+		key: 'page',
+		value: function page() {
+			var _this2 = this;
+
+			var _page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+
+			var args = arguments[1];
+
+			return Repository.request(this.uri, args).then(function (response) {
+				var records = [];
+
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+
+				try {
+					for (var _iterator = response.body[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var record = _step.value;
+
+						records.push(_this2.extractModel(record));
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator.return) {
+							_iterator.return();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+
+				return records;
+			});
+		}
+	}, {
+		key: 'extractModel',
+		value: function extractModel(rawData) {
+			var model = _Bindable.Bindable.makeBindable(new _Model.Model(this));
+
+			model.consume(rawData);
+
+			var resourceUri = this.uri + '/' + model.id;
+
+			_Cache.Cache.store(resourceUri, model, 60 * 60, 'model-uri-repo');
+
+			if (model.class) {
+				var cacheKey = model.class + '::' + model.publidId;
+
+				var cached = _Cache.Cache.load(cacheKey, false, 'model-type-repo');
+
+				if (cached) {
+					cached.consume(rawData);
+					return cached;
+				}
+
+				_Cache.Cache.store(cacheKey, model, 0, 'model-type-repo');
+			}
+
+			return model;
+		}
+	}], [{
 		key: 'loadPage',
 		value: function loadPage() {
 			var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -77,7 +166,7 @@ var Repository = exports.Repository = function () {
 			var args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 			var post = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
-			var _this = this;
+			var _this3 = this;
 
 			var cache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 			var options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
@@ -157,8 +246,8 @@ var Repository = exports.Repository = function () {
 
 						if (xhr.readyState === DONE) {
 
-							if (!_this.cache) {
-								_this.cache = {};
+							if (!_this3.cache) {
+								_this3.cache = {};
 							}
 
 							if (xhr.status === OK) {
@@ -209,7 +298,7 @@ var Repository = exports.Repository = function () {
 							} else {
 								reject('HTTP' + xhr.status);
 							}
-							_this.xhrs[xhrId] = null;
+							_this3.xhrs[xhrId] = null;
 						}
 					};
 
@@ -245,3 +334,6 @@ var Repository = exports.Repository = function () {
 }();
 
 // Repository.lastResponse = null;
+
+
+exports.Repository = Repository;

@@ -13,9 +13,9 @@ var _Config = require('Config');
 
 var _FormWrapper2 = require('./FormWrapper');
 
-var _HiddenField = require('curvature/form/HiddenField');
+var _HiddenField = require('../../form/HiddenField');
 
-var _Repository = require('curvature/base/Repository');
+var _Repository = require('../../base/Repository');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 

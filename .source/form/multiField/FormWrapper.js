@@ -1,11 +1,11 @@
 import { Config     } from 'Config';
 
-import { Repository } from 'curvature/base/Repository';
-import { Form       } from 'curvature/form/Form';
-import { Toast      } from 'curvature/toast/Toast';
-import { ToastAlert } from 'curvature/toast/ToastAlert';
-import { View       } from 'curvature/base/View';
-import { Router     } from 'curvature/base/Router';
+import { Repository } from '../../base/Repository';
+import { Form       } from '../../form/Form';
+import { Toast      } from '../../toast/Toast';
+import { ToastAlert } from '../../toast/ToastAlert';
+import { View       } from '../../base/View';
+import { Router     } from '../../base/Router';
 
 export class FormWrapper extends View
 {

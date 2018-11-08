@@ -1,6 +1,5 @@
-import { Bindable } from 'curvature/base/Bindable';
-
-import { View } from '../base/View';
+import { View     } from '../base/View';
+import { Bindable } from '../base/Bindable';
 
 export class Field extends View {
 	constructor(values, form, parent, key) {

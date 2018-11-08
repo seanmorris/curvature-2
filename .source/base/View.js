@@ -10,6 +10,13 @@ export class View
 {
 	constructor(args = {})
 	{
+		Object.defineProperty(this, '___VIEW___', {
+			enumerable: false,
+			writable:    true
+		});
+
+		this.___VIEW___ = View;
+
 		this.args      = Bindable.makeBindable(args);
 		this._id       = this.uuid();
 		this.args._id  = this._id;
@@ -35,6 +42,8 @@ export class View
 		this.parent    = null;
 		this.viewList  = null;
 		this.viewLists = {};
+
+		this.withViews = {};
 
 		this.tags      = {};
 
@@ -935,37 +944,47 @@ ${tag.outerHTML}`
 			carryProps = carryAttr.split(',').map(s=>s.trim());
 		}
 
-		while(tag.firstChild)
-		{
-			tag.removeChild(tag.firstChild);
-		}
+		this.args.bindTo(withAttr, (v,k,t,d) => {
+			if(this.withViews[k])
+			{
+				this.withViews[k].remove();
+			}
 
-		let view = new View();
+			while(tag.firstChild)
+			{
+				tag.removeChild(tag.firstChild);
+			}
 
-		this.cleanup.push(((view)=>()=>{
-			view.remove();
-		})(view));
+			let view = new View();
 
-		view.template = subTemplate;
-		view.parent   = this;
-
-		// console.log(carryProps);
-
-		for(let i in carryProps)
-		{
-			this.args.bindTo(carryProps[i], ((view) => (v, k) => {
-				view.args[k] = v;
+			this.cleanup.push(((view)=>()=>{
+				view.remove();
 			})(view));
-		}
 
-		for(let i in this.args[withAttr])
-		{
-			this.args[withAttr].bindTo(i, ((view) => (v, k) => {
-				view.args[k] = v;
-			})(view));
-		}
+			view.template = subTemplate;
+			view.parent   = this;
 
-		view.render(tag);
+			// console.log(carryProps);
+
+			for(let i in carryProps)
+			{
+				this.args.bindTo(carryProps[i], ((view) => (v, k) => {
+					view.args[k] = v;
+				})(view));
+			}
+
+			for(let i in v)
+			{
+				v.bindTo(i, ((view) => (v, k) => {
+					// console.log(v);
+					view.args[k] = v;
+				})(view));
+			}
+
+			view.render(tag);
+
+			this.withViews[k] = view;
+		});
 	}
 
 	mapEachTags(tag)

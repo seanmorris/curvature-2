@@ -1,5 +1,5 @@
 import { ScrollTag } from './ScrollTag';
-import { Dom       } from 'curvature/base/Dom';
+import { Dom       } from '../base/Dom';
 
 export class LazyTag extends ScrollTag
 {

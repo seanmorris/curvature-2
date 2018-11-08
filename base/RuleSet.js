@@ -52,7 +52,6 @@ var RuleSet = exports.RuleSet = function () {
 						for (var _iterator = nodes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 							var node = _step.value;
 
-							console.log(node);
 							wrapped(node);
 						}
 					} catch (err) {
@@ -102,7 +101,6 @@ var RuleSet = exports.RuleSet = function () {
 						for (var _iterator2 = nodes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
 							var node = _step2.value;
 
-							console.log(node);
 							wrapped(node);
 						}
 					} catch (err) {

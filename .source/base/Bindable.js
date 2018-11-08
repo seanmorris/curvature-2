@@ -297,15 +297,23 @@ export class Bindable {
     }
     static resolve(object, path, owner = false)
     {
+        console.log(path);
+
         let node;
         let pathParts = path.split('.');
+
+        console.log(object);
 
         while(pathParts.length)
         {
             if(owner && pathParts.length === 1)
             {
+                console.log(object);
+
                 return [this.makeBindable(object), pathParts.shift()];
             }
+
+            node = pathParts.shift();
 
             if(!node in object
                 || !object[node]
@@ -314,10 +322,9 @@ export class Bindable {
                 object[node] = {};
             }
 
-            node   = pathParts.shift();
             object = this.makeBindable(object[node]);
         }
 
-        return this.makeBindable(object);
+        return [this.makeBindable(object), node];
     }
 }

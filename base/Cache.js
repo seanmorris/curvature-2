@@ -49,7 +49,7 @@ var Cache = exports.Cache = function () {
 
 			if (this.bucket && this.bucket[bucket] && this.bucket[bucket][key]) {
 				// console.log(this.bucket[bucket][key].expiration, (new Date).getTime());
-				if (this.bucket[bucket][key].expiration > new Date().getTime()) {
+				if (this.bucket[bucket][key].expiration == 0 || this.bucket[bucket][key].expiration > new Date().getTime()) {
 					return this.bucket[bucket][key].value;
 				}
 			}

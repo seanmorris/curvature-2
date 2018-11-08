@@ -1,7 +1,7 @@
 import { Config      } from 'Config';
 import { FormWrapper } from './FormWrapper';
-import { HiddenField } from 'curvature/form/HiddenField';
-import { Repository  } from 'curvature/base/Repository';
+import { HiddenField } from '../../form/HiddenField';
+import { Repository  } from '../../base/Repository';
 
 export class SearchForm extends FormWrapper
 {

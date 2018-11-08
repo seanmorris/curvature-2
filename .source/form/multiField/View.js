@@ -1,10 +1,12 @@
-import { Form        } from 'curvature/form/Form';
-import { FieldSet    } from 'curvature/form/FieldSet';
+import { Form        } from '../../form/Form';
+import { FieldSet    } from '../../form/FieldSet';
 import { CreateForm  } from './CreateForm';
 import { SearchForm  } from './SearchForm';
 import { FormWrapper } from './FormWrapper';
 import { Wrapper     } from './Wrapper';
 // import { Loader     } from '../Ui/Loader';
+
+import { View as Markdown } from 'cv-markdown/View';
 
 export class View extends FieldSet
 {

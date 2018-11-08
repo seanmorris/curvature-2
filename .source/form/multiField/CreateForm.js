@@ -1,5 +1,5 @@
 import { FormWrapper } from './FormWrapper';
-import { HiddenField } from 'curvature/form/HiddenField';
+import { HiddenField } from '../../form/HiddenField';
 
 export class CreateForm extends FormWrapper
 {

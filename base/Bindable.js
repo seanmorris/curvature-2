@@ -319,23 +319,30 @@ var Bindable = exports.Bindable = function () {
         value: function resolve(object, path) {
             var owner = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
+            console.log(path);
+
             var node = void 0;
             var pathParts = path.split('.');
 
+            console.log(object);
+
             while (pathParts.length) {
                 if (owner && pathParts.length === 1) {
+                    console.log(object);
+
                     return [this.makeBindable(object), pathParts.shift()];
                 }
+
+                node = pathParts.shift();
 
                 if (!node in object || !object[node] || !(object[node] instanceof Object)) {
                     object[node] = {};
                 }
 
-                node = pathParts.shift();
                 object = this.makeBindable(object[node]);
             }
 
-            return this.makeBindable(object);
+            return [this.makeBindable(object), node];
         }
     }]);
 
