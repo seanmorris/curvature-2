@@ -59,6 +59,10 @@ var Tag = exports.Tag = function () {
 
 						this.clear();
 
+						if (!this.element) {
+								return;
+						}
+
 						var detachEvent = new Event('cvDomDetached');
 
 						this.element.dispatchEvent(detachEvent);

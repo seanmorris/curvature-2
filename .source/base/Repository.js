@@ -1,6 +1,7 @@
 import { Bindable } from './Bindable';
 import { Cache    } from './Cache';
 import { Model    } from './Model';
+import { Form     } from '../form/Form';
 
 var objects = {};
 
@@ -42,6 +43,26 @@ export class Repository
 			}
 
 			return records;
+		});
+	}
+
+	edit(publicId = null)
+	{
+		let resourceUri = this.uri + '/create';
+		
+		if(publicId)
+		{
+			resourceUri = this.uri + '/' + publicId + '/edit';
+		}
+
+		// console.log(resourceUri);
+
+		return Repository.request(resourceUri).then((response) => {
+			console.log(response);
+			let form  = new Form(response.meta.form);
+			// let model = this.extractModel(response.body);
+
+			return form;
 		});
 	}
 

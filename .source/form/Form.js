@@ -1,12 +1,13 @@
 import { View } from '../base/View';
 
-import { Field       } from './Field';
-import { FieldSet    } from './FieldSet';
-import { SelectField } from './SelectField';
-import { RadioField  } from './RadioField';
-import { HtmlField   } from './HtmlField';
-import { HiddenField } from './HiddenField';
-import { ButtonField } from './ButtonField';
+import { Field         } from './Field';
+import { FieldSet      } from './FieldSet';
+import { SelectField   } from './SelectField';
+import { RadioField    } from './RadioField';
+import { HtmlField     } from './HtmlField';
+import { HiddenField   } from './HiddenField';
+import { ButtonField   } from './ButtonField';
+import { TextareaField } from './TextareaField';
 
 import { View as MultiField } from './multiField/View';
 
@@ -149,6 +150,9 @@ export class Form extends View
 						break;
 					case 'hidden':
 						field = new HiddenField(skeleton[i], form, parent, i);
+						break;
+					case 'textarea':
+						field = new TextareaField(skeleton[i], form, parent, i);
 						break;
 					default :
 						field = new Field(skeleton[i], form, parent, i);

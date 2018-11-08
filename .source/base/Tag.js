@@ -46,6 +46,11 @@ export class Tag
 
 		this.clear();
 
+		if(!this.element)
+		{
+			return;
+		}
+
 		let detachEvent = new Event('cvDomDetached');
 
 		this.element.dispatchEvent(detachEvent);

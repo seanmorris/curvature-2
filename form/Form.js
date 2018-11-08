@@ -23,6 +23,8 @@ var _HiddenField = require('./HiddenField');
 
 var _ButtonField = require('./ButtonField');
 
+var _TextareaField = require('./TextareaField');
+
 var _View3 = require('./multiField/View');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -227,6 +229,9 @@ var Form = exports.Form = function (_View) {
 							break;
 						case 'hidden':
 							field = new _HiddenField.HiddenField(skeleton[i], form, parent, i);
+							break;
+						case 'textarea':
+							field = new _TextareaField.TextareaField(skeleton[i], form, parent, i);
 							break;
 						default:
 							field = new _Field.Field(skeleton[i], form, parent, i);

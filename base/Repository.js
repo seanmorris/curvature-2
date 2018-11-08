@@ -13,6 +13,8 @@ var _Cache = require('./Cache');
 
 var _Model = require('./Model');
 
+var _Form = require('../form/Form');
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var objects = {};
@@ -79,6 +81,27 @@ var Repository = function () {
 				}
 
 				return records;
+			});
+		}
+	}, {
+		key: 'edit',
+		value: function edit() {
+			var publicId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+			var resourceUri = this.uri + '/create';
+
+			if (publicId) {
+				resourceUri = this.uri + '/' + publicId + '/edit';
+			}
+
+			// console.log(resourceUri);
+
+			return Repository.request(resourceUri).then(function (response) {
+				console.log(response);
+				var form = new _Form.Form(response.meta.form);
+				// let model = this.extractModel(response.body);
+
+				return form;
 			});
 		}
 	}, {
