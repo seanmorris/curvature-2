@@ -2,7 +2,12 @@ export class Cache
 {
 	static store(key, value, expiry, bucket = 'standard')
 	{
-		let expiration = (expiry * 1000) + (new Date).getTime();
+		let expiration = 0;
+
+		if(expiry)
+		{
+			expiration = (expiry * 1000) + (new Date).getTime();
+		}
 
 		// console.log(
 		// 	`Caching ${key} until ${expiration} in ${bucket}.`

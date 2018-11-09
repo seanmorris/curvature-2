@@ -18,7 +18,11 @@ var Cache = exports.Cache = function () {
 		value: function store(key, value, expiry) {
 			var bucket = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'standard';
 
-			var expiration = expiry * 1000 + new Date().getTime();
+			var expiration = 0;
+
+			if (expiry) {
+				expiration = expiry * 1000 + new Date().getTime();
+			}
 
 			// console.log(
 			// 	`Caching ${key} until ${expiration} in ${bucket}.`

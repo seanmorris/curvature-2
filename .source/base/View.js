@@ -28,10 +28,6 @@ export class View
 		this.lastNode  = null;
 		this.nodes     = null;
 
-		this.frames    = [];
-		this.timeouts  = [];
-		this.intervals = [];
-
 		this.cleanup   = [];
 
 		this.attach    = [];
@@ -483,7 +479,7 @@ export class View
 
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
-				proxy.bindTo(property, ((dynamicNode,unsafeHtml) => (v,k,t) => {
+				let debind = proxy.bindTo(property, ((dynamicNode,unsafeHtml) => (v,k,t) => {
 					// console.log(`Setting ${k} to ${v}`, dynamicNode);
 					if(t[k] instanceof View)
 					{
@@ -496,12 +492,12 @@ export class View
 					{
 						v.render(tag.parentNode, dynamicNode);
 
-						this.cleanup.push(((view)=>()=>{
-							if(view)
+						v.cleanup.push(()=>{
+							if(v)
 							{
-								view.remove();
+								v.remove();
 							}
-						})(v));
+						});
 					}
 					else
 					{
@@ -516,6 +512,14 @@ export class View
 						}
 					}
 				})(dynamicNode,unsafeHtml));
+
+				this.cleanup.push(()=>{
+					debind();
+					if(!proxy.isBound())
+					{
+						Bindable.clearBindings(proxy);
+					}
+				});
 			}
 
 			let staticSuffix = original.substring(header)
@@ -582,7 +586,7 @@ export class View
 						console.log(proxy);						
 					}
 
-					proxy.bindTo(property, ((property, longProperty) => (v, k, t, d) => {
+					let debind = proxy.bindTo(property, ((property, longProperty) => (v, k, t, d) => {
 						for(let i in bindProperties)
 						{
 							for(let j in bindProperties[longProperty])
@@ -597,6 +601,14 @@ export class View
 						}
 						tag.setAttribute(attribute.name, segments.join(''));
 					})(property, j));
+
+					this.cleanup.push(()=>{
+						debind();
+						if(!proxy.isBound())
+						{
+							Bindable.clearBindings(proxy);
+						}
+					});
 				}
 
 				// console.log(bindProperties, segments);
@@ -968,17 +980,29 @@ ${tag.outerHTML}`
 
 			for(let i in carryProps)
 			{
-				this.args.bindTo(carryProps[i], ((view) => (v, k) => {
+				let debind = this.args.bindTo(carryProps[i], (v, k) => {
 					view.args[k] = v;
-				})(view));
+				});
+
+				this.cleanup.push(()=>{
+					debind();
+				});
 			}
 
 			for(let i in v)
 			{
-				v.bindTo(i, ((view) => (v, k) => {
+				let debind = v.bindTo(i, (v, k) => {
 					// console.log(v);
 					view.args[k] = v;
-				})(view));
+				});
+
+				this.cleanup.push(()=>{
+					debind();
+					if(!v.isBound())
+					{
+						Bindable.clearBindings(v);
+					}
+				});
 			}
 
 			view.render(tag);
@@ -1010,7 +1034,7 @@ ${tag.outerHTML}`
 
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		this.args.bindTo(eachProp, ((eachProp,carryProps) => (v, k, t)=>{
+		let debind = this.args.bindTo(eachProp, ((eachProp,carryProps) => (v, k, t)=>{
 			if(this.viewLists[eachProp])
 			{
 				this.viewLists[eachProp].remove();
@@ -1024,14 +1048,22 @@ ${tag.outerHTML}`
 
 			for(let i in carryProps)
 			{
-				this.args.bindTo(carryProps[i], (v, k) => {
+				let debind = this.args.bindTo(carryProps[i], (v, k) => {
 					viewList.args.subArgs[k] = v;
+				});
+
+				this.cleanup.push(()=>{
+					debind();
 				});
 			}
 
 			this.viewLists[eachProp] = viewList;
 
 		})(eachProp,carryProps));
+
+		this.cleanup.push(()=>{
+			debind();
+		});
 	}
 	
 	mapIfTags(tag)
@@ -1080,7 +1112,7 @@ ${tag.outerHTML}`
 			);
 		}
 
-		proxy.bindTo(
+		let debind = proxy.bindTo(
 			property
 			, ((tag, ifDoc) => (v,k) => {
 				let detachEvent = new Event('cvDomDetached');
@@ -1128,6 +1160,14 @@ ${tag.outerHTML}`
 				}
 			})(tag, ifDoc)
 		);
+
+		this.cleanup.push(()=>{
+			debind();
+			if(!proxy.isBound())
+			{
+				Bindable.clearBindings(proxy);
+			}
+		});
 
 		tag.removeAttribute('cv-if');
 	}
@@ -1192,6 +1232,18 @@ ${tag.outerHTML}`
 		}
 
 		this.viewLists = [];
+
+		for(let i in this.timeouts)
+		{
+			clearInterval(this.timeouts[i].timeout);
+			delete this.timeouts[i];
+		}
+
+		for(var i in this.intervals)
+		{
+			clearInterval(this.intervals[i].timeout);
+			delete this.intervals[i];
+		}
 
 		Bindable.clearBindings(this);
 	}

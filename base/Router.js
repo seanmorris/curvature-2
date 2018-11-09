@@ -146,6 +146,8 @@ var Router = exports.Router = function () {
 					}
 				}
 
+				console.log(forceRefresh);
+
 				if (!forceRefresh && current && routes[_i] instanceof Object && current instanceof routes[_i] && !(routes[_i] instanceof Promise) && current.update(args)) {
 					view.args.content = current;
 

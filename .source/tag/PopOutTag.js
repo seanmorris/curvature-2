@@ -45,7 +45,9 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				const cut = 1750;
+				const cut = element.getAttribute('data-pop-speed') || 1750;
+
+				console.log(cut);
 
 				let fromRight  = window.innerWidth  - this.rect.right;
 				let fromBottom = window.innerHeight - this.rect.bottom;
@@ -58,11 +60,11 @@ export class PopOutTag extends Tag
 
 				if(this.horizontalDuration < 0.1)
 				{
-					this.horizontalDuration = 0.2;
+					this.horizontalDuration = 0.1;
 				}
 				if(this.verticalDuration < 0.1)
 				{
-					this.verticalDuration = 0.2;
+					this.verticalDuration = 0.1;
 				}
 
 				if(this.horizontalDuration > 0.4)

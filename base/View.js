@@ -51,10 +51,6 @@ var View = exports.View = function () {
 		this.lastNode = null;
 		this.nodes = null;
 
-		this.frames = [];
-		this.timeouts = [];
-		this.intervals = [];
-
 		this.cleanup = [];
 
 		this.attach = [];
@@ -413,7 +409,7 @@ var View = exports.View = function () {
 				var header = 0;
 				var match = void 0;
 
-				while (match = regex.exec(original)) {
+				var _loop3 = function _loop3() {
 					var bindProperty = match[2];
 
 					if (1 || bindProperty.match(/\./)) {
@@ -431,16 +427,16 @@ var View = exports.View = function () {
 						expand = true;
 						bindProperty = bindProperty.substr(3);
 
-						continue;
+						return 'continue';
 					}
 
 					var staticPrefix = original.substring(header, match.index);
 
 					header = match.index + match[1].length;
 
-					var _staticNode = document.createTextNode(staticPrefix);
+					var staticNode = document.createTextNode(staticPrefix);
 
-					tag.parentNode.insertBefore(_staticNode, tag);
+					tag.parentNode.insertBefore(staticNode, tag);
 
 					var dynamicNode = void 0;
 
@@ -450,11 +446,11 @@ var View = exports.View = function () {
 						dynamicNode = document.createTextNode('');
 					}
 
-					var proxy = this.args;
+					var proxy = _this3.args;
 					var property = bindProperty;
 
 					if (bindProperty.match(/\./)) {
-						var _Bindable$resolve = _Bindable.Bindable.resolve(this.args, bindProperty, true);
+						var _Bindable$resolve = _Bindable.Bindable.resolve(_this3.args, bindProperty, true);
 
 						var _Bindable$resolve2 = _slicedToArray(_Bindable$resolve, 2);
 
@@ -464,7 +460,7 @@ var View = exports.View = function () {
 
 					tag.parentNode.insertBefore(dynamicNode, tag);
 
-					proxy.bindTo(property, function (dynamicNode, unsafeHtml) {
+					var debind = proxy.bindTo(property, function (dynamicNode, unsafeHtml) {
 						return function (v, k, t) {
 							// console.log(`Setting ${k} to ${v}`, dynamicNode);
 							if (t[k] instanceof View) {
@@ -476,13 +472,11 @@ var View = exports.View = function () {
 							if (v instanceof View) {
 								v.render(tag.parentNode, dynamicNode);
 
-								_this3.cleanup.push(function (view) {
-									return function () {
-										if (view) {
-											view.remove();
-										}
-									};
-								}(v));
+								v.cleanup.push(function () {
+									if (v) {
+										v.remove();
+									}
+								});
 							} else {
 								// console.log(dynamicNode);
 								if (unsafeHtml) {
@@ -493,6 +487,19 @@ var View = exports.View = function () {
 							}
 						};
 					}(dynamicNode, unsafeHtml));
+
+					_this3.cleanup.push(function () {
+						debind();
+						if (!proxy.isBound()) {
+							_Bindable.Bindable.clearBindings(proxy);
+						}
+					});
+				};
+
+				while (match = regex.exec(original)) {
+					var _ret3 = _loop3();
+
+					if (_ret3 === 'continue') continue;
 				}
 
 				var staticSuffix = original.substring(header);
@@ -505,7 +512,7 @@ var View = exports.View = function () {
 			}
 
 			if (tag.nodeType == Node.ELEMENT_NODE) {
-				var _loop3 = function _loop3(i) {
+				var _loop4 = function _loop4(i) {
 					if (!_this3.interpolatable(tag.attributes[i].value)) {
 						return 'continue';
 					}
@@ -534,25 +541,25 @@ var View = exports.View = function () {
 
 					segments.push(original.substring(header));
 
-					for (var j in bindProperties) {
-						var _proxy = _this3.args;
-						var _property = j;
+					var _loop5 = function _loop5(j) {
+						var proxy = _this3.args;
+						var property = j;
 
 						if (j.match(/\./)) {
 							var _Bindable$resolve3 = _Bindable.Bindable.resolve(_this3.args, j, true);
 
 							var _Bindable$resolve4 = _slicedToArray(_Bindable$resolve3, 2);
 
-							_proxy = _Bindable$resolve4[0];
-							_property = _Bindable$resolve4[1];
+							proxy = _Bindable$resolve4[0];
+							property = _Bindable$resolve4[1];
 						}
 
-						if (!_proxy.bindTo) {
-							console.log(_property);
-							console.log(_proxy);
+						if (!proxy.bindTo) {
+							console.log(property);
+							console.log(proxy);
 						}
 
-						_proxy.bindTo(_property, function (property, longProperty) {
+						var debind = proxy.bindTo(property, function (property, longProperty) {
 							return function (v, k, t, d) {
 								for (var _i9 in bindProperties) {
 									for (var _j in bindProperties[longProperty]) {
@@ -565,7 +572,18 @@ var View = exports.View = function () {
 								}
 								tag.setAttribute(attribute.name, segments.join(''));
 							};
-						}(_property, j));
+						}(property, j));
+
+						_this3.cleanup.push(function () {
+							debind();
+							if (!proxy.isBound()) {
+								_Bindable.Bindable.clearBindings(proxy);
+							}
+						});
+					};
+
+					for (var j in bindProperties) {
+						_loop5(j);
 					}
 
 					// console.log(bindProperties, segments);
@@ -574,9 +592,9 @@ var View = exports.View = function () {
 				};
 
 				for (var i = 0; i < tag.attributes.length; i++) {
-					var _ret3 = _loop3(i);
+					var _ret4 = _loop4(i);
 
-					if (_ret3 === 'continue') continue;
+					if (_ret4 === 'continue') continue;
 				}
 			}
 		}
@@ -912,21 +930,36 @@ var View = exports.View = function () {
 
 				// console.log(carryProps);
 
+				var _loop6 = function _loop6(i) {
+					var debind = _this6.args.bindTo(carryProps[i], function (v, k) {
+						view.args[k] = v;
+					});
+
+					_this6.cleanup.push(function () {
+						debind();
+					});
+				};
+
 				for (var i in carryProps) {
-					_this6.args.bindTo(carryProps[i], function (view) {
-						return function (v, k) {
-							view.args[k] = v;
-						};
-					}(view));
+					_loop6(i);
 				}
 
-				for (var _i10 in v) {
-					v.bindTo(_i10, function (view) {
-						return function (v, k) {
-							// console.log(v);
-							view.args[k] = v;
-						};
-					}(view));
+				var _loop7 = function _loop7(i) {
+					var debind = v.bindTo(i, function (v, k) {
+						// console.log(v);
+						view.args[k] = v;
+					});
+
+					_this6.cleanup.push(function () {
+						debind();
+						if (!v.isBound()) {
+							_Bindable.Bindable.clearBindings(v);
+						}
+					});
+				};
+
+				for (var i in v) {
+					_loop7(i);
 				}
 
 				view.render(tag);
@@ -962,7 +995,7 @@ var View = exports.View = function () {
 			    asProp = _eachAttr$split2[1],
 			    keyProp = _eachAttr$split2[2];
 
-			this.args.bindTo(eachProp, function (eachProp, carryProps) {
+			var debind = this.args.bindTo(eachProp, function (eachProp, carryProps) {
 				return function (v, k, t) {
 					if (_this7.viewLists[eachProp]) {
 						_this7.viewLists[eachProp].remove();
@@ -974,15 +1007,27 @@ var View = exports.View = function () {
 
 					viewList.render(tag);
 
-					for (var i in carryProps) {
-						_this7.args.bindTo(carryProps[i], function (v, k) {
+					var _loop8 = function _loop8(i) {
+						var debind = _this7.args.bindTo(carryProps[i], function (v, k) {
 							viewList.args.subArgs[k] = v;
 						});
+
+						_this7.cleanup.push(function () {
+							debind();
+						});
+					};
+
+					for (var i in carryProps) {
+						_loop8(i);
 					}
 
 					_this7.viewLists[eachProp] = viewList;
 				};
 			}(eachProp, carryProps));
+
+			this.cleanup.push(function () {
+				debind();
+			});
 		}
 	}, {
 		key: 'mapIfTags',
@@ -1031,7 +1076,7 @@ var View = exports.View = function () {
 				property = _Bindable$resolve6[1];
 			}
 
-			proxy.bindTo(property, function (tag, ifDoc) {
+			var debind = proxy.bindTo(property, function (tag, ifDoc) {
 				return function (v, k) {
 					var detachEvent = new Event('cvDomDetached');
 					var attachEvent = new Event('cvDomAttached');
@@ -1072,6 +1117,13 @@ var View = exports.View = function () {
 				};
 			}(tag, ifDoc));
 
+			this.cleanup.push(function () {
+				debind();
+				if (!proxy.isBound()) {
+					_Bindable.Bindable.clearBindings(proxy);
+				}
+			});
+
 			tag.removeAttribute('cv-if');
 		}
 	}, {
@@ -1096,14 +1148,14 @@ var View = exports.View = function () {
 
 			// console.log(this);
 
-			for (var i in this.tags) {
-				if (Array.isArray(this.tags[i])) {
-					for (var j in this.tags[i]) {
-						this.tags[i][j].remove();
+			for (var _i10 in this.tags) {
+				if (Array.isArray(this.tags[_i10])) {
+					for (var j in this.tags[_i10]) {
+						this.tags[_i10][j].remove();
 					}
 					continue;
 				}
-				this.tags[i].remove();
+				this.tags[_i10].remove();
 			}
 
 			for (var _i11 in this.nodes) {
@@ -1125,6 +1177,16 @@ var View = exports.View = function () {
 			}
 
 			this.viewLists = [];
+
+			for (var _i13 in this.timeouts) {
+				clearInterval(this.timeouts[_i13].timeout);
+				delete this.timeouts[_i13];
+			}
+
+			for (var i in this.intervals) {
+				clearInterval(this.intervals[i].timeout);
+				delete this.intervals[i];
+			}
 
 			_Bindable.Bindable.clearBindings(this);
 		}

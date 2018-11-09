@@ -6,8 +6,6 @@ import { FormWrapper } from './FormWrapper';
 import { Wrapper     } from './Wrapper';
 // import { Loader     } from '../Ui/Loader';
 
-import { View as Markdown } from 'cv-markdown/View';
-
 export class View extends FieldSet
 {
 	constructor(values, form, parent, key)

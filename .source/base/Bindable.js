@@ -26,6 +26,11 @@ export class Bindable {
             writable: true
         });
 
+        Object.defineProperty(object, 'isBound', {
+            enumerable: false,
+            writable: true
+        });
+
         Object.defineProperty(object, '___binding___', {
             enumerable: false,
             writable: true
@@ -90,25 +95,56 @@ export class Bindable {
         object.___wrapped___    = {};
         object.___binding___    = {};
         object.___bindingAll___ = [];
-        object.bindTo = ((object) => (property, callback = null) => {
+        object.bindTo = (property, callback = null) => {
             if (callback == null) {
                 callback = property;
+                let bindIndex = object.___bindingAll___.length;
+
                 object.___bindingAll___.push(callback);
+
                 for (let i in object) {
                     callback(object[i], i, object, false);
                 }
-                return;
+
+                return () => {
+                    object.___bindingAll___[bindIndex] = null;
+                };
             }
 
             if (!object.___binding___[property]) {
                 object.___binding___[property] = [];
             }
 
+            let bindIndex = object.___binding___[property].length;
+
             object.___binding___[property].push(callback);
 
             callback(object[property], property, object, false);
 
-        })(object);
+            return () => {
+                if (!object.___binding___[property]) {
+                    return;
+                }
+                object.___binding___[property][bindIndex] = null;
+            };
+        };
+
+        object.isBound = () => {
+            for (let i in object.___bindingAll___) {
+                if (object.___bindingAll___[i]) {
+                    return true;
+                }
+            }
+
+            for (let i in object.___binding___) {
+                for (let j in object.___binding___[i]) {
+                    if (object.___binding___[i][j]) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
 
         object.___stack___ = [];
         object.___stackTime___ = [];
@@ -116,14 +152,14 @@ export class Bindable {
         object.___after___ = [];
         object.___setCount___ = {};
 
-        object.toString = ((object) => () => {
+        object.toString = () => {
             if (typeof object == 'object') {
                 return JSON.stringify(object);
                 return '[object]'
             }
 
             return object;
-        })(object);
+        };
 
         for (let i in object) {
             if (object[i] &&
@@ -134,7 +170,7 @@ export class Bindable {
             }
         }
 
-        let set = ((object) => (target, key, value) => {
+        let set = (target, key, value) => {
             if (target[key] === value && typeof value !== object) {
                 return true;
             }
@@ -161,6 +197,9 @@ export class Bindable {
 
             if (key in object.___binding___) {
                 for (let i in object.___binding___[key]) {
+                    if(!object.___binding___[key][i]) {
+                        continue;
+                    }
                     if (object.___binding___[key][i](value, key, target, false) === false) {
                         stop = true;
                     }
@@ -204,9 +243,9 @@ export class Bindable {
             }
 
             return true;
-        })(object);
+        };
 
-        let del = ((object) => (target, key) => {
+        let del = (target, key) => {
             if (!(key in target)) {
                 return true;
             }
@@ -217,6 +256,9 @@ export class Bindable {
 
             if (key in object.___binding___) {
                 for (let i in object.___binding___[key]) {
+                    if(!object.___binding___[key][i]) {
+                        continue;
+                    }
                     object.___binding___[key][i](undefined, key, target, true);
                 }
             }
@@ -228,9 +270,9 @@ export class Bindable {
             }
 
             return true;
-        })(object);
+        };
 
-        let get = ((object) => (target, key) => {
+        let get = (target, key) => {
             if (target[key] instanceof Function) {
 
             	if(target.___wrapped___[key])
@@ -276,7 +318,7 @@ export class Bindable {
             // console.log(`Getting ${key}`);
 
             return target[key];
-        })(object);
+        };
 
         object.___ref___ = new Proxy(object, {
             deleteProperty: del,
@@ -297,19 +339,13 @@ export class Bindable {
     }
     static resolve(object, path, owner = false)
     {
-        console.log(path);
-
         let node;
         let pathParts = path.split('.');
-
-        console.log(object);
 
         while(pathParts.length)
         {
             if(owner && pathParts.length === 1)
             {
-                console.log(object);
-
                 return [this.makeBindable(object), pathParts.shift()];
             }
 

@@ -42,6 +42,11 @@ var Bindable = exports.Bindable = function () {
                 writable: true
             });
 
+            Object.defineProperty(object, 'isBound', {
+                enumerable: false,
+                writable: true
+            });
+
             Object.defineProperty(object, '___binding___', {
                 enumerable: false,
                 writable: true
@@ -106,28 +111,58 @@ var Bindable = exports.Bindable = function () {
             object.___wrapped___ = {};
             object.___binding___ = {};
             object.___bindingAll___ = [];
-            object.bindTo = function (object) {
-                return function (property) {
-                    var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+            object.bindTo = function (property) {
+                var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-                    if (callback == null) {
-                        callback = property;
-                        object.___bindingAll___.push(callback);
-                        for (var i in object) {
-                            callback(object[i], i, object, false);
-                        }
+                if (callback == null) {
+                    callback = property;
+                    var _bindIndex = object.___bindingAll___.length;
+
+                    object.___bindingAll___.push(callback);
+
+                    for (var i in object) {
+                        callback(object[i], i, object, false);
+                    }
+
+                    return function () {
+                        object.___bindingAll___[_bindIndex] = null;
+                    };
+                }
+
+                if (!object.___binding___[property]) {
+                    object.___binding___[property] = [];
+                }
+
+                var bindIndex = object.___binding___[property].length;
+
+                object.___binding___[property].push(callback);
+
+                callback(object[property], property, object, false);
+
+                return function () {
+                    if (!object.___binding___[property]) {
                         return;
                     }
-
-                    if (!object.___binding___[property]) {
-                        object.___binding___[property] = [];
-                    }
-
-                    object.___binding___[property].push(callback);
-
-                    callback(object[property], property, object, false);
+                    object.___binding___[property][bindIndex] = null;
                 };
-            }(object);
+            };
+
+            object.isBound = function () {
+                for (var i in object.___bindingAll___) {
+                    if (object.___bindingAll___[i]) {
+                        return true;
+                    }
+                }
+
+                for (var _i in object.___binding___) {
+                    for (var j in object.___binding___[_i]) {
+                        if (object.___binding___[_i][j]) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
 
             object.___stack___ = [];
             object.___stackTime___ = [];
@@ -135,16 +170,14 @@ var Bindable = exports.Bindable = function () {
             object.___after___ = [];
             object.___setCount___ = {};
 
-            object.toString = function (object) {
-                return function () {
-                    if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) == 'object') {
-                        return JSON.stringify(object);
-                        return '[object]';
-                    }
+            object.toString = function () {
+                if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) == 'object') {
+                    return JSON.stringify(object);
+                    return '[object]';
+                }
 
-                    return object;
-                };
-            }(object);
+                return object;
+            };
 
             for (var i in object) {
                 if (object[i] && _typeof(object[i]) == 'object' && !object[i] instanceof Node) {
@@ -152,146 +185,146 @@ var Bindable = exports.Bindable = function () {
                 }
             }
 
-            var set = function (object) {
-                return function (target, key, value) {
-                    if (target[key] === value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== object) {
-                        return true;
-                    }
-
-                    // console.log(`Setting ${key}`, value);
-
-                    if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object' && !(value instanceof Node)) {
-                        if (value.___isBindable___ !== Bindable) {
-                            value = Bindable.makeBindable(value);
-
-                            for (var _i in value) {
-                                if (value[_i] && _typeof(value[_i]) == 'object') {
-                                    value[_i] = Bindable.makeBindable(value[_i]);
-                                }
-                            }
-                        }
-                    }
-
-                    for (var _i2 in object.___bindingAll___) {
-                        object.___bindingAll___[_i2](value, key, target, false);
-                    }
-
-                    var stop = false;
-
-                    if (key in object.___binding___) {
-                        for (var _i3 in object.___binding___[key]) {
-                            if (object.___binding___[key][_i3](value, key, target, false) === false) {
-                                stop = true;
-                            }
-                        }
-                    }
-
-                    if (!stop) {
-                        var descriptor = Object.getOwnPropertyDescriptor(target, key);
-
-                        var excluded = target instanceof File && key == 'lastModifiedDate';
-
-                        if (!excluded && (!descriptor || descriptor.writable)) {
-                            target[key] = value;
-                        }
-                    }
-
-                    if (!target.___setCount___[key]) {
-                        target.___setCount___[key] = 0;
-                    }
-
-                    target.___setCount___[key]++;
-
-                    var warnOn = 10;
-
-                    if (target.___setCount___[key] > warnOn && value instanceof Object) {
-                        // console.log(
-                        //     'Warning: Resetting bindable reference "' +
-                        //     key +
-                        //     '" to object ' +
-                        //     target.___setCount___[key] +
-                        //     ' times.'
-                        // );
-                    }
-
+            var set = function set(target, key, value) {
+                if (target[key] === value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== object) {
                     return true;
-                };
-            }(object);
+                }
 
-            var del = function (object) {
-                return function (target, key) {
-                    if (!(key in target)) {
-                        return true;
-                    }
+                // console.log(`Setting ${key}`, value);
 
-                    for (var _i4 in object.___bindingAll___) {
-                        object.___bindingAll___[_i4](undefined, key, target, true);
-                    }
+                if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object' && !(value instanceof Node)) {
+                    if (value.___isBindable___ !== Bindable) {
+                        value = Bindable.makeBindable(value);
 
-                    if (key in object.___binding___) {
-                        for (var _i5 in object.___binding___[key]) {
-                            object.___binding___[key][_i5](undefined, key, target, true);
+                        for (var _i2 in value) {
+                            if (value[_i2] && _typeof(value[_i2]) == 'object') {
+                                value[_i2] = Bindable.makeBindable(value[_i2]);
+                            }
                         }
                     }
+                }
 
-                    if (Array.isArray(target)) {
-                        target.splice(key, 1);
-                    } else {
-                        delete target[key];
+                for (var _i3 in object.___bindingAll___) {
+                    object.___bindingAll___[_i3](value, key, target, false);
+                }
+
+                var stop = false;
+
+                if (key in object.___binding___) {
+                    for (var _i4 in object.___binding___[key]) {
+                        if (!object.___binding___[key][_i4]) {
+                            continue;
+                        }
+                        if (object.___binding___[key][_i4](value, key, target, false) === false) {
+                            stop = true;
+                        }
                     }
+                }
 
+                if (!stop) {
+                    var descriptor = Object.getOwnPropertyDescriptor(target, key);
+
+                    var excluded = target instanceof File && key == 'lastModifiedDate';
+
+                    if (!excluded && (!descriptor || descriptor.writable)) {
+                        target[key] = value;
+                    }
+                }
+
+                if (!target.___setCount___[key]) {
+                    target.___setCount___[key] = 0;
+                }
+
+                target.___setCount___[key]++;
+
+                var warnOn = 10;
+
+                if (target.___setCount___[key] > warnOn && value instanceof Object) {
+                    // console.log(
+                    //     'Warning: Resetting bindable reference "' +
+                    //     key +
+                    //     '" to object ' +
+                    //     target.___setCount___[key] +
+                    //     ' times.'
+                    // );
+                }
+
+                return true;
+            };
+
+            var del = function del(target, key) {
+                if (!(key in target)) {
                     return true;
-                };
-            }(object);
+                }
 
-            var get = function (object) {
-                return function (target, key) {
-                    if (target[key] instanceof Function) {
+                for (var _i5 in object.___bindingAll___) {
+                    object.___bindingAll___[_i5](undefined, key, target, true);
+                }
 
-                        if (target.___wrapped___[key]) {
-                            return target.___wrapped___[key];
+                if (key in object.___binding___) {
+                    for (var _i6 in object.___binding___[key]) {
+                        if (!object.___binding___[key][_i6]) {
+                            continue;
                         }
+                        object.___binding___[key][_i6](undefined, key, target, true);
+                    }
+                }
 
-                        target.___wrapped___[key] = function () {
-                            target.___executing___ = key;
+                if (Array.isArray(target)) {
+                    target.splice(key, 1);
+                } else {
+                    delete target[key];
+                }
 
-                            target.___stack___.unshift(key);
-                            // target.___stackTime___.unshift((new Date).getTime());
+                return true;
+            };
 
-                            // console.log(`Start ${key}()`);
+            var get = function get(target, key) {
+                if (target[key] instanceof Function) {
 
-                            for (var _i6 in target.___before___) {
-                                target.___before___[_i6](target, key, object);
-                            }
-
-                            var ret = target[key].apply(target, arguments);
-
-                            for (var _i7 in target.___after___) {
-                                target.___after___[_i7](target, key, object);
-                            }
-
-                            target.___executing___ = null;
-
-                            // let execTime = (new Date).getTime() - target.___stackTime___[0];
-
-                            // if (execTime > 150) {
-                            //     // console.log(`End ${key}(), took ${execTime} ms`);
-                            // }
-
-                            target.___stack___.shift();
-                            // target.___stackTime___.shift();
-
-                            return ret;
-                        };
-
+                    if (target.___wrapped___[key]) {
                         return target.___wrapped___[key];
                     }
 
-                    // console.log(`Getting ${key}`);
+                    target.___wrapped___[key] = function () {
+                        target.___executing___ = key;
 
-                    return target[key];
-                };
-            }(object);
+                        target.___stack___.unshift(key);
+                        // target.___stackTime___.unshift((new Date).getTime());
+
+                        // console.log(`Start ${key}()`);
+
+                        for (var _i7 in target.___before___) {
+                            target.___before___[_i7](target, key, object);
+                        }
+
+                        var ret = target[key].apply(target, arguments);
+
+                        for (var _i8 in target.___after___) {
+                            target.___after___[_i8](target, key, object);
+                        }
+
+                        target.___executing___ = null;
+
+                        // let execTime = (new Date).getTime() - target.___stackTime___[0];
+
+                        // if (execTime > 150) {
+                        //     // console.log(`End ${key}(), took ${execTime} ms`);
+                        // }
+
+                        target.___stack___.shift();
+                        // target.___stackTime___.shift();
+
+                        return ret;
+                    };
+
+                    return target.___wrapped___[key];
+                }
+
+                // console.log(`Getting ${key}`);
+
+                return target[key];
+            };
 
             object.___ref___ = new Proxy(object, {
                 deleteProperty: del,
@@ -319,17 +352,11 @@ var Bindable = exports.Bindable = function () {
         value: function resolve(object, path) {
             var owner = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
-            console.log(path);
-
             var node = void 0;
             var pathParts = path.split('.');
 
-            console.log(object);
-
             while (pathParts.length) {
                 if (owner && pathParts.length === 1) {
-                    console.log(object);
-
                     return [this.makeBindable(object), pathParts.shift()];
                 }
 
