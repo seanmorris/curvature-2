@@ -36,7 +36,7 @@ export class ViewList
 
 		// console.log(this.args);
 
-		this.args.value.bindTo((v, k, t, d) => {
+		let debind = this.args.value.bindTo((v, k, t, d) => {
 
 			if(this.paused)
 			{
@@ -66,9 +66,11 @@ export class ViewList
 				this.views[k].parent   = this.parent;
 				this.views[k].viewList = this;
 
-				this.args.subArgs.bindTo((v, k, t, d) => {
+				let debind = this.args.subArgs.bindTo((v, k, t, d) => {
 					view.args[k] = v;
 				});
+
+				this.views[k].cleanup.push(debind);
 
 				this.views[k].args[ this.subProperty ] = v;
 
@@ -84,6 +86,8 @@ export class ViewList
 
 			this.views[k].args[ this.subProperty ] = v;
 		});
+
+		this.cleanup.push(debind);
 	}
 
 	render(tag)
@@ -233,5 +237,12 @@ export class ViewList
 			this.tag.removeChild(this.tag.firstChild);
 		}
 
+		Bindable.clearBindings(this.args.subArgs);
+		Bindable.clearBindings(this.args);
+
+		if(!this.args.value.isBound())
+		{
+			Bindable.clearBindings(this.args.value);			
+		}
 	}
 }

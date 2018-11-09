@@ -399,9 +399,17 @@ export class View
 				continue;
 			}
 
-			expandArg.bindTo(i, ((tag,i)=>(v)=>{
+			let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
 				tag.setAttribute(i, v);
 			})(tag,i));
+
+			this.cleanup.push(()=>{
+				debind();
+				if(expandArg.isBound())
+				{
+					Bindable.clearBindings(expandArg);
+				}
+			});
 		}
 	}
 
@@ -586,7 +594,9 @@ export class View
 						console.log(proxy);						
 					}
 
-					let debind = proxy.bindTo(property, ((property, longProperty) => (v, k, t, d) => {
+					let longProperty = j;
+
+					let debind = proxy.bindTo(property, (v, k, t, d) => {
 						for(let i in bindProperties)
 						{
 							for(let j in bindProperties[longProperty])
@@ -599,8 +609,9 @@ export class View
 								}
 							}
 						}
+
 						tag.setAttribute(attribute.name, segments.join(''));
-					})(property, j));
+					});
 
 					this.cleanup.push(()=>{
 						debind();
@@ -694,7 +705,7 @@ export class View
 	mapBindTags(tag)
 	{
 		let bindArg = tag.getAttribute('cv-bind');
-		this.args.bindTo(bindArg, (v,k,t) => {
+		let debind = this.args.bindTo(bindArg, (v,k,t) => {
 			if(t[k] instanceof View && t[k] !== v)
 			{
 				t[k].remove();
@@ -737,6 +748,8 @@ export class View
 				tag.innerText = v;
 			}
 		});
+
+		this.cleanup.push(debind);
 
 		let inputListener = (event) => {
 			if(event.target.getAttribute('type') !== 'password')
@@ -951,7 +964,7 @@ ${tag.outerHTML}`
 			carryProps = carryAttr.split(',').map(s=>s.trim());
 		}
 
-		this.args.bindTo(withAttr, (v,k,t,d) => {
+		let debind = this.args.bindTo(withAttr, (v,k,t,d) => {
 			if(this.withViews[k])
 			{
 				this.withViews[k].remove();
@@ -979,19 +992,29 @@ ${tag.outerHTML}`
 					view.args[k] = v;
 				});
 
+				view.cleanup.push(debind);
 				this.cleanup.push(()=>{
 					debind();
+					view.remove();
 				});
 			}
 
 			for(let i in v)
 			{
 				let debind = v.bindTo(i, (v, k) => {
-					// console.log(v);
 					view.args[k] = v;
 				});
 
 				this.cleanup.push(()=>{
+					debind();
+					if(!v.isBound())
+					{
+						Bindable.clearBindings(v);
+					}
+					view.remove();
+				});
+
+				view.cleanup.push(()=>{
 					debind();
 					if(!v.isBound())
 					{
@@ -1004,6 +1027,8 @@ ${tag.outerHTML}`
 
 			this.withViews[k] = view;
 		});
+
+		this.cleanup.push(debind);
 	}
 
 	mapEachTags(tag)
@@ -1029,7 +1054,7 @@ ${tag.outerHTML}`
 
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		let debind = this.args.bindTo(eachProp, ((eachProp,carryProps) => (v, k, t)=>{
+		let debind = this.args.bindTo(eachProp, (v, k, t)=>{
 			if(this.viewLists[eachProp])
 			{
 				this.viewLists[eachProp].remove();
@@ -1047,18 +1072,23 @@ ${tag.outerHTML}`
 					viewList.args.subArgs[k] = v;
 				});
 
+				viewList.cleanup.push(debind);
+
 				this.cleanup.push(()=>{
-					debind();
+					debind()
+					if(v && !v.isBound())
+					{
+						Bindable.clearBindings(v);
+					}
+					viewList.remove();
 				});
 			}
 
 			this.viewLists[eachProp] = viewList;
 
-		})(eachProp,carryProps));
-
-		this.cleanup.push(()=>{
-			debind();
 		});
+
+		this.cleanup.push(debind);
 	}
 	
 	mapIfTags(tag)

@@ -190,6 +190,9 @@ export class Bindable {
             }
 
             for (let i in object.___bindingAll___) {
+                if(!object.___bindingAll___[i]) {
+                    continue;
+                }
                 object.___bindingAll___[i](value, key, target, false);
             }
 

@@ -205,6 +205,9 @@ var Bindable = exports.Bindable = function () {
                 }
 
                 for (var _i3 in object.___bindingAll___) {
+                    if (!object.___bindingAll___[_i3]) {
+                        continue;
+                    }
                     object.___bindingAll___[_i3](value, key, target, false);
                 }
 

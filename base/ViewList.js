@@ -50,7 +50,7 @@ var ViewList = function () {
 
 		// console.log(this.args);
 
-		this.args.value.bindTo(function (v, k, t, d) {
+		var debind = this.args.value.bindTo(function (v, k, t, d) {
 
 			if (_this.paused) {
 				return;
@@ -77,9 +77,11 @@ var ViewList = function () {
 				_this.views[k].parent = _this.parent;
 				_this.views[k].viewList = _this;
 
-				_this.args.subArgs.bindTo(function (v, k, t, d) {
+				var _debind = _this.args.subArgs.bindTo(function (v, k, t, d) {
 					view.args[k] = v;
 				});
+
+				_this.views[k].cleanup.push(_debind);
 
 				_this.views[k].args[_this.subProperty] = v;
 
@@ -94,6 +96,8 @@ var ViewList = function () {
 
 			_this.views[k].args[_this.subProperty] = v;
 		});
+
+		this.cleanup.push(debind);
 	}
 
 	_createClass(ViewList, [{
@@ -228,6 +232,13 @@ var ViewList = function () {
 
 			while (this.tag && this.tag.firstChild) {
 				this.tag.removeChild(this.tag.firstChild);
+			}
+
+			_Bindable.Bindable.clearBindings(this.args.subArgs);
+			_Bindable.Bindable.clearBindings(this.args);
+
+			if (!this.args.value.isBound()) {
+				_Bindable.Bindable.clearBindings(this.args.value);
 			}
 		}
 	}]);

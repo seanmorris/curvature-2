@@ -375,27 +375,42 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapExpandableTags',
 		value: function mapExpandableTags(tag) {
+			var _this3 = this;
+
 			var expandProperty = tag.getAttribute('cv-expand');
 			var expandArg = _Bindable.Bindable.makeBindable(this.args[expandProperty] || {});
 
 			tag.removeAttribute('cv-expand');
 
-			for (var i in expandArg) {
+			var _loop3 = function _loop3(i) {
 				if (i == 'name' || i == 'type') {
-					continue;
+					return 'continue';
 				}
 
-				expandArg.bindTo(i, function (tag, i) {
+				var debind = expandArg.bindTo(i, function (tag, i) {
 					return function (v) {
 						tag.setAttribute(i, v);
 					};
 				}(tag, i));
+
+				_this3.cleanup.push(function () {
+					debind();
+					if (expandArg.isBound()) {
+						_Bindable.Bindable.clearBindings(expandArg);
+					}
+				});
+			};
+
+			for (var i in expandArg) {
+				var _ret3 = _loop3(i);
+
+				if (_ret3 === 'continue') continue;
 			}
 		}
 	}, {
 		key: 'mapInterpolatableTags',
 		value: function mapInterpolatableTags(tag) {
-			var _this3 = this;
+			var _this4 = this;
 
 			var regex = this.interpolateRegex;
 
@@ -409,7 +424,7 @@ var View = exports.View = function () {
 				var header = 0;
 				var match = void 0;
 
-				var _loop3 = function _loop3() {
+				var _loop4 = function _loop4() {
 					var bindProperty = match[2];
 
 					if (1 || bindProperty.match(/\./)) {
@@ -446,11 +461,11 @@ var View = exports.View = function () {
 						dynamicNode = document.createTextNode('');
 					}
 
-					var proxy = _this3.args;
+					var proxy = _this4.args;
 					var property = bindProperty;
 
 					if (bindProperty.match(/\./)) {
-						var _Bindable$resolve = _Bindable.Bindable.resolve(_this3.args, bindProperty, true);
+						var _Bindable$resolve = _Bindable.Bindable.resolve(_this4.args, bindProperty, true);
 
 						var _Bindable$resolve2 = _slicedToArray(_Bindable$resolve, 2);
 
@@ -488,7 +503,7 @@ var View = exports.View = function () {
 						};
 					}(dynamicNode, unsafeHtml));
 
-					_this3.cleanup.push(function () {
+					_this4.cleanup.push(function () {
 						debind();
 						if (!proxy.isBound()) {
 							_Bindable.Bindable.clearBindings(proxy);
@@ -497,9 +512,9 @@ var View = exports.View = function () {
 				};
 
 				while (match = regex.exec(original)) {
-					var _ret3 = _loop3();
+					var _ret4 = _loop4();
 
-					if (_ret3 === 'continue') continue;
+					if (_ret4 === 'continue') continue;
 				}
 
 				var staticSuffix = original.substring(header);
@@ -512,8 +527,8 @@ var View = exports.View = function () {
 			}
 
 			if (tag.nodeType == Node.ELEMENT_NODE) {
-				var _loop4 = function _loop4(i) {
-					if (!_this3.interpolatable(tag.attributes[i].value)) {
+				var _loop5 = function _loop5(i) {
+					if (!_this4.interpolatable(tag.attributes[i].value)) {
 						return 'continue';
 					}
 
@@ -541,12 +556,12 @@ var View = exports.View = function () {
 
 					segments.push(original.substring(header));
 
-					var _loop5 = function _loop5(j) {
-						var proxy = _this3.args;
+					var _loop6 = function _loop6(j) {
+						var proxy = _this4.args;
 						var property = j;
 
 						if (j.match(/\./)) {
-							var _Bindable$resolve3 = _Bindable.Bindable.resolve(_this3.args, j, true);
+							var _Bindable$resolve3 = _Bindable.Bindable.resolve(_this4.args, j, true);
 
 							var _Bindable$resolve4 = _slicedToArray(_Bindable$resolve3, 2);
 
@@ -559,22 +574,23 @@ var View = exports.View = function () {
 							console.log(proxy);
 						}
 
-						var debind = proxy.bindTo(property, function (property, longProperty) {
-							return function (v, k, t, d) {
-								for (var _i9 in bindProperties) {
-									for (var _j in bindProperties[longProperty]) {
-										segments[bindProperties[longProperty][_j]] = t[_i9];
+						var longProperty = j;
 
-										if (k === property) {
-											segments[bindProperties[longProperty][_j]] = v;
-										}
+						var debind = proxy.bindTo(property, function (v, k, t, d) {
+							for (var _i9 in bindProperties) {
+								for (var _j in bindProperties[longProperty]) {
+									segments[bindProperties[longProperty][_j]] = t[_i9];
+
+									if (k === property) {
+										segments[bindProperties[longProperty][_j]] = v;
 									}
 								}
-								tag.setAttribute(attribute.name, segments.join(''));
-							};
-						}(property, j));
+							}
 
-						_this3.cleanup.push(function () {
+							tag.setAttribute(attribute.name, segments.join(''));
+						});
+
+						_this4.cleanup.push(function () {
 							debind();
 							if (!proxy.isBound()) {
 								_Bindable.Bindable.clearBindings(proxy);
@@ -583,7 +599,7 @@ var View = exports.View = function () {
 					};
 
 					for (var j in bindProperties) {
-						_loop5(j);
+						_loop6(j);
 					}
 
 					// console.log(bindProperties, segments);
@@ -592,9 +608,9 @@ var View = exports.View = function () {
 				};
 
 				for (var i = 0; i < tag.attributes.length; i++) {
-					var _ret4 = _loop4(i);
+					var _ret5 = _loop5(i);
 
-					if (_ret4 === 'continue') continue;
+					if (_ret5 === 'continue') continue;
 				}
 			}
 		}
@@ -668,10 +684,10 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapBindTags',
 		value: function mapBindTags(tag) {
-			var _this4 = this;
+			var _this5 = this;
 
 			var bindArg = tag.getAttribute('cv-bind');
-			this.args.bindTo(bindArg, function (v, k, t) {
+			var debind = this.args.bindTo(bindArg, function (v, k, t) {
 				if (t[k] instanceof View && t[k] !== v) {
 					t[k].remove();
 				}
@@ -704,6 +720,8 @@ var View = exports.View = function () {
 				}
 			});
 
+			this.cleanup.push(debind);
+
 			var inputListener = function inputListener(event) {
 				if (event.target.getAttribute('type') !== 'password') {
 					// console.log(event.target.value);
@@ -715,7 +733,7 @@ var View = exports.View = function () {
 
 				// console.log(event.target.value);
 
-				_this4.args[bindArg] = event.target.value;
+				_this5.args[bindArg] = event.target.value;
 			};
 
 			tag.addEventListener('input', inputListener);
@@ -737,7 +755,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapOnTags',
 		value: function mapOnTags(tag) {
-			var _this5 = this;
+			var _this6 = this;
 
 			var action = String(tag.getAttribute('cv-on')).split(/;/).map(function (a) {
 				return a.split(':');
@@ -757,7 +775,7 @@ var View = exports.View = function () {
 					}
 
 					var eventMethod = void 0;
-					var parent = _this5;
+					var parent = _this6;
 
 					while (parent) {
 						if (typeof parent[callbackName] == 'function') {
@@ -817,17 +835,17 @@ var View = exports.View = function () {
 							break;
 
 						case '_attach':
-							_this5.attach.push(eventListener);
+							_this6.attach.push(eventListener);
 							break;
 
 						case '_detach':
-							_this5.detach.push(eventListener);
+							_this6.detach.push(eventListener);
 							break;
 
 						default:
 							tag.addEventListener(eventName, eventListener);
 
-							_this5.cleanup.push(function (tag, eventName, eventListener) {
+							_this6.cleanup.push(function (tag, eventName, eventListener) {
 								return function () {
 									tag.removeEventListener(eventName, eventListener);
 									tag = undefined;
@@ -887,7 +905,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapWithTags',
 		value: function mapWithTags(tag) {
-			var _this6 = this;
+			var _this7 = this;
 
 			var withAttr = tag.getAttribute('cv-with');
 			var carryAttr = tag.getAttribute('cv-carry');
@@ -904,9 +922,9 @@ var View = exports.View = function () {
 				});
 			}
 
-			this.args.bindTo(withAttr, function (v, k, t, d) {
-				if (_this6.withViews[k]) {
-					_this6.withViews[k].remove();
+			var debind = this.args.bindTo(withAttr, function (v, k, t, d) {
+				if (_this7.withViews[k]) {
+					_this7.withViews[k].remove();
 				}
 
 				while (tag.firstChild) {
@@ -915,38 +933,47 @@ var View = exports.View = function () {
 
 				var view = new View();
 
-				_this6.cleanup.push(function (view) {
+				_this7.cleanup.push(function (view) {
 					return function () {
 						view.remove();
 					};
 				}(view));
 
 				view.template = subTemplate;
-				view.parent = _this6;
+				view.parent = _this7;
 
 				// console.log(carryProps);
 
-				var _loop6 = function _loop6(i) {
-					var debind = _this6.args.bindTo(carryProps[i], function (v, k) {
+				var _loop7 = function _loop7(i) {
+					var debind = _this7.args.bindTo(carryProps[i], function (v, k) {
 						view.args[k] = v;
 					});
 
-					_this6.cleanup.push(function () {
+					view.cleanup.push(debind);
+					_this7.cleanup.push(function () {
 						debind();
+						view.remove();
 					});
 				};
 
 				for (var i in carryProps) {
-					_loop6(i);
+					_loop7(i);
 				}
 
-				var _loop7 = function _loop7(i) {
+				var _loop8 = function _loop8(i) {
 					var debind = v.bindTo(i, function (v, k) {
-						// console.log(v);
 						view.args[k] = v;
 					});
 
-					_this6.cleanup.push(function () {
+					_this7.cleanup.push(function () {
+						debind();
+						if (!v.isBound()) {
+							_Bindable.Bindable.clearBindings(v);
+						}
+						view.remove();
+					});
+
+					view.cleanup.push(function () {
 						debind();
 						if (!v.isBound()) {
 							_Bindable.Bindable.clearBindings(v);
@@ -955,18 +982,20 @@ var View = exports.View = function () {
 				};
 
 				for (var i in v) {
-					_loop7(i);
+					_loop8(i);
 				}
 
 				view.render(tag);
 
-				_this6.withViews[k] = view;
+				_this7.withViews[k] = view;
 			});
+
+			this.cleanup.push(debind);
 		}
 	}, {
 		key: 'mapEachTags',
 		value: function mapEachTags(tag) {
-			var _this7 = this;
+			var _this8 = this;
 
 			var eachAttr = tag.getAttribute('cv-each');
 			var carryAttr = tag.getAttribute('cv-carry');
@@ -991,39 +1020,41 @@ var View = exports.View = function () {
 			    asProp = _eachAttr$split2[1],
 			    keyProp = _eachAttr$split2[2];
 
-			var debind = this.args.bindTo(eachProp, function (eachProp, carryProps) {
-				return function (v, k, t) {
-					if (_this7.viewLists[eachProp]) {
-						_this7.viewLists[eachProp].remove();
-					}
+			var debind = this.args.bindTo(eachProp, function (v, k, t) {
+				if (_this8.viewLists[eachProp]) {
+					_this8.viewLists[eachProp].remove();
+				}
 
-					var viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
+				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
 
-					viewList.parent = _this7;
+				viewList.parent = _this8;
 
-					viewList.render(tag);
+				viewList.render(tag);
 
-					var _loop8 = function _loop8(i) {
-						var debind = _this7.args.bindTo(carryProps[i], function (v, k) {
-							viewList.args.subArgs[k] = v;
-						});
+				var _loop9 = function _loop9(i) {
+					var debind = _this8.args.bindTo(carryProps[i], function (v, k) {
+						viewList.args.subArgs[k] = v;
+					});
 
-						_this7.cleanup.push(function () {
-							debind();
-						});
-					};
+					viewList.cleanup.push(debind);
 
-					for (var i in carryProps) {
-						_loop8(i);
-					}
-
-					_this7.viewLists[eachProp] = viewList;
+					_this8.cleanup.push(function () {
+						debind();
+						if (v && !v.isBound()) {
+							_Bindable.Bindable.clearBindings(v);
+						}
+						viewList.remove();
+					});
 				};
-			}(eachProp, carryProps));
 
-			this.cleanup.push(function () {
-				debind();
+				for (var i in carryProps) {
+					_loop9(i);
+				}
+
+				_this8.viewLists[eachProp] = viewList;
 			});
+
+			this.cleanup.push(debind);
 		}
 	}, {
 		key: 'mapIfTags',
