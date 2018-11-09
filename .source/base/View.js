@@ -1245,7 +1245,7 @@ ${tag.outerHTML}`
 			delete this.intervals[i];
 		}
 
-		Bindable.clearBindings(this);
+		Bindable.clearBindings(this.args);
 	}
 
 	update()
