@@ -95,7 +95,7 @@ export class Bindable {
         object.___wrapped___    = {};
         object.___binding___    = {};
         object.___bindingAll___ = [];
-        object.bindTo = (property, callback = null) => {
+        object.bindTo = (property, callback = null, options = {}) => {
             if (callback == null) {
                 callback = property;
                 let bindIndex = object.___bindingAll___.length;
@@ -109,6 +109,38 @@ export class Bindable {
                 return () => {
                     object.___bindingAll___[bindIndex] = null;
                 };
+            }
+
+            let throttle = false;
+
+            if (options.delay > 0) {
+                callback = ((callback) => (v,k,t,d) => {
+                    let p = t[k];
+                    setTimeout(()=>callback(v,k,t,d,p), options.delay);
+                })(callback);
+            }
+
+            if (options.throttle > 0) {
+                callback = ((callback) => (v,k,t,d) => {
+                    if (throttle) {
+                        return;
+                    }
+                    callback(v,k,t,d);
+                    throttle = true;
+                    setTimeout(()=>throttle = false, options.throttle);
+                })(callback);
+            }
+
+            let waiter;
+
+            if (options.wait) {
+                callback = ((callback) => (v,k,t,d) => {
+                    if (waiter) {
+                        clearTimeout(waiter);
+                    }
+                    let p = t[k];
+                    waiter = setTimeout(()=>callback(v,k,t,d,p), options.wait);
+                })(callback);
             }
 
             if (!object.___binding___[property]) {

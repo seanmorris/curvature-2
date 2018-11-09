@@ -113,6 +113,7 @@ var Bindable = exports.Bindable = function () {
             object.___bindingAll___ = [];
             object.bindTo = function (property) {
                 var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+                var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
                 if (callback == null) {
                     callback = property;
@@ -127,6 +128,50 @@ var Bindable = exports.Bindable = function () {
                     return function () {
                         object.___bindingAll___[_bindIndex] = null;
                     };
+                }
+
+                var throttle = false;
+
+                if (options.delay > 0) {
+                    callback = function (callback) {
+                        return function (v, k, t, d) {
+                            var p = t[k];
+                            setTimeout(function () {
+                                return callback(v, k, t, d, p);
+                            }, options.delay);
+                        };
+                    }(callback);
+                }
+
+                if (options.throttle > 0) {
+                    callback = function (callback) {
+                        return function (v, k, t, d) {
+                            if (throttle) {
+                                return;
+                            }
+                            callback(v, k, t, d);
+                            throttle = true;
+                            setTimeout(function () {
+                                return throttle = false;
+                            }, options.throttle);
+                        };
+                    }(callback);
+                }
+
+                var waiter = void 0;
+
+                if (options.wait) {
+                    callback = function (callback) {
+                        return function (v, k, t, d) {
+                            if (waiter) {
+                                clearTimeout(waiter);
+                            }
+                            var p = t[k];
+                            waiter = setTimeout(function () {
+                                return callback(v, k, t, d, p);
+                            }, options.wait);
+                        };
+                    }(callback);
                 }
 
                 if (!object.___binding___[property]) {
