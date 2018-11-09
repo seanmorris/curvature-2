@@ -463,7 +463,7 @@ var View = exports.View = function () {
 					var debind = proxy.bindTo(property, function (dynamicNode, unsafeHtml) {
 						return function (v, k, t) {
 							// console.log(`Setting ${k} to ${v}`, dynamicNode);
-							if (t[k] instanceof View) {
+							if (t[k] instanceof View && t[k] !== v) {
 								t[k].remove();
 							}
 
@@ -672,11 +672,7 @@ var View = exports.View = function () {
 
 			var bindArg = tag.getAttribute('cv-bind');
 			this.args.bindTo(bindArg, function (v, k, t) {
-				if (t[k] === v) {
-					// return;
-				}
-
-				if (t[k] instanceof View) {
+				if (t[k] instanceof View && t[k] !== v) {
 					t[k].remove();
 				}
 
@@ -1188,7 +1184,7 @@ var View = exports.View = function () {
 				delete this.intervals[i];
 			}
 
-			_Bindable.Bindable.clearBindings(this);
+			_Bindable.Bindable.clearBindings(this.args);
 		}
 	}, {
 		key: 'update',

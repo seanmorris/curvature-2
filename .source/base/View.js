@@ -481,7 +481,7 @@ export class View
 
 				let debind = proxy.bindTo(property, ((dynamicNode,unsafeHtml) => (v,k,t) => {
 					// console.log(`Setting ${k} to ${v}`, dynamicNode);
-					if(t[k] instanceof View)
+					if(t[k] instanceof View && t[k] !== v)
 					{
 						t[k].remove();
 					}
@@ -695,12 +695,7 @@ export class View
 	{
 		let bindArg = tag.getAttribute('cv-bind');
 		this.args.bindTo(bindArg, (v,k,t) => {
-			if(t[k] === v)
-			{
-				// return;
-			}
-
-			if(t[k] instanceof View)
+			if(t[k] instanceof View && t[k] !== v)
 			{
 				t[k].remove();
 			}
