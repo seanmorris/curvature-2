@@ -291,6 +291,9 @@ export class View
 				tag.matches('[cv-bind]')
 					&& this.mapBindTags(tag);
 
+				tag.matches('[cv-attr]')
+					&& this.mapAttrTags(tag);
+
 				this.mapInterpolatableTags(tag);
 
 				tag.matches('[cv-expand]')
@@ -410,6 +413,31 @@ export class View
 					Bindable.clearBindings(expandArg);
 				}
 			});
+		}
+	}
+
+	mapAttrTags(tag)
+	{
+		let attrProperty = tag.getAttribute('cv-attr');
+
+		tag.removeAttribute('cv-attr');
+
+		let pairs = attrProperty.split(',');
+		let attrs = pairs.map((p) => p.split(':'));
+
+		for (let i in attrs)
+		{
+			this.cleanup.push(this.args.bindTo(
+				attrs[i][1]
+				, ((attr) => (v)=>{
+					if(v == null)
+					{
+						tag.setAttribute(attr[0], '');
+						return;
+					}
+					tag.setAttribute(attr[0], v);
+				})(attrs[i])
+			));
 		}
 	}
 

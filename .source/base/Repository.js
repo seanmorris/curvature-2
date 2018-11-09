@@ -16,16 +16,16 @@ export class Repository
 	{
 		let resourceUri = this.uri + '/' + id;
 
-		let cached = Cache.load(
-			resourceUri
-			, false
-			, 'model-uri-repo'
-		);
+		// let cached = Cache.load(
+		// 	resourceUri
+		// 	, false
+		// 	, 'model-uri-repo'
+		// );
 
-		if(cached)
-		{
-			return Promise.resolve(cached);
-		}
+		// if(cached)
+		// {
+		// 	return Promise.resolve(cached);
+		// }
 
 		return Repository.request(resourceUri).then((response) => {
 			return this.extractModel(response.body);
@@ -74,10 +74,12 @@ export class Repository
 
 		let resourceUri = this.uri + '/' + model.id;
 
+		console.log(resourceUri);
+
 		Cache.store(
 			resourceUri
 			, model
-			, 60*60
+			, 10
 			, 'model-uri-repo'
 		);
 
@@ -87,16 +89,16 @@ export class Repository
 
 			let cached = Cache.load(cacheKey, false, 'model-type-repo');
 
-			if(cached)
-			{
-				cached.consume(rawData);
-				return cached;
-			}
+			// if(cached)
+			// {
+			// 	cached.consume(rawData);
+			// 	return cached;
+			// }
 
 			Cache.store(
 				cacheKey
 				, model
-				, 0
+				, 10
 				, 'model-type-repo'
 			);
 		}

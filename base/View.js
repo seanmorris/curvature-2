@@ -297,6 +297,8 @@ var View = exports.View = function () {
 
 					tag.matches('[cv-bind]') && _this2.mapBindTags(tag);
 
+					tag.matches('[cv-attr]') && _this2.mapAttrTags(tag);
+
 					_this2.mapInterpolatableTags(tag);
 
 					tag.matches('[cv-expand]') && _this2.mapExpandableTags(tag);
@@ -405,6 +407,30 @@ var View = exports.View = function () {
 				var _ret3 = _loop3(i);
 
 				if (_ret3 === 'continue') continue;
+			}
+		}
+	}, {
+		key: 'mapAttrTags',
+		value: function mapAttrTags(tag) {
+			var attrProperty = tag.getAttribute('cv-attr');
+
+			tag.removeAttribute('cv-attr');
+
+			var pairs = attrProperty.split(',');
+			var attrs = pairs.map(function (p) {
+				return p.split(':');
+			});
+
+			for (var i in attrs) {
+				this.cleanup.push(this.args.bindTo(attrs[i][1], function (attr) {
+					return function (v) {
+						if (v == null) {
+							tag.setAttribute(attr[0], '');
+							return;
+						}
+						tag.setAttribute(attr[0], v);
+					};
+				}(attrs[i])));
 			}
 		}
 	}, {

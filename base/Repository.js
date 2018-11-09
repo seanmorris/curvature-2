@@ -33,11 +33,16 @@ var Repository = function () {
 
 			var resourceUri = this.uri + '/' + id;
 
-			var cached = _Cache.Cache.load(resourceUri, false, 'model-uri-repo');
+			// let cached = Cache.load(
+			// 	resourceUri
+			// 	, false
+			// 	, 'model-uri-repo'
+			// );
 
-			if (cached) {
-				return Promise.resolve(cached);
-			}
+			// if(cached)
+			// {
+			// 	return Promise.resolve(cached);
+			// }
 
 			return Repository.request(resourceUri).then(function (response) {
 				return _this.extractModel(response.body);
@@ -113,19 +118,22 @@ var Repository = function () {
 
 			var resourceUri = this.uri + '/' + model.id;
 
-			_Cache.Cache.store(resourceUri, model, 60 * 60, 'model-uri-repo');
+			console.log(resourceUri);
+
+			_Cache.Cache.store(resourceUri, model, 10, 'model-uri-repo');
 
 			if (model.class) {
 				var cacheKey = model.class + '::' + model.publidId;
 
 				var cached = _Cache.Cache.load(cacheKey, false, 'model-type-repo');
 
-				if (cached) {
-					cached.consume(rawData);
-					return cached;
-				}
+				// if(cached)
+				// {
+				// 	cached.consume(rawData);
+				// 	return cached;
+				// }
 
-				_Cache.Cache.store(cacheKey, model, 0, 'model-type-repo');
+				_Cache.Cache.store(cacheKey, model, 10, 'model-type-repo');
 			}
 
 			return model;

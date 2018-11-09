@@ -64,8 +64,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 				var cut = element.getAttribute('data-pop-speed') || 1750;
 
-				console.log(cut);
-
 				var fromRight = window.innerWidth - _this.rect.right;
 				var fromBottom = window.innerHeight - _this.rect.bottom;
 
@@ -75,11 +73,11 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				_this.horizontalDuration = horizontalAverage / cut;
 				_this.verticalDuration = vericalAverage / cut;
 
-				if (_this.horizontalDuration < 0.1) {
-					_this.horizontalDuration = 0.1;
+				if (_this.horizontalDuration < 0.01) {
+					_this.horizontalDuration = 0.01;
 				}
-				if (_this.verticalDuration < 0.1) {
-					_this.verticalDuration = 0.1;
+				if (_this.verticalDuration < 0.01) {
+					_this.verticalDuration = 0.01;
 				}
 
 				if (_this.horizontalDuration > 0.4) {

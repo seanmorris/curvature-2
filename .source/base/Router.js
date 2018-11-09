@@ -109,8 +109,6 @@ export class Router {
 				}
 			}
 
-			console.log(forceRefresh);
-
 			if(!forceRefresh
 				&& current
 				&& (routes[i] instanceof Object)
