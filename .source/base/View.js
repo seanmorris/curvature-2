@@ -732,7 +732,19 @@ export class View
 	mapBindTags(tag)
 	{
 		let bindArg = tag.getAttribute('cv-bind');
-		let debind = this.args.bindTo(bindArg, (v,k,t) => {
+		let proxy    = this.args;
+		let property = bindArg
+
+		if(bindArg.match(/\./))
+		{
+			[proxy, property] = Bindable.resolve(
+				this.args
+				, bindArg
+				, true
+			);
+		}
+
+		let debind = proxy.bindTo(property, (v,k,t) => {
 			if(t[k] instanceof View && t[k] !== v)
 			{
 				t[k].remove();
@@ -779,18 +791,22 @@ export class View
 		this.cleanup.push(debind);
 
 		let inputListener = (event) => {
-			if(event.target.getAttribute('type') !== 'password')
-			{
-				// console.log(event.target.value);
-			}
-
 			if(event.target !== tag) {
 				return;
 			}
 
-			// console.log(event.target.value);
-
-			this.args[bindArg] = event.target.value;
+			let type = tag.getAttribute('type');
+			if (type && type.toLowerCase() == 'checkbox') {
+				if (tag.checked) {
+					proxy[property] = event.target.value;
+				}
+				else {
+					proxy[property] = false;
+				}
+			}
+			else {
+				proxy[property] = event.target.value;
+			}
 		};
 
 		tag.addEventListener('input',         inputListener);

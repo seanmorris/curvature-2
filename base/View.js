@@ -709,10 +709,20 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapBindTags',
 		value: function mapBindTags(tag) {
-			var _this5 = this;
-
 			var bindArg = tag.getAttribute('cv-bind');
-			var debind = this.args.bindTo(bindArg, function (v, k, t) {
+			var proxy = this.args;
+			var property = bindArg;
+
+			if (bindArg.match(/\./)) {
+				var _Bindable$resolve5 = _Bindable.Bindable.resolve(this.args, bindArg, true);
+
+				var _Bindable$resolve6 = _slicedToArray(_Bindable$resolve5, 2);
+
+				proxy = _Bindable$resolve6[0];
+				property = _Bindable$resolve6[1];
+			}
+
+			var debind = proxy.bindTo(property, function (v, k, t) {
 				if (t[k] instanceof View && t[k] !== v) {
 					t[k].remove();
 				}
@@ -748,17 +758,20 @@ var View = exports.View = function () {
 			this.cleanup.push(debind);
 
 			var inputListener = function inputListener(event) {
-				if (event.target.getAttribute('type') !== 'password') {
-					// console.log(event.target.value);
-				}
-
 				if (event.target !== tag) {
 					return;
 				}
 
-				// console.log(event.target.value);
-
-				_this5.args[bindArg] = event.target.value;
+				var type = tag.getAttribute('type');
+				if (type && type.toLowerCase() == 'checkbox') {
+					if (tag.checked) {
+						proxy[property] = event.target.value;
+					} else {
+						proxy[property] = false;
+					}
+				} else {
+					proxy[property] = event.target.value;
+				}
 			};
 
 			tag.addEventListener('input', inputListener);
@@ -780,7 +793,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapOnTags',
 		value: function mapOnTags(tag) {
-			var _this6 = this;
+			var _this5 = this;
 
 			var action = String(tag.getAttribute('cv-on')).split(/;/).map(function (a) {
 				return a.split(':');
@@ -800,7 +813,7 @@ var View = exports.View = function () {
 					}
 
 					var eventMethod = void 0;
-					var parent = _this6;
+					var parent = _this5;
 
 					while (parent) {
 						if (typeof parent[callbackName] == 'function') {
@@ -860,17 +873,17 @@ var View = exports.View = function () {
 							break;
 
 						case '_attach':
-							_this6.attach.push(eventListener);
+							_this5.attach.push(eventListener);
 							break;
 
 						case '_detach':
-							_this6.detach.push(eventListener);
+							_this5.detach.push(eventListener);
 							break;
 
 						default:
 							tag.addEventListener(eventName, eventListener);
 
-							_this6.cleanup.push(function (tag, eventName, eventListener) {
+							_this5.cleanup.push(function (tag, eventName, eventListener) {
 								return function () {
 									tag.removeEventListener(eventName, eventListener);
 									tag = undefined;
@@ -930,7 +943,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapWithTags',
 		value: function mapWithTags(tag) {
-			var _this7 = this;
+			var _this6 = this;
 
 			var withAttr = tag.getAttribute('cv-with');
 			var carryAttr = tag.getAttribute('cv-carry');
@@ -948,8 +961,8 @@ var View = exports.View = function () {
 			}
 
 			var debind = this.args.bindTo(withAttr, function (v, k, t, d) {
-				if (_this7.withViews[k]) {
-					_this7.withViews[k].remove();
+				if (_this6.withViews[k]) {
+					_this6.withViews[k].remove();
 				}
 
 				while (tag.firstChild) {
@@ -958,24 +971,24 @@ var View = exports.View = function () {
 
 				var view = new View();
 
-				_this7.cleanup.push(function (view) {
+				_this6.cleanup.push(function (view) {
 					return function () {
 						view.remove();
 					};
 				}(view));
 
 				view.template = subTemplate;
-				view.parent = _this7;
+				view.parent = _this6;
 
 				// console.log(carryProps);
 
 				var _loop7 = function _loop7(i) {
-					var debind = _this7.args.bindTo(carryProps[i], function (v, k) {
+					var debind = _this6.args.bindTo(carryProps[i], function (v, k) {
 						view.args[k] = v;
 					});
 
 					view.cleanup.push(debind);
-					_this7.cleanup.push(function () {
+					_this6.cleanup.push(function () {
 						debind();
 						view.remove();
 					});
@@ -990,7 +1003,7 @@ var View = exports.View = function () {
 						view.args[k] = v;
 					});
 
-					_this7.cleanup.push(function () {
+					_this6.cleanup.push(function () {
 						debind();
 						if (!v.isBound()) {
 							_Bindable.Bindable.clearBindings(v);
@@ -1012,7 +1025,7 @@ var View = exports.View = function () {
 
 				view.render(tag);
 
-				_this7.withViews[k] = view;
+				_this6.withViews[k] = view;
 			});
 
 			this.cleanup.push(debind);
@@ -1020,7 +1033,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapEachTags',
 		value: function mapEachTags(tag) {
-			var _this8 = this;
+			var _this7 = this;
 
 			var eachAttr = tag.getAttribute('cv-each');
 			var carryAttr = tag.getAttribute('cv-carry');
@@ -1046,22 +1059,22 @@ var View = exports.View = function () {
 			    keyProp = _eachAttr$split2[2];
 
 			var debind = this.args.bindTo(eachProp, function (v, k, t) {
-				if (_this8.viewLists[eachProp]) {
-					_this8.viewLists[eachProp].remove();
+				if (_this7.viewLists[eachProp]) {
+					_this7.viewLists[eachProp].remove();
 				}
 
-				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, _this8, keyProp);
+				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, _this7, keyProp);
 
 				viewList.render(tag);
 
 				var _loop9 = function _loop9(i) {
-					var debind = _this8.args.bindTo(carryProps[i], function (v, k) {
+					var debind = _this7.args.bindTo(carryProps[i], function (v, k) {
 						viewList.args.subArgs[k] = v;
 					});
 
 					viewList.cleanup.push(debind);
 
-					_this8.cleanup.push(function () {
+					_this7.cleanup.push(function () {
 						debind();
 						if (v && !v.isBound()) {
 							_Bindable.Bindable.clearBindings(v);
@@ -1074,7 +1087,7 @@ var View = exports.View = function () {
 					_loop9(i);
 				}
 
-				_this8.viewLists[eachProp] = viewList;
+				_this7.viewLists[eachProp] = viewList;
 			});
 
 			this.cleanup.push(debind);
@@ -1118,12 +1131,12 @@ var View = exports.View = function () {
 			var property = ifProperty;
 
 			if (ifProperty.match(/\./)) {
-				var _Bindable$resolve5 = _Bindable.Bindable.resolve(this.args, ifProperty, true);
+				var _Bindable$resolve7 = _Bindable.Bindable.resolve(this.args, ifProperty, true);
 
-				var _Bindable$resolve6 = _slicedToArray(_Bindable$resolve5, 2);
+				var _Bindable$resolve8 = _slicedToArray(_Bindable$resolve7, 2);
 
-				proxy = _Bindable$resolve6[0];
-				property = _Bindable$resolve6[1];
+				proxy = _Bindable$resolve8[0];
+				property = _Bindable$resolve8[1];
 			}
 
 			var debind = proxy.bindTo(property, function (tag, ifDoc) {

@@ -393,9 +393,7 @@ var Bindable = exports.Bindable = function () {
             object.___before___ = [];
             object.___after___ = [];
             object.___ref___ = {};
-            object.toString = function () {
-                return '{}';
-            };
+            // object.toString         = ()=>'{}';
         }
     }, {
         key: 'resolve',

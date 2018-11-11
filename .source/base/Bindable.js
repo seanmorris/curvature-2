@@ -372,7 +372,7 @@ export class Bindable {
         object.___before___     = [];
         object.___after___      = [];
         object.___ref___        = {};
-        object.toString         = ()=>'{}';
+        // object.toString         = ()=>'{}';
     }
     static resolve(object, path, owner = false)
     {
