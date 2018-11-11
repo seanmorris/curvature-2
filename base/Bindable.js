@@ -259,6 +259,9 @@ var Bindable = exports.Bindable = function () {
 
                 if (key in object.___binding___) {
                     for (var _i4 in object.___binding___[key]) {
+                        if (!object.___binding___[key]) {
+                            continue;
+                        }
                         if (!object.___binding___[key][_i4]) {
                             continue;
                         }
@@ -345,7 +348,7 @@ var Bindable = exports.Bindable = function () {
                             target.___before___[_i7](target, key, object);
                         }
 
-                        var ret = target[key].apply(target, arguments);
+                        var ret = target[key].apply(object.___ref___, arguments);
 
                         for (var _i8 in target.___after___) {
                             target.___after___[_i8](target, key, object);

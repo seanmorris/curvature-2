@@ -14,10 +14,10 @@ var _View = require('./View');
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var ViewList = function () {
-	function ViewList(template, subProperty, list) {
+	function ViewList(template, subProperty, list, parent) {
 		var _this = this;
 
-		var keyProperty = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+		var keyProperty = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
 
 		_classCallCheck(this, ViewList);
 
@@ -31,6 +31,7 @@ var ViewList = function () {
 		this.keyProperty = keyProperty;
 		this.tag = null;
 		this.paused = false;
+		this.parent = parent;
 
 		this.args.value.___before___.push(function (t) {
 			if (t.___executing___ == 'bindTo') {
@@ -85,6 +86,10 @@ var ViewList = function () {
 				if (_this.keyProperty) {
 					_this.views[k].args[_this.keyProperty] = k;
 				}
+
+				view.args.bindTo(_this.subProperty, function (v) {
+					_this.args.value[k] = v;
+				});
 
 				t[k] = v;
 

@@ -231,6 +231,9 @@ export class Bindable {
 
             if (key in object.___binding___) {
                 for (let i in object.___binding___[key]) {
+                    if(!object.___binding___[key]) {
+                        continue;
+                    }
                     if(!object.___binding___[key][i]) {
                         continue;
                     }
@@ -322,11 +325,11 @@ export class Bindable {
 
                     // console.log(`Start ${key}()`);
 
-                    for (let i in target.___before___) {
+                   for (let i in target.___before___) {
                         target.___before___[i](target, key, object);
                     }
 
-                    let ret = target[key].apply(target, arguments);
+                    let ret = target[key].apply(object.___ref___, arguments);
 
                     for (let i in target.___after___) {
                         target.___after___[i](target, key, object);

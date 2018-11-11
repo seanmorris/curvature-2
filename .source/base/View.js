@@ -1087,9 +1087,7 @@ ${tag.outerHTML}`
 				this.viewLists[eachProp].remove();
 			}
 
-			let viewList = new ViewList(subTemplate, asProp, v, keyProp);
-
-			viewList.parent = this;
+			let viewList = new ViewList(subTemplate, asProp, v, this, keyProp);
 
 			viewList.render(tag);
 

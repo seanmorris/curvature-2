@@ -3,7 +3,7 @@ import { View     } from './View';
 
 export class ViewList
 {
-	constructor(template, subProperty, list, keyProperty = null)
+	constructor(template, subProperty, list, parent, keyProperty = null)
 	{
 		this.args         = Bindable.makeBindable({});
 		this.args.value   = Bindable.makeBindable(list || {});
@@ -15,6 +15,7 @@ export class ViewList
 		this.keyProperty  = keyProperty;
 		this.tag          = null;
 		this.paused       = false;
+		this.parent       = parent;
 
 		this.args.value.___before___.push((t)=>{
 			if(t.___executing___ == 'bindTo')
@@ -79,6 +80,10 @@ export class ViewList
 				{
 					this.views[k].args[ this.keyProperty ] = k;
 				}
+
+				view.args.bindTo(this.subProperty, (v)=>{
+					this.args.value[k] = v;
+				});
 
 				t[k] = v;
 

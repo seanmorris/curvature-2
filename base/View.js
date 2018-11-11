@@ -1050,9 +1050,7 @@ var View = exports.View = function () {
 					_this8.viewLists[eachProp].remove();
 				}
 
-				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, keyProp);
-
-				viewList.parent = _this8;
+				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, _this8, keyProp);
 
 				viewList.render(tag);
 
