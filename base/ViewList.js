@@ -87,16 +87,16 @@ var ViewList = function () {
 					_this.views[k].args[_this.keyProperty] = k;
 				}
 
-				view.args.bindTo(_this.subProperty, function (v) {
+				_this.cleanup.push(view.args.bindTo(_this.subProperty, function (v) {
 					_this.args.value[k] = v;
-				});
+				}));
 
 				t[k] = v;
 
 				_this.reRender();
 			}
 
-			_this.views[k].args[_this.subProperty] = v;
+			// this.views[k].args[ this.subProperty ] = v;
 
 			// this.views[k].args.bindTo(this.subProperty, (v,k,t,d)=>{
 			// 	console.log(k,v);
@@ -132,53 +132,52 @@ var ViewList = function () {
 
 			var finalViews = [];
 
-			var _loop = function _loop(_i) {
+			for (var _i in this.args.value) {
 				var found = false;
-				for (var _j in views) {
-					if (views[_j] && _this2.args.value[_i] === views[_j].args[_this2.subProperty]) {
+				for (var j in views) {
+					if (views[j] && this.args.value[_i] === views[j].args[this.subProperty] && !(this.args.value[_i] instanceof Object)) {
 						found = true;
-						finalViews[_i] = views[_j];
-						delete views[_j];
+						finalViews[_i] = views[j];
+						finalViews[_i].args[this.keyProperty] = _i;
+						delete views[j];
 						break;
 					}
 				}
 				if (!found) {
-					var viewArgs = {};
-					finalViews[_i] = new _View.View(viewArgs);
+					(function () {
+						var viewArgs = {};
+						finalViews[_i] = new _View.View(viewArgs);
 
-					finalViews[_i].template = _this2.template;
-					finalViews[_i].parent = _this2.parent;
-					finalViews[_i].viewList = _this2;
+						finalViews[_i].template = _this2.template;
+						finalViews[_i].parent = _this2.parent;
+						finalViews[_i].viewList = _this2;
 
-					finalViews[_i].args[_this2.keyProperty] = _i;
+						finalViews[_i].args[_this2.keyProperty] = _i;
 
-					_this2.cleanup.push(_this2.args.value.bindTo(_i, function (v, k, t) {
-						viewArgs[_this2.subProperty] = v;
-					}));
+						_this2.cleanup.push(_this2.args.value.bindTo(_i, function (v, k, t) {
+							viewArgs[_this2.keyProperty] = k;
+							viewArgs[_this2.subProperty] = v;
+						}));
 
-					_this2.cleanup.push(_this2.args.subArgs.bindTo(function (v, k, t, d) {
-						finalViews[_i].args[k] = v;
-					}));
+						_this2.cleanup.push(viewArgs.bindTo(_this2.subProperty, function (v, k) {
+							var index = viewArgs[_this2.keyProperty];
+							_this2.args.value[index] = v;
+						}));
 
-					_this2.cleanup.push(viewArgs.bindTo(_this2.subProperty, function (i) {
-						return function (v) {
-							_this2.args.value[i] = v;
-						};
-					}(_i)));
+						_this2.cleanup.push(_this2.args.subArgs.bindTo(function (v, k, t, d) {
+							viewArgs[k] = v;
+						}));
 
-					viewArgs[_this2.subProperty] = _this2.args.value[_i];
+						viewArgs[_this2.subProperty] = _this2.args.value[_i];
+					})();
 				}
-			};
-
-			for (var _i in this.args.value) {
-				_loop(_i);
 			}
 
 			for (var _i2 in this.views) {
 				var _found = false;
 
-				for (var j in finalViews) {
-					if (this.views[_i2] === finalViews[j]) {
+				for (var _j in finalViews) {
+					if (this.views[_i2] === finalViews[_j]) {
 						_found = true;
 						break;
 					}

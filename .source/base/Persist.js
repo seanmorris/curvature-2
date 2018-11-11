@@ -33,8 +33,6 @@ export class Persist
 				});
 			}
 
-			console.log(key, value, JSON.stringify({key, value}));
-
 			localStorage.setItem(
 				`${bucket}::$[${key}]`
 				, JSON.stringify({key, value})
@@ -61,11 +59,7 @@ export class Persist
 					`${bucket}::$[${i}]`
 				);
 
-				console.log(source);
-
 				let {key,value} = JSON.parse(source);
-
-				console.log(i);
 
 				object[key] = value;
 			}

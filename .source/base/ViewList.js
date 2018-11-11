@@ -81,16 +81,18 @@ export class ViewList
 					this.views[k].args[ this.keyProperty ] = k;
 				}
 
-				view.args.bindTo(this.subProperty, (v)=>{
-					this.args.value[k] = v;
-				});
+				this.cleanup.push(
+					view.args.bindTo(this.subProperty, (v)=>{
+						this.args.value[k] = v;
+					})
+				);
 
 				t[k] = v;
 
 				this.reRender();
 			}
 
-			this.views[k].args[ this.subProperty ] = v;
+			// this.views[k].args[ this.subProperty ] = v;
 
 			// this.views[k].args.bindTo(this.subProperty, (v,k,t,d)=>{
 			// 	console.log(k,v);
@@ -131,10 +133,13 @@ export class ViewList
 			let found = false;
 			for(let j in views)
 			{
-				if(views[j] && this.args.value[i] === views[j].args[ this.subProperty ])
-				{
+				if(views[j]
+					&& this.args.value[i] === views[j].args[ this.subProperty ]
+					&& !(this.args.value[i] instanceof Object)
+				){
 					found = true;
 					finalViews[i] = views[j];
+					finalViews[i].args[ this.keyProperty ] = i;
 					delete views[j];
 					break;
 				}
@@ -152,20 +157,22 @@ export class ViewList
 
 				this.cleanup.push(
 					this.args.value.bindTo(i, (v,k,t)=>{
-						viewArgs[this.subProperty] = v;
+						viewArgs[ this.keyProperty ] = k;
+						viewArgs[ this.subProperty ] = v;
 					})
 				);
+
+				this.cleanup.push(
+					viewArgs.bindTo(this.subProperty, (v,k)=>{
+						let index = viewArgs[ this.keyProperty ];
+						this.args.value[index] = v;
+					}
+				));
 
 				this.cleanup.push(
 					this.args.subArgs.bindTo((v, k, t, d) => {
-						finalViews[i].args[k] = v;
+						viewArgs[k] = v;
 					})
-				);
-
-				this.cleanup.push(
-					viewArgs.bindTo(this.subProperty, (v)=>{
-						this.args.value[i] = v;
-					}
 				);
 
 				viewArgs[this.subProperty] = this.args.value[i];

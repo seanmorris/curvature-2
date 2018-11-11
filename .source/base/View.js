@@ -733,7 +733,7 @@ export class View
 	{
 		let bindArg = tag.getAttribute('cv-bind');
 		let proxy    = this.args;
-		let property = bindArg
+		let property = bindArg;
 
 		if(bindArg.match(/\./))
 		{

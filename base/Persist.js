@@ -36,8 +36,6 @@ var Persist = exports.Persist = function Persist(bucket, object) {
 			});
 		}
 
-		console.log(key, value, JSON.stringify({ key: key, value: value }));
-
 		localStorage.setItem(bucket + '::$[' + key + ']', JSON.stringify({ key: key, value: value }));
 
 		localStorage.setItem(indexKey, JSON.stringify(index));
@@ -54,13 +52,9 @@ var Persist = exports.Persist = function Persist(bucket, object) {
 		for (var i in index) {
 			var source = localStorage.getItem(bucket + '::$[' + i + ']');
 
-			console.log(source);
-
 			var _JSON$parse = JSON.parse(source),
 			    key = _JSON$parse.key,
 			    value = _JSON$parse.value;
-
-			console.log(i);
 
 			object[key] = value;
 		}
