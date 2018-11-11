@@ -163,9 +163,9 @@ export class ViewList
 				);
 
 				this.cleanup.push(
-					viewArgs.bindTo(this.subProperty, ((i)=>(v)=>{
+					viewArgs.bindTo(this.subProperty, (v)=>{
 						this.args.value[i] = v;
-					})(i))
+					}
 				);
 
 				viewArgs[this.subProperty] = this.args.value[i];
