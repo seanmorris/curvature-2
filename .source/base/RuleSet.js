@@ -159,6 +159,21 @@ export class RuleSet
 					view.cleanup.push(((r)=>()=>{
 						r.remove();
 					})(result));
+
+					result.parent = view;
+
+					view.cleanup.push(
+						view.args.bindTo((v, k,t)=>{
+							t[k] = v;
+							result.args[k] = v;
+						})
+					);
+					view.cleanup.push(
+						result.args.bindTo((v, k, t, d)=>{
+							t[k] = v;
+							view.args[k] = v;
+						})
+					);
 				}
 
 				tag.clear();

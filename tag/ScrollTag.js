@@ -26,8 +26,6 @@ var ScrollTag = exports.ScrollTag = function (_Tag) {
 		_classCallCheck(this, ScrollTag);
 
 		var _this = _possibleConstructorReturn(this, (ScrollTag.__proto__ || Object.getPrototypeOf(ScrollTag)).call(this, element, parent, ref, index, direct));
-		// parent.cleanup.push(x=>{console.log('Parent cleanup');});
-		// direct.cleanup.push(x=>{console.log('Direct cleanup');});
 
 		_this.visible = false;
 		_this.offsetTop = false;

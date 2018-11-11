@@ -205,6 +205,17 @@ var RuleSet = exports.RuleSet = function () {
 								r.remove();
 							};
 						}(result));
+
+						result.parent = view;
+
+						view.cleanup.push(view.args.bindTo(function (v, k, t) {
+							t[k] = v;
+							result.args[k] = v;
+						}));
+						view.cleanup.push(result.args.bindTo(function (v, k, t, d) {
+							t[k] = v;
+							view.args[k] = v;
+						}));
 					}
 
 					tag.clear();

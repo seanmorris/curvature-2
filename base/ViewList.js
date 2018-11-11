@@ -33,7 +33,6 @@ var ViewList = function () {
 		this.paused = false;
 
 		this.args.value.___before___.push(function (t) {
-			// console.log(t.___executing___);
 			if (t.___executing___ == 'bindTo') {
 				return;
 			}
@@ -41,14 +40,14 @@ var ViewList = function () {
 		});
 
 		this.args.value.___after___.push(function (t) {
+			if (t.___executing___ == 'bindTo') {
+				return;
+			}
 			if (_this.paused) {
-				// console.log(t.___executing___);
 				_this.reRender();
 			}
 			_this.paused = false;
 		});
-
-		// console.log(this.args);
 
 		var debind = this.args.value.bindTo(function (v, k, t, d) {
 
@@ -57,15 +56,14 @@ var ViewList = function () {
 			}
 
 			if (d) {
-				_this.views[k].remove();
+				if (_this.views[k]) {
+					_this.views[k].remove();
+				}
 
 				delete _this.views[k];
-				// console.log(`Deleting ${k}`, v, this.views);
 
 				return;
 			}
-
-			// console.log(`Setting ${k}`, v, this.views);
 
 			if (!_this.views[k]) {
 				var view = new _View.View();
@@ -77,11 +75,10 @@ var ViewList = function () {
 				_this.views[k].parent = _this.parent;
 				_this.views[k].viewList = _this;
 
-				var _debind = _this.args.subArgs.bindTo(function (v, k, t, d) {
+				// this.views[k].cleanup.push();
+				_this.cleanup.push(_this.args.subArgs.bindTo(function (v, k, t, d) {
 					view.args[k] = v;
-				});
-
-				_this.views[k].cleanup.push(_debind);
+				}));
 
 				_this.views[k].args[_this.subProperty] = v;
 
@@ -95,6 +92,10 @@ var ViewList = function () {
 			}
 
 			_this.views[k].args[_this.subProperty] = v;
+
+			// this.views[k].args.bindTo(this.subProperty, (v,k,t,d)=>{
+			// 	console.log(k,v);
+			// });
 		});
 
 		this.cleanup.push(debind);
@@ -108,15 +109,12 @@ var ViewList = function () {
 			}
 
 			this.tag = tag;
-
-			// console.log(tag);
 		}
 	}, {
 		key: 'reRender',
 		value: function reRender() {
 			var _this2 = this;
 
-			// console.log('rerender');
 			if (!this.tag) {
 				return;
 			}
@@ -141,7 +139,6 @@ var ViewList = function () {
 				}
 				if (!found) {
 					var viewArgs = {};
-					viewArgs[_this2.subProperty] = _this2.args.value[_i];
 					finalViews[_i] = new _View.View(viewArgs);
 
 					finalViews[_i].template = _this2.template;
@@ -150,9 +147,21 @@ var ViewList = function () {
 
 					finalViews[_i].args[_this2.keyProperty] = _i;
 
-					_this2.args.subArgs.bindTo(function (v, k, t, d) {
+					_this2.cleanup.push(_this2.args.value.bindTo(_i, function (v, k, t) {
+						viewArgs[_this2.subProperty] = v;
+					}));
+
+					_this2.cleanup.push(_this2.args.subArgs.bindTo(function (v, k, t, d) {
 						finalViews[_i].args[k] = v;
-					});
+					}));
+
+					_this2.cleanup.push(viewArgs.bindTo(_this2.subProperty, function (i) {
+						return function (v) {
+							_this2.args.value[i] = v;
+						};
+					}(_i)));
+
+					viewArgs[_this2.subProperty] = _this2.args.value[_i];
 				}
 			};
 
@@ -184,27 +193,27 @@ var ViewList = function () {
 			}
 
 			if (!appendOnly) {
-				for (var _i4 in this.views) {
-					this.views[_i4].remove();
-				}
-
 				while (this.tag.firstChild) {
 					this.tag.removeChild(this.tag.firstChild);
 				}
 
-				for (var _i5 in finalViews) {
-					finalViews[_i5].render(this.tag);
+				for (var _i4 in finalViews) {
+					finalViews[_i4].render(this.tag);
 				}
 			} else {
-				var _i6 = this.views.length || 0;
+				var _i5 = this.views.length || 0;
 
-				while (finalViews[_i6]) {
-					finalViews[_i6].render(this.tag);
-					_i6++;
+				while (finalViews[_i5]) {
+					finalViews[_i5].render(this.tag);
+					_i5++;
 				}
 			}
 
 			this.views = finalViews;
+
+			for (var _i6 in this.views) {
+				this.views[_i6].args[this.keyProperty] = _i6;
+			}
 		}
 	}, {
 		key: 'pause',

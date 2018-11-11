@@ -6,9 +6,6 @@ export class ScrollTag extends Tag
 {
 	constructor(element, parent, ref, index, direct)
 	{
-		// parent.cleanup.push(x=>{console.log('Parent cleanup');});
-		// direct.cleanup.push(x=>{console.log('Direct cleanup');});
-
 		super(element, parent, ref, index, direct);
 
 		this.visible         = false;

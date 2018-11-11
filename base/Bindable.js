@@ -104,13 +104,18 @@ var Bindable = exports.Bindable = function () {
 
             Object.defineProperty(object, '___object___', {
                 enumerable: false,
-                writable: true
+                writable: false,
+                value: object
             });
-            object.___object___ = object;
             object.___isBindable___ = Bindable;
             object.___wrapped___ = {};
             object.___binding___ = {};
             object.___bindingAll___ = [];
+            object.___stack___ = [];
+            object.___stackTime___ = [];
+            object.___before___ = [];
+            object.___after___ = [];
+            object.___setCount___ = {};
             object.bindTo = function (property) {
                 var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
                 var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
@@ -208,12 +213,6 @@ var Bindable = exports.Bindable = function () {
                 }
                 return false;
             };
-
-            object.___stack___ = [];
-            object.___stackTime___ = [];
-            object.___before___ = [];
-            object.___after___ = [];
-            object.___setCount___ = {};
 
             object.toString = function () {
                 if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) == 'object') {
@@ -388,8 +387,8 @@ var Bindable = exports.Bindable = function () {
             object.___wrapped___ = {};
             object.___bindingAll___ = {};
             object.___binding___ = {};
-            object.___before___ = {};
-            object.___after___ = {};
+            object.___before___ = [];
+            object.___after___ = [];
             object.___ref___ = {};
             object.toString = function () {
                 return '{}';

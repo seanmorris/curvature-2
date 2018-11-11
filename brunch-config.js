@@ -4,7 +4,10 @@ exports.files = {
 };
 
 exports.plugins = {
-  babel: {presets: ['latest']},
+  babel: {
+    // presets: ['latest']
+    presets: [ "minify" , {} ]
+  },
   raw: {
     pattern: /\.(html|jss)$/,
     wrapper: content => `module.exports = ${JSON.stringify(content)}`

@@ -88,13 +88,18 @@ export class Bindable {
 
         Object.defineProperty(object, '___object___', {
             enumerable: false,
-            writable: true
+            writable: false,
+            value: object
         });
-        object.___object___     = object;
         object.___isBindable___ = Bindable;
         object.___wrapped___    = {};
         object.___binding___    = {};
         object.___bindingAll___ = [];
+        object.___stack___      = [];
+        object.___stackTime___  = [];
+        object.___before___     = [];
+        object.___after___      = [];
+        object.___setCount___ = {};
         object.bindTo = (property, callback = null, options = {}) => {
             if (callback == null) {
                 callback = property;
@@ -177,12 +182,6 @@ export class Bindable {
             }
             return false;
         };
-
-        object.___stack___ = [];
-        object.___stackTime___ = [];
-        object.___before___ = [];
-        object.___after___ = [];
-        object.___setCount___ = {};
 
         object.toString = () => {
             if (typeof object == 'object') {
@@ -367,8 +366,8 @@ export class Bindable {
         object.___wrapped___    = {};
         object.___bindingAll___ = {};
         object.___binding___    = {};
-        object.___before___     = {};
-        object.___after___      = {};
+        object.___before___     = [];
+        object.___after___      = [];
         object.___ref___        = {};
         object.toString         = ()=>'{}';
     }

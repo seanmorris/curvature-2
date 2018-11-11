@@ -45,7 +45,6 @@ var View = exports.View = function () {
 		this.args._id = this._id;
 		this.template = '';
 		this.document = '';
-		this.parent = null;
 
 		this.firstNode = null;
 		this.lastNode = null;
@@ -327,7 +326,7 @@ var View = exports.View = function () {
 				}
 			}
 
-			_RuleSet.RuleSet.apply(subDoc);
+			_RuleSet.RuleSet.apply(subDoc, this);
 
 			var _loop2 = function _loop2() {
 				var newNode = subDoc.firstChild;

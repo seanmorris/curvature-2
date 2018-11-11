@@ -17,7 +17,6 @@ export class ViewList
 		this.paused       = false;
 
 		this.args.value.___before___.push((t)=>{
-			// console.log(t.___executing___);
 			if(t.___executing___ == 'bindTo')
 			{
 				return;
@@ -26,15 +25,16 @@ export class ViewList
 		});
 
 		this.args.value.___after___.push((t)=>{
+			if(t.___executing___ == 'bindTo')
+			{
+				return;
+			}
 			if(this.paused)
 			{
-				// console.log(t.___executing___);
 				this.reRender();
 			}
 			this.paused = false;
 		});
-
-		// console.log(this.args);
 
 		let debind = this.args.value.bindTo((v, k, t, d) => {
 
@@ -45,15 +45,15 @@ export class ViewList
 
 			if(d)
 			{
-				this.views[k].remove();
+				if(this.views[k])
+				{
+					this.views[k].remove();
+				}
 
 				delete this.views[k];
-				// console.log(`Deleting ${k}`, v, this.views);
 
 				return;
 			}
-
-			// console.log(`Setting ${k}`, v, this.views);
 
 			if(!this.views[k])
 			{
@@ -66,11 +66,12 @@ export class ViewList
 				this.views[k].parent   = this.parent;
 				this.views[k].viewList = this;
 
-				let debind = this.args.subArgs.bindTo((v, k, t, d) => {
-					view.args[k] = v;
-				});
-
-				this.views[k].cleanup.push(debind);
+				// this.views[k].cleanup.push();
+				this.cleanup.push(
+					this.args.subArgs.bindTo((v, k, t, d) => {
+						view.args[k] = v;
+					})
+				);
 
 				this.views[k].args[ this.subProperty ] = v;
 
@@ -85,6 +86,10 @@ export class ViewList
 			}
 
 			this.views[k].args[ this.subProperty ] = v;
+
+			// this.views[k].args.bindTo(this.subProperty, (v,k,t,d)=>{
+			// 	console.log(k,v);
+			// });
 		});
 
 		this.cleanup.push(debind);
@@ -98,13 +103,10 @@ export class ViewList
 		}
 
 		this.tag = tag;
-
-		// console.log(tag);
 	}
 
 	reRender()
 	{
-		// console.log('rerender');
 		if(!this.tag)
 		{
 			return;
@@ -135,7 +137,6 @@ export class ViewList
 			if(!found)
 			{
 				let viewArgs = {};
-				viewArgs[this.subProperty] = this.args.value[i];
 				finalViews[i] = new View(viewArgs);
 
 				finalViews[i].template = this.template;
@@ -144,9 +145,25 @@ export class ViewList
 
 				finalViews[i].args[ this.keyProperty ] = i;
 
-				this.args.subArgs.bindTo((v, k, t, d) => {
-					finalViews[i].args[k] = v;
-				});
+				this.cleanup.push(
+					this.args.value.bindTo(i, (v,k,t)=>{
+						viewArgs[this.subProperty] = v;
+					})
+				);
+
+				this.cleanup.push(
+					this.args.subArgs.bindTo((v, k, t, d) => {
+						finalViews[i].args[k] = v;
+					})
+				);
+
+				this.cleanup.push(
+					viewArgs.bindTo(this.subProperty, ((i)=>(v)=>{
+						this.args.value[i] = v;
+					})(i))
+				);
+
+				viewArgs[this.subProperty] = this.args.value[i];
 			}
 		}
 
@@ -181,11 +198,6 @@ export class ViewList
 
 		if(!appendOnly)
 		{
-			for(let i in this.views)
-			{
-				this.views[i].remove();
-			}
-
 			while(this.tag.firstChild)
 			{
 				this.tag.removeChild(this.tag.firstChild);
@@ -208,6 +220,11 @@ export class ViewList
 		}
 
 		this.views = finalViews;
+
+		for(let i in this.views)
+		{
+			this.views[i].args[ this.keyProperty ] = i;
+		}
 	}
 	pause(pause=true)
 	{

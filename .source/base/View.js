@@ -22,8 +22,7 @@ export class View
 		this.args._id  = this._id;
 		this.template  = ``;
 		this.document  = ``;
-		this.parent    = null;
-
+		
 		this.firstNode = null;
 		this.lastNode  = null;
 		this.nodes     = null;
@@ -332,7 +331,7 @@ export class View
 			}
 		}
 
-		RuleSet.apply(subDoc);
+		RuleSet.apply(subDoc, this);
 
 		while(subDoc.firstChild)
 		{
