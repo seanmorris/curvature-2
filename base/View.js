@@ -595,8 +595,8 @@ var View = exports.View = function () {
 						}
 
 						if (!proxy.bindTo) {
-							console.log(property);
-							console.log(proxy);
+							// console.log(property);
+							// console.log(proxy);
 						}
 
 						var longProperty = j;

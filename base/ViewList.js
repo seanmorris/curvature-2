@@ -146,7 +146,7 @@ var ViewList = function () {
 				if (!found) {
 					(function () {
 						var viewArgs = {};
-						finalViews[_i] = new _View.View(viewArgs);
+						var view = finalViews[_i] = new _View.View(viewArgs);
 
 						finalViews[_i].template = _this2.template;
 						finalViews[_i].parent = _this2.parent;

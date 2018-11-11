@@ -112,7 +112,20 @@ export class RuleSet
 
 			element.___cvApplied___.push(callback);
 
-			const tag     = new Tag(element);
+			let direct, parentView;
+
+			if(view)
+			{
+				direct = parentView = view;
+
+				if(view.viewList)
+				{
+					parentView = view.viewList.parent;
+				}
+			}
+
+			const tag     = new Tag(element, parentView, null, undefined, direct);
+
 			const parent  = tag.element.parentNode;
 			const sibling = tag.element.nextSibling;
 

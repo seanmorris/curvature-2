@@ -147,7 +147,7 @@ export class ViewList
 			if(!found)
 			{
 				let viewArgs = {};
-				finalViews[i] = new View(viewArgs);
+				let view = finalViews[i] = new View(viewArgs);
 
 				finalViews[i].template = this.template;
 				finalViews[i].parent   = this.parent;

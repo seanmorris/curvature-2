@@ -22,7 +22,7 @@ export class View
 		this.args._id  = this._id;
 		this.template  = ``;
 		this.document  = ``;
-		
+
 		this.firstNode = null;
 		this.lastNode  = null;
 		this.nodes     = null;
@@ -233,7 +233,7 @@ export class View
 					else
 					{
 						parentNode.appendChild(this.nodes[i]);
-					}					
+					}
 				}
 
 
@@ -490,7 +490,7 @@ export class View
 				tag.parentNode.insertBefore(staticNode, tag);
 
 				let dynamicNode;
-				
+
 				if(unsafeHtml)
 				{
 					dynamicNode = document.createElement('div');
@@ -617,8 +617,8 @@ export class View
 
 					if(!proxy.bindTo)
 					{
-						console.log(property);
-						console.log(proxy);						
+						// console.log(property);
+						// console.log(proxy);
 					}
 
 					let longProperty = j;
@@ -1131,7 +1131,7 @@ ${tag.outerHTML}`
 
 		this.cleanup.push(debind);
 	}
-	
+
 	mapIfTags(tag)
 	{
 		let ifProperty = tag.getAttribute('cv-if');

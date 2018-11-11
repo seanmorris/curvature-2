@@ -168,7 +168,19 @@ var RuleSet = exports.RuleSet = function () {
 
 				element.___cvApplied___.push(callback);
 
-				var tag = new _Tag.Tag(element);
+				var direct = void 0,
+				    parentView = void 0;
+
+				if (view) {
+					direct = parentView = view;
+
+					if (view.viewList) {
+						parentView = view.viewList.parent;
+					}
+				}
+
+				var tag = new _Tag.Tag(element, parentView, null, undefined, direct);
+
 				var parent = tag.element.parentNode;
 				var sibling = tag.element.nextSibling;
 

@@ -371,6 +371,10 @@ var Bindable = exports.Bindable = function () {
                     return target.___wrapped___[key];
                 }
 
+                if (target[key] instanceof Object) {
+                    Bindable.makeBindable(target[key]);
+                }
+
                 // console.log(`Getting ${key}`);
 
                 return target[key];
