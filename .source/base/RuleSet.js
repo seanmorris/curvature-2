@@ -110,8 +110,6 @@ export class RuleSet
 				}
 			}
 
-			element.___cvApplied___.push(callback);
-
 			let direct, parentView;
 
 			if(view)
@@ -130,6 +128,11 @@ export class RuleSet
 			const sibling = tag.element.nextSibling;
 
 			let result    = callback(tag);
+
+			if(result !== false)
+			{
+				element.___cvApplied___.push(callback);
+			}
 
 			if(result instanceof HTMLElement)
 			{

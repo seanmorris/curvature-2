@@ -8,7 +8,7 @@ export class ViewList
 		this.args         = Bindable.makeBindable({});
 		this.args.value   = Bindable.makeBindable(list || {});
 		this.args.subArgs = Bindable.makeBindable({});
-		this.views        = {};
+		this.views        = [];
 		this.cleanup      = [];
 		this.template     = template;
 		this.subProperty  = subProperty;
@@ -51,7 +51,12 @@ export class ViewList
 					this.views[k].remove();
 				}
 
-				delete this.views[k];
+				this.views.splice(k,1);
+
+				for(let i in this.views)
+				{
+					this.views[i].args[ this.keyProperty ] = i;
+				}
 
 				return;
 			}
@@ -135,8 +140,9 @@ export class ViewList
 			{
 				if(views[j]
 					&& this.args.value[i] === views[j].args[ this.subProperty ]
-					&& !(this.args.value[i] instanceof Object)
+					// && !(this.args.value[i] instanceof Object)
 				){
+					// console.log(i, views[j].args._id);
 					found = true;
 					finalViews[i] = views[j];
 					finalViews[i].args[ this.keyProperty ] = i;
@@ -149,16 +155,19 @@ export class ViewList
 				let viewArgs = {};
 				let view = finalViews[i] = new View(viewArgs);
 
+				// console.log(i, view.args._id);
+
 				finalViews[i].template = this.template;
 				finalViews[i].parent   = this.parent;
 				finalViews[i].viewList = this;
 
 				finalViews[i].args[ this.keyProperty ] = i;
+				finalViews[i].args[ this.subProperty ] = this.args.value[i];
 
 				this.cleanup.push(
 					this.args.value.bindTo(i, (v,k,t)=>{
-						viewArgs[ this.keyProperty ] = k;
-						viewArgs[ this.subProperty ] = v;
+						// viewArgs[ this.keyProperty ] = k;
+						// viewArgs[ this.subProperty ] = v;
 					})
 				);
 
@@ -208,35 +217,77 @@ export class ViewList
 			}
 		}
 
-		if(!appendOnly)
+		// console.log('==============');
+
+		// console.log(finalViews, this.views);
+
+		for(let i in finalViews)
 		{
-			while(this.tag.firstChild)
+			// console.log(
+			// 	i
+			// 	, finalViews[i]
+			// 		? finalViews[i].args[ this.keyProperty ]
+			// 		: null
+			// 	, this.views[i]
+			// 		? this.views[i].args[ this.keyProperty ]
+			// 		: null
+			// 	, finalViews[i] === this.views[i]
+			// );
+
+			if(finalViews[i] === this.views[i])
 			{
-				this.tag.removeChild(this.tag.firstChild);
+				continue;
 			}
 
-			for(let i in finalViews)
+			if(i == 0)
 			{
-				finalViews[i].render(this.tag);
+				this.views.unshift(finalViews[i]);
+				let subDoc = document.createRange().createContextualFragment('');
+				finalViews[i].render(subDoc);
+				this.tag.prepend(subDoc);
+				continue;
 			}
+
+			if(this.views[i])
+			{
+				this.views.splice(this.views[i].args[ this.keyProperty ], 1);
+			}
+
+			this.views.splice(i+1, 0, finalViews[i]);
+
+			finalViews[i].render(this.tag, this.views[i+1] || null);
 		}
-		else
-		{
-			let i = this.views.length || 0
-
-			while(finalViews[i])
-			{
-				finalViews[i].render(this.tag);
-				i++;
-			}
-		}
-
-		this.views = finalViews;
 
 		for(let i in this.views)
 		{
 			this.views[i].args[ this.keyProperty ] = i;
 		}
+
+
+		// if(1||!appendOnly)
+		// {
+		// 	while(this.tag.firstChild)
+		// 	{
+		// 		this.tag.removeChild(this.tag.firstChild);
+		// 	}
+
+		// 	for(let i in finalViews)
+		// 	{
+		// 		finalViews[i].render(subDoc);
+		// 	}
+		// }
+		// else
+		// {
+		// 	let i = this.views.length || 0
+
+		// 	while(finalViews[i])
+		// 	{
+		// 		finalViews[i].render(subDoc);
+		// 		i++;
+		// 	}
+		// }
+
+		// this.tag.appendChild(subDoc);
 	}
 	pause(pause=true)
 	{

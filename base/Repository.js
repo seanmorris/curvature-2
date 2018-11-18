@@ -15,6 +15,8 @@ var _Model = require('./Model');
 
 var _Form = require('../form/Form');
 
+var _FormWrapper = require('../form/multiField/FormWrapper');
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var objects = {};
@@ -102,11 +104,10 @@ var Repository = function () {
 			// console.log(resourceUri);
 
 			return Repository.request(resourceUri).then(function (response) {
-				console.log(response);
 				var form = new _Form.Form(response.meta.form);
 				// let model = this.extractModel(response.body);
 
-				return form;
+				return new _FormWrapper.FormWrapper(form, resourceUri);
 			});
 		}
 	}, {

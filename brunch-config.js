@@ -5,8 +5,8 @@ exports.files = {
 
 exports.plugins = {
   babel: {
-    // presets: ['latest']
-    presets: [ "minify" , {} ]
+    presets: ['latest']
+    // presets: [ "minify" , {} ]
   },
   raw: {
     pattern: /\.(html|jss)$/,

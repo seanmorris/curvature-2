@@ -87,10 +87,10 @@ var Bindable = exports.Bindable = function () {
                 writable: true
             });
 
-            Object.defineProperty(object, 'toString', {
-                enumerable: false,
-                writable: true
-            });
+            // Object.defineProperty(object, 'toString', {
+            //     enumerable: false,
+            //     writable: true
+            // });
 
             Object.defineProperty(object, '___setCount___', {
                 enumerable: false,
@@ -120,24 +120,17 @@ var Bindable = exports.Bindable = function () {
                 var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
                 var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-                if (callback == null) {
+                var bindToAll = false;
+
+                if (property instanceof Function) {
+                    options = callback || {};
                     callback = property;
-                    var _bindIndex = object.___bindingAll___.length;
-
-                    object.___bindingAll___.push(callback);
-
-                    for (var i in object) {
-                        callback(object[i], i, object, false);
-                    }
-
-                    return function () {
-                        object.___bindingAll___[_bindIndex] = null;
-                    };
+                    bindToAll = true;
                 }
 
                 var throttle = false;
 
-                if (options.delay > 0) {
+                if (options.delay >= 0) {
                     callback = function (callback) {
                         return function (v, k, t, d) {
                             var p = t[k];
@@ -148,7 +141,7 @@ var Bindable = exports.Bindable = function () {
                     }(callback);
                 }
 
-                if (options.throttle > 0) {
+                if (options.throttle >= 0) {
                     callback = function (callback) {
                         return function (v, k, t, d) {
                             if (throttle) {
@@ -165,7 +158,7 @@ var Bindable = exports.Bindable = function () {
 
                 var waiter = void 0;
 
-                if (options.wait) {
+                if (options.wait >= 0) {
                     callback = function (callback) {
                         return function (v, k, t, d) {
                             if (waiter) {
@@ -177,6 +170,20 @@ var Bindable = exports.Bindable = function () {
                             }, options.wait);
                         };
                     }(callback);
+                }
+
+                if (bindToAll) {
+                    var _bindIndex = object.___bindingAll___.length;
+
+                    object.___bindingAll___.push(callback);
+
+                    for (var i in object) {
+                        callback(object[i], i, object, false);
+                    }
+
+                    return function () {
+                        object.___bindingAll___[_bindIndex] = null;
+                    };
                 }
 
                 if (!object.___binding___[property]) {
@@ -214,14 +221,14 @@ var Bindable = exports.Bindable = function () {
                 return false;
             };
 
-            object.toString = function () {
-                if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) == 'object') {
-                    return JSON.stringify(object);
-                    return '[object]';
-                }
+            // object.toString = object.toString || (() => {
+            //     if (typeof object == 'object') {
+            //         return JSON.stringify(object);
+            //         return '[object]'
+            //     }
 
-                return object;
-            };
+            //     return object;
+            // });
 
             for (var i in object) {
                 if (object[i] && _typeof(object[i]) == 'object' && !object[i] instanceof Node) {
@@ -392,7 +399,7 @@ var Bindable = exports.Bindable = function () {
         key: 'clearBindings',
         value: function clearBindings(object) {
             object.___wrapped___ = {};
-            object.___bindingAll___ = {};
+            object.___bindingAll___ = [];
             object.___binding___ = {};
             object.___before___ = [];
             object.___after___ = [];
@@ -406,10 +413,13 @@ var Bindable = exports.Bindable = function () {
 
             var node = void 0;
             var pathParts = path.split('.');
+            var top = pathParts[0];
 
             while (pathParts.length) {
                 if (owner && pathParts.length === 1) {
-                    return [this.makeBindable(object), pathParts.shift()];
+                    var obj = this.makeBindable(object);
+
+                    return [obj, pathParts.shift(), top];
                 }
 
                 node = pathParts.shift();
@@ -421,7 +431,7 @@ var Bindable = exports.Bindable = function () {
                 object = this.makeBindable(object[node]);
             }
 
-            return [this.makeBindable(object), node];
+            return [this.makeBindable(object), node, top];
         }
     }]);
 

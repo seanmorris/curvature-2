@@ -166,8 +166,6 @@ var RuleSet = exports.RuleSet = function () {
 					}
 				}
 
-				element.___cvApplied___.push(callback);
-
 				var direct = void 0,
 				    parentView = void 0;
 
@@ -185,6 +183,10 @@ var RuleSet = exports.RuleSet = function () {
 				var sibling = tag.element.nextSibling;
 
 				var result = callback(tag);
+
+				if (result !== false) {
+					element.___cvApplied___.push(callback);
+				}
 
 				if (result instanceof HTMLElement) {
 					result = new _Tag.Tag(result);

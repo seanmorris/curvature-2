@@ -50,9 +50,7 @@ var Toast = exports.Toast = function (_View) {
 
 		_this.args.alerts = [];
 
-		_this.args.alerts.bindTo(function (v) {
-			console.log(v);
-		});
+		// this.args.alerts.bindTo((v) => { console.log(v) });
 		return _this;
 	}
 
@@ -69,9 +67,9 @@ var Toast = exports.Toast = function (_View) {
 				return function () {
 					for (var i in _this2.args.alerts) {
 						if (_this2.args.alerts) {
-							_this2.args.alerts[i] === alert;
+							delete _this2.args.alerts[i];
 
-							_this2.args.alerts.splice(i, 1);
+							// this.args.alerts.[splice(i, 1)];
 							return;
 						}
 					}

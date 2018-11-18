@@ -21,8 +21,9 @@ var Tag = exports.Tag = function () {
 				this.ref = ref;
 				this.index = index;
 
-				this.proxy = _Bindable.Bindable.makeBindable(this);
 				this.cleanup = [];
+
+				this.proxy = _Bindable.Bindable.makeBindable(this);
 
 				// this.detachListener = (event) => {
 				// 	return;
@@ -43,7 +44,7 @@ var Tag = exports.Tag = function () {
 
 				// this.element.addEventListener('cvDomDetached', this.detachListener);
 
-				return this.proxy;
+				// return this.proxy;
 		}
 
 		_createClass(Tag, [{

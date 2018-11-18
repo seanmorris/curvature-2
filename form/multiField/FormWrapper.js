@@ -51,19 +51,34 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		_this._onRequest = [];
 		_this._onResponse = [];
 
-		_Repository.Repository.request(_Config.Config.backend + path).then(function (resp) {
-			if (!resp || !resp.meta || !resp.meta.form || !(resp.meta.form instanceof Object)) {
-				console.log('Cannot render form with ', resp);
-				// Router.go('/');
-				return;
-			}
+		if (path instanceof _Form.Form) {
+			_this.loadForm(form);
+		} else {
+			_Repository.Repository.request(path).then(function (resp) {
+				if (!resp || !resp.meta || !resp.meta.form || !(resp.meta.form instanceof Object)) {
+					console.log('Cannot render form with ', resp);
+					// Router.go('/');
+					return;
+				}
 
-			_this.args.form = new _Form.Form(resp.meta.form, customFields);
+				_this.loadForm(new _Form.Form(resp.meta.form, customFields));
 
-			_this.onLoad(_this.args.form, resp.body);
+				_this.onLoad(_this.args.form, resp.body);
+			});
+		}
 
-			_this.args.form.onSubmit(function (form, event) {
-				if (_this.onSubmit(form, event) === false) {
+		return _this;
+	}
+
+	_createClass(FormWrapper, [{
+		key: 'loadForm',
+		value: function loadForm(form) {
+			var _this2 = this;
+
+			this.args.form = form;
+
+			this.args.form.onSubmit(function (form, event) {
+				if (_this2.onSubmit(form, event) === false) {
 					return;
 				}
 
@@ -71,8 +86,8 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 				event.stopPropagation();
 
 				var formElement = form.tags.formTag.element;
-				var uri = formElement.getAttribute('action') || _this.args.action || path;
-				var method = formElement.getAttribute('method') || _this.args.method;
+				var uri = formElement.getAttribute('action') || _this2.args.action || _this2.path;
+				var method = formElement.getAttribute('method') || _this2.args.method;
 				var query = form.args.flatValue;
 
 				method = method.toUpperCase();
@@ -82,8 +97,8 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 				if (method == 'GET') {
 					var _query = {};
 
-					if (_this.args.content && _this.args.content.args) {
-						_this.args.content.args.page = 0;
+					if (_this2.args.content && _this2.args.content.args) {
+						_this2.args.content.args.page = 0;
 					}
 
 					_query.page = 0;
@@ -95,16 +110,16 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 						_query[i] = query[i];
 					}
 
-					var promises = _this.onRequest(_query);
+					var promises = _this2.onRequest(_query);
 
 					promises.then(function () {
-						_this.onResponse({});
+						_this2.onResponse({});
 
 						_Router.Router.go(uri + '?' + _Router.Router.queryToString(_query));
 
-						_this.update(_query);
+						_this2.update(_query);
 					}).catch(function (error) {
-						_this.onRequestError(error);
+						_this2.onRequestError(error);
 					});
 				} else if (method == 'POST') {
 					var formData = form.formData();
@@ -134,24 +149,21 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 						}
 					}
 
-					var _promises = _this.onRequest(formData);
+					var _promises = _this2.onRequest(formData);
 
 					if (_promises) {
 						_promises.then(function () {
-							_Repository.Repository.request(_Config.Config.backend + uri, { api: 'json' }, formData).then(function (response) {
-								_this.onResponse(response);
+							_Repository.Repository.request(uri, { api: 'json' }, formData).then(function (response) {
+								_this2.onResponse(response);
 							}).catch(function (error) {
-								_this.onRequestError(error);
+								_this2.onRequestError(error);
 							});
 						});
 					}
 				}
 			});
-		});
-		return _this;
-	}
-
-	_createClass(FormWrapper, [{
+		}
+	}, {
 		key: 'onRequest',
 		value: function onRequest(requestData) {
 			var promises = [];

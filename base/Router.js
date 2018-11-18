@@ -57,8 +57,13 @@ var Router = exports.Router = function () {
 			document.title = _Config.Config.title;
 			setTimeout(function () {
 				history.pushState(null, null, route);
+
 				if (!silent) {
 					window.dispatchEvent(new Event('popstate'));
+
+					if (route.substring(0, 1) === '#') {
+						window.dispatchEvent(new HashChangeEvent('hashchange'));
+					}
 				}
 			}, 0);
 		}

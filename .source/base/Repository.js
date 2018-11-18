@@ -1,7 +1,9 @@
-import { Bindable } from './Bindable';
-import { Cache    } from './Cache';
-import { Model    } from './Model';
-import { Form     } from '../form/Form';
+import { Bindable    } from './Bindable';
+import { Cache       } from './Cache';
+import { Model       } from './Model';
+import { Form        } from '../form/Form';
+
+import { FormWrapper } from '../form/multiField/FormWrapper';
 
 var objects = {};
 
@@ -58,11 +60,10 @@ export class Repository
 		// console.log(resourceUri);
 
 		return Repository.request(resourceUri).then((response) => {
-			console.log(response);
 			let form  = new Form(response.meta.form);
 			// let model = this.extractModel(response.body);
 
-			return form;
+			return new FormWrapper(form, resourceUri);
 		});
 	}
 

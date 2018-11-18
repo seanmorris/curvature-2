@@ -71,10 +71,10 @@ export class Bindable {
             writable: true
         });
 
-        Object.defineProperty(object, 'toString', {
-            enumerable: false,
-            writable: true
-        });
+        // Object.defineProperty(object, 'toString', {
+        //     enumerable: false,
+        //     writable: true
+        // });
 
         Object.defineProperty(object, '___setCount___', {
             enumerable: false,
@@ -101,31 +101,24 @@ export class Bindable {
         object.___after___      = [];
         object.___setCount___ = {};
         object.bindTo = (property, callback = null, options = {}) => {
-            if (callback == null) {
-                callback = property;
-                let bindIndex = object.___bindingAll___.length;
+            let bindToAll = false;
 
-                object.___bindingAll___.push(callback);
-
-                for (let i in object) {
-                    callback(object[i], i, object, false);
-                }
-
-                return () => {
-                    object.___bindingAll___[bindIndex] = null;
-                };
+            if (property instanceof Function) {
+                options   = callback || {};
+                callback  = property;
+                bindToAll = true;
             }
 
             let throttle = false;
 
-            if (options.delay > 0) {
+            if (options.delay >= 0) {
                 callback = ((callback) => (v,k,t,d) => {
                     let p = t[k];
                     setTimeout(()=>callback(v,k,t,d,p), options.delay);
                 })(callback);
             }
 
-            if (options.throttle > 0) {
+            if (options.throttle >= 0) {
                 callback = ((callback) => (v,k,t,d) => {
                     if (throttle) {
                         return;
@@ -138,7 +131,7 @@ export class Bindable {
 
             let waiter;
 
-            if (options.wait) {
+            if (options.wait >= 0) {
                 callback = ((callback) => (v,k,t,d) => {
                     if (waiter) {
                         clearTimeout(waiter);
@@ -146,6 +139,20 @@ export class Bindable {
                     let p = t[k];
                     waiter = setTimeout(()=>callback(v,k,t,d,p), options.wait);
                 })(callback);
+            }
+
+            if(bindToAll) {
+                let bindIndex = object.___bindingAll___.length;
+
+                object.___bindingAll___.push(callback);
+
+                for (let i in object) {
+                    callback(object[i], i, object, false);
+                }
+
+                return () => {
+                    object.___bindingAll___[bindIndex] = null;
+                };
             }
 
             if (!object.___binding___[property]) {
@@ -183,14 +190,14 @@ export class Bindable {
             return false;
         };
 
-        object.toString = () => {
-            if (typeof object == 'object') {
-                return JSON.stringify(object);
-                return '[object]'
-            }
+        // object.toString = object.toString || (() => {
+        //     if (typeof object == 'object') {
+        //         return JSON.stringify(object);
+        //         return '[object]'
+        //     }
 
-            return object;
-        };
+        //     return object;
+        // });
 
         for (let i in object) {
             if (object[i] &&
@@ -371,7 +378,7 @@ export class Bindable {
     }
     static clearBindings(object) {
         object.___wrapped___    = {};
-        object.___bindingAll___ = {};
+        object.___bindingAll___ = [];
         object.___binding___    = {};
         object.___before___     = [];
         object.___after___      = [];
@@ -382,12 +389,15 @@ export class Bindable {
     {
         let node;
         let pathParts = path.split('.');
+        let top       = pathParts[0];
 
         while(pathParts.length)
         {
             if(owner && pathParts.length === 1)
             {
-                return [this.makeBindable(object), pathParts.shift()];
+                let obj = this.makeBindable(object);
+
+                return [obj, pathParts.shift(), top];
             }
 
             node = pathParts.shift();
@@ -402,6 +412,6 @@ export class Bindable {
             object = this.makeBindable(object[node]);
         }
 
-        return [this.makeBindable(object), node];
+        return [this.makeBindable(object), node, top];
     }
 }

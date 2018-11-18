@@ -67,7 +67,7 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 		key: 'onChange',
 		value: function onChange(callback) {
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
-			this.args.bindTo('current', callback);
+			return this.args.bindTo('current', callback);
 		}
 	}, {
 		key: 'uri',

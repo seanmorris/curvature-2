@@ -31,98 +31,111 @@ export class FormWrapper extends View
 		this._onRequest  = [];
 		this._onResponse = [];
 
-		Repository.request(Config.backend + path).then(resp=>{
-			if(!resp
-				|| !resp.meta
-				|| !resp.meta.form
-				|| !(resp.meta.form instanceof Object)
-			){
-				console.log('Cannot render form with ', resp);
-				// Router.go('/');
-				return;
-			}
-
-			this.args.form = new Form(resp.meta.form, customFields);
-
-			this.onLoad(this.args.form, resp.body);
-
-			this.args.form.onSubmit((form, event)=>{
-				if(this.onSubmit(form, event) === false)
-				{
+		if(path instanceof Form)
+		{
+			this.loadForm(form);
+		}
+		else
+		{
+			Repository.request(path).then(resp=>{
+				if(!resp
+					|| !resp.meta
+					|| !resp.meta.form
+					|| !(resp.meta.form instanceof Object)
+				){
+					console.log('Cannot render form with ', resp);
+					// Router.go('/');
 					return;
 				}
 
-				event.preventDefault();
-				event.stopPropagation();
+				this.loadForm(new Form(resp.meta.form, customFields));
 
-				let formElement = form.tags.formTag.element;
-				let uri         = formElement.getAttribute('action') || this.args.action || path;
-				let method      = formElement.getAttribute('method') || this.args.method;
-				let query       = form.args.flatValue;
+				this.onLoad(this.args.form, resp.body);
+			});
+		}
 
-				method = method.toUpperCase();
+	}
 
-				// console.log(method, uri);
+	loadForm(form)
+	{
+		this.args.form = form;
 
-				if(method == 'GET')
+		this.args.form.onSubmit((form, event)=>{
+			if(this.onSubmit(form, event) === false)
+			{
+				return;
+			}
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			let formElement = form.tags.formTag.element;
+			let uri         = formElement.getAttribute('action') || this.args.action || this.path;
+			let method      = formElement.getAttribute('method') || this.args.method;
+			let query       = form.args.flatValue;
+
+			method = method.toUpperCase();
+
+			// console.log(method, uri);
+
+			if(method == 'GET')
+			{
+				let _query = {};
+
+				if(this.args.content && this.args.content.args)
 				{
-					let _query = {};
+					this.args.content.args.page = 0;
+				}
 
-					if(this.args.content && this.args.content.args)
+				_query.page = 0;
+
+				for(let i in query)
+				{
+					if(i === 'api')
 					{
-						this.args.content.args.page = 0;
+						continue;
 					}
+					_query[i] = query[i];
+				}
 
-					_query.page = 0;
+				let promises = this.onRequest(_query);
 
-					for(let i in query)
-					{
-						if(i === 'api')
-						{
-							continue;
-						}
-						_query[i] = query[i];
-					}
+				promises.then(()=>{
+					this.onResponse({});
 
-					let promises = this.onRequest(_query);
+					Router.go(uri + '?' + Router.queryToString(_query));
 
+					this.update(_query);
+				}).catch((error) => {
+					this.onRequestError(error);
+				});
+			}
+			else if(method == 'POST')
+			{
+				let formData = form.formData();
+
+				for (var pair of formData.entries())
+				{
+					// console.log(pair[0]+ ', ' + pair[1]);
+				}
+
+				let promises = this.onRequest(formData);
+
+				if(promises)
+				{
 					promises.then(()=>{
-						this.onResponse({});
-
-						Router.go(uri + '?' + Router.queryToString(_query));
-
-						this.update(_query);
-					}).catch((error) => {
-						this.onRequestError(error);
+						Repository.request(
+							uri
+							, {api: 'json'}
+							, formData
+						).then((response) => {
+							this.onResponse(response);
+						}).catch((error) => {
+							this.onRequestError(error);
+						});
 					});
 				}
-				else if(method == 'POST')
-				{
-					let formData = form.formData();
-
-					for (var pair of formData.entries())
-					{
-						// console.log(pair[0]+ ', ' + pair[1]);
-					}
-
-					let promises = this.onRequest(formData);
-
-					if(promises)
-					{
-						promises.then(()=>{
-							Repository.request(
-								Config.backend + uri
-								, {api: 'json'}
-								, formData
-							).then((response) => {
-								this.onResponse(response);
-							}).catch((error) => {
-								this.onRequestError(error);
-							});
-						});
-					}
-				}
-			});
+			}
 		});
 	}
 

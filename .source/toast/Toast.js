@@ -30,7 +30,7 @@ export class Toast extends View {
 		
 		this.args.alerts = [];
 
-		this.args.alerts.bindTo((v) => { console.log(v) });
+		// this.args.alerts.bindTo((v) => { console.log(v) });
 	}
 	pop(alert) {
 		let index = this.args.alerts.length;
@@ -42,9 +42,9 @@ export class Toast extends View {
 			{
 				if(this.args.alerts)
 				{
-					this.args.alerts[i] === alert;
+					delete this.args.alerts[i];
 
-					this.args.alerts.splice(i, 1);
+					// this.args.alerts.[splice(i, 1)];
 					return;
 				}
 			}

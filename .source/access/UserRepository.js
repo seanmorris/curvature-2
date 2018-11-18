@@ -31,7 +31,7 @@ export class UserRepository extends Repository {
 		});
 	}
 	static login() {
-		return this.request(Config.backend + '/user/login')
+		return this.request(Config.backend + '/user/login');
 	}
 	static logout() {
 		this.args = this.args || Bindable.makeBindable({});
@@ -47,7 +47,7 @@ export class UserRepository extends Repository {
 	}
 	static onChange(callback) {
 		this.args = this.args || Bindable.makeBindable({});
-		this.args.bindTo('current', callback);
+		return this.args.bindTo('current', callback);
 	}
 }
 

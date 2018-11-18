@@ -36,22 +36,22 @@ export class Form extends View
 			this.args._classes = v.join(' ');
 		});
 
-		this._onSubmit  = [];
-		this.action     = '';
-		this.template   = `
+		this._onSubmit   = [];
+		this.action      = '';
+		this.template    = `
 			<form
-				class   = "[[_classes]]"
-				method  = "[[method]]"
-				enctype = "multipart/form-data"
-				cv-on   = "submit:submit(event)"
-				cv-ref  = "formTag:curvature/base/Tag"
-				cv-each = "fields:field"
+				class    = "[[_classes]]"
+				method   = "[[method]]"
+				enctype  = "multipart/form-data"
+				cv-on    = "submit:submit(event)"
+				cv-ref   = "formTag:curvature/base/Tag"
+				cv-each  = "fields:field"
 			>
 				[[field]]
 			</form>
 		`;
 
-		this.args.fields    = Form.renderFields(skeleton, this, customFields);
+		this.args.fields = Form.renderFields(skeleton, this, customFields);
 
 		this.args.bindTo(
 			'value'

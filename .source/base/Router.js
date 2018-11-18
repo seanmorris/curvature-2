@@ -35,9 +35,18 @@ export class Router {
 		setTimeout(
 			() => {
 				history.pushState(null, null, route);
+
 				if(!silent)
 				{
 					window.dispatchEvent(new Event('popstate'))
+
+					if(route.substring(0,1) === '#')
+					{
+						window.dispatchEvent(new HashChangeEvent(
+							'hashchange'
+						));
+					}
+
 				}
 			}
 			, 0

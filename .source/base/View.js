@@ -21,7 +21,7 @@ export class View
 		this._id       = this.uuid();
 		this.args._id  = this._id;
 		this.template  = ``;
-		this.document  = ``;
+		this.document  = ``;		
 
 		this.firstNode = null;
 		this.lastNode  = null;
@@ -45,7 +45,12 @@ export class View
 		this.intervals = [];
 		this.timeouts  = [];
 		this.frames    = [];
-		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g
+
+		this.ruleSet     = new RuleSet;
+		this.preRuleSet  = new RuleSet;
+		this.subBindings = {};
+
+		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
 	}
 
 	static isView()
@@ -268,9 +273,7 @@ export class View
 			this.document = subDoc;
 		}
 
-		// Dom.mapTags(subDoc, '[cv-ref]', (tag)=>{
-		// 	this.mapRefTags(tag)
-		// });
+		this.preRuleSet.apply(subDoc, this);
 
 		Dom.mapTags(subDoc, false, (tag)=>{
 			if(tag.matches)
@@ -313,9 +316,12 @@ export class View
 			}
 		});
 
+		this.ruleSet.apply(subDoc, this);
+
 		this.nodes = [];
 
-		this.firstNode = document.createComment(`Template ${this._id} Start`);
+		// this.firstNode = document.createComment(`Template ${this._id} Start`);
+		this.firstNode = document.createTextNode('');
 
 		this.nodes.push(this.firstNode);
 
@@ -330,8 +336,6 @@ export class View
 				parentNode.appendChild(this.firstNode);
 			}
 		}
-
-		RuleSet.apply(subDoc, this);
 
 		while(subDoc.firstChild)
 		{
@@ -359,7 +363,9 @@ export class View
 			newNode.dispatchEvent(attachEvent);
 		}
 
-		this.lastNode = document.createComment(`Template ${this._id} End`);
+		// this.lastNode = document.createComment(`Template ${this._id} End`);
+		this.lastNode = document.createTextNode('');
+
 
 		this.nodes.push(this.lastNode);
 
@@ -426,6 +432,14 @@ export class View
 
 		for (let i in attrs)
 		{
+			if(this.args[ attrs[i][1] ])
+			{
+				tag.setAttribute(
+					attrs[i][0]
+					, this.args[ attrs[i][1] ]
+				);
+			}
+
 			this.cleanup.push(this.args.bindTo(
 				attrs[i][1]
 				, ((attr) => (v)=>{
@@ -438,6 +452,8 @@ export class View
 				})(attrs[i])
 			));
 		}
+
+		console.log(tag.outerHTML);
 	}
 
 	mapInterpolatableTags(tag)
@@ -536,7 +552,14 @@ export class View
 					}
 					else
 					{
-						// console.log(dynamicNode);
+						if(v instanceof Object && v.__toString instanceof Function)
+						{
+							console.log(v);
+							console.log(v.__toString);
+							v = v.__toString();
+							console.log(v);
+						}
+
 						if(unsafeHtml)
 						{
 							dynamicNode.innerHTML = v;
@@ -731,20 +754,37 @@ export class View
 
 	mapBindTags(tag)
 	{
-		let bindArg = tag.getAttribute('cv-bind');
+		let bindArg  = tag.getAttribute('cv-bind');
 		let proxy    = this.args;
 		let property = bindArg;
+		let top      = null;
 
 		if(bindArg.match(/\./))
 		{
-			[proxy, property] = Bindable.resolve(
+			[proxy, property, top] = Bindable.resolve(
 				this.args
 				, bindArg
 				, true
 			);
 		}
 
+		if(proxy !== this.args)
+		{
+			this.subBindings[bindArg] = this.subBindings[bindArg] || [];
+
+			this.cleanup.push(
+				this.args.bindTo(top, ()=>{
+					while(this.subBindings.length)
+					{
+						console.log('HERE!');
+						this.subBindings.shift()();
+					}
+				})
+			);
+		}
+
 		let debind = proxy.bindTo(property, (v,k,t) => {
+
 			if(t[k] instanceof View && t[k] !== v)
 			{
 				t[k].remove();
@@ -756,21 +796,10 @@ export class View
 			) {
 				let type = tag.getAttribute('type');
 				if(type && type.toLowerCase() == 'checkbox') {
-					if(v) {
-						tag.checked = true;
-					}
-					else {
-						tag.checked = false;
-					}
+					tag.checked = !!v;
 				}
 				else if(type && type.toLowerCase() == 'radio') {
-					console.log(tag, v, tag.value, k);
-					if(v == tag.value) {
-						tag.checked = true;
-					}
-					else {
-						tag.checked = false;
-					}
+					tag.checked = (v == tag.value);
 				}
 				else if(type !== 'file') {
 					tag.value = v || '';
@@ -787,6 +816,11 @@ export class View
 				tag.innerText = v;
 			}
 		});
+
+		if(proxy !== this.args)
+		{
+			this.subBindings[bindArg].push(debind);
+		}
 
 		this.cleanup.push(debind);
 
@@ -1157,6 +1191,16 @@ ${tag.outerHTML}`
 
 		view.args = this.args;
 
+		// this.args.bindTo((v,k,t)=>{
+		// 	t[k]         = v;
+		// 	view.args[k] = v;
+		// });
+
+		// view.args.bindTo((v,k,t)=>{
+		// 	this.args[k] = v;
+		// 	t[k]         = v;
+		// });
+
 		this.cleanup.push(((view)=>()=>{
 			view.remove();
 		})(view));
@@ -1180,9 +1224,11 @@ ${tag.outerHTML}`
 
 		let debind = proxy.bindTo(
 			property
-			, ((tag, ifDoc) => (v,k) => {
+			, (v,k) => {
 				let detachEvent = new Event('cvDomDetached');
 				let attachEvent = new Event('cvDomAttached');
+
+				// console.log(k,v);
 
 				if(Array.isArray(v))
 				{
@@ -1224,7 +1270,7 @@ ${tag.outerHTML}`
 						});
 					}
 				}
-			})(tag, ifDoc)
+			}
 		);
 
 		this.cleanup.push(()=>{
