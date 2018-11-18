@@ -119,8 +119,6 @@ var Repository = function () {
 
 			var resourceUri = this.uri + '/' + model.id;
 
-			console.log(resourceUri);
-
 			_Cache.Cache.store(resourceUri, model, 10, 'model-uri-repo');
 
 			if (model.class) {

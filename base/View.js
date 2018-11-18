@@ -440,8 +440,6 @@ var View = exports.View = function () {
 					};
 				}(attrs[i])));
 			}
-
-			console.log(tag.outerHTML);
 		}
 	}, {
 		key: 'mapInterpolatableTags',

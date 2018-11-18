@@ -452,8 +452,6 @@ export class View
 				})(attrs[i])
 			));
 		}
-
-		console.log(tag.outerHTML);
 	}
 
 	mapInterpolatableTags(tag)

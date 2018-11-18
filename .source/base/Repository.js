@@ -75,8 +75,6 @@ export class Repository
 
 		let resourceUri = this.uri + '/' + model.id;
 
-		console.log(resourceUri);
-
 		Cache.store(
 			resourceUri
 			, model
