@@ -800,7 +800,11 @@ export class View
 					tag.checked = (v == tag.value);
 				}
 				else if(type !== 'file') {
-					tag.value = v || '';
+					console.log(tag.tagName, v);
+					if(tag.tagName == 'SELECT')
+					{
+					}
+					tag.value = v == null ? '' : v;
 				}
 				return;
 			}
@@ -862,10 +866,10 @@ export class View
 			.split(/;/)
 			.map((a) => a.split(':'))
 			.map(((object, tag) => (a) => {
-				var eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
-				var callbackName = a[1];
-				var argList      = [];
-				var groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
+				let eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+				let callbackName = a[1];
+				let argList      = [];
+				let groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
 				if(groups.length) {
 					callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 					if(groups[2]) {
@@ -880,8 +884,10 @@ export class View
 				{
 					if(typeof parent[callbackName] == 'function')
 					{
+						let _parent       = parent;
+						let _callBackName = callbackName;
 						eventMethod = (...args) => {
-							parent[ callbackName ](...args);
+							_parent[ _callBackName ](...args);
 						};
 						break;
 					}
@@ -917,13 +923,13 @@ export class View
 							return tag;
 						}
 						else if(arg === '$parent') {
-							return object.parent;
+							return this.parent;
 						}
 						else if(arg === '$subview') {
-							return object;
+							return this;
 						}
-						else if(arg in object.args) {
-							return object.args[arg];
+						else if(arg in this.args) {
+							return this.args[arg];
 						}
 						else if(match = /^['"](\w+?)["']$/.exec(arg))
 						{
@@ -964,13 +970,9 @@ ${tag.outerHTML}`
 					default:
 						tag.addEventListener(eventName, eventListener);
 
-						this.cleanup.push(
-							((tag, eventName, eventListener) => ()=>{
-								tag.removeEventListener(eventName, eventListener);
-								tag           = undefined;
-								eventListener = undefined;
-							}
-						)(tag, eventName, eventListener));
+						this.cleanup.push(()=>{
+							tag.removeEventListener(eventName, eventListener);
+						});
 						break;
 				}
 

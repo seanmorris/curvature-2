@@ -765,7 +765,9 @@ var View = exports.View = function () {
 					} else if (type && type.toLowerCase() == 'radio') {
 						tag.checked = v == tag.value;
 					} else if (type !== 'file') {
-						tag.value = v || '';
+						console.log(tag.tagName, v);
+						if (tag.tagName == 'SELECT') {}
+						tag.value = v == null ? '' : v;
 					}
 					return;
 				}
@@ -843,12 +845,16 @@ var View = exports.View = function () {
 
 					while (parent) {
 						if (typeof parent[callbackName] == 'function') {
-							eventMethod = function eventMethod() {
-								var _parent;
+							var _ret7 = function () {
+								var _parent = parent;
+								var _callBackName = callbackName;
+								eventMethod = function eventMethod() {
+									_parent[_callBackName].apply(_parent, arguments);
+								};
+								return 'break';
+							}();
 
-								(_parent = parent)[callbackName].apply(_parent, arguments);
-							};
-							break;
+							if (_ret7 === 'break') break;
 						}
 
 						if (parent.viewList && parent.viewList.parent) {
@@ -873,11 +879,11 @@ var View = exports.View = function () {
 								} else if (arg === '$tag') {
 									return tag;
 								} else if (arg === '$parent') {
-									return object.parent;
+									return _this6.parent;
 								} else if (arg === '$subview') {
-									return object;
-								} else if (arg in object.args) {
-									return object.args[arg];
+									return _this6;
+								} else if (arg in _this6.args) {
+									return _this6.args[arg];
 								} else if (match = /^['"](\w+?)["']$/.exec(arg)) {
 									return match[1];
 								}
@@ -909,13 +915,9 @@ var View = exports.View = function () {
 						default:
 							tag.addEventListener(eventName, eventListener);
 
-							_this6.cleanup.push(function (tag, eventName, eventListener) {
-								return function () {
-									tag.removeEventListener(eventName, eventListener);
-									tag = undefined;
-									eventListener = undefined;
-								};
-							}(tag, eventName, eventListener));
+							_this6.cleanup.push(function () {
+								tag.removeEventListener(eventName, eventListener);
+							});
 							break;
 					}
 

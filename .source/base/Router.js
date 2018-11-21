@@ -11,6 +11,9 @@ export class Router {
 	}
 	static listen(mainView)
 	{
+		let routeHistory      = [location.toString()];
+		let prevHistoryLength = history.length;
+
 		let route = location.pathname + location.search;
 
 		if(location.hash)
@@ -22,6 +25,30 @@ export class Router {
 			'popstate'
 			, (event) => {
 				event.preventDefault();
+
+				console.log(event);
+
+				console.log(routeHistory.length);
+
+				if(routeHistory.length && prevHistoryLength == history.length)
+				{
+					if(location.toString() == routeHistory[routeHistory.length - 2])
+					{
+						routeHistory.pop();
+						console.log('Back button!', location.toString());
+					}
+					else
+					{
+						routeHistory.push(location.toString());
+						console.log('Forward button.', location.toString());
+					}
+				}
+				else
+				{
+					routeHistory.push(location.toString());
+					prevHistoryLength = history.length;
+					console.log('Normal nav.', location.toString());
+				}
 
 				this.match(location.pathname, mainView);
 			}
@@ -58,6 +85,11 @@ export class Router {
 		{
 			return;
 		}
+
+		let eventStart = new CustomEvent('cvRouteStart', {
+			cancelable: true
+			, detail:   {result, path, view}
+		});
 
 		let current = view.args.content;
 		let routes  = view.routes;
@@ -136,6 +168,8 @@ export class Router {
 			break;
 		}
 
+		document.dispatchEvent(eventStart);
+
 		if(selected in routes
 			&& routes[selected] instanceof Object
 			&& routes[selected].isView
@@ -153,10 +187,12 @@ export class Router {
 
 			if(_result instanceof Promise)
 			{
+				result = false;
+
 				_result.then(x=>{
-					view.args.content = x;
+					this.update(view, path, x);
 				}).catch(x=>{
-					view.args.content = x;
+					this.update(view, path, x);
 				});
 			}
 			else
@@ -166,13 +202,13 @@ export class Router {
 		}
 		else if(routes[selected] instanceof Promise)
 		{
-			routes[selected].then(x => {
-				view.args.content = x;
-			}).catch(x=>{
-				view.args.content = x;
-			});
+			result = false;
 
-			result = '';
+			routes[selected].then(x => {
+				this.update(view, path, x);
+			}).catch(x=>{
+				this.update(view, path, x);
+			});
 		}
 		else if(routes[selected] instanceof Object)
 		{
@@ -183,21 +219,23 @@ export class Router {
 			result = routes[selected];
 		}
 
-		if(view.args.content instanceof View)
-		{
-			// view.args.content.pause(true);
-			view.args.content.remove();
-		}
+		this.update(view, path, result);
 
-		let event = new CustomEvent('cvRoute', {
-			cancelable: true
-			, detail:   {result, path, view}
-		});
+		// if(view.args.content instanceof View)
+		// {
+		// 	// view.args.content.pause(true);
+		// 	view.args.content.remove();
+		// }
 
-		if(document.dispatchEvent(event))
-		{
-			view.args.content = result;
-		}
+		// console.log(result);
+
+		// if(result !== false)
+		// {
+		// 	if(document.dispatchEvent(event))
+		// 	{
+		// 		view.args.content = result;
+		// 	}
+		// }
 
 		if(result instanceof View)
 		{
@@ -207,6 +245,35 @@ export class Router {
 		}
 
 		return selected !== false;
+	}
+
+	static update(view, path, result)
+	{
+		let event = new CustomEvent('cvRoute', {
+			cancelable: true
+			, detail:   {result, path, view}
+		});
+
+		let eventEnd = new CustomEvent('cvRouteEnd', {
+			cancelable: true
+			, detail:   {result, path, view}
+		});
+
+		if(result !== false)
+		{
+			if(view.args.content instanceof View)
+			{
+				// view.args.content.pause(true);
+				view.args.content.remove();
+			}
+
+			if(document.dispatchEvent(event))
+			{
+				view.args.content = result;
+			}
+
+			document.dispatchEvent(eventEnd);
+		}
 	}
 	static clearCache() {
 		// this.cache = {};

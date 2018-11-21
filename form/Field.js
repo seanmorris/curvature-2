@@ -28,7 +28,7 @@ var Field = exports.Field = function (_View) {
 		var _this = _possibleConstructorReturn(this, (Field.__proto__ || Object.getPrototypeOf(Field)).call(this, values));
 
 		_this.args.title = _this.args.title || '';
-		_this.args.value = _this.args.value || '';
+		_this.args.value = _this.args.value == null ? '' : _this.args.value;
 		_this.skeleton = skeleton;
 		_this.disabled = null;
 

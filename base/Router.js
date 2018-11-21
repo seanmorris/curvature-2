@@ -37,6 +37,9 @@ var Router = exports.Router = function () {
 		value: function listen(mainView) {
 			var _this2 = this;
 
+			var routeHistory = [location.toString()];
+			var prevHistoryLength = history.length;
+
 			var route = location.pathname + location.search;
 
 			if (location.hash) {
@@ -45,6 +48,24 @@ var Router = exports.Router = function () {
 
 			window.addEventListener('popstate', function (event) {
 				event.preventDefault();
+
+				console.log(event);
+
+				console.log(routeHistory.length);
+
+				if (routeHistory.length && prevHistoryLength == history.length) {
+					if (location.toString() == routeHistory[routeHistory.length - 2]) {
+						routeHistory.pop();
+						console.log('Back button!', location.toString());
+					} else {
+						routeHistory.push(location.toString());
+						console.log('Forward button.', location.toString());
+					}
+				} else {
+					routeHistory.push(location.toString());
+					prevHistoryLength = history.length;
+					console.log('Normal nav.', location.toString());
+				}
 
 				_this2.match(location.pathname, mainView);
 			});
@@ -70,11 +91,18 @@ var Router = exports.Router = function () {
 	}, {
 		key: 'match',
 		value: function match(path, view) {
+			var _this3 = this;
+
 			var forceRefresh = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
 			if (this.path == path && !forceRefresh) {
 				return;
 			}
+
+			var eventStart = new CustomEvent('cvRouteStart', {
+				cancelable: true,
+				detail: { result: result, path: path, view: view }
+			});
 
 			var current = view.args.content;
 			var routes = view.routes;
@@ -163,6 +191,8 @@ var Router = exports.Router = function () {
 				break;
 			}
 
+			document.dispatchEvent(eventStart);
+
 			if (selected in routes && routes[selected] instanceof Object && routes[selected].isView && routes[selected].isView()) {
 				result = new routes[selected](args);
 
@@ -175,41 +205,47 @@ var Router = exports.Router = function () {
 				var _result = routes[selected](args);
 
 				if (_result instanceof Promise) {
+					result = false;
+
 					_result.then(function (x) {
-						view.args.content = x;
+						_this3.update(view, path, x);
 					}).catch(function (x) {
-						view.args.content = x;
+						_this3.update(view, path, x);
 					});
 				} else {
 					result = _result;
 				}
 			} else if (routes[selected] instanceof Promise) {
-				routes[selected].then(function (x) {
-					view.args.content = x;
-				}).catch(function (x) {
-					view.args.content = x;
-				});
+				result = false;
 
-				result = '';
+				routes[selected].then(function (x) {
+					_this3.update(view, path, x);
+				}).catch(function (x) {
+					_this3.update(view, path, x);
+				});
 			} else if (routes[selected] instanceof Object) {
 				result = new routes[selected](args);
 			} else if (typeof routes[selected] == 'string') {
 				result = routes[selected];
 			}
 
-			if (view.args.content instanceof _View.View) {
-				// view.args.content.pause(true);
-				view.args.content.remove();
-			}
+			this.update(view, path, result);
 
-			var event = new CustomEvent('cvRoute', {
-				cancelable: true,
-				detail: { result: result, path: path, view: view }
-			});
+			// if(view.args.content instanceof View)
+			// {
+			// 	// view.args.content.pause(true);
+			// 	view.args.content.remove();
+			// }
 
-			if (document.dispatchEvent(event)) {
-				view.args.content = result;
-			}
+			// console.log(result);
+
+			// if(result !== false)
+			// {
+			// 	if(document.dispatchEvent(event))
+			// 	{
+			// 		view.args.content = result;
+			// 	}
+			// }
 
 			if (result instanceof _View.View) {
 				result.pause(false);
@@ -218,6 +254,32 @@ var Router = exports.Router = function () {
 			}
 
 			return selected !== false;
+		}
+	}, {
+		key: 'update',
+		value: function update(view, path, result) {
+			var event = new CustomEvent('cvRoute', {
+				cancelable: true,
+				detail: { result: result, path: path, view: view }
+			});
+
+			var eventEnd = new CustomEvent('cvRouteEnd', {
+				cancelable: true,
+				detail: { result: result, path: path, view: view }
+			});
+
+			if (result !== false) {
+				if (view.args.content instanceof _View.View) {
+					// view.args.content.pause(true);
+					view.args.content.remove();
+				}
+
+				if (document.dispatchEvent(event)) {
+					view.args.content = result;
+				}
+
+				document.dispatchEvent(eventEnd);
+			}
 		}
 	}, {
 		key: 'clearCache',

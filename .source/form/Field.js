@@ -8,7 +8,7 @@ export class Field extends View {
 		super(values);
 
 		this.args.title = this.args.title || '';
-		this.args.value = this.args.value || '';
+		this.args.value = this.args.value == null ?  '' : this.args.value;
 		this.skeleton   = skeleton;
 		this.disabled   = null;
 
