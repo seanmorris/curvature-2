@@ -33,18 +33,15 @@ var Repository = function () {
 		value: function get(id) {
 			var _this = this;
 
+			var refresh = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
 			var resourceUri = this.uri + '/' + id;
 
-			// let cached = Cache.load(
-			// 	resourceUri
-			// 	, false
-			// 	, 'model-uri-repo'
-			// );
+			var cached = _Cache.Cache.load(resourceUri, false, 'model-uri-repo');
 
-			// if(cached)
-			// {
-			// 	return Promise.resolve(cached);
-			// }
+			if (!refresh && cached) {
+				return Promise.resolve(cached);
+			}
 
 			return Repository.request(resourceUri).then(function (response) {
 				return _this.extractModel(response.body);
@@ -117,7 +114,7 @@ var Repository = function () {
 
 			model.consume(rawData);
 
-			var resourceUri = this.uri + '/' + model.id;
+			var resourceUri = this.uri + '/' + model.publicId;
 
 			_Cache.Cache.store(resourceUri, model, 10, 'model-uri-repo');
 

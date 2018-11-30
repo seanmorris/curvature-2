@@ -237,7 +237,7 @@ var Bindable = exports.Bindable = function () {
             }
 
             var set = function set(target, key, value) {
-                if (target[key] === value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== object) {
+                if (target[key] === value) {
                     return true;
                 }
 

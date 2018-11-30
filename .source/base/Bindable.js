@@ -209,7 +209,7 @@ export class Bindable {
         }
 
         let set = (target, key, value) => {
-            if (target[key] === value && typeof value !== object) {
+            if (target[key] === value) {
                 return true;
             }
 

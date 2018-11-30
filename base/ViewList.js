@@ -284,13 +284,16 @@ var ViewList = function () {
 	}, {
 		key: 'remove',
 		value: function remove() {
+			console.log('REMOVE LIST');
+
 			for (var i in this.views) {
 				this.views[i].remove();
 			}
 
 			var cleanup = void 0;
 
-			while (cleanup = this.cleanup.pop()) {
+			while (this.cleanup.length) {
+				cleanup = this.cleanup.pop();
 				cleanup();
 			}
 

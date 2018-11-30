@@ -298,6 +298,8 @@ export class ViewList
 	}
 	remove()
 	{
+		console.log('REMOVE LIST');
+
 		for(let i in this.views)
 		{
 			this.views[i].remove();
@@ -305,8 +307,9 @@ export class ViewList
 
 		let cleanup;
 
-		while(cleanup = this.cleanup.pop())
+		while(this.cleanup.length)
 		{
+			cleanup = this.cleanup.pop();
 			cleanup();
 		}
 

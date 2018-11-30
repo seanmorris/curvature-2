@@ -1093,17 +1093,16 @@ var View = exports.View = function () {
 
 				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, _this8, keyProp);
 
-				viewList.render(tag);
-
 				var _loop9 = function _loop9(i) {
-					var debind = _this8.args.bindTo(carryProps[i], function (v, k) {
+					var _debind = _this8.args.bindTo(carryProps[i], function (v, k) {
 						viewList.args.subArgs[k] = v;
 					});
 
-					viewList.cleanup.push(debind);
+					viewList.cleanup.push(_debind);
 
 					_this8.cleanup.push(function () {
-						debind();
+						_debind();
+
 						if (v && !v.isBound()) {
 							_Bindable.Bindable.clearBindings(v);
 						}
@@ -1115,7 +1114,15 @@ var View = exports.View = function () {
 					_loop9(i);
 				}
 
+				while (tag.firstChild) {
+					tag.removeChild(tag.firstChild);
+				}
+
+				// console.log(tag, this.viewLists[eachProp], viewList);
+
 				_this8.viewLists[eachProp] = viewList;
+
+				viewList.render(tag);
 			});
 
 			this.cleanup.push(debind);
@@ -1123,7 +1130,10 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapIfTags',
 		value: function mapIfTags(tag) {
+			var _this9 = this;
+
 			var ifProperty = tag.getAttribute('cv-if');
+			var carryAttr = tag.getAttribute('cv-carry');
 
 			var inverted = false;
 
@@ -1142,20 +1152,64 @@ var View = exports.View = function () {
 
 			var view = new View();
 
-			view.args = this.args;
+			// view.args = this.args;
 
-			// this.args.bindTo((v,k,t)=>{
-			// 	t[k]         = v;
-			// 	view.args[k] = v;
-			// });
+			var debindA = this.args.bindTo(function (v, k, t, d) {
+				if (t[k] === v) {
+					// return;
+				}
 
-			// view.args.bindTo((v,k,t)=>{
-			// 	this.args[k] = v;
-			// 	t[k]         = v;
-			// });
+				if (view.args[k] instanceof View && view.args[k] !== v) {
+					view.args[k].remove();
+				}
+
+				t[k] = v;
+				view.args[k] = v;
+			});
+
+			console.log(this.args);
+
+			for (var i in this.args) {
+				if (i == '_id') {
+					continue;
+				}
+				// console.log(i, this.args[i]);
+				view.args[i] = this.args[i];
+			}
+
+			var debindB = view.args.bindTo(function (v, k, t, d) {
+				if (t[k] === v) {
+					return;
+				}
+
+				if (_this9.args[k] instanceof View && _this9.args[k] !== v) {
+					_this9.args[k].remove();
+				}
+				_this9.args[k] = v;
+				t[k] = v;
+			});
+			// let carryProps = [];
+
+			// if(carryAttr)
+			// {
+			// 	carryProps = carryAttr.split(',');
+			// }
+
+			// for(let i in carryProps)
+			// {
+			// 	let _debind = this.args.bindTo(carryProps[i], (v, k) => {
+			// 		view.args[k] = v;
+			// 	});
+
+			// 	view.cleanup.push(_debind);
+
+			// 	this.cleanup.push(_debind);
+			// }
 
 			this.cleanup.push(function (view) {
 				return function () {
+					debindA();
+					debindB();
 					view.remove();
 				};
 			}(view));
@@ -1190,6 +1244,8 @@ var View = exports.View = function () {
 				if (inverted) {
 					v = !v;
 				}
+
+				console.log(k, v, '!!!');
 
 				if (v) {
 					while (ifDoc.firstChild) {
@@ -1226,6 +1282,7 @@ var View = exports.View = function () {
 			});
 
 			tag.removeAttribute('cv-if');
+			tag.removeAttribute('cv-carry');
 		}
 	}, {
 		key: 'postRender',
@@ -1289,7 +1346,7 @@ var View = exports.View = function () {
 				delete this.intervals[i];
 			}
 
-			_Bindable.Bindable.clearBindings(this.args);
+			// Bindable.clearBindings(this.args);
 		}
 	}, {
 		key: 'update',

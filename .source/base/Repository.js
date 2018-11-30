@@ -14,20 +14,20 @@ export class Repository
 		this.uri = uri;
 	}
 
-	get(id)
+	get(id, refresh = false)
 	{
 		let resourceUri = this.uri + '/' + id;
 
-		// let cached = Cache.load(
-		// 	resourceUri
-		// 	, false
-		// 	, 'model-uri-repo'
-		// );
+		let cached = Cache.load(
+			resourceUri
+			, false
+			, 'model-uri-repo'
+		);
 
-		// if(cached)
-		// {
-		// 	return Promise.resolve(cached);
-		// }
+		if(!refresh && cached)
+		{
+			return Promise.resolve(cached);
+		}
 
 		return Repository.request(resourceUri).then((response) => {
 			return this.extractModel(response.body);
@@ -73,7 +73,7 @@ export class Repository
 
 		model.consume(rawData);
 
-		let resourceUri = this.uri + '/' + model.id;
+		let resourceUri = this.uri + '/' + model.publicId;
 
 		Cache.store(
 			resourceUri
