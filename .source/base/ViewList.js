@@ -298,8 +298,6 @@ export class ViewList
 	}
 	remove()
 	{
-		console.log('REMOVE LIST');
-
 		for(let i in this.views)
 		{
 			this.views[i].remove();

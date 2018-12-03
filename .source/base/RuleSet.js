@@ -48,7 +48,7 @@ export class RuleSet
 
 	apply(doc = document, view = null)
 	{
-		RuleSet.apply(doc);
+		RuleSet.apply(doc, view);
 
 		for(let selector in this.rules)
 		{

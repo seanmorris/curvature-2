@@ -2,12 +2,22 @@ import { Bindable } from './Bindable';
 
 export class Persist
 {
-	static watch(bucket, object)
+	static watch(bucket, object, refresh = false)
 	{
 		let index    = {};
 		let bindings = {};
 		let indexKey = `${bucket}::#[index]`;
 		let _index;
+
+		// if(refresh)
+		// {
+		// 	let index = JSON.parse(localStorage.getItem(indexKey));
+		// 	for(let i in index)
+		// 	{
+		// 		localStorage.removeItem(`${bucket}::$[${index[i]}]`);
+		// 	}
+		// 	console.log(index);
+		// }
 
 		let store = (key, value, del = false) => {
 			index[key] = 1;
@@ -94,7 +104,7 @@ export class Persist
 
 		let debind = object.bindTo((v,k,t,d)=>{
 			store(k, v, d);
-		}, {delay: 0});
+		}, {wait: 0});
 
 		return () => {
 			debind();

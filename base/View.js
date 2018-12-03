@@ -73,6 +73,8 @@ var View = exports.View = function () {
 		this.preRuleSet = new _RuleSet.RuleSet();
 		this.subBindings = {};
 
+		this.removed = false;
+
 		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
 	}
 
@@ -230,6 +232,10 @@ var View = exports.View = function () {
 
 			var parentNode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 			var insertPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+			if (insertPoint instanceof View) {
+				insertPoint = insertPoint.firstNode;
+			}
 
 			if (this.nodes) {
 				for (var i in this.detach) {
@@ -527,10 +533,7 @@ var View = exports.View = function () {
 								});
 							} else {
 								if (v instanceof Object && v.__toString instanceof Function) {
-									console.log(v);
-									console.log(v.__toString);
 									v = v.__toString();
-									console.log(v);
 								}
 
 								if (unsafeHtml) {
@@ -764,7 +767,7 @@ var View = exports.View = function () {
 					} else if (type && type.toLowerCase() == 'radio') {
 						tag.checked = v == tag.value;
 					} else if (type !== 'file') {
-						console.log(tag.tagName, v);
+						// console.log(tag.tagName, v);
 						if (tag.tagName == 'SELECT') {}
 						tag.value = v == null ? '' : v;
 					}
@@ -1087,6 +1090,7 @@ var View = exports.View = function () {
 
 			var debind = this.args.bindTo(eachProp, function (v, k, t) {
 				if (_this8.viewLists[eachProp]) {
+					console.log('RE-binding %s', eachProp, tag, v);
 					_this8.viewLists[eachProp].remove();
 				}
 
@@ -1122,9 +1126,12 @@ var View = exports.View = function () {
 				_this8.viewLists[eachProp] = viewList;
 
 				viewList.render(tag);
-			});
+			}, { wait: 0 });
 
-			this.cleanup.push(debind);
+			this.cleanup.push(function () {
+				console.log('Debinding %s', eachProp);
+				debind();
+			});
 		}
 	}, {
 		key: 'mapIfTags',
@@ -1152,9 +1159,6 @@ var View = exports.View = function () {
 
 			var view = new View();
 
-			console.log('Subview created.');
-			console.log(subTemplate);
-
 			view.template = subTemplate;
 			view.parent = this;
 
@@ -1165,8 +1169,8 @@ var View = exports.View = function () {
 					return;
 				}
 
-				t[k] = v;
 				view.args[k] = v;
+				// t[k]         = v;
 			});
 
 			for (var i in this.args) {
@@ -1182,8 +1186,18 @@ var View = exports.View = function () {
 					return;
 				}
 
-				if (t[k] instanceof View && t[k].___ref___ !== v.___ref___) {
-					console.log(v, t[k]);
+				var newRef = v;
+				var oldRef = t[k];
+
+				if (v instanceof View) {
+					newRef = v.___ref___;
+				}
+
+				if (t[k] instanceof View) {
+					oldRef = t[k].___ref___;
+				}
+
+				if (newRef !== oldRef && t[k] instanceof View) {
 					t[k].remove();
 				}
 
@@ -1197,15 +1211,10 @@ var View = exports.View = function () {
 				cleaner = cleaner.parent;
 			}
 
-			view.cleanup.push(function () {
-				console.log('Subview removed.');
-				console.log(view.template);
-			});
-
 			this.cleanup.push(function () {
 				debindA();
 				debindB();
-				view.remove();
+				// view.remove();
 			});
 
 			var proxy = this.args;
@@ -1304,6 +1313,8 @@ var View = exports.View = function () {
 				clearInterval(this.intervals[i].timeout);
 				delete this.intervals[i];
 			}
+
+			this.removed = true;
 
 			// Bindable.clearBindings(this.args);
 		}

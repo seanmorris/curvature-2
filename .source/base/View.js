@@ -50,6 +50,8 @@ export class View
 		this.preRuleSet  = new RuleSet;
 		this.subBindings = {};
 
+		this.removed   = false;	
+
 		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
 	}
 
@@ -211,6 +213,11 @@ export class View
 
 	render(parentNode = null, insertPoint = null)
 	{
+		if(insertPoint instanceof View)
+		{
+			insertPoint = insertPoint.firstNode;
+		}
+
 		if(this.nodes)
 		{
 			for(let i in this.detach)
@@ -551,10 +558,7 @@ export class View
 					{
 						if(v instanceof Object && v.__toString instanceof Function)
 						{
-							console.log(v);
-							console.log(v.__toString);
 							v = v.__toString();
-							console.log(v);
 						}
 
 						if(unsafeHtml)
@@ -799,7 +803,7 @@ export class View
 					tag.checked = (v == tag.value);
 				}
 				else if(type !== 'file') {
-					console.log(tag.tagName, v);
+					// console.log(tag.tagName, v);
 					if(tag.tagName == 'SELECT')
 					{
 					}
@@ -1133,6 +1137,7 @@ ${tag.outerHTML}`
 		let debind = this.args.bindTo(eachProp, (v, k, t)=>{
 			if(this.viewLists[eachProp])
 			{
+				console.log('RE-binding %s', eachProp, tag ,v);
 				this.viewLists[eachProp].remove();
 			}
 
@@ -1167,9 +1172,12 @@ ${tag.outerHTML}`
 			this.viewLists[eachProp] = viewList;
 
 			viewList.render(tag);
-		});
+		},{wait:0});
 
-		this.cleanup.push(debind);
+		this.cleanup.push(()=>{
+			console.log('Debinding %s', eachProp);
+			debind();
+		});
 	}
 
 	mapIfTags(tag)
@@ -1197,9 +1205,6 @@ ${tag.outerHTML}`
 
 		let view = new View();
 
-		console.log('Subview created.');
-		console.log(subTemplate);
-
 		view.template = subTemplate;
 		view.parent   = this;
 
@@ -1211,8 +1216,8 @@ ${tag.outerHTML}`
 				return;
 			}
 
-			t[k]         = v;
 			view.args[k] = v;
+			// t[k]         = v;
 		});
 
 		for(let i in this.args)
@@ -1231,9 +1236,21 @@ ${tag.outerHTML}`
 				return;
 			}
 
-			if(t[k] instanceof View && t[k].___ref___ !== v.___ref___)
+			let newRef = v;
+			let oldRef = t[k];
+
+			if(v instanceof View)
 			{
-				console.log(v, t[k]);
+				newRef = v.___ref___;
+			}
+
+			if(t[k] instanceof View)
+			{
+				oldRef = t[k].___ref___;
+			}
+
+			if(newRef !== oldRef && t[k] instanceof View)
+			{
 				t[k].remove();
 			}
 
@@ -1248,15 +1265,10 @@ ${tag.outerHTML}`
 			cleaner = cleaner.parent;
 		}
 
-		view.cleanup.push(()=>{
-			console.log('Subview removed.');
-			console.log(view.template);
-		});
-
 		this.cleanup.push(()=>{
 			debindA();
 			debindB();
-			view.remove();
+			// view.remove();
 		});
 
 		let proxy    = this.args;
@@ -1376,6 +1388,8 @@ ${tag.outerHTML}`
 			clearInterval(this.intervals[i].timeout);
 			delete this.intervals[i];
 		}
+
+		this.removed = true;
 
 		// Bindable.clearBindings(this.args);
 	}

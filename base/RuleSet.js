@@ -36,7 +36,7 @@ var RuleSet = exports.RuleSet = function () {
 			var doc = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document;
 			var view = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-			RuleSet.apply(doc);
+			RuleSet.apply(doc, view);
 
 			for (var selector in this.rules) {
 				for (var i in this.rules[selector]) {

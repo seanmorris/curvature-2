@@ -284,8 +284,6 @@ var ViewList = function () {
 	}, {
 		key: 'remove',
 		value: function remove() {
-			console.log('REMOVE LIST');
-
 			for (var i in this.views) {
 				this.views[i].remove();
 			}

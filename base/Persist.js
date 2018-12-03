@@ -19,10 +19,22 @@ var Persist = exports.Persist = function () {
 	_createClass(Persist, null, [{
 		key: 'watch',
 		value: function watch(bucket, object) {
+			var refresh = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
 			var index = {};
 			var bindings = {};
 			var indexKey = bucket + '::#[index]';
 			var _index = void 0;
+
+			// if(refresh)
+			// {
+			// 	let index = JSON.parse(localStorage.getItem(indexKey));
+			// 	for(let i in index)
+			// 	{
+			// 		localStorage.removeItem(`${bucket}::$[${index[i]}]`);
+			// 	}
+			// 	console.log(index);
+			// }
 
 			var store = function store(key, value) {
 				var del = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
@@ -90,7 +102,7 @@ var Persist = exports.Persist = function () {
 
 			var debind = object.bindTo(function (v, k, t, d) {
 				store(k, v, d);
-			}, { delay: 0 });
+			}, { wait: 0 });
 
 			return function () {
 				debind();
