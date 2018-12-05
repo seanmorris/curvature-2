@@ -411,6 +411,8 @@ var Bindable = exports.Bindable = function () {
         value: function resolve(object, path) {
             var owner = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
+            // console.log(path, object);
+
             var node = void 0;
             var pathParts = path.split('.');
             var top = pathParts[0];

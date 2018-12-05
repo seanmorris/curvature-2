@@ -387,6 +387,8 @@ export class Bindable {
     }
     static resolve(object, path, owner = false)
     {
+        // console.log(path, object);
+
         let node;
         let pathParts = path.split('.');
         let top       = pathParts[0];

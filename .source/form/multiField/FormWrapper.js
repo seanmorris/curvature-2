@@ -192,7 +192,7 @@ export class FormWrapper extends View
 	{
 		for(let i in this._onLoad)
 		{
-			this._onLoad[i](this);
+			this._onLoad[i](this, form, model);
 		}
 	}
 

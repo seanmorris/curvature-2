@@ -26,28 +26,24 @@ export class Router {
 			, (event) => {
 				event.preventDefault();
 
-				console.log(event);
-
-				console.log(routeHistory.length);
-
 				if(routeHistory.length && prevHistoryLength == history.length)
 				{
 					if(location.toString() == routeHistory[routeHistory.length - 2])
 					{
 						routeHistory.pop();
-						console.log('Back button!', location.toString());
+						// console.log('Back button!', location.toString());
 					}
 					else
 					{
 						routeHistory.push(location.toString());
-						console.log('Forward button.', location.toString());
+						// console.log('Forward button.', location.toString());
 					}
 				}
 				else
 				{
 					routeHistory.push(location.toString());
 					prevHistoryLength = history.length;
-					console.log('Normal nav.', location.toString());
+					// console.log('Normal nav.', location.toString());
 				}
 
 				this.match(location.pathname, mainView);

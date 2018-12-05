@@ -202,7 +202,7 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		key: 'onLoad',
 		value: function onLoad(form, model) {
 			for (var i in this._onLoad) {
-				this._onLoad[i](this);
+				this._onLoad[i](this, form, model);
 			}
 		}
 	}, {

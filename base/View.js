@@ -74,6 +74,7 @@ var View = exports.View = function () {
 		this.subBindings = {};
 
 		this.removed = false;
+		this.preserve = false;
 
 		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
 	}
@@ -466,10 +467,6 @@ var View = exports.View = function () {
 				var _loop4 = function _loop4() {
 					var bindProperty = match[2];
 
-					if (1 || bindProperty.match(/\./)) {
-						// console.log(bindProperty);
-					}
-
 					var unsafeHtml = false;
 
 					if (bindProperty.substr(0, 1) === '$') {
@@ -516,9 +513,10 @@ var View = exports.View = function () {
 
 					var debind = proxy.bindTo(property, function (dynamicNode, unsafeHtml) {
 						return function (v, k, t) {
-							// console.log(`Setting ${k} to ${v}`, dynamicNode);
 							if (t[k] instanceof View && t[k] !== v) {
-								t[k].remove();
+								if (!t[k].preserve) {
+									t[k].remove();
+								}
 							}
 
 							dynamicNode.nodeValue = '';
@@ -526,8 +524,8 @@ var View = exports.View = function () {
 							if (v instanceof View) {
 								v.render(tag.parentNode, dynamicNode);
 
-								v.cleanup.push(function () {
-									if (v) {
+								_this4.cleanup.push(function () {
+									if (!v.preserve) {
 										v.remove();
 									}
 								});
@@ -611,11 +609,6 @@ var View = exports.View = function () {
 							property = _Bindable$resolve4[1];
 						}
 
-						if (!proxy.bindTo) {
-							// console.log(property);
-							// console.log(proxy);
-						}
-
 						var longProperty = j;
 
 						var debind = proxy.bindTo(property, function (v, k, t, d) {
@@ -643,10 +636,6 @@ var View = exports.View = function () {
 					for (var j in bindProperties) {
 						_loop6(j);
 					}
-
-					// console.log(bindProperties, segments);
-
-					// console.log(tag.attributes[i].name, tag.attributes[i].value);
 				};
 
 				for (var i = 0; i < tag.attributes.length; i++) {
@@ -767,7 +756,6 @@ var View = exports.View = function () {
 					} else if (type && type.toLowerCase() == 'radio') {
 						tag.checked = v == tag.value;
 					} else if (type !== 'file') {
-						// console.log(tag.tagName, v);
 						if (tag.tagName == 'SELECT') {}
 						tag.value = v == null ? '' : v;
 					}
@@ -890,11 +878,7 @@ var View = exports.View = function () {
 									return match[1];
 								}
 							});
-							// console.log(argList, argRefs);
 							if (!(typeof eventMethod == 'function')) {
-								// console.log(object);
-								// console.trace();
-								// console.log(this, parent);
 								throw new Error(callbackName + ' is not defined on View object.\n\nTag:\n\n' + tag.outerHTML);
 							}
 							eventMethod.apply(undefined, _toConsumableArray(argRefs));
@@ -1010,8 +994,6 @@ var View = exports.View = function () {
 				view.template = subTemplate;
 				view.parent = _this7;
 
-				// console.log(carryProps);
-
 				var _loop7 = function _loop7(i) {
 					var debind = _this7.args.bindTo(carryProps[i], function (v, k) {
 						view.args[k] = v;
@@ -1090,11 +1072,14 @@ var View = exports.View = function () {
 
 			var debind = this.args.bindTo(eachProp, function (v, k, t) {
 				if (_this8.viewLists[eachProp]) {
-					console.log('RE-binding %s', eachProp, tag, v);
 					_this8.viewLists[eachProp].remove();
 				}
 
 				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, _this8, keyProp);
+
+				_this8.cleanup.push(function () {
+					viewList.remove();
+				});
 
 				var _loop9 = function _loop9(i) {
 					var _debind = _this8.args.bindTo(carryProps[i], function (v, k) {
@@ -1109,7 +1094,6 @@ var View = exports.View = function () {
 						if (v && !v.isBound()) {
 							_Bindable.Bindable.clearBindings(v);
 						}
-						viewList.remove();
 					});
 				};
 
@@ -1121,15 +1105,12 @@ var View = exports.View = function () {
 					tag.removeChild(tag.firstChild);
 				}
 
-				// console.log(tag, this.viewLists[eachProp], viewList);
-
 				_this8.viewLists[eachProp] = viewList;
 
 				viewList.render(tag);
 			}, { wait: 0 });
 
 			this.cleanup.push(function () {
-				console.log('Debinding %s', eachProp);
 				debind();
 			});
 		}
@@ -1271,8 +1252,6 @@ var View = exports.View = function () {
 		key: 'remove',
 		value: function remove() {
 			var detachEvent = new Event('cvDomDetached');
-
-			// console.log(this);
 
 			for (var _i10 in this.tags) {
 				if (Array.isArray(this.tags[_i10])) {

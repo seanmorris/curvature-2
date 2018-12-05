@@ -51,6 +51,7 @@ export class View
 		this.subBindings = {};
 
 		this.removed   = false;	
+		this.preserve  = false;
 
 		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
 	}
@@ -480,11 +481,6 @@ export class View
 			{
 				let bindProperty = match[2];
 
-				if(1||bindProperty.match(/\./))
-				{
-					// console.log(bindProperty);
-				}
-
 				let unsafeHtml = false;
 
 				if(bindProperty.substr(0, 1) === '$')
@@ -535,10 +531,12 @@ export class View
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
 				let debind = proxy.bindTo(property, ((dynamicNode,unsafeHtml) => (v,k,t) => {
-					// console.log(`Setting ${k} to ${v}`, dynamicNode);
 					if(t[k] instanceof View && t[k] !== v)
 					{
-						t[k].remove();
+						if(!t[k].preserve)
+						{
+							t[k].remove();
+						}
 					}
 
 					dynamicNode.nodeValue = '';
@@ -547,8 +545,8 @@ export class View
 					{
 						v.render(tag.parentNode, dynamicNode);
 
-						v.cleanup.push(()=>{
-							if(v)
+						this.cleanup.push(()=>{
+							if(!v.preserve)
 							{
 								v.remove();
 							}
@@ -639,12 +637,6 @@ export class View
 						);
 					}
 
-					if(!proxy.bindTo)
-					{
-						// console.log(property);
-						// console.log(proxy);
-					}
-
 					let longProperty = j;
 
 					let debind = proxy.bindTo(property, (v, k, t, d) => {
@@ -672,10 +664,6 @@ export class View
 						}
 					});
 				}
-
-				// console.log(bindProperties, segments);
-
-				// console.log(tag.attributes[i].name, tag.attributes[i].value);
 			}
 		}
 	}
@@ -803,7 +791,6 @@ export class View
 					tag.checked = (v == tag.value);
 				}
 				else if(type !== 'file') {
-					// console.log(tag.tagName, v);
 					if(tag.tagName == 'SELECT')
 					{
 					}
@@ -939,11 +926,7 @@ export class View
 							return match[1];
 						}
 					});
-					// console.log(argList, argRefs);
 					if(!(typeof eventMethod == 'function')) {
-						// console.log(object);
-						// console.trace();
-						// console.log(this, parent);
 						throw new Error(
 							`${callbackName} is not defined on View object.
 
@@ -1064,8 +1047,6 @@ ${tag.outerHTML}`
 			view.template = subTemplate;
 			view.parent   = this;
 
-			// console.log(carryProps);
-
 			for(let i in carryProps)
 			{
 				let debind = this.args.bindTo(carryProps[i], (v, k) => {
@@ -1137,11 +1118,14 @@ ${tag.outerHTML}`
 		let debind = this.args.bindTo(eachProp, (v, k, t)=>{
 			if(this.viewLists[eachProp])
 			{
-				console.log('RE-binding %s', eachProp, tag ,v);
 				this.viewLists[eachProp].remove();
 			}
 
 			let viewList = new ViewList(subTemplate, asProp, v, this, keyProp);
+
+			this.cleanup.push(()=>{
+				viewList.remove();
+			});
 
 			for(let i in carryProps)
 			{
@@ -1158,7 +1142,6 @@ ${tag.outerHTML}`
 					{
 						Bindable.clearBindings(v);
 					}
-					viewList.remove();
 				});
 			}
 
@@ -1167,15 +1150,12 @@ ${tag.outerHTML}`
 				tag.removeChild(tag.firstChild);
 			}
 
-			// console.log(tag, this.viewLists[eachProp], viewList);
-
 			this.viewLists[eachProp] = viewList;
 
 			viewList.render(tag);
 		},{wait:0});
 
 		this.cleanup.push(()=>{
-			console.log('Debinding %s', eachProp);
 			debind();
 		});
 	}
@@ -1337,8 +1317,6 @@ ${tag.outerHTML}`
 	remove()
 	{
 		let detachEvent = new Event('cvDomDetached');
-
-		// console.log(this);
 
 		for(let i in this.tags)
 		{
