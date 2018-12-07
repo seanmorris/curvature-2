@@ -45,8 +45,6 @@ var ViewList = function () {
 				return;
 			}
 
-			console.log(t.___executing___, t.___stack___.length);
-
 			_this.paused = t.___stack___.length > 1;
 
 			_this.reRender();
@@ -92,7 +90,7 @@ var ViewList = function () {
 	}, {
 		key: 'reRender',
 		value: function reRender() {
-			console.trace();
+			var _this2 = this;
 
 			if (this.paused || !this.tag) {
 				return;
@@ -110,52 +108,43 @@ var ViewList = function () {
 				var found = false;
 
 				for (var j in views) {
-					if (views[j] && this.args.value[_i] === views[j].args[this.subProperty]
-					// && !(this.args.value[i] instanceof Object)
-					) {
-							// console.log(i, views[j].args._id);
-							found = true;
-							finalViews[_i] = views[j];
-							finalViews[_i].args[this.keyProperty] = _i;
-							delete views[j];
-							break;
-						}
+					if (views[j] && this.args.value[_i] === views[j].args[this.subProperty]) {
+						found = true;
+						finalViews[_i] = views[j];
+						finalViews[_i].args[this.keyProperty] = _i;
+						delete views[j];
+						break;
+					}
 				}
 
 				if (!found) {
-					var viewArgs = {};
-					var view = finalViews[_i] = new _View.View(viewArgs);
+					(function () {
+						var viewArgs = {};
+						var view = finalViews[_i] = new _View.View(viewArgs);
 
-					console.log(_i, view.args._id);
+						finalViews[_i].template = _this2.template;
+						finalViews[_i].parent = _this2.parent;
+						finalViews[_i].viewList = _this2;
 
-					finalViews[_i].template = this.template;
-					finalViews[_i].parent = this.parent;
-					finalViews[_i].viewList = this;
+						finalViews[_i].args[_this2.keyProperty] = _i;
+						finalViews[_i].args[_this2.subProperty] = _this2.args.value[_i];
 
-					finalViews[_i].args[this.keyProperty] = _i;
-					finalViews[_i].args[this.subProperty] = this.args.value[_i];
+						_this2.cleanup.push(_this2.args.value.bindTo(_i, function (v, k, t) {
+							viewArgs[_this2.keyProperty] = k;
+							// viewArgs[ this.subProperty ] = v;
+						}));
 
-					// this.cleanup.push(
-					// 	this.args.value.bindTo(i, (v,k,t)=>{
-					// 		viewArgs[ this.keyProperty ] = k;
-					// 		// viewArgs[ this.subProperty ] = v;
-					// 	})
-					// );
+						_this2.cleanup.push(viewArgs.bindTo(_this2.subProperty, function (v, k) {
+							var index = viewArgs[_this2.keyProperty];
+							_this2.args.value[index] = v;
+						}));
 
-					// this.cleanup.push(
-					// 	viewArgs.bindTo(this.subProperty, (v,k)=>{
-					// 		let index = viewArgs[ this.keyProperty ];
-					// 		this.args.value[index] = v;
-					// 	}
-					// ));
+						_this2.cleanup.push(_this2.args.subArgs.bindTo(function (v, k, t, d) {
+							viewArgs[k] = v;
+						}));
 
-					// this.cleanup.push(
-					// 	this.args.subArgs.bindTo((v, k, t, d) => {
-					// 		viewArgs[k] = v;
-					// 	})
-					// );
-
-					viewArgs[this.subProperty] = this.args.value[_i];
+						viewArgs[_this2.subProperty] = _this2.args.value[_i];
+					})();
 				}
 			}
 
@@ -176,47 +165,20 @@ var ViewList = function () {
 
 			var appendOnly = true;
 
-			for (var _i3 in views) {
-				if (views[_i3] !== finalViews[_i3]) {
+			for (var _i3 in this.views) {
+				if (this.views[_i3] !== finalViews[_i3]) {
 					appendOnly = false;
 				}
 			}
 
-			// console.log('==============');
-
-			// console.log(finalViews, this.views);
-
 			for (var _i4 in finalViews) {
-				// console.log(
-				// 	i
-				// 	, finalViews[i]
-				// 		? finalViews[i].args[ this.keyProperty ]
-				// 		: null
-				// 	, this.views[i]
-				// 		? this.views[i].args[ this.keyProperty ]
-				// 		: null
-				// 	, finalViews[i] === this.views[i]
-				// );
-
-				if (finalViews[_i4] === views[_i4]) {
+				if (finalViews[_i4] === this.views[_i4]) {
 					continue;
-				}
-
-				if (_i4 == 0) {
-					views.unshift(finalViews[_i4]);
-					var subDoc = document.createRange().createContextualFragment('');
-					finalViews[_i4].render(subDoc);
-					this.tag.prepend(subDoc);
-					continue;
-				}
-
-				if (views[_i4]) {
-					views.splice(views[_i4].args[this.keyProperty], 1);
 				}
 
 				views.splice(_i4 + 1, 0, finalViews[_i4]);
 
-				finalViews[_i4].render(this.tag, views[_i4 + 1] || null);
+				finalViews[_i4].render(this.tag);
 			}
 
 			for (var _i5 in views) {
@@ -224,31 +186,6 @@ var ViewList = function () {
 			}
 
 			this.views = finalViews;
-
-			// if(1||!appendOnly)
-			// {
-			// 	while(this.tag.firstChild)
-			// 	{
-			// 		this.tag.removeChild(this.tag.firstChild);
-			// 	}
-
-			// 	for(let i in finalViews)
-			// 	{
-			// 		finalViews[i].render(subDoc);
-			// 	}
-			// }
-			// else
-			// {
-			// 	let i = this.views.length || 0
-
-			// 	while(finalViews[i])
-			// 	{
-			// 		finalViews[i].render(subDoc);
-			// 		i++;
-			// 	}
-			// }
-
-			// this.tag.appendChild(subDoc);
 		}
 	}, {
 		key: 'pause',
