@@ -44,10 +44,12 @@ var ViewList = function () {
 			if (t.___executing___ == 'bindTo') {
 				return;
 			}
-			if (_this.paused) {
-				_this.reRender();
-			}
-			_this.paused = false;
+
+			console.log(t.___executing___, t.___stack___.length);
+
+			_this.paused = t.___stack___.length > 1;
+
+			_this.reRender();
 		});
 
 		var debind = this.args.value.bindTo(function (v, k, t, d) {
@@ -71,41 +73,9 @@ var ViewList = function () {
 			}
 
 			if (!_this.views[k]) {
-				var view = new _View.View();
-
-				_this.views[k] = view;
-
-				_this.views[k].template = _this.template;
-
-				_this.views[k].parent = _this.parent;
-				_this.views[k].viewList = _this;
-
-				// this.views[k].cleanup.push();
-				_this.cleanup.push(_this.args.subArgs.bindTo(function (v, k, t, d) {
-					view.args[k] = v;
-				}));
-
-				_this.views[k].args[_this.subProperty] = v;
-
-				if (_this.keyProperty) {
-					_this.views[k].args[_this.keyProperty] = k;
-				}
-
-				_this.cleanup.push(view.args.bindTo(_this.subProperty, function (v) {
-					_this.args.value[k] = v;
-				}));
-
-				t[k] = v;
-
 				_this.reRender();
 			}
-
-			// this.views[k].args[ this.subProperty ] = v;
-
-			// this.views[k].args.bindTo(this.subProperty, (v,k,t,d)=>{
-			// 	console.log(k,v);
-			// });
-		});
+		}, { wait: 0 });
 
 		this.cleanup.push(debind);
 	}
@@ -122,9 +92,9 @@ var ViewList = function () {
 	}, {
 		key: 'reRender',
 		value: function reRender() {
-			var _this2 = this;
+			console.trace();
 
-			if (!this.tag) {
+			if (this.paused || !this.tag) {
 				return;
 			}
 
@@ -138,6 +108,7 @@ var ViewList = function () {
 
 			for (var _i in this.args.value) {
 				var found = false;
+
 				for (var j in views) {
 					if (views[j] && this.args.value[_i] === views[j].args[this.subProperty]
 					// && !(this.args.value[i] instanceof Object)
@@ -150,58 +121,63 @@ var ViewList = function () {
 							break;
 						}
 				}
+
 				if (!found) {
-					(function () {
-						var viewArgs = {};
-						var view = finalViews[_i] = new _View.View(viewArgs);
+					var viewArgs = {};
+					var view = finalViews[_i] = new _View.View(viewArgs);
 
-						// console.log(i, view.args._id);
+					console.log(_i, view.args._id);
 
-						finalViews[_i].template = _this2.template;
-						finalViews[_i].parent = _this2.parent;
-						finalViews[_i].viewList = _this2;
+					finalViews[_i].template = this.template;
+					finalViews[_i].parent = this.parent;
+					finalViews[_i].viewList = this;
 
-						finalViews[_i].args[_this2.keyProperty] = _i;
-						finalViews[_i].args[_this2.subProperty] = _this2.args.value[_i];
+					finalViews[_i].args[this.keyProperty] = _i;
+					finalViews[_i].args[this.subProperty] = this.args.value[_i];
 
-						_this2.cleanup.push(_this2.args.value.bindTo(_i, function (v, k, t) {
-							// viewArgs[ this.keyProperty ] = k;
-							// viewArgs[ this.subProperty ] = v;
-						}));
+					// this.cleanup.push(
+					// 	this.args.value.bindTo(i, (v,k,t)=>{
+					// 		viewArgs[ this.keyProperty ] = k;
+					// 		// viewArgs[ this.subProperty ] = v;
+					// 	})
+					// );
 
-						_this2.cleanup.push(viewArgs.bindTo(_this2.subProperty, function (v, k) {
-							var index = viewArgs[_this2.keyProperty];
-							_this2.args.value[index] = v;
-						}));
+					// this.cleanup.push(
+					// 	viewArgs.bindTo(this.subProperty, (v,k)=>{
+					// 		let index = viewArgs[ this.keyProperty ];
+					// 		this.args.value[index] = v;
+					// 	}
+					// ));
 
-						_this2.cleanup.push(_this2.args.subArgs.bindTo(function (v, k, t, d) {
-							viewArgs[k] = v;
-						}));
+					// this.cleanup.push(
+					// 	this.args.subArgs.bindTo((v, k, t, d) => {
+					// 		viewArgs[k] = v;
+					// 	})
+					// );
 
-						viewArgs[_this2.subProperty] = _this2.args.value[_i];
-					})();
+					viewArgs[this.subProperty] = this.args.value[_i];
 				}
 			}
 
-			for (var _i2 in this.views) {
+			for (var _i2 in views) {
 				var _found = false;
 
 				for (var _j in finalViews) {
-					if (this.views[_i2] === finalViews[_j]) {
+					if (views[_i2] === finalViews[_j]) {
 						_found = true;
 						break;
 					}
 				}
 
 				if (!_found) {
-					this.views[_i2].remove();
+					views[_i2].remove();
 				}
 			}
 
 			var appendOnly = true;
 
-			for (var _i3 in this.views) {
-				if (this.views[_i3] !== finalViews[_i3]) {
+			for (var _i3 in views) {
+				if (views[_i3] !== finalViews[_i3]) {
 					appendOnly = false;
 				}
 			}
@@ -222,30 +198,32 @@ var ViewList = function () {
 				// 	, finalViews[i] === this.views[i]
 				// );
 
-				if (finalViews[_i4] === this.views[_i4]) {
+				if (finalViews[_i4] === views[_i4]) {
 					continue;
 				}
 
 				if (_i4 == 0) {
-					this.views.unshift(finalViews[_i4]);
+					views.unshift(finalViews[_i4]);
 					var subDoc = document.createRange().createContextualFragment('');
 					finalViews[_i4].render(subDoc);
 					this.tag.prepend(subDoc);
 					continue;
 				}
 
-				if (this.views[_i4]) {
-					this.views.splice(this.views[_i4].args[this.keyProperty], 1);
+				if (views[_i4]) {
+					views.splice(views[_i4].args[this.keyProperty], 1);
 				}
 
-				this.views.splice(_i4 + 1, 0, finalViews[_i4]);
+				views.splice(_i4 + 1, 0, finalViews[_i4]);
 
-				finalViews[_i4].render(this.tag, this.views[_i4 + 1] || null);
+				finalViews[_i4].render(this.tag, views[_i4 + 1] || null);
 			}
 
-			for (var _i5 in this.views) {
-				this.views[_i5].args[this.keyProperty] = _i5;
+			for (var _i5 in views) {
+				views[_i5].args[this.keyProperty] = _i5;
 			}
+
+			this.views = finalViews;
 
 			// if(1||!appendOnly)
 			// {

@@ -20,11 +20,44 @@ export class Field extends View {
 
 		this.ignore = this.args.attrs['data-cv-ignore'] || false;
 
+		let extra = '';
+
+		if(this.args.attrs.type == 'checkbox')
+		{
+			extra = 'value = "1"';
+		}
+
+		this.template = `
+			<label
+				for           = "${this.args.name}"
+				data-type     = "${this.args.attrs.type}"
+				cv-ref        = "label:curvature/base/Tag"
+			>
+				<span cv-if = "title">
+					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
+				</span>
+				<input
+					name      = "${this.args.name}"
+					type      = "${this.args.attrs.type||'text'}"
+					cv-bind   = "value"
+					cv-ref    = "input:curvature/base/Tag"
+					cv-expand = "attrs"
+					${extra}
+				/>
+			</label>
+		`;
+		//type    = "${this.args.attrs.type||'text'}"
+	}
+
+	postRender()
+	{
+		let key     = this.key;
 		let setting = null;
 
 		this.args.bindTo(
 			'value'
 			, (v, k) => {
+
 				if(setting == key)
 				{
 					return;
@@ -59,6 +92,7 @@ export class Field extends View {
 		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
 
 		this.parent.args.value.bindTo(key, (v, k)=>{
+			
 			if(setting == k)
 			{
 				return;
@@ -80,34 +114,6 @@ export class Field extends View {
 
 			setting = null;
 		});
-
-		let extra = '';
-
-		if(this.args.attrs.type == 'checkbox')
-		{
-			extra = 'value = "1"';
-		}
-
-		this.template = `
-			<label
-				for           = "${this.args.name}"
-				data-type     = "${this.args.attrs.type}"
-				cv-ref        = "label:curvature/base/Tag"
-			>
-				<span cv-if = "title">
-					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
-				</span>
-				<input
-					name      = "${this.args.name}"
-					type      = "${this.args.attrs.type||'text'}"
-					cv-bind   = "value"
-					cv-ref    = "input:curvature/base/Tag"
-					cv-expand = "attrs"
-					${extra}
-				/>
-			</label>
-		`;
-		//type    = "${this.args.attrs.type||'text'}"
 	}
 
 	disable()

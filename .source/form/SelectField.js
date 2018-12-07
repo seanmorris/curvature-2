@@ -18,10 +18,12 @@ export class SelectField extends Field {
 					cv-ref  = "input:curvature/base/Tag"
 				/>
 					<option value = "[[option]]">[[optionText]]</option>
+					[[value]]
 				</select>
 			</label>
 		`;
 	}
+
 	getLabel()
 	{
 		for(let i in this.args.options)

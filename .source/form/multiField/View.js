@@ -69,7 +69,7 @@ export class View extends FieldSet
 
 					<div
 						class = "overlay create"
-						cv-on = "wheel:cancel(event)"
+						--cv-on = "wheel:cancel(event)"
 					>
 						<div class = "form constrict">
 							<div

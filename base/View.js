@@ -743,10 +743,10 @@ var View = exports.View = function () {
 				}));
 			}
 
-			var debind = proxy.bindTo(property, function (v, k, t) {
+			var debind = proxy.bindTo(property, function (v, k, t, d, p) {
 
-				if (t[k] instanceof View && t[k] !== v) {
-					t[k].remove();
+				if (p instanceof View && p !== v) {
+					p.remove();
 				}
 
 				if (tag.tagName == 'INPUT' || tag.tagName == 'SELECT' || tag.tagName == 'TEXTAREA') {
@@ -756,7 +756,16 @@ var View = exports.View = function () {
 					} else if (type && type.toLowerCase() == 'radio') {
 						tag.checked = v == tag.value;
 					} else if (type !== 'file') {
-						if (tag.tagName == 'SELECT') {}
+						if (tag.tagName == 'SELECT') {
+							console.log(k, v, tag.outerHTML, tag.options.length);
+							for (var i in tag.options) {
+								var option = tag.options[i];
+
+								if (option.value == v) {
+									tag.selectedIndex = i;
+								}
+							}
+						}
 						tag.value = v == null ? '' : v;
 					}
 					return;
@@ -767,7 +776,7 @@ var View = exports.View = function () {
 				} else {
 					tag.innerText = v;
 				}
-			});
+			}, { wait: 0 });
 
 			if (proxy !== this.args) {
 				this.subBindings[bindArg].push(debind);
@@ -1070,7 +1079,7 @@ var View = exports.View = function () {
 			    asProp = _eachAttr$split2[1],
 			    keyProp = _eachAttr$split2[2];
 
-			var debind = this.args.bindTo(eachProp, function (v, k, t) {
+			var debind = this.args.bindTo(eachProp, function (v, k, t, d, p) {
 				if (_this8.viewLists[eachProp]) {
 					_this8.viewLists[eachProp].remove();
 				}

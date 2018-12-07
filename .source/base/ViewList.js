@@ -30,11 +30,13 @@ export class ViewList
 			{
 				return;
 			}
-			if(this.paused)
-			{
-				this.reRender();
-			}
-			this.paused = false;
+
+			console.log(t.___executing___, t.___stack___.length);
+
+			this.paused = t.___stack___.length > 1;	
+
+			this.reRender();
+			
 		});
 
 		let debind = this.args.value.bindTo((v, k, t, d) => {
@@ -63,46 +65,9 @@ export class ViewList
 
 			if(!this.views[k])
 			{
-				let view = new View();
-
-				this.views[k] = view;
-
-				this.views[k].template = this.template;
-
-				this.views[k].parent   = this.parent;
-				this.views[k].viewList = this;
-
-				// this.views[k].cleanup.push();
-				this.cleanup.push(
-					this.args.subArgs.bindTo((v, k, t, d) => {
-						view.args[k] = v;
-					})
-				);
-
-				this.views[k].args[ this.subProperty ] = v;
-
-				if(this.keyProperty)
-				{
-					this.views[k].args[ this.keyProperty ] = k;
-				}
-
-				this.cleanup.push(
-					view.args.bindTo(this.subProperty, (v)=>{
-						this.args.value[k] = v;
-					})
-				);
-
-				t[k] = v;
-
-				this.reRender();
+				this.reRender();	
 			}
-
-			// this.views[k].args[ this.subProperty ] = v;
-
-			// this.views[k].args.bindTo(this.subProperty, (v,k,t,d)=>{
-			// 	console.log(k,v);
-			// });
-		});
+		}, {wait: 0});
 
 		this.cleanup.push(debind);
 	}
@@ -119,7 +84,9 @@ export class ViewList
 
 	reRender()
 	{
-		if(!this.tag)
+		console.trace();
+
+		if(this.paused || !this.tag)
 		{
 			return;
 		}
@@ -136,6 +103,7 @@ export class ViewList
 		for(let i in this.args.value)
 		{
 			let found = false;
+
 			for(let j in views)
 			{
 				if(views[j]
@@ -150,12 +118,13 @@ export class ViewList
 					break;
 				}
 			}
+
 			if(!found)
 			{
 				let viewArgs = {};
 				let view = finalViews[i] = new View(viewArgs);
 
-				// console.log(i, view.args._id);
+				console.log(i, view.args._id);
 
 				finalViews[i].template = this.template;
 				finalViews[i].parent   = this.parent;
@@ -164,37 +133,37 @@ export class ViewList
 				finalViews[i].args[ this.keyProperty ] = i;
 				finalViews[i].args[ this.subProperty ] = this.args.value[i];
 
-				this.cleanup.push(
-					this.args.value.bindTo(i, (v,k,t)=>{
-						// viewArgs[ this.keyProperty ] = k;
-						// viewArgs[ this.subProperty ] = v;
-					})
-				);
+				// this.cleanup.push(
+				// 	this.args.value.bindTo(i, (v,k,t)=>{
+				// 		viewArgs[ this.keyProperty ] = k;
+				// 		// viewArgs[ this.subProperty ] = v;
+				// 	})
+				// );
 
-				this.cleanup.push(
-					viewArgs.bindTo(this.subProperty, (v,k)=>{
-						let index = viewArgs[ this.keyProperty ];
-						this.args.value[index] = v;
-					}
-				));
+				// this.cleanup.push(
+				// 	viewArgs.bindTo(this.subProperty, (v,k)=>{
+				// 		let index = viewArgs[ this.keyProperty ];
+				// 		this.args.value[index] = v;
+				// 	}
+				// ));
 
-				this.cleanup.push(
-					this.args.subArgs.bindTo((v, k, t, d) => {
-						viewArgs[k] = v;
-					})
-				);
+				// this.cleanup.push(
+				// 	this.args.subArgs.bindTo((v, k, t, d) => {
+				// 		viewArgs[k] = v;
+				// 	})
+				// );
 
 				viewArgs[this.subProperty] = this.args.value[i];
 			}
 		}
 
-		for(let i in this.views)
+		for(let i in views)
 		{
 			let found = false;
 
 			for(let j in finalViews)
 			{
-				if(this.views[i] === finalViews[j])
+				if(views[i] === finalViews[j])
 				{
 					found = true;
 					break;
@@ -203,15 +172,15 @@ export class ViewList
 
 			if(!found)
 			{
-				this.views[i].remove();
+				views[i].remove();
 			}
 		}
 
 		let appendOnly = true;
 
-		for(let i in this.views)
+		for(let i in views)
 		{
-			if(this.views[i] !== finalViews[i])
+			if(views[i] !== finalViews[i])
 			{
 				appendOnly = false;
 			}
@@ -234,34 +203,36 @@ export class ViewList
 			// 	, finalViews[i] === this.views[i]
 			// );
 
-			if(finalViews[i] === this.views[i])
+			if(finalViews[i] === views[i])
 			{
 				continue;
 			}
 
 			if(i == 0)
 			{
-				this.views.unshift(finalViews[i]);
+				views.unshift(finalViews[i]);
 				let subDoc = document.createRange().createContextualFragment('');
 				finalViews[i].render(subDoc);
 				this.tag.prepend(subDoc);
 				continue;
 			}
 
-			if(this.views[i])
+			if(views[i])
 			{
-				this.views.splice(this.views[i].args[ this.keyProperty ], 1);
+				views.splice(views[i].args[ this.keyProperty ], 1);
 			}
 
-			this.views.splice(i+1, 0, finalViews[i]);
+			views.splice(i+1, 0, finalViews[i]);
 
-			finalViews[i].render(this.tag, this.views[i+1] || null);
+			finalViews[i].render(this.tag, views[i+1] || null);
 		}
 
-		for(let i in this.views)
+		for(let i in views)
 		{
-			this.views[i].args[ this.keyProperty ] = i;
+			views[i].args[ this.keyProperty ] = i;
 		}
+
+		this.views = finalViews;
 
 
 		// if(1||!appendOnly)

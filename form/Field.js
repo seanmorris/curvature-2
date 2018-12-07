@@ -40,53 +40,6 @@ var Field = exports.Field = function (_View) {
 
 		_this.ignore = _this.args.attrs['data-cv-ignore'] || false;
 
-		var setting = null;
-
-		_this.args.bindTo('value', function (v, k) {
-			if (setting == key) {
-				return;
-			}
-
-			_this.args.valueString = JSON.stringify(v || '', null, 4);
-
-			setting = key;
-
-			if (_this.args.attrs.type == 'file') {
-				if (_this.tags.input && _this.tags.input.element.files) {
-					console.log(_this.tags.input.element.files[0]);
-
-					_this.parent.args.value[key] = _this.tags.input.element.files[0];
-				}
-			} else {
-				if (!_this.parent.args.value) {
-					_this.parent.args.value = {};
-				}
-
-				_this.parent.args.value[key] = v;
-			}
-			setting = null;
-		});
-
-		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
-
-		_this.parent.args.value.bindTo(key, function (v, k) {
-			if (setting == k) {
-				return;
-			}
-
-			setting = k;
-
-			if (_this.args.attrs.type == 'file') {
-				if (_this.tags.input && _this.tags.input.element.files) {
-					_this.args.value = _this.tags.input.element.files[0];
-				}
-			} else {
-				_this.args.value = v;
-			}
-
-			setting = null;
-		});
-
 		var extra = '';
 
 		if (_this.args.attrs.type == 'checkbox') {
@@ -99,6 +52,61 @@ var Field = exports.Field = function (_View) {
 	}
 
 	_createClass(Field, [{
+		key: 'postRender',
+		value: function postRender() {
+			var _this2 = this;
+
+			var key = this.key;
+			var setting = null;
+
+			this.args.bindTo('value', function (v, k) {
+
+				if (setting == key) {
+					return;
+				}
+
+				_this2.args.valueString = JSON.stringify(v || '', null, 4);
+
+				setting = key;
+
+				if (_this2.args.attrs.type == 'file') {
+					if (_this2.tags.input && _this2.tags.input.element.files) {
+						console.log(_this2.tags.input.element.files[0]);
+
+						_this2.parent.args.value[key] = _this2.tags.input.element.files[0];
+					}
+				} else {
+					if (!_this2.parent.args.value) {
+						_this2.parent.args.value = {};
+					}
+
+					_this2.parent.args.value[key] = v;
+				}
+				setting = null;
+			});
+
+			// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
+
+			this.parent.args.value.bindTo(key, function (v, k) {
+
+				if (setting == k) {
+					return;
+				}
+
+				setting = k;
+
+				if (_this2.args.attrs.type == 'file') {
+					if (_this2.tags.input && _this2.tags.input.element.files) {
+						_this2.args.value = _this2.tags.input.element.files[0];
+					}
+				} else {
+					_this2.args.value = v;
+				}
+
+				setting = null;
+			});
+		}
+	}, {
 		key: 'disable',
 		value: function disable() {
 			if (this.hasChildren()) {

@@ -772,11 +772,11 @@ export class View
 			);
 		}
 
-		let debind = proxy.bindTo(property, (v,k,t) => {
+		let debind = proxy.bindTo(property, (v,k,t,d,p) => {
 
-			if(t[k] instanceof View && t[k] !== v)
+			if(p instanceof View && p !== v)
 			{
-				t[k].remove();
+				p.remove();
 			}
 
 			if(tag.tagName == 'INPUT'
@@ -793,6 +793,16 @@ export class View
 				else if(type !== 'file') {
 					if(tag.tagName == 'SELECT')
 					{
+						console.log(k, v, tag.outerHTML, tag.options.length);
+						for(let i in tag.options)
+						{
+							let option = tag.options[i];
+
+							if(option.value == v)
+							{
+								tag.selectedIndex = i;
+							}
+						}
 					}
 					tag.value = v == null ? '' : v;
 				}
@@ -807,7 +817,7 @@ export class View
 			{
 				tag.innerText = v;
 			}
-		});
+		}, {wait: 0});
 
 		if(proxy !== this.args)
 		{
@@ -1115,7 +1125,7 @@ ${tag.outerHTML}`
 
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		let debind = this.args.bindTo(eachProp, (v, k, t)=>{
+		let debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
 			if(this.viewLists[eachProp])
 			{
 				this.viewLists[eachProp].remove();
@@ -1153,7 +1163,7 @@ ${tag.outerHTML}`
 			this.viewLists[eachProp] = viewList;
 
 			viewList.render(tag);
-		},{wait:0});
+		},{wait :0});
 
 		this.cleanup.push(()=>{
 			debind();
