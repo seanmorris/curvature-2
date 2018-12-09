@@ -49,68 +49,65 @@ var Field = exports.Field = function (_View) {
 
 		_this.template = '\n\t\t\t<label\n\t\t\t\tfor           = "' + _this.args.name + '"\n\t\t\t\tdata-type     = "' + _this.args.attrs.type + '"\n\t\t\t\tcv-ref        = "label:curvature/base/Tag"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\t\t\t\t<input\n\t\t\t\t\tname      = "' + _this.args.name + '"\n\t\t\t\t\ttype      = "' + (_this.args.attrs.type || 'text') + '"\n\t\t\t\t\tcv-bind   = "value"\n\t\t\t\t\tcv-ref    = "input:curvature/base/Tag"\n\t\t\t\t\tcv-expand = "attrs"\n\t\t\t\t\t' + extra + '\n\t\t\t\t/>\n\t\t\t</label>\n\t\t';
 		//type    = "${this.args.attrs.type||'text'}"
+
+		// let key     = this.key;
+		var setting = null;
+
+		_this.args.bindTo('value', function (v, k) {
+
+			_this.value = v;
+
+			console.log(v, k);
+
+			if (setting == k) {
+				return;
+			}
+
+			setting = key;
+
+			_this.args.valueString = JSON.stringify(v || '', null, 4);
+			_this.valueString = _this.args.valueString;
+
+			if (_this.args.attrs.type == 'file' && _this.tags.input && _this.tags.input.element.files && _this.tags.input.element.files[0]) {
+				_this.parent.args.value[key] = _this.tags.input.element.files[0];
+			} else {
+				if (!_this.parent.args.value) {
+					_this.parent.args.value = {};
+				}
+
+				_this.parent.args.value[key] = v;
+			}
+			setting = null;
+		});
+
+		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
+
+		_this.parent.args.value.bindTo(key, function (v, k) {
+
+			if (setting == k) {
+				return;
+			}
+
+			setting = k;
+
+			if (_this.args.attrs.type == 'file') {
+				if (_this.tags.input && _this.tags.input.element.files) {
+					_this.args.value = _this.tags.input.element.files[0];
+				} else {
+					_this.args.value = v;
+				}
+
+				console.log(_this.args.value);
+			} else {
+				_this.args.value = v;
+			}
+
+			setting = null;
+		});
 		return _this;
 	}
 
 	_createClass(Field, [{
-		key: 'postRender',
-		value: function postRender() {
-			var _this2 = this;
-
-			var key = this.key;
-			var setting = null;
-
-			this.args.bindTo('value', function (v, k) {
-
-				_this2.value = v;
-
-				if (setting == key) {
-					return;
-				}
-
-				_this2.args.valueString = JSON.stringify(v || '', null, 4);
-				_this2.valueString = _this2.args.valueString;
-
-				setting = key;
-
-				if (_this2.args.attrs.type == 'file') {
-					if (_this2.tags.input && _this2.tags.input.element.files) {
-						// console.log(this.tags.input.element.files[0]);
-
-						_this2.parent.args.value[key] = _this2.tags.input.element.files[0];
-					}
-				} else {
-					if (!_this2.parent.args.value) {
-						_this2.parent.args.value = {};
-					}
-
-					_this2.parent.args.value[key] = v;
-				}
-				setting = null;
-			});
-
-			// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
-
-			this.parent.args.value.bindTo(key, function (v, k) {
-
-				if (setting == k) {
-					return;
-				}
-
-				setting = k;
-
-				if (_this2.args.attrs.type == 'file') {
-					if (_this2.tags.input && _this2.tags.input.element.files) {
-						_this2.args.value = _this2.tags.input.element.files[0];
-					}
-				} else {
-					_this2.args.value = v;
-				}
-
-				setting = null;
-			});
-		}
-	}, {
 		key: 'disable',
 		value: function disable() {
 			if (this.hasChildren()) {

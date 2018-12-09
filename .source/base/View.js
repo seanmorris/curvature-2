@@ -793,7 +793,7 @@ export class View
 				else if(type !== 'file') {
 					if(tag.tagName == 'SELECT')
 					{
-						console.log(k, v, tag.outerHTML, tag.options.length);
+						// console.log(k, v, tag.outerHTML, tag.options.length);
 						for(let i in tag.options)
 						{
 							let option = tag.options[i];
@@ -1206,7 +1206,10 @@ ${tag.outerHTML}`
 				return;
 			}
 
-			view.args[k] = v;
+			if(view.args[k] !== v)
+			{
+				view.args[k] = v;
+			}
 			// t[k]         = v;
 		});
 
@@ -1244,8 +1247,15 @@ ${tag.outerHTML}`
 				t[k].remove();
 			}
 
-			t[k]         = v;
-			this.args[k] = v;
+			if(t[k] !== v)
+			{
+				t[k]         = v;
+			}
+
+			if(this.args[k] !== v)
+			{
+				this.args[k] = v;
+			}
 		});
 
 		let cleaner = this;
@@ -1292,6 +1302,10 @@ ${tag.outerHTML}`
 				}
 				else
 				{
+					while(tag.firstChild)
+					{
+						tag.firstChild.remove();
+					}
 					view.render(ifDoc);
 				}
 			}

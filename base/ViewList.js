@@ -130,8 +130,8 @@ var ViewList = function () {
 						finalViews[_i].args[_this2.subProperty] = _this2.args.value[_i];
 
 						_this2.cleanup.push(_this2.args.value.bindTo(_i, function (v, k, t) {
-							viewArgs[_this2.keyProperty] = k;
-							viewArgs[_this2.subProperty] = v;
+							// viewArgs[ this.keyProperty ] = k;
+							// viewArgs[ this.subProperty ] = v;
 						}));
 
 						_this2.cleanup.push(viewArgs.bindTo(_this2.subProperty, function (v, k) {

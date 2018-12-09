@@ -234,8 +234,9 @@ export class Form extends View
 				
 				let fieldName = field.args.fields[i].getName();
 
-				if(field.args.fields[i].args.type == 'file')
-				{
+				if(field.args.fields[i].args.type == 'file'
+					&& field.args.fields[i].tags.input.element.files[0]
+				){
 					append.append(
 						fieldName
 						, field.args.fields[i].tags.input.element.files[0]

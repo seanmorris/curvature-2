@@ -757,7 +757,7 @@ var View = exports.View = function () {
 						tag.checked = v == tag.value;
 					} else if (type !== 'file') {
 						if (tag.tagName == 'SELECT') {
-							console.log(k, v, tag.outerHTML, tag.options.length);
+							// console.log(k, v, tag.outerHTML, tag.options.length);
 							for (var i in tag.options) {
 								var option = tag.options[i];
 
@@ -1159,7 +1159,9 @@ var View = exports.View = function () {
 					return;
 				}
 
-				view.args[k] = v;
+				if (view.args[k] !== v) {
+					view.args[k] = v;
+				}
 				// t[k]         = v;
 			});
 
@@ -1191,8 +1193,13 @@ var View = exports.View = function () {
 					t[k].remove();
 				}
 
-				t[k] = v;
-				_this9.args[k] = v;
+				if (t[k] !== v) {
+					t[k] = v;
+				}
+
+				if (_this9.args[k] !== v) {
+					_this9.args[k] = v;
+				}
 			});
 
 			var cleaner = this;
@@ -1231,6 +1238,9 @@ var View = exports.View = function () {
 				if (v) {
 					view.render(tag);
 				} else {
+					while (tag.firstChild) {
+						tag.firstChild.remove();
+					}
 					view.render(ifDoc);
 				}
 			});

@@ -48,11 +48,8 @@ export class Field extends View {
 			</label>
 		`;
 		//type    = "${this.args.attrs.type||'text'}"
-	}
 
-	postRender()
-	{
-		let key     = this.key;
+		// let key     = this.key;
 		let setting = null;
 
 		this.args.bindTo(
@@ -61,24 +58,24 @@ export class Field extends View {
 
 				this.value = v;
 
-				if(setting == key)
+				console.log(v,k);
+
+				if(setting == k)
 				{
 					return;
 				}
 
+				setting = key;
+
 				this.args.valueString = JSON.stringify(v||'', null, 4);
 				this.valueString = this.args.valueString;
 
-				setting = key;
-
-				if(this.args.attrs.type == 'file')
-				{
-					if(this.tags.input && this.tags.input.element.files)
-					{
-						// console.log(this.tags.input.element.files[0]);
-
-						this.parent.args.value[key] = this.tags.input.element.files[0];
-					}
+				if(this.args.attrs.type == 'file'
+					&& this.tags.input
+					&& this.tags.input.element.files
+					&& this.tags.input.element.files[0]
+				){
+					this.parent.args.value[key] = this.tags.input.element.files[0];
 				}
 				else
 				{
@@ -110,6 +107,12 @@ export class Field extends View {
 				{
 					this.args.value = this.tags.input.element.files[0];
 				}
+				else
+				{
+					this.args.value = v;
+				}
+
+				console.log(this.args.value);
 			}
 			else
 			{
