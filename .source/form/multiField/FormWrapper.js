@@ -33,7 +33,7 @@ export class FormWrapper extends View
 
 		if(path instanceof Form)
 		{
-			this.loadForm(form);
+			this.loadForm(form, customFields);
 		}
 		else
 		{
@@ -207,5 +207,10 @@ export class FormWrapper extends View
 	customFields()
 	{
 		return {};
+	}
+
+	submit()
+	{
+		// console.log(this);
 	}
 }

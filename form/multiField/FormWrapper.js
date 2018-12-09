@@ -52,7 +52,7 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		_this._onResponse = [];
 
 		if (path instanceof _Form.Form) {
-			_this.loadForm(form);
+			_this.loadForm(form, customFields);
 		} else {
 			_Repository.Repository.request(path).then(function (resp) {
 				if (!resp || !resp.meta || !resp.meta.form || !(resp.meta.form instanceof Object)) {
@@ -216,6 +216,11 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		key: 'customFields',
 		value: function customFields() {
 			return {};
+		}
+	}, {
+		key: 'submit',
+		value: function submit() {
+			// console.log(this);
 		}
 	}]);
 

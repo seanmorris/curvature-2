@@ -128,7 +128,7 @@ export class ViewList
 				this.cleanup.push(
 					this.args.value.bindTo(i, (v,k,t)=>{
 						viewArgs[ this.keyProperty ] = k;
-						// viewArgs[ this.subProperty ] = v;
+						viewArgs[ this.subProperty ] = v;
 					})
 				);
 
@@ -190,9 +190,9 @@ export class ViewList
 			finalViews[i].render(this.tag);
 		}
 
-		for(let i in views)
+		for(let i in finalViews)
 		{
-			views[i].args[ this.keyProperty ] = i;
+			finalViews[i].args[ this.keyProperty ] = i;
 		}
 
 		this.views = finalViews;

@@ -69,8 +69,12 @@ var Form = exports.Form = function (_View) {
 
 		_this.args.fields = Form.renderFields(skeleton, _this, customFields);
 
+		_this.fields = _this.args.fields;
+
 		_this.args.bindTo('value', function (v) {
 			_this.args.valueString = JSON.stringify(v, null, 4);
+			_this.valueString = _this.args.valueString;
+			_this.value = v;
 		});
 		return _this;
 	}

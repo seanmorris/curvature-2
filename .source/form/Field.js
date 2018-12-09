@@ -9,6 +9,7 @@ export class Field extends View {
 
 		this.args.title = this.args.title || '';
 		this.args.value = this.args.value == null ?  '' : this.args.value;
+		this.value      = this.args.value;
 		this.skeleton   = skeleton;
 		this.disabled   = null;
 
@@ -58,12 +59,15 @@ export class Field extends View {
 			'value'
 			, (v, k) => {
 
+				this.value = v;
+
 				if(setting == key)
 				{
 					return;
 				}
 
 				this.args.valueString = JSON.stringify(v||'', null, 4);
+				this.valueString = this.args.valueString;
 
 				setting = key;
 
@@ -71,7 +75,7 @@ export class Field extends View {
 				{
 					if(this.tags.input && this.tags.input.element.files)
 					{
-						console.log(this.tags.input.element.files[0]);
+						// console.log(this.tags.input.element.files[0]);
 
 						this.parent.args.value[key] = this.tags.input.element.files[0];
 					}

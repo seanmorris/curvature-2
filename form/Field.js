@@ -29,6 +29,7 @@ var Field = exports.Field = function (_View) {
 
 		_this.args.title = _this.args.title || '';
 		_this.args.value = _this.args.value == null ? '' : _this.args.value;
+		_this.value = _this.args.value;
 		_this.skeleton = skeleton;
 		_this.disabled = null;
 
@@ -61,17 +62,20 @@ var Field = exports.Field = function (_View) {
 
 			this.args.bindTo('value', function (v, k) {
 
+				_this2.value = v;
+
 				if (setting == key) {
 					return;
 				}
 
 				_this2.args.valueString = JSON.stringify(v || '', null, 4);
+				_this2.valueString = _this2.args.valueString;
 
 				setting = key;
 
 				if (_this2.args.attrs.type == 'file') {
 					if (_this2.tags.input && _this2.tags.input.element.files) {
-						console.log(_this2.tags.input.element.files[0]);
+						// console.log(this.tags.input.element.files[0]);
 
 						_this2.parent.args.value[key] = _this2.tags.input.element.files[0];
 					}

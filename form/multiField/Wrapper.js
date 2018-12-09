@@ -58,8 +58,6 @@ var Wrapper = exports.Wrapper = function (_View) {
 			_Repository.Repository.request(_this.backendPath(), { id: v }).then(function (response) {
 				_this.args.id = v;
 
-				console.log(response);
-
 				var record = response.body[0];
 
 				if (!record) {
@@ -68,8 +66,6 @@ var Wrapper = exports.Wrapper = function (_View) {
 
 					return;
 				}
-
-				console.log(record);
 
 				_this.refresh(record);
 			});
@@ -109,7 +105,7 @@ var Wrapper = exports.Wrapper = function (_View) {
 	}, {
 		key: 'getRecordTitle',
 		value: function getRecordTitle(record) {
-			console.log(record);
+			// console.log(record);
 
 			if (record._titleField) {
 				return record[record._titleField];

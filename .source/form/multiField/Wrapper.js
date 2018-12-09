@@ -61,8 +61,6 @@ export class Wrapper extends View
 			).then(response=>{
 				this.args.id = v;
 
-				console.log(response);
-
 				let record = response.body[0];
 
 				if(!record)
@@ -72,8 +70,6 @@ export class Wrapper extends View
 
 					return;
 				}
-
-				console.log(record);
 
 				this.refresh(record);
 			});
@@ -117,7 +113,7 @@ export class Wrapper extends View
 
 	getRecordTitle(record)
 	{
-		console.log(record);
+		// console.log(record);
 
 		if(record._titleField)
 		{

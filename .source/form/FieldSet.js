@@ -8,6 +8,7 @@ export class FieldSet extends Field
 		super(values, form, parent, key);
 		this.args.value  = {};
 		this.args.fields = Form.renderFields(values.children, this);
+		this.fields      = this.args.fields;
 		this.template    = `
 			<label
 				for        = "${this.args.name}"

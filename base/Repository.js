@@ -91,6 +91,8 @@ var Repository = function () {
 		key: 'edit',
 		value: function edit() {
 			var publicId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+			var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+			var customFields = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			var resourceUri = this.uri + '/create';
 
@@ -100,12 +102,20 @@ var Repository = function () {
 
 			// console.log(resourceUri);
 
-			return Repository.request(resourceUri).then(function (response) {
-				var form = new _Form.Form(response.meta.form);
-				// let model = this.extractModel(response.body);
+			if (!data) {
+				return Repository.request(resourceUri).then(function (response) {
+					var form = new _Form.Form(response.meta.form, customFields);
+					// let model = this.extractModel(response.body);
 
-				return new _FormWrapper.FormWrapper(form, resourceUri);
-			});
+					console.log(form, customFields);
+
+					return new _FormWrapper.FormWrapper(form, resourceUri, 'POST', customFields);
+				});
+			} else {
+				return Repository.request(resourceUri, { api: 'json' }, data).then(function (response) {
+					return response.body;
+				});
+			}
 		}
 	}, {
 		key: 'extractModel',

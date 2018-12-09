@@ -144,14 +144,12 @@ export class View extends FieldSet
 
 		this.args.fields[name] = newField;
 
-		console.log(record, newField);
+		let newWrap = this.wrapSubfield(newField);
 
 		newField.args.value.id    = record.id    || '';
 		newField.args.value.class = record.class || '';
 		newField.args.value.title = record.title || '';
 
-		let newWrap = this.wrapSubfield(newField);
-		
 		this.args._fields.push(newWrap);
 
 		newWrap.refresh(record);

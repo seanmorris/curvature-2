@@ -48,10 +48,10 @@ export class Repository
 		});
 	}
 
-	edit(publicId = null)
+	edit(publicId = null, data = null, customFields = {})
 	{
 		let resourceUri = this.uri + '/create';
-		
+
 		if(publicId)
 		{
 			resourceUri = this.uri + '/' + publicId + '/edit';
@@ -59,12 +59,28 @@ export class Repository
 
 		// console.log(resourceUri);
 
-		return Repository.request(resourceUri).then((response) => {
-			let form  = new Form(response.meta.form);
-			// let model = this.extractModel(response.body);
+		if(!data)
+		{
+			return Repository.request(resourceUri).then((response) => {
+				let form  = new Form(response.meta.form, customFields);
+				// let model = this.extractModel(response.body);
 
-			return new FormWrapper(form, resourceUri);
-		});
+				console.log(form, customFields);
+
+				return new FormWrapper(form, resourceUri, 'POST', customFields);
+			});
+		}
+		else
+		{
+			return Repository.request(
+				resourceUri
+				, {api: 'json'}
+				, data
+			).then((response) => {
+				return response.body;
+			});
+		}
+
 	}
 
 	extractModel(rawData)
