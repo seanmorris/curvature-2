@@ -57,8 +57,6 @@ var Field = exports.Field = function (_View) {
 
 			_this.value = v;
 
-			console.log(v, k);
-
 			if (setting == k) {
 				return;
 			}

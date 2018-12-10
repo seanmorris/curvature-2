@@ -39,8 +39,10 @@ export class Repository
 		return Repository.request(this.uri, args).then((response) => {
 			let records = [];
 
-			for(let record of response.body)
+			for(let i in response.body)
 			{
+				let record = response.body[i];
+
 				records.push(this.extractModel(record));
 			}
 
@@ -162,6 +164,34 @@ export class Repository
 			this.objects[this.uri] = {};
 		}
 	}
+	static encode(obj, namespace = null, formData = null)
+	{
+		if(!formData)
+		{
+			formData = new FormData();
+		}
+
+		for(let i in obj)
+		{
+			let ns = i;
+
+			if(namespace)
+			{
+				ns = `${namespace}[${ns}]`;
+			}
+
+			if(obj[i] && typeof obj[i] !== 'object')
+			{
+				formData.append(ns, obj[i]);
+			}
+			else
+			{
+				this.encode(obj[i], ns, formData);
+			}
+		}
+
+		return formData;
+	}
 	static request(uri, args = null, post = null, cache = true, options = {}) {
 		let type = 'GET';
 		let queryString = '';
@@ -181,7 +211,7 @@ export class Repository
 		}).join('&');
 
 		let fullUri    = uri;
-		let postString = '';
+		// let postString = '';
 
 		if(post) {
 			cache = false;
@@ -192,16 +222,13 @@ export class Repository
 			}
 			else
 			{
-				formData = new FormData();
-				for(let i in post) {
-					formData.append(i, post[i]);
-				}
+				formData = this.encode(post);
 			}
-			postString = Object.keys(post).map((arg) => {
-				return encodeURIComponent(arg)
-				+ '='
-				+ encodeURIComponent(post[arg])
-			}).join('&');
+			// postString = Object.keys(post).map((arg) => {
+			// 	return encodeURIComponent(arg)
+			// 	+ '='
+			// 	+ encodeURIComponent(post[arg])
+			// }).join('&');
 		}
 
 		fullUri = uri + '?' + queryString;
