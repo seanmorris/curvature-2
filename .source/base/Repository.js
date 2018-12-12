@@ -1,8 +1,9 @@
 import { Bindable    } from './Bindable';
 import { Cache       } from './Cache';
 import { Model       } from './Model';
-import { Form        } from '../form/Form';
+import { Bag         } from './Bag';
 
+import { Form        } from '../form/Form';
 import { FormWrapper } from '../form/multiField/FormWrapper';
 
 var objects = {};
@@ -80,7 +81,6 @@ export class Repository
 				return response.body;
 			});
 		}
-
 	}
 
 	extractModel(rawData)
@@ -162,6 +162,19 @@ export class Repository
 			this.objects[this.uri] = {};
 		}
 	}
+
+	static onResponse(callback)
+	{
+		if(!this._onResponse)
+		{
+			this._onResponse = new Bag;
+		}
+
+		console.log(callback);
+
+		return this._onResponse.add(callback);
+	}
+
 	static request(uri, args = null, post = null, cache = true, options = {}) {
 		let type = 'GET';
 		let queryString = '';
@@ -170,6 +183,11 @@ export class Repository
 
 		if(args) {
 			queryArgs   = args;
+		}
+
+		if(!this._onResponse)
+		{
+			this._onResponse = new Bag;
 		}
 
 		queryArgs.api   = queryArgs.api || 'json';
@@ -289,11 +307,25 @@ export class Repository
 									tagCache.innerText = JSON.stringify(response);
 								}
 
+								let onResponse = this._onResponse.items();
+
+								for(let i in onResponse)
+								{
+									onResponse[i](response, true);
+								}
+
 								resolve(response);
 							}
 							else {
 								if(!post && cache) {
 									// this.cache[fullUri] = response;
+								}
+
+								let onResponse = this._onResponse.items();
+
+								for(let i in onResponse)
+								{
+									onResponse[i](response, true);
 								}
 
 								reject(response);
@@ -304,6 +336,13 @@ export class Repository
 
 							if(!post && cache) {
 								// this.cache[fullUri] = xhr.responseText;
+							}
+
+							let onResponse = this._onResponse.items();
+
+							for(let i in onResponse)
+							{
+								onResponse[i](xhr, true);
 							}
 
 							resolve(xhr);

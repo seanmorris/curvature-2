@@ -13,6 +13,8 @@ var _Cache = require('./Cache');
 
 var _Model = require('./Model');
 
+var _Bag = require('./Bag');
+
 var _Form = require('../form/Form');
 
 var _FormWrapper = require('../form/multiField/FormWrapper');
@@ -198,6 +200,17 @@ var Repository = function () {
 			}
 		}
 	}, {
+		key: 'onResponse',
+		value: function onResponse(callback) {
+			if (!this._onResponse) {
+				this._onResponse = new _Bag.Bag();
+			}
+
+			console.log(callback);
+
+			return this._onResponse.add(callback);
+		}
+	}, {
 		key: 'request',
 		value: function request(uri) {
 			var args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
@@ -215,6 +228,10 @@ var Repository = function () {
 
 			if (args) {
 				queryArgs = args;
+			}
+
+			if (!this._onResponse) {
+				this._onResponse = new _Bag.Bag();
 			}
 
 			queryArgs.api = queryArgs.api || 'json';
@@ -315,10 +332,22 @@ var Repository = function () {
 											_tagCache.innerText = JSON.stringify(response);
 										}
 
+										var onResponse = _this3._onResponse.items();
+
+										for (var _i in onResponse) {
+											onResponse[_i](response, true);
+										}
+
 										resolve(response);
 									} else {
 										if (!post && cache) {
 											// this.cache[fullUri] = response;
+										}
+
+										var _onResponse = _this3._onResponse.items();
+
+										for (var _i2 in _onResponse) {
+											_onResponse[_i2](response, true);
 										}
 
 										reject(response);
@@ -328,6 +357,12 @@ var Repository = function () {
 
 									if (!post && cache) {
 										// this.cache[fullUri] = xhr.responseText;
+									}
+
+									var _onResponse2 = _this3._onResponse.items();
+
+									for (var _i3 in _onResponse2) {
+										_onResponse2[_i3](xhr, true);
 									}
 
 									resolve(xhr);

@@ -51,6 +51,13 @@ export class UserRepository extends Repository {
 	}
 }
 
+Repository.onResponse((response)=>{
+	if(response && response.meta && response.meta.currentUser)
+	{
+		UserRepository.args.current = response.meta.currentUser;
+	}
+});
+
 // setInterval(() => {
 // 	UserRepository.getCurrentUser();
 // 	console.log('!!!');
