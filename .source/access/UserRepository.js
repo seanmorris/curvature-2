@@ -56,7 +56,7 @@ Repository.onResponse((response)=>{
 	{
 		UserRepository.args.current = response.meta.currentUser;
 	}
-});
+}, {wait:0});
 
 // setInterval(() => {
 // 	UserRepository.getCurrentUser();

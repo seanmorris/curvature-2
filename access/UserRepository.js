@@ -83,7 +83,7 @@ _Repository2.Repository.onResponse(function (response) {
 	if (response && response.meta && response.meta.currentUser) {
 		UserRepository.args.current = response.meta.currentUser;
 	}
-});
+}, { wait: 0 });
 
 // setInterval(() => {
 // 	UserRepository.getCurrentUser();
