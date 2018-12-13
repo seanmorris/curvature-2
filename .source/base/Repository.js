@@ -66,8 +66,6 @@ export class Repository
 				let form  = new Form(response.meta.form, customFields);
 				// let model = this.extractModel(response.body);
 
-				console.log(form, customFields);
-
 				return new FormWrapper(form, resourceUri, 'POST', customFields);
 			});
 		}
@@ -169,8 +167,6 @@ export class Repository
 		{
 			this._onResponse = new Bag;
 		}
-
-		console.log(callback);
 
 		return this._onResponse.add(callback);
 	}

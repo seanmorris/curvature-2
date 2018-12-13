@@ -31,19 +31,16 @@ export class Router {
 					if(location.toString() == routeHistory[routeHistory.length - 2])
 					{
 						routeHistory.pop();
-						// console.log('Back button!', location.toString());
 					}
 					else
 					{
 						routeHistory.push(location.toString());
-						// console.log('Forward button.', location.toString());
 					}
 				}
 				else
 				{
 					routeHistory.push(location.toString());
 					prevHistoryLength = history.length;
-					// console.log('Normal nav.', location.toString());
 				}
 
 				this.match(location.pathname, mainView);
@@ -223,8 +220,6 @@ export class Router {
 		// 	view.args.content.remove();
 		// }
 
-		// console.log(result);
-
 		// if(result !== false)
 		// {
 		// 	if(document.dispatchEvent(event))
@@ -276,11 +271,17 @@ export class Router {
 	}
 	static queryOver(args = {})
 	{
+		let params    = new URLSearchParams(location.search);
 		let finalArgs = {};
+		let query     = [];
 
-		for(let i in this.query)
+		for(let pair of params) {
+			query[ pair[0] ] = pair[1];
+		}
+
+		for(let i in query)
 		{
-			finalArgs[i] = this.query[i];
+			finalArgs[i] = query[i];
 		}
 
 		for(let i in args)

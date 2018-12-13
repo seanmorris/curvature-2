@@ -109,8 +109,6 @@ var Repository = function () {
 					var form = new _Form.Form(response.meta.form, customFields);
 					// let model = this.extractModel(response.body);
 
-					console.log(form, customFields);
-
 					return new _FormWrapper.FormWrapper(form, resourceUri, 'POST', customFields);
 				});
 			} else {
@@ -205,8 +203,6 @@ var Repository = function () {
 			if (!this._onResponse) {
 				this._onResponse = new _Bag.Bag();
 			}
-
-			console.log(callback);
 
 			return this._onResponse.add(callback);
 		}

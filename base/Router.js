@@ -52,15 +52,12 @@ var Router = exports.Router = function () {
 				if (routeHistory.length && prevHistoryLength == history.length) {
 					if (location.toString() == routeHistory[routeHistory.length - 2]) {
 						routeHistory.pop();
-						// console.log('Back button!', location.toString());
 					} else {
 						routeHistory.push(location.toString());
-						// console.log('Forward button.', location.toString());
 					}
 				} else {
 					routeHistory.push(location.toString());
 					prevHistoryLength = history.length;
-					// console.log('Normal nav.', location.toString());
 				}
 
 				_this2.match(location.pathname, mainView);
@@ -233,8 +230,6 @@ var Router = exports.Router = function () {
 			// 	view.args.content.remove();
 			// }
 
-			// console.log(result);
-
 			// if(result !== false)
 			// {
 			// 	if(document.dispatchEvent(event))
@@ -287,10 +282,37 @@ var Router = exports.Router = function () {
 		value: function queryOver() {
 			var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+			var params = new URLSearchParams(location.search);
 			var finalArgs = {};
+			var query = [];
 
-			for (var i in this.query) {
-				finalArgs[i] = this.query[i];
+			var _iteratorNormalCompletion2 = true;
+			var _didIteratorError2 = false;
+			var _iteratorError2 = undefined;
+
+			try {
+				for (var _iterator2 = params[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+					var pair = _step2.value;
+
+					query[pair[0]] = pair[1];
+				}
+			} catch (err) {
+				_didIteratorError2 = true;
+				_iteratorError2 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion2 && _iterator2.return) {
+						_iterator2.return();
+					}
+				} finally {
+					if (_didIteratorError2) {
+						throw _iteratorError2;
+					}
+				}
+			}
+
+			for (var i in query) {
+				finalArgs[i] = query[i];
 			}
 
 			for (var _i2 in args) {

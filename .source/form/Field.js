@@ -58,8 +58,6 @@ export class Field extends View {
 
 				this.value = v;
 
-				console.log(v,k);
-
 				if(setting == k)
 				{
 					return;
