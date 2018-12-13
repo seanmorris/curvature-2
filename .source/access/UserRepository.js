@@ -31,17 +31,25 @@ export class UserRepository extends Repository {
 		});
 	}
 	static login() {
-		return this.request(Config.backend + '/user/login');
+		return this.request(this.uri + '/login');
 	}
 	static logout() {
 		this.args = this.args || Bindable.makeBindable({});
 		this.args.current = null;
 		return this.request(
-			this.uri + 'logout'
+			this.uri + 'current'
 			, false
 			, {}
 			, false
 		).then((user) => {
+			this.request(
+				this.uri + 'logout'
+				, false
+				, {}
+				, false
+			).then(() => {
+				return user;
+			});
 			return user;
 		});
 	}

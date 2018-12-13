@@ -52,14 +52,19 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 	}, {
 		key: 'login',
 		value: function login() {
-			return this.request(_Config.Config.backend + '/user/login');
+			return this.request(this.uri + '/login');
 		}
 	}, {
 		key: 'logout',
 		value: function logout() {
+			var _this3 = this;
+
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
 			this.args.current = null;
-			return this.request(this.uri + 'logout', false, {}, false).then(function (user) {
+			return this.request(this.uri + 'current', false, {}, false).then(function (user) {
+				_this3.request(_this3.uri + 'logout', false, {}, false).then(function () {
+					return user;
+				});
 				return user;
 			});
 		}
