@@ -1210,7 +1210,6 @@ ${tag.outerHTML}`
 			{
 				view.args[k] = v;
 			}
-			// t[k]         = v;
 		});
 
 		for(let i in this.args)
@@ -1247,16 +1246,11 @@ ${tag.outerHTML}`
 				t[k].remove();
 			}
 
-			if(t[k] !== v)
-			{
-				t[k]         = v;
-			}
-
-			if(this.args[k] !== v)
+			if((k in this.args) && newRef !== oldRef)
 			{
 				this.args[k] = v;
 			}
-		});
+		}, {wait:0});
 
 		let cleaner = this;
 

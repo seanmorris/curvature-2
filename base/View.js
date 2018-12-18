@@ -1162,7 +1162,6 @@ var View = exports.View = function () {
 				if (view.args[k] !== v) {
 					view.args[k] = v;
 				}
-				// t[k]         = v;
 			});
 
 			for (var i in this.args) {
@@ -1193,14 +1192,10 @@ var View = exports.View = function () {
 					t[k].remove();
 				}
 
-				if (t[k] !== v) {
-					t[k] = v;
-				}
-
-				if (_this9.args[k] !== v) {
+				if (k in _this9.args && newRef !== oldRef) {
 					_this9.args[k] = v;
 				}
-			});
+			}, { wait: 0 });
 
 			var cleaner = this;
 
