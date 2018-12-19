@@ -1,117 +1,48 @@
+import { View }     from './View';
 import { Bindable } from './Bindable';
 
 export class Persist
 {
-	static watch(bucket, object, refresh = false)
+	static watch(bucket, object)
 	{
-		let index    = {};
-		let bindings = {};
-		let indexKey = `${bucket}::#[index]`;
-		let _index;
+		let subBinding = {};
+		let key        = `Persist::[${bucket}]`;
 
-		// if(refresh)
-		// {
-		// 	let index = JSON.parse(localStorage.getItem(indexKey));
-		// 	for(let i in index)
-		// 	{
-		// 		localStorage.removeItem(`${bucket}::$[${index[i]}]`);
-		// 	}
-		// 	console.log(index);
-		// }
+		let _source = localStorage.getItem(key);
+		let source;
 
-		let store = (key, value, del = false) => {
-			index[key] = 1;
+		object = Bindable.makeBindable(object);
 
-			if(bindings[key])
+		let debind = object.bindTo((v,k,t,d,p)=>{
+			if(subBinding[k])
 			{
-				bindings[key]();
-				delete bindings[key];
+				subBinding[k]();
 			}
 
-			if(del)
+			if(typeof v === 'object')
 			{
-				localStorage.removeItem(`${bucket}::$[${key}]`);
-				delete index[key];
-			}
-			else
-			{
-				if(value instanceof Object)
-				{
-					let bindable = Bindable.makeBindable(value);
-
-					bindings[key] = bindable.bindTo((v,k,t,d)=>{
-						t[k] = v;
-						localStorage.setItem(
-							`${bucket}::$[${key}]`
-							, JSON.stringify({key, value})
-						);
-					});
-				}
-
-				localStorage.setItem(
-					`${bucket}::$[${key}]`
-					, JSON.stringify({key, value})
-				);
+				subBinding[k] = Persist.watch(`${bucket}::${k}`, v);
 			}
 
-			localStorage.setItem(
-				indexKey
-				, JSON.stringify(index)
-			);
-		};
+			localStorage.setItem(key, JSON.stringify(object));
 
-		if(_index = localStorage.getItem(indexKey))
+		}, {delay: 0});
+
+		if(source = JSON.parse(_source))
 		{
-			index = JSON.parse(_index);
-
-			let values = {};
-
-			for(let i in index)
+			for(let i in source)
 			{
-				let source = localStorage.getItem(
-					`${bucket}::$[${i}]`
-				);
-
-				if(!source)
-				{
-					continue;
-				}
-
-				let {key,value} = JSON.parse(source);
-
-				values[key] = value;
-			}
-
-			if(Array.isArray(object))
-			{
-				while(object.pop());
-			}
-
-			for(let i in values)
-			{
-				if(Array.isArray(object))
-				{
-					if(i !== object.length)
-					{
-						localStorage.removeItem(`${bucket}::$[${i}]`);
-					}
-					object.push(values[i]);
-					continue;
-				}
-				object[key] = values[i];
+				object[i] = source[i];
 			}
 		}
-
-		let debind = object.bindTo((v,k,t,d)=>{
-			store(k, v, d);
-		}, {wait: 0});
-
-		return () => {
-			debind();
-			for(let i in bindings)
+		
+		return ()=>{
+			debind()
+			for(let i in subBinding)
 			{
-				bindings[i]();
+				subBinding[i]();
 			}
+			localStorage.removeItem(key);
 		};
 	}
 }
