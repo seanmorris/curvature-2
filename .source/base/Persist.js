@@ -16,9 +16,12 @@ export class Persist
 		let debind = object.bindTo((v,k,t,d,p)=>{
 			if(subBinding[k])
 			{
-				while(subBinding[k].length)
+				if(v !== p)
 				{
-					subBinding[k].pop()();
+					while(subBinding[k].length)
+					{
+						subBinding[k].pop()();
+					}
 				}
 			}
 			else
