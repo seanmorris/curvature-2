@@ -33,11 +33,15 @@ var Persist = exports.Persist = function () {
 
 			var debind = object.bindTo(function (v, k, t, d, p) {
 				if (subBinding[k]) {
-					subBinding[k]();
+					while (subBinding[k].length) {
+						subBinding[k].pop()();
+					}
+				} else {
+					subBinding[k] = [];
 				}
 
 				if ((typeof v === 'undefined' ? 'undefined' : _typeof(v)) === 'object') {
-					subBinding[k] = Persist.watch(bucket + '::' + k, v);
+					subBinding[k].push(Persist.watch(bucket + '::' + k, v));
 				}
 
 				localStorage.setItem(key, JSON.stringify(object));
@@ -52,7 +56,9 @@ var Persist = exports.Persist = function () {
 			return function () {
 				debind();
 				for (var _i in subBinding) {
-					subBinding[_i]();
+					while (subBinding[_i].length) {
+						subBinding[_i].pop()();
+					}
 				}
 				localStorage.removeItem(key);
 			};

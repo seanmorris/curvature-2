@@ -16,12 +16,19 @@ export class Persist
 		let debind = object.bindTo((v,k,t,d,p)=>{
 			if(subBinding[k])
 			{
-				subBinding[k]();
+				while(subBinding[k].length)
+				{
+					subBinding[k].pop()();
+				}
+			}
+			else
+			{
+				subBinding[k] = [];
 			}
 
 			if(typeof v === 'object')
 			{
-				subBinding[k] = Persist.watch(`${bucket}::${k}`, v);
+				subBinding[k].push(Persist.watch(`${bucket}::${k}`, v));
 			}
 
 			localStorage.setItem(key, JSON.stringify(object));
@@ -40,7 +47,10 @@ export class Persist
 			debind()
 			for(let i in subBinding)
 			{
-				subBinding[i]();
+				while(subBinding[i].length)
+				{
+					subBinding[i].pop()();
+				}
 			}
 			localStorage.removeItem(key);
 		};
