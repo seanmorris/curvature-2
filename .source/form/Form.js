@@ -121,7 +121,9 @@ export class Form extends View
 				}
 			}
 
-			if(skeleton[i].name in customFields)
+			// console.log(customFields);
+
+			if(customFields && skeleton[i].name in customFields)
 			{
 				field = new customFields[ skeleton[i].name ](skeleton[i], form, parent, i)
 			}
@@ -235,18 +237,33 @@ export class Form extends View
 				let fieldName = field.args.fields[i].getName();
 
 				if(field.args.fields[i].args.type == 'file'
-					&& field.args.fields[i].tags.input.element.files[0]
+					&& field.args.fields[i].tags.input.element.files.length
 				){
-					append.append(
-						fieldName
-						, field.args.fields[i].tags.input.element.files[0]
-					);
+					if(field.args.fields[i].args.attrs.multiple)
+					{
+						let files = field.args.fields[i].tags.input.element.files;
+
+						for(let i = 0; i < files.length; i++)
+						{
+							append.append(fieldName + '[]', files[i]);
+						}
+					}
+					else
+					{
+						append.append(
+							fieldName
+							, field.args.fields[i].tags.input.element.files[0]
+						);
+					}
+
 				}
 				else
 				{
 					append.append(
 						fieldName
-						, field.args.fields[i].args.value
+						, field.args.fields[i].args.value === undefined
+							? ''
+							: field.args.fields[i].args.value
 					);
 				}
 			}

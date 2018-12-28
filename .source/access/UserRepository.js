@@ -4,11 +4,16 @@ import { Repository } from '../base/Repository';
 
 export class UserRepository extends Repository {
 	static get uri() { return Config.backend + '/user/'; }
-	static getCurrentUser(refresh) {
+	static getCurrentUser(refresh = false) {
 		this.args = this.args || Bindable.makeBindable({});
 		if(window.prerenderer)
 		{
 			return;
+		}
+		if(!refresh && this.args.response)
+		{
+			console.log(this.args.response);
+			return Promise.resolve(this.args.response);
 		}
 		return this.request(
 			this.uri + 'current'
@@ -26,7 +31,11 @@ export class UserRepository extends Repository {
 					}
 				}
 			}
-			this.args.current = response.body;
+			if(this.args.response && this.args.response.id)
+			{
+				this.args.response = response;
+				this.args.current  = response.body;
+			}
 			return response;
 		});
 	}

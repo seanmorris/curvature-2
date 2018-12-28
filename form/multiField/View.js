@@ -86,32 +86,38 @@ var View = exports.View = function (_FieldSet) {
 	}, {
 		key: 'addRecord',
 		value: function addRecord(record) {
-			var fieldClass = this.args.fields[-1].constructor;
+			if (!Array.isArray(record)) {
+				record = [record];
+			}
 
-			var skeleton = Object.assign({}, this.args.fields[-1].skeleton);
-			var name = Object.values(this.args.fields).length - 1;
+			for (var i in record) {
+				var fieldClass = this.args.fields[-1].constructor;
 
-			skeleton = this.cloneSkeleton(skeleton);
+				var skeleton = Object.assign({}, this.args.fields[-1].skeleton);
+				var name = Object.values(this.args.fields).length - 1;
 
-			skeleton = this.correctNames(skeleton, name);
+				skeleton = this.cloneSkeleton(skeleton);
 
-			var superSkeleton = {};
+				skeleton = this.correctNames(skeleton, name);
 
-			superSkeleton[name + 1] = skeleton;
+				var superSkeleton = {};
 
-			var newField = _Form.Form.renderFields(superSkeleton, this)[name + 1];
+				superSkeleton[name + 1] = skeleton;
 
-			this.args.fields[name] = newField;
+				var newField = _Form.Form.renderFields(superSkeleton, this)[name + 1];
 
-			var newWrap = this.wrapSubfield(newField);
+				this.args.fields[name] = newField;
 
-			newField.args.value.id = record.id || '';
-			newField.args.value.class = record.class || '';
-			newField.args.value.title = record.title || '';
+				var newWrap = this.wrapSubfield(newField);
 
-			this.args._fields.push(newWrap);
+				newField.args.value.id = record[i].id || '';
+				newField.args.value.class = record[i].class || '';
+				newField.args.value.title = record[i].title || '';
 
-			newWrap.refresh(record);
+				this.args._fields.push(newWrap);
+
+				newWrap.refresh(record[i]);
+			}
 		}
 	}, {
 		key: 'editRecord',

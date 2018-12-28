@@ -33,8 +33,10 @@ var Persist = exports.Persist = function () {
 
 			var debind = object.bindTo(function (v, k, t, d, p) {
 				if (subBinding[k]) {
-					while (subBinding[k].length) {
-						subBinding[k].pop()();
+					if (v !== p) {
+						while (subBinding[k].length) {
+							subBinding[k].pop()();
+						}
 					}
 				} else {
 					subBinding[k] = [];

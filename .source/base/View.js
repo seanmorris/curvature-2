@@ -806,6 +806,9 @@ export class View
 					}
 					tag.value = v == null ? '' : v;
 				}
+				else if(type === 'file') {
+					console.log(v);	
+				}
 				return;
 			}
 
@@ -817,7 +820,7 @@ export class View
 			{
 				tag.innerText = v;
 			}
-		}, {wait: 0});
+		});
 
 		if(proxy !== this.args)
 		{
@@ -831,7 +834,8 @@ export class View
 				return;
 			}
 
-			let type = tag.getAttribute('type');
+			let type  = tag.getAttribute('type');
+			let multi = tag.getAttribute('multiple');
 			if (type && type.toLowerCase() == 'checkbox') {
 				if (tag.checked) {
 					proxy[property] = event.target.value;
@@ -840,8 +844,13 @@ export class View
 					proxy[property] = false;
 				}
 			}
-			else {
+			else if(type !== 'file')
+			{
 				proxy[property] = event.target.value;
+			}
+			else if(type == 'file' && multi)
+			{
+				proxy[property] = Array.from(event.target.files);
 			}
 		};
 

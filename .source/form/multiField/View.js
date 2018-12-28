@@ -127,32 +127,41 @@ export class View extends FieldSet
 
 	addRecord(record)
 	{
-		let fieldClass = this.args.fields[-1].constructor;
+		if(!Array.isArray(record))
+		{
+			record = [record];
+		}
 
-		let skeleton   = Object.assign({}, this.args.fields[-1].skeleton);
-		let name       = Object.values(this.args.fields).length - 1;
+		for(let i in record)
+		{
+			let fieldClass = this.args.fields[-1].constructor;
 
-		skeleton = this.cloneSkeleton(skeleton);
+			let skeleton   = Object.assign({}, this.args.fields[-1].skeleton);
+			let name       = Object.values(this.args.fields).length - 1;
 
-		skeleton = this.correctNames(skeleton, name);
+			skeleton = this.cloneSkeleton(skeleton);
 
-		let superSkeleton = {};
+			skeleton = this.correctNames(skeleton, name);
 
-		superSkeleton[name + 1] = skeleton;
+			let superSkeleton = {};
 
-		let newField = Form.renderFields(superSkeleton, this)[name + 1];
+			superSkeleton[name + 1] = skeleton;
 
-		this.args.fields[name] = newField;
+			let newField = Form.renderFields(superSkeleton, this)[name + 1];
 
-		let newWrap = this.wrapSubfield(newField);
+			this.args.fields[name] = newField;
 
-		newField.args.value.id    = record.id    || '';
-		newField.args.value.class = record.class || '';
-		newField.args.value.title = record.title || '';
+			let newWrap = this.wrapSubfield(newField);
 
-		this.args._fields.push(newWrap);
+			newField.args.value.id    = record[i].id    || '';
+			newField.args.value.class = record[i].class || '';
+			newField.args.value.title = record[i].title || '';
 
-		newWrap.refresh(record);
+			this.args._fields.push(newWrap);
+
+			newWrap.refresh(record[i]);
+		}
+
 	}
 
 	editRecord(record, wrapper)

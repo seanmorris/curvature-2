@@ -71,9 +71,16 @@ export class Field extends View {
 				if(this.args.attrs.type == 'file'
 					&& this.tags.input
 					&& this.tags.input.element.files
-					&& this.tags.input.element.files[0]
+					&& this.tags.input.element.length
 				){
-					this.parent.args.value[key] = this.tags.input.element.files[0];
+					if(!this.args.attrs.multiple)
+					{
+						this.parent.args.value[key] = this.tags.input.element.files[0];
+					}
+					else
+					{
+						this.parent.args.value[key] = Array.from(this.tags.input.element.files);
+					}
 				}
 				else
 				{
@@ -86,12 +93,13 @@ export class Field extends View {
 				}
 				setting = null;
 			}
+			, {wait: 0}
 		);
 
 		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
 
 		this.parent.args.value.bindTo(key, (v, k)=>{
-			
+
 			if(setting == k)
 			{
 				return;
@@ -99,18 +107,26 @@ export class Field extends View {
 
 			setting = k;
 
+			
 			if(this.args.attrs.type == 'file')
 			{
-				if(this.tags.input && this.tags.input.element.files)
-				{
-					this.args.value = this.tags.input.element.files[0];
+				if(this.tags.input
+					 && this.tags.input.element.files
+					 && this.tags.input.element.files.length
+				){
+					if(!this.args.attrs.multiple)
+					{
+						this.parent.args.value[key] = this.tags.input.element.files[0];
+					}
+					else
+					{
+						this.parent.args.value[key] = Array.from(this.tags.input.element.files);
+					}
 				}
 				else
 				{
 					this.args.value = v;
 				}
-
-				console.log(this.args.value);
 			}
 			else
 			{

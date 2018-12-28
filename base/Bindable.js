@@ -147,7 +147,8 @@ var Bindable = exports.Bindable = function () {
                             if (throttle) {
                                 return;
                             }
-                            callback(v, k, t, d);
+                            var p = t[k];
+                            callback(v, k, t, d, p);
                             throttle = true;
                             setTimeout(function () {
                                 return throttle = false;
@@ -272,7 +273,7 @@ var Bindable = exports.Bindable = function () {
                         if (!object.___binding___[key][_i4]) {
                             continue;
                         }
-                        if (object.___binding___[key][_i4](value, key, target, false) === false) {
+                        if (object.___binding___[key][_i4](value, key, target, false, target[key]) === false) {
                             stop = true;
                         }
                     }
@@ -315,7 +316,7 @@ var Bindable = exports.Bindable = function () {
                 }
 
                 for (var _i5 in object.___bindingAll___) {
-                    object.___bindingAll___[_i5](undefined, key, target, true);
+                    object.___bindingAll___[_i5](undefined, key, target, true, target[key]);
                 }
 
                 if (key in object.___binding___) {
@@ -323,7 +324,7 @@ var Bindable = exports.Bindable = function () {
                         if (!object.___binding___[key][_i6]) {
                             continue;
                         }
-                        object.___binding___[key][_i6](undefined, key, target, true);
+                        object.___binding___[key][_i6](undefined, key, target, true, target[key]);
                     }
                 }
 

@@ -172,13 +172,13 @@ export class Repository
 	}
 
 	static request(uri, args = null, post = null, cache = true, options = {}) {
-		let type = 'GET';
+		let type        = 'GET';
 		let queryString = '';
-		let formData = null;
+		let formData    = null;
 		let queryArgs   = {};
 
 		if(args) {
-			queryArgs   = args;
+			queryArgs = args;
 		}
 
 		if(!this._onResponse)
@@ -186,7 +186,7 @@ export class Repository
 			this._onResponse = new Bag;
 		}
 
-		queryArgs.api   = queryArgs.api || 'json';
+		queryArgs.api = queryArgs.api || 'json';
 
 		queryString = Object.keys(queryArgs).map((arg) => {
 			return encodeURIComponent(arg)
