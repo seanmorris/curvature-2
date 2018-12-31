@@ -33,6 +33,10 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		_this.style = element.getAttribute('style');
 		_this.moving = false;
 
+		_this.hostSelector = _this.element.getAttribute('cv-pop-to');
+
+		_this.element.removeAttribute('cv-pop-to');
+
 		_this.leftDuration = 0;
 		_this.topDuration = 0;
 		_this.rightDuration = 0;
@@ -108,6 +112,14 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			}
 		};
 
+		_this.escapeListener = function (event) {
+			console.log(event);
+			if (event.key !== 'Escape') {
+				return;
+			}
+			_this.unpop();
+		};
+
 		if (!_this.element.___clickListener___) {
 			Object.defineProperty(_this.element, '___scrollListeners___', {
 				enumerable: false,
@@ -115,12 +127,15 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			});
 
 			_this.element.___clickListener___ = _this.clickListener;
+			_this.element.___escapeListener___ = _this.escapeListener;
 
 			_this.element.addEventListener('click', element.___clickListener___);
+			window.addEventListener('keyup', element.___escapeListener___);
 
 			_this.cleanup.push(function (element) {
 				return function () {
 					element.removeEventListener('click', element.___clickListener___);
+					window.removeEventListener('keyup', element.___escapeListener___);
 				};
 			}(element));
 		}
@@ -151,6 +166,21 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			this.rect = this.element.getBoundingClientRect();
 			this.style = this.element.getAttribute('style');
 
+			var hostTag = this.element;
+
+			console.log(hostTag);
+
+			while (hostTag.parentNode && !hostTag.matches(this.hostSelector)) {
+				if (hostTag.parentNode == document) {
+					break;
+				}
+				hostTag = hostTag.parentNode;
+			}
+
+			console.log(hostTag);
+
+			var hostRect = hostTag.getBoundingClientRect();
+
 			window.requestAnimationFrame(function () {
 
 				_this2.unpoppedStyle = '\n\t\t\t\t;position:  fixed;\n\t\t\t\tleft:       ' + _this2.rect.x + 'px;\n\t\t\t\ttop:        ' + _this2.rect.y + 'px;\n\t\t\t\twidth:      ' + _this2.rect.width + 'px;\n\t\t\t\theight:     ' + _this2.rect.height + 'px;\n\t\t\t\tz-index:    99999;\n\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's  ease-out\n\t\t\t\t\t\t\t, top ' + _this2.verticalDuration + 's    ease-out\n\t\t\t\t\t\t\t, left ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t\t\t, height ' + _this2.verticalDuration + 's ease-out\n\t\t\t\t\t\t\t, all ' + _this2.horizontalDuration + 's  ease-out;\n\t\t\t\toverflow: hidden;\n\t\t\t';
@@ -160,7 +190,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				_this2.element.setAttribute('style', style);
 
 				window.requestAnimationFrame(function () {
-					style += '\n\t\t\t\t\t;top:   0px;\n\t\t\t\t\tleft:   0px;\n\t\t\t\t\twidth:  100%;\n\t\t\t\t\theight: 100%;\n\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, top ' + _this2.verticalDuration + 's           ease-out\n\t\t\t\t\t\t, left ' + _this2.horizontalDuration + 's        ease-out\n\t\t\t\t\t\t, height ' + _this2.verticalDuration + 's        ease-out\n\t\t\t\t\t\t, all ' + _this2.horizontalDuration + 's         ease-out;\n\t\t\t\t';
+					style += '\n\t\t\t\t\t;left:      ' + hostRect.x + 'px;\n\t\t\t\t\ttop:        ' + hostRect.y + 'px;\n\t\t\t\t\twidth:      ' + hostRect.width + 'px;\n\t\t\t\t\theight:     ' + hostRect.height + 'px;\n\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, top ' + _this2.verticalDuration + 's           ease-out\n\t\t\t\t\t\t, left ' + _this2.horizontalDuration + 's        ease-out\n\t\t\t\t\t\t, height ' + _this2.verticalDuration + 's        ease-out\n\t\t\t\t\t\t, all ' + _this2.horizontalDuration + 's         ease-out;\n\t\t\t\t';
 
 					_this2.moving = true;
 

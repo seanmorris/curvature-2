@@ -1300,7 +1300,7 @@ ${tag.outerHTML}`
 
 			if(p instanceof View)
 			{
-				oldRef = t[k].___ref___;
+				oldRef = p.___ref___;
 			}
 
 			if(newRef !== oldRef && p instanceof View)

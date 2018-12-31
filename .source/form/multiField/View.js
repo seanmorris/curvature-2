@@ -67,10 +67,7 @@ export class View extends FieldSet
 						</div>
 					</div>
 
-					<div
-						class = "overlay create"
-						--cv-on = "wheel:cancel(event)"
-					>
+					<div class = "overlay create">
 						<div class = "form constrict">
 							<div
 								cv-on = "click:addButtonClicked(event)"
@@ -86,6 +83,11 @@ export class View extends FieldSet
 					<div class = "overlay loading">
 						[[loader]]
 					</div>
+
+					<div
+						cv-on = "click:addButtonClicked(event)"
+						class = "bubble bottom left-margin add"
+					>+</div>
 
 					<div
 						cv-on = "click:addButtonClicked(event)"
