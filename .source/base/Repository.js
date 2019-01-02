@@ -45,7 +45,9 @@ export class Repository
 				records.push(this.extractModel(record));
 			}
 
-			return records;
+			response.body = records;
+
+			return response;
 		});
 	}
 

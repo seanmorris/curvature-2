@@ -86,7 +86,9 @@ var Repository = function () {
 					}
 				}
 
-				return records;
+				response.body = records;
+
+				return response;
 			});
 		}
 	}, {
