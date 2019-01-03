@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _Bindable = require('./Bindable');
 
+var _Router = require('./Router');
+
 var _Cache = require('./Cache');
 
 var _Model = require('./Model');
@@ -36,16 +38,17 @@ var Repository = function () {
 			var _this = this;
 
 			var refresh = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+			var args = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			var resourceUri = this.uri + '/' + id;
 
-			var cached = _Cache.Cache.load(resourceUri, false, 'model-uri-repo');
+			var cached = _Cache.Cache.load(resourceUri + _Router.Router.queryToString(_Router.Router.queryOver(args), true), false, 'model-uri-repo');
 
 			if (!refresh && cached) {
 				return Promise.resolve(cached);
 			}
 
-			return Repository.request(resourceUri).then(function (response) {
+			return Repository.request(resourceUri, args).then(function (response) {
 				return _this.extractModel(response.body);
 			});
 		}

@@ -1,4 +1,5 @@
 import { Bindable    } from './Bindable';
+import { Router      } from './Router';
 import { Cache       } from './Cache';
 import { Model       } from './Model';
 import { Bag         } from './Bag';
@@ -15,12 +16,15 @@ export class Repository
 		this.uri = uri;
 	}
 
-	get(id, refresh = false)
+	get(id, refresh = false, args = {})
 	{
 		let resourceUri = this.uri + '/' + id;
 
 		let cached = Cache.load(
-			resourceUri
+			resourceUri + Router.queryToString(
+				Router.queryOver(args)
+				, true
+			)
 			, false
 			, 'model-uri-repo'
 		);
@@ -30,7 +34,7 @@ export class Repository
 			return Promise.resolve(cached);
 		}
 
-		return Repository.request(resourceUri).then((response) => {
+		return Repository.request(resourceUri, args).then((response) => {
 			return this.extractModel(response.body);
 		});
 	}
