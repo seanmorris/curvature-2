@@ -91,7 +91,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					_this.verticalDuration = 0.4;
 				}
 
-				console.log(_this.horizontalDuration, _this.verticalDuration);
+				// console.log(this.horizontalDuration, this.verticalDuration);
 			}
 
 			if (!_this.element.contains(event.target)) {
@@ -113,7 +113,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		};
 
 		_this.escapeListener = function (event) {
-			console.log(event);
+			// console.log(event);
 			if (event.key !== 'Escape') {
 				return;
 			}
@@ -168,7 +168,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			var hostTag = this.element;
 
-			console.log(hostTag);
+			// console.log(hostTag);
 
 			while (hostTag.parentNode && !hostTag.matches(this.hostSelector)) {
 				if (hostTag.parentNode == document) {
@@ -177,7 +177,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				hostTag = hostTag.parentNode;
 			}
 
-			console.log(hostTag);
+			// console.log(hostTag);
 
 			var hostRect = hostTag.getBoundingClientRect();
 

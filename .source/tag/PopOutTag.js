@@ -78,7 +78,7 @@ export class PopOutTag extends Tag
 					this.verticalDuration = 0.4;
 				}
 
-				console.log(this.horizontalDuration, this.verticalDuration);
+				// console.log(this.horizontalDuration, this.verticalDuration);
 			}
 
 			if(!this.element.contains(event.target))
@@ -106,7 +106,7 @@ export class PopOutTag extends Tag
 
 
 		this.escapeListener = (event) => {
-			console.log(event);
+			// console.log(event);
 			if(event.key !== 'Escape')
 			{
 				return;
@@ -185,7 +185,7 @@ export class PopOutTag extends Tag
 
 		let hostTag = this.element;
 
-		console.log(hostTag);
+		// console.log(hostTag);
 
 		while(hostTag.parentNode && !hostTag.matches(this.hostSelector))
 		{
@@ -196,7 +196,7 @@ export class PopOutTag extends Tag
 			hostTag = hostTag.parentNode;
 		}
 
-		console.log(hostTag);
+		// console.log(hostTag);
 
 		let hostRect = hostTag.getBoundingClientRect();
 
