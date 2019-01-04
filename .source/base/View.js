@@ -1225,7 +1225,7 @@ ${tag.outerHTML}`
 			this.viewLists[eachProp] = viewList;
 
 			viewList.render(tag);
-		},{wait :0});
+		});
 
 		this.cleanup.push(()=>{
 			debind();

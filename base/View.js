@@ -1165,7 +1165,7 @@ var View = exports.View = function () {
 				_this8.viewLists[eachProp] = viewList;
 
 				viewList.render(tag);
-			}, { wait: 0 });
+			});
 
 			this.cleanup.push(function () {
 				debind();

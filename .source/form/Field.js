@@ -3,12 +3,12 @@ import { Bindable } from '../base/Bindable';
 
 export class Field extends View {
 	constructor(values, form, parent, key) {
-		let skeleton = Object.assign(values);
+		let skeleton = Object.assign({}, values);
 
-		super(values);
+		super(skeleton);
 
 		this.args.title = this.args.title || '';
-		this.args.value = this.args.value == null ?  '' : this.args.value;
+		this.args.value = this.args.value === null ?  '' : this.args.value;
 		this.value      = this.args.value;
 		this.skeleton   = skeleton;
 		this.disabled   = null;
@@ -52,51 +52,48 @@ export class Field extends View {
 		// let key     = this.key;
 		let setting = null;
 
-		this.args.bindTo(
-			'value'
-			, (v, k) => {
+		this.args.bindTo('value', (v, k) => {
+			this.value = v;
 
-				this.value = v;
+			if(setting == k)
+			{
+				return;
+			}
 
-				if(setting == k)
+			setting = key;
+
+			this.args.valueString = JSON.stringify(v||'', null, 4);
+			this.valueString = this.args.valueString;
+
+			if(this.args.attrs.type == 'file'
+				&& this.tags.input
+				&& this.tags.input.element.files
+				&& this.tags.input.element.length
+			){
+				if(!this.args.attrs.multiple)
 				{
-					return;
-				}
-
-				setting = key;
-
-				this.args.valueString = JSON.stringify(v||'', null, 4);
-				this.valueString = this.args.valueString;
-
-				if(this.args.attrs.type == 'file'
-					&& this.tags.input
-					&& this.tags.input.element.files
-					&& this.tags.input.element.length
-				){
-					if(!this.args.attrs.multiple)
-					{
-						this.parent.args.value[key] = this.tags.input.element.files[0];
-					}
-					else
-					{
-						this.parent.args.value[key] = Array.from(this.tags.input.element.files);
-					}
+					this.parent.args.value[key] = this.tags.input.element.files[0];
 				}
 				else
 				{
-					if(!this.parent.args.value)
-					{
-						this.parent.args.value = {};
-					}
-
-					this.parent.args.value[key] = v;
+					this.parent.args.value[key] = Array.from(this.tags.input.element.files);
 				}
-				setting = null;
 			}
-			, {wait: 0}
-		);
+			else
+			{
+				if(!this.parent.args.value)
+				{
+					this.parent.args.value = {};
+				}
+
+				this.parent.args.value[key] = v;
+			}
+			setting = null;
+		}, {wait: 0});
 
 		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
+
+		this.parent.args.value[this.key] = this.args.value;
 
 		this.parent.args.value.bindTo(key, (v, k)=>{
 

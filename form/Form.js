@@ -229,6 +229,7 @@ var Form = exports.Form = function (_View) {
 							}
 							break;
 						case 'select':
+							console.log(skeleton[i]);
 							field = new _SelectField.SelectField(skeleton[i], form, parent, i);
 							break;
 						case 'radios':
