@@ -22,8 +22,6 @@ export class SelectField extends Field {
 			</label>
 		`;
 
-		console.log(values);
-
 		this.args.bindTo('value', (v,k,t,d,p)=>{
 			console.log(this.args.name,v,p);
 		});
@@ -37,8 +35,6 @@ export class SelectField extends Field {
 			for(let i in tag.options)
 			{
 				let option = tag.options[i];
-
-				console.log(option);
 
 				if(option.value == this.args.value)
 				{

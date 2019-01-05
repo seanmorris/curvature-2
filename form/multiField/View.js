@@ -129,8 +129,6 @@ var View = exports.View = function (_FieldSet) {
 			});
 
 			this.args.creating = this.args.creating ? '' : 'creating';
-
-			console.log(wrapper);
 		}
 	}, {
 		key: 'deleteImage',
@@ -142,9 +140,9 @@ var View = exports.View = function (_FieldSet) {
 		key: 'undeleteImage',
 		value: function undeleteImage(index) {
 			this.args.fields[index].enable();
-			console.log(this.args.fields[index]);
-			console.log(this.args._fields[index]);
-			console.log('===============');
+			// console.log(this.args.fields[index]);
+			// console.log(this.args._fields[index]);
+			// console.log('===============');
 
 			this.args._fields[index].args.classes = '';
 		}
