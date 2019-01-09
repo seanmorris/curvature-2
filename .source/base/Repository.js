@@ -1,8 +1,10 @@
 import { Bindable    } from './Bindable';
+import { Router      } from './Router';
 import { Cache       } from './Cache';
 import { Model       } from './Model';
-import { Form        } from '../form/Form';
+import { Bag         } from './Bag';
 
+import { Form        } from '../form/Form';
 import { FormWrapper } from '../form/multiField/FormWrapper';
 
 var objects = {};
@@ -14,12 +16,15 @@ export class Repository
 		this.uri = uri;
 	}
 
-	get(id, refresh = false)
+	get(id, refresh = false, args = {})
 	{
 		let resourceUri = this.uri + '/' + id;
 
 		let cached = Cache.load(
-			resourceUri
+			resourceUri + Router.queryToString(
+				Router.queryOver(args)
+				, true
+			)
 			, false
 			, 'model-uri-repo'
 		);
@@ -29,7 +34,7 @@ export class Repository
 			return Promise.resolve(cached);
 		}
 
-		return Repository.request(resourceUri).then((response) => {
+		return Repository.request(resourceUri, args).then((response) => {
 			return this.extractModel(response.body);
 		});
 	}
@@ -46,7 +51,9 @@ export class Repository
 				records.push(this.extractModel(record));
 			}
 
-			return records;
+			response.body = records;
+
+			return response;
 		});
 	}
 
@@ -67,8 +74,6 @@ export class Repository
 				let form  = new Form(response.meta.form, customFields);
 				// let model = this.extractModel(response.body);
 
-				console.log(form, customFields);
-
 				return new FormWrapper(form, resourceUri, 'POST', customFields);
 			});
 		}
@@ -82,7 +87,6 @@ export class Repository
 				return response.body;
 			});
 		}
-
 	}
 
 	extractModel(rawData)
@@ -164,6 +168,7 @@ export class Repository
 			this.objects[this.uri] = {};
 		}
 	}
+
 	static encode(obj, namespace = null, formData = null)
 	{
 		if(!formData)
@@ -192,17 +197,33 @@ export class Repository
 
 		return formData;
 	}
+
+	static onResponse(callback)
+	{
+		if(!this._onResponse)
+		{
+			this._onResponse = new Bag;
+		}
+
+		return this._onResponse.add(callback);
+	}
+
 	static request(uri, args = null, post = null, cache = true, options = {}) {
-		let type = 'GET';
+		let type        = 'GET';
 		let queryString = '';
-		let formData = null;
+		let formData    = null;
 		let queryArgs   = {};
 
 		if(args) {
-			queryArgs   = args;
+			queryArgs = args;
 		}
 
-		queryArgs.api   = queryArgs.api || 'json';
+		if(!this._onResponse)
+		{
+			this._onResponse = new Bag;
+		}
+
+		queryArgs.api = queryArgs.api || 'json';
 
 		queryString = Object.keys(queryArgs).map((arg) => {
 			return encodeURIComponent(arg)
@@ -316,11 +337,25 @@ export class Repository
 									tagCache.innerText = JSON.stringify(response);
 								}
 
+								let onResponse = this._onResponse.items();
+
+								for(let i in onResponse)
+								{
+									onResponse[i](response, true);
+								}
+
 								resolve(response);
 							}
 							else {
 								if(!post && cache) {
 									// this.cache[fullUri] = response;
+								}
+
+								let onResponse = this._onResponse.items();
+
+								for(let i in onResponse)
+								{
+									onResponse[i](response, true);
 								}
 
 								reject(response);
@@ -331,6 +366,13 @@ export class Repository
 
 							if(!post && cache) {
 								// this.cache[fullUri] = xhr.responseText;
+							}
+
+							let onResponse = this._onResponse.items();
+
+							for(let i in onResponse)
+							{
+								onResponse[i](xhr, true);
 							}
 
 							resolve(xhr);

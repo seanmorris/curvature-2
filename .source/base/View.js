@@ -806,6 +806,9 @@ export class View
 					}
 					tag.value = v == null ? '' : v;
 				}
+				else if(type === 'file') {
+					console.log(v);	
+				}
 				return;
 			}
 
@@ -817,7 +820,7 @@ export class View
 			{
 				tag.innerText = v;
 			}
-		}, {wait: 0});
+		});
 
 		if(proxy !== this.args)
 		{
@@ -831,7 +834,8 @@ export class View
 				return;
 			}
 
-			let type = tag.getAttribute('type');
+			let type  = tag.getAttribute('type');
+			let multi = tag.getAttribute('multiple');
 			if (type && type.toLowerCase() == 'checkbox') {
 				if (tag.checked) {
 					proxy[property] = event.target.value;
@@ -840,8 +844,13 @@ export class View
 					proxy[property] = false;
 				}
 			}
-			else {
+			else if(type !== 'file')
+			{
 				proxy[property] = event.target.value;
+			}
+			else if(type == 'file' && multi)
+			{
+				proxy[property] = Array.from(event.target.files);
 			}
 		};
 
@@ -1116,12 +1125,12 @@ ${tag.outerHTML}`
 			tag.removeChild(tag.firstChild);
 		}
 
-		let carryProps = [];
+		// let carryProps = [];
 
-		if(carryAttr)
-		{
-			carryProps = carryAttr.split(',');
-		}
+		// if(carryAttr)
+		// {
+		// 	carryProps = carryAttr.split(',');
+		// }
 
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
@@ -1137,23 +1146,76 @@ ${tag.outerHTML}`
 				viewList.remove();
 			});
 
-			for(let i in carryProps)
-			{
-				let _debind = this.args.bindTo(carryProps[i], (v, k) => {
+			let debindA = this.args.bindTo((v,k,t,d)=>{
+				if(k == '_id')
+				{
+					return;
+				}
+
+				if(viewList.args.subArgs[k] !== v)
+				{
+					// view.args[k] = v;
 					viewList.args.subArgs[k] = v;
-				});
+				}
+			});
 
-				viewList.cleanup.push(_debind);
+			for(let i in this.args)
+			{
+				if(i == '_id')
+				{
+					continue;
+				}
 
-				this.cleanup.push(()=>{
-					_debind();
-
-					if(v && !v.isBound())
-					{
-						Bindable.clearBindings(v);
-					}
-				});
+				viewList.args.subArgs[k] = this.args[i];
 			}
+
+			let debindB = viewList.args.bindTo((v,k,t,d,p)=>{
+				if(k == '_id')
+				{
+					return;
+				}
+
+				let newRef = v;
+				let oldRef = p;//t[k];
+
+				if(v instanceof View)
+				{
+					newRef = v.___ref___;
+				}
+
+				if(p instanceof View)
+				{
+					oldRef = p.___ref___;
+				}
+
+				if(newRef !== oldRef && t[k] instanceof View)
+				{
+					t[k].remove();
+				}
+
+				if((k in this.args) && newRef !== oldRef)
+				{
+					this.args[k] = v;
+				}
+			}, {wait:0});
+
+			// for(let i in carryProps)
+			// {
+			// 	let _debind = this.args.bindTo(carryProps[i], (v, k) => {
+			// 		viewList.args.subArgs[k] = v;
+			// 	});
+
+			// 	viewList.cleanup.push(_debind);
+
+			// 	this.cleanup.push(()=>{
+			// 		_debind();
+
+			// 		if(v && !v.isBound())
+			// 		{
+			// 			Bindable.clearBindings(v);
+			// 		}
+			// 	});
+			// }
 
 			while(tag.firstChild)
 			{
@@ -1163,7 +1225,7 @@ ${tag.outerHTML}`
 			this.viewLists[eachProp] = viewList;
 
 			viewList.render(tag);
-		},{wait :0});
+		});
 
 		this.cleanup.push(()=>{
 			debind();
@@ -1210,7 +1272,6 @@ ${tag.outerHTML}`
 			{
 				view.args[k] = v;
 			}
-			// t[k]         = v;
 		});
 
 		for(let i in this.args)
@@ -1223,40 +1284,35 @@ ${tag.outerHTML}`
 			view.args[i] = this.args[i];
 		}
 
-		let debindB = view.args.bindTo((v,k,t,d)=>{
+		let debindB = view.args.bindTo((v,k,t,d,p)=>{
 			if(k == '_id')
 			{
 				return;
 			}
 
 			let newRef = v;
-			let oldRef = t[k];
+			let oldRef = p;
 
 			if(v instanceof View)
 			{
 				newRef = v.___ref___;
 			}
 
-			if(t[k] instanceof View)
+			if(p instanceof View)
 			{
-				oldRef = t[k].___ref___;
+				oldRef = p.___ref___;
 			}
 
-			if(newRef !== oldRef && t[k] instanceof View)
+			if(newRef !== oldRef && p instanceof View)
 			{
-				t[k].remove();
+				p.remove();
 			}
 
-			if(t[k] !== v)
-			{
-				t[k]         = v;
-			}
-
-			if(this.args[k] !== v)
+			if((k in this.args) && newRef !== oldRef)
 			{
 				this.args[k] = v;
 			}
-		});
+		}, {wait:0});
 
 		let cleaner = this;
 

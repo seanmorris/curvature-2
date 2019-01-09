@@ -767,6 +767,8 @@ var View = exports.View = function () {
 							}
 						}
 						tag.value = v == null ? '' : v;
+					} else if (type === 'file') {
+						console.log(v);
 					}
 					return;
 				}
@@ -776,7 +778,7 @@ var View = exports.View = function () {
 				} else {
 					tag.innerText = v;
 				}
-			}, { wait: 0 });
+			});
 
 			if (proxy !== this.args) {
 				this.subBindings[bindArg].push(debind);
@@ -790,14 +792,17 @@ var View = exports.View = function () {
 				}
 
 				var type = tag.getAttribute('type');
+				var multi = tag.getAttribute('multiple');
 				if (type && type.toLowerCase() == 'checkbox') {
 					if (tag.checked) {
 						proxy[property] = event.target.value;
 					} else {
 						proxy[property] = false;
 					}
-				} else {
+				} else if (type !== 'file') {
 					proxy[property] = event.target.value;
+				} else if (type == 'file' && multi) {
+					proxy[property] = Array.from(event.target.files);
 				}
 			};
 
@@ -1067,11 +1072,12 @@ var View = exports.View = function () {
 				tag.removeChild(tag.firstChild);
 			}
 
-			var carryProps = [];
+			// let carryProps = [];
 
-			if (carryAttr) {
-				carryProps = carryAttr.split(',');
-			}
+			// if(carryAttr)
+			// {
+			// 	carryProps = carryAttr.split(',');
+			// }
 
 			var _eachAttr$split = eachAttr.split(':'),
 			    _eachAttr$split2 = _slicedToArray(_eachAttr$split, 3),
@@ -1090,25 +1096,67 @@ var View = exports.View = function () {
 					viewList.remove();
 				});
 
-				var _loop9 = function _loop9(i) {
-					var _debind = _this8.args.bindTo(carryProps[i], function (v, k) {
+				var debindA = _this8.args.bindTo(function (v, k, t, d) {
+					if (k == '_id') {
+						return;
+					}
+
+					if (viewList.args.subArgs[k] !== v) {
+						// view.args[k] = v;
 						viewList.args.subArgs[k] = v;
-					});
+					}
+				});
 
-					viewList.cleanup.push(_debind);
+				for (var i in _this8.args) {
+					if (i == '_id') {
+						continue;
+					}
 
-					_this8.cleanup.push(function () {
-						_debind();
-
-						if (v && !v.isBound()) {
-							_Bindable.Bindable.clearBindings(v);
-						}
-					});
-				};
-
-				for (var i in carryProps) {
-					_loop9(i);
+					viewList.args.subArgs[k] = _this8.args[i];
 				}
+
+				var debindB = viewList.args.bindTo(function (v, k, t, d, p) {
+					if (k == '_id') {
+						return;
+					}
+
+					var newRef = v;
+					var oldRef = p; //t[k];
+
+					if (v instanceof View) {
+						newRef = v.___ref___;
+					}
+
+					if (p instanceof View) {
+						oldRef = p.___ref___;
+					}
+
+					if (newRef !== oldRef && t[k] instanceof View) {
+						t[k].remove();
+					}
+
+					if (k in _this8.args && newRef !== oldRef) {
+						_this8.args[k] = v;
+					}
+				}, { wait: 0 });
+
+				// for(let i in carryProps)
+				// {
+				// 	let _debind = this.args.bindTo(carryProps[i], (v, k) => {
+				// 		viewList.args.subArgs[k] = v;
+				// 	});
+
+				// 	viewList.cleanup.push(_debind);
+
+				// 	this.cleanup.push(()=>{
+				// 		_debind();
+
+				// 		if(v && !v.isBound())
+				// 		{
+				// 			Bindable.clearBindings(v);
+				// 		}
+				// 	});
+				// }
 
 				while (tag.firstChild) {
 					tag.removeChild(tag.firstChild);
@@ -1117,7 +1165,7 @@ var View = exports.View = function () {
 				_this8.viewLists[eachProp] = viewList;
 
 				viewList.render(tag);
-			}, { wait: 0 });
+			});
 
 			this.cleanup.push(function () {
 				debind();
@@ -1162,7 +1210,6 @@ var View = exports.View = function () {
 				if (view.args[k] !== v) {
 					view.args[k] = v;
 				}
-				// t[k]         = v;
 			});
 
 			for (var i in this.args) {
@@ -1173,34 +1220,30 @@ var View = exports.View = function () {
 				view.args[i] = this.args[i];
 			}
 
-			var debindB = view.args.bindTo(function (v, k, t, d) {
+			var debindB = view.args.bindTo(function (v, k, t, d, p) {
 				if (k == '_id') {
 					return;
 				}
 
 				var newRef = v;
-				var oldRef = t[k];
+				var oldRef = p;
 
 				if (v instanceof View) {
 					newRef = v.___ref___;
 				}
 
-				if (t[k] instanceof View) {
-					oldRef = t[k].___ref___;
+				if (p instanceof View) {
+					oldRef = p.___ref___;
 				}
 
-				if (newRef !== oldRef && t[k] instanceof View) {
-					t[k].remove();
+				if (newRef !== oldRef && p instanceof View) {
+					p.remove();
 				}
 
-				if (t[k] !== v) {
-					t[k] = v;
-				}
-
-				if (_this9.args[k] !== v) {
+				if (k in _this9.args && newRef !== oldRef) {
 					_this9.args[k] = v;
 				}
-			});
+			}, { wait: 0 });
 
 			var cleaner = this;
 

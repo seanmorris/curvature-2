@@ -73,7 +73,7 @@ export class Wrapper extends View
 
 				this.refresh(record);
 			});
-		});
+		}, {wait: 0});
 
 		this.args.field.args.value.bindTo('keyword', (v)=>{
 			this.args.keyword = v;
@@ -113,8 +113,6 @@ export class Wrapper extends View
 
 	getRecordTitle(record)
 	{
-		// console.log(record);
-
 		if(record._titleField)
 		{
 			return record[ record._titleField ];

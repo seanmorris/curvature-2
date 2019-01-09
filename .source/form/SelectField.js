@@ -18,10 +18,30 @@ export class SelectField extends Field {
 					cv-ref  = "input:curvature/base/Tag"
 				/>
 					<option value = "[[option]]">[[optionText]]</option>
-					[[value]]
 				</select>
 			</label>
 		`;
+
+		this.args.bindTo('value', (v,k,t,d,p)=>{
+			console.log(this.args.name,v,p);
+		});
+	}
+
+	postRender(parentNode)
+	{
+		this.onTimeout(0,()=>{
+			let tag = this.tags.input.element;
+
+			for(let i in tag.options)
+			{
+				let option = tag.options[i];
+
+				if(option.value == this.args.value)
+				{
+					tag.selectedIndex = i;
+				}
+			}
+		});
 	}
 
 	getLabel()

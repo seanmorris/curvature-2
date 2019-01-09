@@ -60,7 +60,7 @@ var View = exports.View = function (_FieldSet) {
 
 		_this.setCreateForm({ view: _this });
 
-		_this.template = '\n\t\t\t<label\n\t\t\t\tfor        = "' + _this.args.name + '"\n\t\t\t\tdata-type  = "' + _this.args.attrs.type + '"\n\t\t\t\tdata-multi = "' + (_this.args.attrs['data-multi'] ? 'true' : 'false') + '"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\n\t\t\t\t<fieldset\n\t\t\t\t\tname  = "' + _this.args.name + '"\n\t\t\t\t\tclass = "multi-field [[creating]] [[fieldType]]"\n\t\t\t\t>\n\n\t\t\t\t\t<div class = "record-list" cv-each = "_fields:field:f">\n\t\t\t\t\t\t<div\n\t\t\t\t\t\t\tclass     = "single-record"\n\t\t\t\t\t\t\tdata-for  = "[[f]]"\n\t\t\t\t\t\t\tdraggable = "true"\n\t\t\t\t\t\t\tcv-on     = "\n\t\t\t\t\t\t\t\tdrop:drop(event);\n\t\t\t\t\t\t\t\tdragstart:drag(event);\n\t\t\t\t\t\t\t\tdragend:dragStop(event);\n\t\t\t\t\t\t\t\tdragover:dragOver(event);\n\t\t\t\t\t\t\t"\n\t\t\t\t\t\t>\n\t\t\t\t\t\t\t[[field]]\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div\n\t\t\t\t\t\tclass = "overlay create"\n\t\t\t\t\t\t--cv-on = "wheel:cancel(event)"\n\t\t\t\t\t>\n\t\t\t\t\t\t<div class = "form constrict">\n\t\t\t\t\t\t\t<div\n\t\t\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\t\t\tclass = "bubble bottom left-margin close"\n\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t&#215;\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t[[createForm]]\n\t\t\t\t\t\t[[searchForm]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class = "overlay loading">\n\t\t\t\t\t\t[[loader]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div\n\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\tclass = "bubble bottom left-margin add"\n\t\t\t\t\t>+</div>\n\n\t\t\t\t</fieldset>\n\n\t\t\t</label>\n\t\t';
+		_this.template = '\n\t\t\t<label\n\t\t\t\tfor        = "' + _this.args.name + '"\n\t\t\t\tdata-type  = "' + _this.args.attrs.type + '"\n\t\t\t\tdata-multi = "' + (_this.args.attrs['data-multi'] ? 'true' : 'false') + '"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\n\t\t\t\t<fieldset\n\t\t\t\t\tname  = "' + _this.args.name + '"\n\t\t\t\t\tclass = "multi-field [[creating]] [[fieldType]]"\n\t\t\t\t>\n\n\t\t\t\t\t<div class = "record-list" cv-each = "_fields:field:f">\n\t\t\t\t\t\t<div\n\t\t\t\t\t\t\tclass     = "single-record"\n\t\t\t\t\t\t\tdata-for  = "[[f]]"\n\t\t\t\t\t\t\tdraggable = "true"\n\t\t\t\t\t\t\tcv-on     = "\n\t\t\t\t\t\t\t\tdrop:drop(event);\n\t\t\t\t\t\t\t\tdragstart:drag(event);\n\t\t\t\t\t\t\t\tdragend:dragStop(event);\n\t\t\t\t\t\t\t\tdragover:dragOver(event);\n\t\t\t\t\t\t\t"\n\t\t\t\t\t\t>\n\t\t\t\t\t\t\t[[field]]\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class = "overlay create">\n\t\t\t\t\t\t<div class = "form constrict">\n\t\t\t\t\t\t\t<div\n\t\t\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\t\t\tclass = "bubble bottom left-margin close"\n\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t&#215;\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t[[createForm]]\n\t\t\t\t\t\t[[searchForm]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class = "overlay loading">\n\t\t\t\t\t\t[[loader]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div\n\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\tclass = "bubble bottom left-margin add"\n\t\t\t\t\t>+</div>\n\n\t\t\t\t\t<div\n\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\tclass = "bubble bottom left-margin add"\n\t\t\t\t\t>+</div>\n\n\t\t\t\t</fieldset>\n\n\t\t\t</label>\n\t\t';
 		return _this;
 	}
 
@@ -86,32 +86,38 @@ var View = exports.View = function (_FieldSet) {
 	}, {
 		key: 'addRecord',
 		value: function addRecord(record) {
-			var fieldClass = this.args.fields[-1].constructor;
+			if (!Array.isArray(record)) {
+				record = [record];
+			}
 
-			var skeleton = Object.assign({}, this.args.fields[-1].skeleton);
-			var name = Object.values(this.args.fields).length - 1;
+			for (var i in record) {
+				var fieldClass = this.args.fields[-1].constructor;
 
-			skeleton = this.cloneSkeleton(skeleton);
+				var skeleton = Object.assign({}, this.args.fields[-1].skeleton);
+				var name = Object.values(this.args.fields).length - 1;
 
-			skeleton = this.correctNames(skeleton, name);
+				skeleton = this.cloneSkeleton(skeleton);
 
-			var superSkeleton = {};
+				skeleton = this.correctNames(skeleton, name);
 
-			superSkeleton[name + 1] = skeleton;
+				var superSkeleton = {};
 
-			var newField = _Form.Form.renderFields(superSkeleton, this)[name + 1];
+				superSkeleton[name + 1] = skeleton;
 
-			this.args.fields[name] = newField;
+				var newField = _Form.Form.renderFields(superSkeleton, this)[name + 1];
 
-			var newWrap = this.wrapSubfield(newField);
+				this.args.fields[name] = newField;
 
-			newField.args.value.id = record.id || '';
-			newField.args.value.class = record.class || '';
-			newField.args.value.title = record.title || '';
+				var newWrap = this.wrapSubfield(newField);
 
-			this.args._fields.push(newWrap);
+				newField.args.value.id = record[i].id || '';
+				newField.args.value.class = record[i].class || '';
+				newField.args.value.title = record[i].title || '';
 
-			newWrap.refresh(record);
+				this.args._fields.push(newWrap);
+
+				newWrap.refresh(record[i]);
+			}
 		}
 	}, {
 		key: 'editRecord',
@@ -123,8 +129,6 @@ var View = exports.View = function (_FieldSet) {
 			});
 
 			this.args.creating = this.args.creating ? '' : 'creating';
-
-			console.log(wrapper);
 		}
 	}, {
 		key: 'deleteImage',
@@ -136,9 +140,9 @@ var View = exports.View = function (_FieldSet) {
 		key: 'undeleteImage',
 		value: function undeleteImage(index) {
 			this.args.fields[index].enable();
-			console.log(this.args.fields[index]);
-			console.log(this.args._fields[index]);
-			console.log('===============');
+			// console.log(this.args.fields[index]);
+			// console.log(this.args._fields[index]);
+			// console.log('===============');
 
 			this.args._fields[index].args.classes = '';
 		}

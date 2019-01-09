@@ -69,7 +69,7 @@ var Wrapper = exports.Wrapper = function (_View) {
 
 				_this.refresh(record);
 			});
-		});
+		}, { wait: 0 });
 
 		_this.args.field.args.value.bindTo('keyword', function (v) {
 			_this.args.keyword = v;
@@ -105,8 +105,6 @@ var Wrapper = exports.Wrapper = function (_View) {
 	}, {
 		key: 'getRecordTitle',
 		value: function getRecordTitle(record) {
-			// console.log(record);
-
 			if (record._titleField) {
 				return record[record._titleField];
 			}

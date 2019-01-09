@@ -11,9 +11,13 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _Bindable = require('./Bindable');
 
+var _Router = require('./Router');
+
 var _Cache = require('./Cache');
 
 var _Model = require('./Model');
+
+var _Bag = require('./Bag');
 
 var _Form = require('../form/Form');
 
@@ -36,16 +40,17 @@ var Repository = function () {
 			var _this = this;
 
 			var refresh = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+			var args = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			var resourceUri = this.uri + '/' + id;
 
-			var cached = _Cache.Cache.load(resourceUri, false, 'model-uri-repo');
+			var cached = _Cache.Cache.load(resourceUri + _Router.Router.queryToString(_Router.Router.queryOver(args), true), false, 'model-uri-repo');
 
 			if (!refresh && cached) {
 				return Promise.resolve(cached);
 			}
 
-			return Repository.request(resourceUri).then(function (response) {
+			return Repository.request(resourceUri, args).then(function (response) {
 				return _this.extractModel(response.body);
 			});
 		}
@@ -67,7 +72,9 @@ var Repository = function () {
 					records.push(_this2.extractModel(record));
 				}
 
-				return records;
+				response.body = records;
+
+				return response;
 			});
 		}
 	}, {
@@ -89,8 +96,6 @@ var Repository = function () {
 				return Repository.request(resourceUri).then(function (response) {
 					var form = new _Form.Form(response.meta.form, customFields);
 					// let model = this.extractModel(response.body);
-
-					console.log(form, customFields);
 
 					return new _FormWrapper.FormWrapper(form, resourceUri, 'POST', customFields);
 				});
@@ -181,6 +186,7 @@ var Repository = function () {
 			}
 		}
 	}, {
+<<<<<<< HEAD
 		key: 'encode',
 		value: function encode(obj) {
 			var namespace = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
@@ -205,6 +211,15 @@ var Repository = function () {
 			}
 
 			return formData;
+=======
+		key: 'onResponse',
+		value: function onResponse(callback) {
+			if (!this._onResponse) {
+				this._onResponse = new _Bag.Bag();
+			}
+
+			return this._onResponse.add(callback);
+>>>>>>> 7d064e9e15df878ece9770dce5268344b51b05fd
 		}
 	}, {
 		key: 'request',
@@ -224,6 +239,10 @@ var Repository = function () {
 
 			if (args) {
 				queryArgs = args;
+			}
+
+			if (!this._onResponse) {
+				this._onResponse = new _Bag.Bag();
 			}
 
 			queryArgs.api = queryArgs.api || 'json';
@@ -323,10 +342,22 @@ var Repository = function () {
 											_tagCache.innerText = JSON.stringify(response);
 										}
 
+										var onResponse = _this3._onResponse.items();
+
+										for (var _i in onResponse) {
+											onResponse[_i](response, true);
+										}
+
 										resolve(response);
 									} else {
 										if (!post && cache) {
 											// this.cache[fullUri] = response;
+										}
+
+										var _onResponse = _this3._onResponse.items();
+
+										for (var _i2 in _onResponse) {
+											_onResponse[_i2](response, true);
 										}
 
 										reject(response);
@@ -336,6 +367,12 @@ var Repository = function () {
 
 									if (!post && cache) {
 										// this.cache[fullUri] = xhr.responseText;
+									}
+
+									var _onResponse2 = _this3._onResponse.items();
+
+									for (var _i3 in _onResponse2) {
+										_onResponse2[_i3](xhr, true);
 									}
 
 									resolve(xhr);

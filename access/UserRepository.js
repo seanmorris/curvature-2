@@ -30,12 +30,18 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 
 	_createClass(UserRepository, null, [{
 		key: 'getCurrentUser',
-		value: function getCurrentUser(refresh) {
+		value: function getCurrentUser() {
 			var _this2 = this;
+
+			var refresh = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
 			if (window.prerenderer) {
 				return;
+			}
+			if (!refresh && this.args.response) {
+				console.log(this.args.response);
+				return Promise.resolve(this.args.response);
 			}
 			return this.request(this.uri + 'current', false, false, false).then(function (response) {
 				if (response.body.roles) {
@@ -45,21 +51,29 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 						}
 					}
 				}
-				_this2.args.current = response.body;
+				if (_this2.args.response && _this2.args.response.id) {
+					_this2.args.response = response;
+					_this2.args.current = response.body;
+				}
 				return response;
 			});
 		}
 	}, {
 		key: 'login',
 		value: function login() {
-			return this.request(_Config.Config.backend + '/user/login');
+			return this.request(this.uri + '/login');
 		}
 	}, {
 		key: 'logout',
 		value: function logout() {
+			var _this3 = this;
+
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
 			this.args.current = null;
-			return this.request(this.uri + 'logout', false, {}, false).then(function (user) {
+			return this.request(this.uri + 'current', false, {}, false).then(function (user) {
+				_this3.request(_this3.uri + 'logout', false, {}, false).then(function () {
+					return user;
+				});
 				return user;
 			});
 		}
@@ -78,6 +92,12 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 
 	return UserRepository;
 }(_Repository2.Repository);
+
+_Repository2.Repository.onResponse(function (response) {
+	if (response && response.meta && response.meta.currentUser) {
+		UserRepository.args.current = response.meta.currentUser;
+	}
+}, { wait: 0 });
 
 // setInterval(() => {
 // 	UserRepository.getCurrentUser();

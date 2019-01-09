@@ -123,7 +123,8 @@ export class Bindable {
                     if (throttle) {
                         return;
                     }
-                    callback(v,k,t,d);
+                    let p = t[k];
+                    callback(v,k,t,d,p);
                     throttle = true;
                     setTimeout(()=>throttle = false, options.throttle);
                 })(callback);
@@ -244,7 +245,7 @@ export class Bindable {
                     if(!object.___binding___[key][i]) {
                         continue;
                     }
-                    if (object.___binding___[key][i](value, key, target, false) === false) {
+                    if (object.___binding___[key][i](value, key, target, false, target[key]) === false) {
                         stop = true;
                     }
                 }
@@ -295,7 +296,7 @@ export class Bindable {
             }
 
             for (let i in object.___bindingAll___) {
-                object.___bindingAll___[i](undefined, key, target, true);
+                object.___bindingAll___[i](undefined, key, target, true, target[key]);
             }
 
             if (key in object.___binding___) {
@@ -303,7 +304,7 @@ export class Bindable {
                     if(!object.___binding___[key][i]) {
                         continue;
                     }
-                    object.___binding___[key][i](undefined, key, target, true);
+                    object.___binding___[key][i](undefined, key, target, true, target[key]);
                 }
             }
 

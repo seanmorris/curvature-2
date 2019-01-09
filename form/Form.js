@@ -138,10 +138,18 @@ var Form = exports.Form = function (_View) {
 
 					var fieldName = field.args.fields[i].getName();
 
-					if (field.args.fields[i].args.type == 'file' && field.args.fields[i].tags.input.element.files[0]) {
-						append.append(fieldName, field.args.fields[i].tags.input.element.files[0]);
+					if (field.args.fields[i].args.type == 'file' && field.args.fields[i].tags.input.element.files.length) {
+						if (field.args.fields[i].args.attrs.multiple) {
+							var files = field.args.fields[i].tags.input.element.files;
+
+							for (var _i = 0; _i < files.length; _i++) {
+								append.append(fieldName + '[]', files[_i]);
+							}
+						} else {
+							append.append(fieldName, field.args.fields[i].tags.input.element.files[0]);
+						}
 					} else {
-						append.append(fieldName, field.args.fields[i].args.value);
+						append.append(fieldName, field.args.fields[i].args.value === undefined ? '' : field.args.fields[i].args.value);
 					}
 				}
 			}
@@ -159,8 +167,8 @@ var Form = exports.Form = function (_View) {
 				args[i] = args[i] || this.args.flatValue[i];
 			}
 
-			for (var _i in args) {
-				parts.push(_i + '=' + encodeURIComponent(args[_i]));
+			for (var _i2 in args) {
+				parts.push(_i2 + '=' + encodeURIComponent(args[_i2]));
 			}
 
 			return parts.join('&');
@@ -207,7 +215,9 @@ var Form = exports.Form = function (_View) {
 					}
 				}
 
-				if (skeleton[i].name in customFields) {
+				// console.log(customFields);
+
+				if (customFields && skeleton[i].name in customFields) {
 					field = new customFields[skeleton[i].name](skeleton[i], form, parent, i);
 				} else {
 					switch (skeleton[i].type) {
@@ -219,6 +229,7 @@ var Form = exports.Form = function (_View) {
 							}
 							break;
 						case 'select':
+							console.log(skeleton[i]);
 							field = new _SelectField.SelectField(skeleton[i], form, parent, i);
 							break;
 						case 'radios':

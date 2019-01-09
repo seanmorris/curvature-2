@@ -12,6 +12,10 @@ export class PopOutTag extends Tag
 		this.style     = element.getAttribute('style');
 		this.moving    = false;
 
+		this.hostSelector = this.element.getAttribute('cv-pop-to');
+
+		this.element.removeAttribute('cv-pop-to');
+
 		this.leftDuration   = 0;
 		this.topDuration    = 0;
 		this.rightDuration  = 0;
@@ -74,7 +78,7 @@ export class PopOutTag extends Tag
 					this.verticalDuration = 0.4;
 				}
 
-				console.log(this.horizontalDuration, this.verticalDuration);
+				// console.log(this.horizontalDuration, this.verticalDuration);
 			}
 
 			if(!this.element.contains(event.target))
@@ -100,6 +104,16 @@ export class PopOutTag extends Tag
 			}
 		};
 
+
+		this.escapeListener = (event) => {
+			// console.log(event);
+			if(event.key !== 'Escape')
+			{
+				return;
+			}
+			this.unpop();
+		};
+
 		if(!this.element.___clickListener___)
 		{
 			Object.defineProperty(this.element, '___scrollListeners___', {
@@ -108,11 +122,14 @@ export class PopOutTag extends Tag
 			});
 
 			this.element.___clickListener___ = this.clickListener;
+			this.element.___escapeListener___ = this.escapeListener;
 
 			this.element.addEventListener('click',  element.___clickListener___);
+			window.addEventListener('keyup',  element.___escapeListener___);
 
 			this.cleanup.push(((element)=>()=>{
 				element.removeEventListener('click',  element.___clickListener___);
+				window.removeEventListener('keyup',  element.___escapeListener___);
 			})(element));
 		}
 	}
@@ -166,6 +183,23 @@ export class PopOutTag extends Tag
 		this.rect  = this.element.getBoundingClientRect();
 		this.style = this.element.getAttribute('style');
 
+		let hostTag = this.element;
+
+		// console.log(hostTag);
+
+		while(hostTag.parentNode && !hostTag.matches(this.hostSelector))
+		{
+			if(hostTag.parentNode == document)
+			{
+				break;
+			}
+			hostTag = hostTag.parentNode;
+		}
+
+		// console.log(hostTag);
+
+		let hostRect = hostTag.getBoundingClientRect();
+
 		window.requestAnimationFrame(()=>{
 
 			this.unpoppedStyle = `
@@ -189,10 +223,10 @@ export class PopOutTag extends Tag
 
 			window.requestAnimationFrame(()=>{
 				style += `
-					;top:   0px;
-					left:   0px;
-					width:  100%;
-					height: 100%;
+					;left:      ${hostRect.x}px;
+					top:        ${hostRect.y}px;
+					width:      ${hostRect.width}px;
+					height:     ${hostRect.height}px;
 					overflow-y: auto;
 					transition: width ${this.horizontalDuration}s ease-out
 						, top ${this.verticalDuration}s           ease-out

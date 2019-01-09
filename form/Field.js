@@ -23,12 +23,12 @@ var Field = exports.Field = function (_View) {
 	function Field(values, form, parent, key) {
 		_classCallCheck(this, Field);
 
-		var skeleton = Object.assign(values);
+		var skeleton = Object.assign({}, values);
 
-		var _this = _possibleConstructorReturn(this, (Field.__proto__ || Object.getPrototypeOf(Field)).call(this, values));
+		var _this = _possibleConstructorReturn(this, (Field.__proto__ || Object.getPrototypeOf(Field)).call(this, skeleton));
 
 		_this.args.title = _this.args.title || '';
-		_this.args.value = _this.args.value == null ? '' : _this.args.value;
+		_this.args.value = _this.args.value === null ? '' : _this.args.value;
 		_this.value = _this.args.value;
 		_this.skeleton = skeleton;
 		_this.disabled = null;
@@ -54,7 +54,6 @@ var Field = exports.Field = function (_View) {
 		var setting = null;
 
 		_this.args.bindTo('value', function (v, k) {
-
 			_this.value = v;
 
 			if (setting == k) {
@@ -66,8 +65,12 @@ var Field = exports.Field = function (_View) {
 			_this.args.valueString = JSON.stringify(v || '', null, 4);
 			_this.valueString = _this.args.valueString;
 
-			if (_this.args.attrs.type == 'file' && _this.tags.input && _this.tags.input.element.files && _this.tags.input.element.files[0]) {
-				_this.parent.args.value[key] = _this.tags.input.element.files[0];
+			if (_this.args.attrs.type == 'file' && _this.tags.input && _this.tags.input.element.files && _this.tags.input.element.length) {
+				if (!_this.args.attrs.multiple) {
+					_this.parent.args.value[key] = _this.tags.input.element.files[0];
+				} else {
+					_this.parent.args.value[key] = Array.from(_this.tags.input.element.files);
+				}
 			} else {
 				if (!_this.parent.args.value) {
 					_this.parent.args.value = {};
@@ -76,9 +79,11 @@ var Field = exports.Field = function (_View) {
 				_this.parent.args.value[key] = v;
 			}
 			setting = null;
-		});
+		}, { wait: 0 });
 
 		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
+
+		_this.parent.args.value[_this.key] = _this.args.value;
 
 		_this.parent.args.value.bindTo(key, function (v, k) {
 
@@ -89,13 +94,15 @@ var Field = exports.Field = function (_View) {
 			setting = k;
 
 			if (_this.args.attrs.type == 'file') {
-				if (_this.tags.input && _this.tags.input.element.files) {
-					_this.args.value = _this.tags.input.element.files[0];
+				if (_this.tags.input && _this.tags.input.element.files && _this.tags.input.element.files.length) {
+					if (!_this.args.attrs.multiple) {
+						_this.parent.args.value[key] = _this.tags.input.element.files[0];
+					} else {
+						_this.parent.args.value[key] = Array.from(_this.tags.input.element.files);
+					}
 				} else {
 					_this.args.value = v;
 				}
-
-				console.log(_this.args.value);
 			} else {
 				_this.args.value = v;
 			}
