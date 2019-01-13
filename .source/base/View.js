@@ -439,24 +439,39 @@ export class View
 
 		for (let i in attrs)
 		{
-			if(this.args[ attrs[i][1] ])
+			let proxy        = this.args;
+			let bindProperty = attrs[i][1];
+			let property     = bindProperty;
+
+			if(bindProperty.match(/\./))
 			{
-				tag.setAttribute(
-					attrs[i][0]
-					, this.args[ attrs[i][1] ]
+				[proxy, property] = Bindable.resolve(
+					this.args
+					, bindProperty
+					, true
 				);
 			}
 
-			this.cleanup.push(this.args.bindTo(
-				attrs[i][1]
-				, ((attr) => (v)=>{
+			if(proxy[ attrs[i][1] ])
+			{
+				tag.setAttribute(
+					attrs[i][0]
+					, proxy[ attrs[i][1] ]
+				);
+			}
+
+			let attrib = attrs[i][0];
+
+			this.cleanup.push(proxy.bindTo(
+				property
+				, (v)=>{
 					if(v == null)
 					{
-						tag.setAttribute(attr[0], '');
+						tag.setAttribute(attrib, '');
 						return;
 					}
-					tag.setAttribute(attr[0], v);
-				})(attrs[i])
+					tag.setAttribute(attrib, v);
+				}
 			));
 		}
 	}

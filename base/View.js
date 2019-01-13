@@ -422,6 +422,8 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapAttrTags',
 		value: function mapAttrTags(tag) {
+			var _this4 = this;
+
 			var attrProperty = tag.getAttribute('cv-attr');
 
 			tag.removeAttribute('cv-attr');
@@ -431,26 +433,43 @@ var View = exports.View = function () {
 				return p.split(':');
 			});
 
-			for (var i in attrs) {
-				if (this.args[attrs[i][1]]) {
-					tag.setAttribute(attrs[i][0], this.args[attrs[i][1]]);
+			var _loop4 = function _loop4(i) {
+				var proxy = _this4.args;
+				var bindProperty = attrs[i][1];
+				var property = bindProperty;
+
+				if (bindProperty.match(/\./)) {
+					var _Bindable$resolve = _Bindable.Bindable.resolve(_this4.args, bindProperty, true);
+
+					var _Bindable$resolve2 = _slicedToArray(_Bindable$resolve, 2);
+
+					proxy = _Bindable$resolve2[0];
+					property = _Bindable$resolve2[1];
 				}
 
-				this.cleanup.push(this.args.bindTo(attrs[i][1], function (attr) {
-					return function (v) {
-						if (v == null) {
-							tag.setAttribute(attr[0], '');
-							return;
-						}
-						tag.setAttribute(attr[0], v);
-					};
-				}(attrs[i])));
+				if (proxy[attrs[i][1]]) {
+					tag.setAttribute(attrs[i][0], proxy[attrs[i][1]]);
+				}
+
+				var attrib = attrs[i][0];
+
+				_this4.cleanup.push(proxy.bindTo(property, function (v) {
+					if (v == null) {
+						tag.setAttribute(attrib, '');
+						return;
+					}
+					tag.setAttribute(attrib, v);
+				}));
+			};
+
+			for (var i in attrs) {
+				_loop4(i);
 			}
 		}
 	}, {
 		key: 'mapInterpolatableTags',
 		value: function mapInterpolatableTags(tag) {
-			var _this4 = this;
+			var _this5 = this;
 
 			var regex = this.interpolateRegex;
 
@@ -464,7 +483,7 @@ var View = exports.View = function () {
 				var header = 0;
 				var match = void 0;
 
-				var _loop4 = function _loop4() {
+				var _loop5 = function _loop5() {
 					var bindProperty = match[2];
 
 					var unsafeHtml = false;
@@ -497,16 +516,16 @@ var View = exports.View = function () {
 						dynamicNode = document.createTextNode('');
 					}
 
-					var proxy = _this4.args;
+					var proxy = _this5.args;
 					var property = bindProperty;
 
 					if (bindProperty.match(/\./)) {
-						var _Bindable$resolve = _Bindable.Bindable.resolve(_this4.args, bindProperty, true);
+						var _Bindable$resolve3 = _Bindable.Bindable.resolve(_this5.args, bindProperty, true);
 
-						var _Bindable$resolve2 = _slicedToArray(_Bindable$resolve, 2);
+						var _Bindable$resolve4 = _slicedToArray(_Bindable$resolve3, 2);
 
-						proxy = _Bindable$resolve2[0];
-						property = _Bindable$resolve2[1];
+						proxy = _Bindable$resolve4[0];
+						property = _Bindable$resolve4[1];
 					}
 
 					tag.parentNode.insertBefore(dynamicNode, tag);
@@ -524,7 +543,7 @@ var View = exports.View = function () {
 							if (v instanceof View) {
 								v.render(tag.parentNode, dynamicNode);
 
-								_this4.cleanup.push(function () {
+								_this5.cleanup.push(function () {
 									if (!v.preserve) {
 										v.remove();
 									}
@@ -543,7 +562,7 @@ var View = exports.View = function () {
 						};
 					}(dynamicNode, unsafeHtml));
 
-					_this4.cleanup.push(function () {
+					_this5.cleanup.push(function () {
 						debind();
 						if (!proxy.isBound()) {
 							_Bindable.Bindable.clearBindings(proxy);
@@ -552,9 +571,9 @@ var View = exports.View = function () {
 				};
 
 				while (match = regex.exec(original)) {
-					var _ret4 = _loop4();
+					var _ret5 = _loop5();
 
-					if (_ret4 === 'continue') continue;
+					if (_ret5 === 'continue') continue;
 				}
 
 				var staticSuffix = original.substring(header);
@@ -567,8 +586,8 @@ var View = exports.View = function () {
 			}
 
 			if (tag.nodeType == Node.ELEMENT_NODE) {
-				var _loop5 = function _loop5(i) {
-					if (!_this4.interpolatable(tag.attributes[i].value)) {
+				var _loop6 = function _loop6(i) {
+					if (!_this5.interpolatable(tag.attributes[i].value)) {
 						return 'continue';
 					}
 
@@ -596,17 +615,17 @@ var View = exports.View = function () {
 
 					segments.push(original.substring(header));
 
-					var _loop6 = function _loop6(j) {
-						var proxy = _this4.args;
+					var _loop7 = function _loop7(j) {
+						var proxy = _this5.args;
 						var property = j;
 
 						if (j.match(/\./)) {
-							var _Bindable$resolve3 = _Bindable.Bindable.resolve(_this4.args, j, true);
+							var _Bindable$resolve5 = _Bindable.Bindable.resolve(_this5.args, j, true);
 
-							var _Bindable$resolve4 = _slicedToArray(_Bindable$resolve3, 2);
+							var _Bindable$resolve6 = _slicedToArray(_Bindable$resolve5, 2);
 
-							proxy = _Bindable$resolve4[0];
-							property = _Bindable$resolve4[1];
+							proxy = _Bindable$resolve6[0];
+							property = _Bindable$resolve6[1];
 						}
 
 						var longProperty = j;
@@ -625,7 +644,7 @@ var View = exports.View = function () {
 							tag.setAttribute(attribute.name, segments.join(''));
 						});
 
-						_this4.cleanup.push(function () {
+						_this5.cleanup.push(function () {
 							debind();
 							if (!proxy.isBound()) {
 								_Bindable.Bindable.clearBindings(proxy);
@@ -634,14 +653,14 @@ var View = exports.View = function () {
 					};
 
 					for (var j in bindProperties) {
-						_loop6(j);
+						_loop7(j);
 					}
 				};
 
 				for (var i = 0; i < tag.attributes.length; i++) {
-					var _ret5 = _loop5(i);
+					var _ret6 = _loop6(i);
 
-					if (_ret5 === 'continue') continue;
+					if (_ret6 === 'continue') continue;
 				}
 			}
 		}
@@ -715,7 +734,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapBindTags',
 		value: function mapBindTags(tag) {
-			var _this5 = this;
+			var _this6 = this;
 
 			var bindArg = tag.getAttribute('cv-bind');
 			var proxy = this.args;
@@ -723,22 +742,22 @@ var View = exports.View = function () {
 			var top = null;
 
 			if (bindArg.match(/\./)) {
-				var _Bindable$resolve5 = _Bindable.Bindable.resolve(this.args, bindArg, true);
+				var _Bindable$resolve7 = _Bindable.Bindable.resolve(this.args, bindArg, true);
 
-				var _Bindable$resolve6 = _slicedToArray(_Bindable$resolve5, 3);
+				var _Bindable$resolve8 = _slicedToArray(_Bindable$resolve7, 3);
 
-				proxy = _Bindable$resolve6[0];
-				property = _Bindable$resolve6[1];
-				top = _Bindable$resolve6[2];
+				proxy = _Bindable$resolve8[0];
+				property = _Bindable$resolve8[1];
+				top = _Bindable$resolve8[2];
 			}
 
 			if (proxy !== this.args) {
 				this.subBindings[bindArg] = this.subBindings[bindArg] || [];
 
 				this.cleanup.push(this.args.bindTo(top, function () {
-					while (_this5.subBindings.length) {
+					while (_this6.subBindings.length) {
 						console.log('HERE!');
-						_this5.subBindings.shift()();
+						_this6.subBindings.shift()();
 					}
 				}));
 			}
@@ -825,7 +844,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapOnTags',
 		value: function mapOnTags(tag) {
-			var _this6 = this;
+			var _this7 = this;
 
 			var action = String(tag.getAttribute('cv-on')).split(/;/).map(function (a) {
 				return a.split(':');
@@ -845,11 +864,11 @@ var View = exports.View = function () {
 					}
 
 					var eventMethod = void 0;
-					var parent = _this6;
+					var parent = _this7;
 
 					while (parent) {
 						if (typeof parent[callbackName] == 'function') {
-							var _ret7 = function () {
+							var _ret8 = function () {
 								var _parent = parent;
 								var _callBackName = callbackName;
 								eventMethod = function eventMethod() {
@@ -858,7 +877,7 @@ var View = exports.View = function () {
 								return 'break';
 							}();
 
-							if (_ret7 === 'break') break;
+							if (_ret8 === 'break') break;
 						}
 
 						if (parent.viewList && parent.viewList.parent) {
@@ -883,11 +902,11 @@ var View = exports.View = function () {
 								} else if (arg === '$tag') {
 									return tag;
 								} else if (arg === '$parent') {
-									return _this6.parent;
+									return _this7.parent;
 								} else if (arg === '$subview') {
-									return _this6;
-								} else if (arg in _this6.args) {
-									return _this6.args[arg];
+									return _this7;
+								} else if (arg in _this7.args) {
+									return _this7.args[arg];
 								} else if (match = /^['"](\w+?)["']$/.exec(arg)) {
 									return match[1];
 								}
@@ -905,17 +924,17 @@ var View = exports.View = function () {
 							break;
 
 						case '_attach':
-							_this6.attach.push(eventListener);
+							_this7.attach.push(eventListener);
 							break;
 
 						case '_detach':
-							_this6.detach.push(eventListener);
+							_this7.detach.push(eventListener);
 							break;
 
 						default:
 							tag.addEventListener(eventName, eventListener);
 
-							_this6.cleanup.push(function () {
+							_this7.cleanup.push(function () {
 								tag.removeEventListener(eventName, eventListener);
 							});
 							break;
@@ -971,7 +990,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapWithTags',
 		value: function mapWithTags(tag) {
-			var _this7 = this;
+			var _this8 = this;
 
 			var withAttr = tag.getAttribute('cv-with');
 			var carryAttr = tag.getAttribute('cv-carry');
@@ -989,8 +1008,8 @@ var View = exports.View = function () {
 			}
 
 			var debind = this.args.bindTo(withAttr, function (v, k, t, d) {
-				if (_this7.withViews[k]) {
-					_this7.withViews[k].remove();
+				if (_this8.withViews[k]) {
+					_this8.withViews[k].remove();
 				}
 
 				while (tag.firstChild) {
@@ -999,37 +1018,37 @@ var View = exports.View = function () {
 
 				var view = new View();
 
-				_this7.cleanup.push(function (view) {
+				_this8.cleanup.push(function (view) {
 					return function () {
 						view.remove();
 					};
 				}(view));
 
 				view.template = subTemplate;
-				view.parent = _this7;
+				view.parent = _this8;
 
-				var _loop7 = function _loop7(i) {
-					var debind = _this7.args.bindTo(carryProps[i], function (v, k) {
+				var _loop8 = function _loop8(i) {
+					var debind = _this8.args.bindTo(carryProps[i], function (v, k) {
 						view.args[k] = v;
 					});
 
 					view.cleanup.push(debind);
-					_this7.cleanup.push(function () {
+					_this8.cleanup.push(function () {
 						debind();
 						view.remove();
 					});
 				};
 
 				for (var i in carryProps) {
-					_loop7(i);
+					_loop8(i);
 				}
 
-				var _loop8 = function _loop8(i) {
+				var _loop9 = function _loop9(i) {
 					var debind = v.bindTo(i, function (v, k) {
 						view.args[k] = v;
 					});
 
-					_this7.cleanup.push(function () {
+					_this8.cleanup.push(function () {
 						debind();
 						if (!v.isBound()) {
 							_Bindable.Bindable.clearBindings(v);
@@ -1046,12 +1065,12 @@ var View = exports.View = function () {
 				};
 
 				for (var i in v) {
-					_loop8(i);
+					_loop9(i);
 				}
 
 				view.render(tag);
 
-				_this7.withViews[k] = view;
+				_this8.withViews[k] = view;
 			});
 
 			this.cleanup.push(debind);
@@ -1059,7 +1078,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapEachTags',
 		value: function mapEachTags(tag) {
-			var _this8 = this;
+			var _this9 = this;
 
 			var eachAttr = tag.getAttribute('cv-each');
 			var carryAttr = tag.getAttribute('cv-carry');
@@ -1086,17 +1105,17 @@ var View = exports.View = function () {
 			    keyProp = _eachAttr$split2[2];
 
 			var debind = this.args.bindTo(eachProp, function (v, k, t, d, p) {
-				if (_this8.viewLists[eachProp]) {
-					_this8.viewLists[eachProp].remove();
+				if (_this9.viewLists[eachProp]) {
+					_this9.viewLists[eachProp].remove();
 				}
 
-				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, _this8, keyProp);
+				var viewList = new _ViewList.ViewList(subTemplate, asProp, v, _this9, keyProp);
 
-				_this8.cleanup.push(function () {
+				_this9.cleanup.push(function () {
 					viewList.remove();
 				});
 
-				var debindA = _this8.args.bindTo(function (v, k, t, d) {
+				var debindA = _this9.args.bindTo(function (v, k, t, d) {
 					if (k == '_id') {
 						return;
 					}
@@ -1107,12 +1126,12 @@ var View = exports.View = function () {
 					}
 				});
 
-				for (var i in _this8.args) {
+				for (var i in _this9.args) {
 					if (i == '_id') {
 						continue;
 					}
 
-					viewList.args.subArgs[k] = _this8.args[i];
+					viewList.args.subArgs[k] = _this9.args[i];
 				}
 
 				var debindB = viewList.args.bindTo(function (v, k, t, d, p) {
@@ -1135,8 +1154,8 @@ var View = exports.View = function () {
 						t[k].remove();
 					}
 
-					if (k in _this8.args && newRef !== oldRef) {
-						_this8.args[k] = v;
+					if (k in _this9.args && newRef !== oldRef) {
+						_this9.args[k] = v;
 					}
 				}, { wait: 0 });
 
@@ -1162,7 +1181,7 @@ var View = exports.View = function () {
 					tag.removeChild(tag.firstChild);
 				}
 
-				_this8.viewLists[eachProp] = viewList;
+				_this9.viewLists[eachProp] = viewList;
 
 				viewList.render(tag);
 			});
@@ -1174,7 +1193,7 @@ var View = exports.View = function () {
 	}, {
 		key: 'mapIfTags',
 		value: function mapIfTags(tag) {
-			var _this9 = this;
+			var _this10 = this;
 
 			var ifProperty = tag.getAttribute('cv-if');
 
@@ -1240,8 +1259,8 @@ var View = exports.View = function () {
 					p.remove();
 				}
 
-				if (k in _this9.args && newRef !== oldRef) {
-					_this9.args[k] = v;
+				if (k in _this10.args && newRef !== oldRef) {
+					_this10.args[k] = v;
 				}
 			}, { wait: 0 });
 
@@ -1261,12 +1280,12 @@ var View = exports.View = function () {
 			var property = ifProperty;
 
 			if (ifProperty.match(/\./)) {
-				var _Bindable$resolve7 = _Bindable.Bindable.resolve(this.args, ifProperty, true);
+				var _Bindable$resolve9 = _Bindable.Bindable.resolve(this.args, ifProperty, true);
 
-				var _Bindable$resolve8 = _slicedToArray(_Bindable$resolve7, 2);
+				var _Bindable$resolve10 = _slicedToArray(_Bindable$resolve9, 2);
 
-				proxy = _Bindable$resolve8[0];
-				property = _Bindable$resolve8[1];
+				proxy = _Bindable$resolve10[0];
+				property = _Bindable$resolve10[1];
 			}
 
 			var debind = proxy.bindTo(property, function (v, k) {
