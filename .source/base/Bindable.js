@@ -210,6 +210,12 @@ export class Bindable {
         }
 
         let set = (target, key, value) => {
+            if(key.substring(0,3) === '___'
+                && key.slice(-3) === '___'
+            ){
+                return true;
+            }
+
             if (target[key] === value) {
                 return true;
             }

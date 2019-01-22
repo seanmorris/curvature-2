@@ -1081,9 +1081,7 @@ var View = exports.View = function () {
 			var _this9 = this;
 
 			var eachAttr = tag.getAttribute('cv-each');
-			var carryAttr = tag.getAttribute('cv-carry');
 			tag.removeAttribute('cv-each');
-			tag.removeAttribute('cv-carry');
 
 			var subTemplate = tag.innerHTML;
 
@@ -1120,6 +1118,8 @@ var View = exports.View = function () {
 						return;
 					}
 
+					// console.log(k,v);
+
 					if (viewList.args.subArgs[k] !== v) {
 						// view.args[k] = v;
 						viewList.args.subArgs[k] = v;
@@ -1135,7 +1135,7 @@ var View = exports.View = function () {
 				}
 
 				var debindB = viewList.args.bindTo(function (v, k, t, d, p) {
-					if (k == '_id') {
+					if (k == '_id' || k.substring(0, 3) === '___') {
 						return;
 					}
 
@@ -1159,23 +1159,29 @@ var View = exports.View = function () {
 					}
 				}, { wait: 0 });
 
-				// for(let i in carryProps)
-				// {
-				// 	let _debind = this.args.bindTo(carryProps[i], (v, k) => {
-				// 		viewList.args.subArgs[k] = v;
-				// 	});
+				// let debindC = viewList.args.subArgs.bindTo((v,k,t,d,p)=>{
+				// 	if(k == '_id')
+				// 	{
+				// 		return;
+				// 	}
 
-				// 	viewList.cleanup.push(_debind);
+				// 	console.log(k,v,p,this.args[k]);
 
-				// 	this.cleanup.push(()=>{
-				// 		_debind();
+				// 	if(this.args[k] === v)
+				// 	{
+				// 		// return;
+				// 	}
 
-				// 		if(v && !v.isBound())
-				// 		{
-				// 			Bindable.clearBindings(v);
-				// 		}
-				// 	});
-				// }
+				// 	if(k in this.args)
+				// 	{
+				// 		this.args[k] = v;
+				// 	}
+				// });
+
+				_this9.cleanup.push(function () {
+					debindA();
+					debindB();
+				});
 
 				while (tag.firstChild) {
 					tag.removeChild(tag.firstChild);
@@ -1218,8 +1224,6 @@ var View = exports.View = function () {
 
 			view.template = subTemplate;
 			view.parent = this;
-
-			view.render(tag);
 
 			var debindA = this.args.bindTo(function (v, k, t, d) {
 				if (k == '_id') {
@@ -1275,6 +1279,8 @@ var View = exports.View = function () {
 				debindB();
 				// view.remove();
 			});
+
+			view.render(tag);
 
 			var proxy = this.args;
 			var property = ifProperty;
