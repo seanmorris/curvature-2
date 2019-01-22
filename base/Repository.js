@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Repository = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _Bindable = require('./Bindable');
@@ -64,29 +66,10 @@ var Repository = function () {
 			return Repository.request(this.uri, args).then(function (response) {
 				var records = [];
 
-				var _iteratorNormalCompletion = true;
-				var _didIteratorError = false;
-				var _iteratorError = undefined;
+				for (var i in response.body) {
+					var record = response.body[i];
 
-				try {
-					for (var _iterator = response.body[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-						var record = _step.value;
-
-						records.push(_this2.extractModel(record));
-					}
-				} catch (err) {
-					_didIteratorError = true;
-					_iteratorError = err;
-				} finally {
-					try {
-						if (!_iteratorNormalCompletion && _iterator.return) {
-							_iterator.return();
-						}
-					} finally {
-						if (_didIteratorError) {
-							throw _iteratorError;
-						}
-					}
+					records.push(_this2.extractModel(record));
 				}
 
 				response.body = records;
@@ -203,6 +186,32 @@ var Repository = function () {
 			}
 		}
 	}, {
+<<<<<<< HEAD
+		key: 'encode',
+		value: function encode(obj) {
+			var namespace = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+			var formData = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+			if (!formData) {
+				formData = new FormData();
+			}
+
+			for (var i in obj) {
+				var ns = i;
+
+				if (namespace) {
+					ns = namespace + '[' + ns + ']';
+				}
+
+				if (obj[i] && _typeof(obj[i]) !== 'object') {
+					formData.append(ns, obj[i]);
+				} else {
+					this.encode(obj[i], ns, formData);
+				}
+			}
+
+			return formData;
+=======
 		key: 'onResponse',
 		value: function onResponse(callback) {
 			if (!this._onResponse) {
@@ -210,6 +219,7 @@ var Repository = function () {
 			}
 
 			return this._onResponse.add(callback);
+>>>>>>> 7d064e9e15df878ece9770dce5268344b51b05fd
 		}
 	}, {
 		key: 'request',
@@ -242,7 +252,7 @@ var Repository = function () {
 			}).join('&');
 
 			var fullUri = uri;
-			var postString = '';
+			// let postString = '';
 
 			if (post) {
 				cache = false;
@@ -250,14 +260,13 @@ var Repository = function () {
 				if (post instanceof FormData) {
 					formData = post;
 				} else {
-					formData = new FormData();
-					for (var i in post) {
-						formData.append(i, post[i]);
-					}
+					formData = this.encode(post);
 				}
-				postString = Object.keys(post).map(function (arg) {
-					return encodeURIComponent(arg) + '=' + encodeURIComponent(post[arg]);
-				}).join('&');
+				// postString = Object.keys(post).map((arg) => {
+				// 	return encodeURIComponent(arg)
+				// 	+ '='
+				// 	+ encodeURIComponent(post[arg])
+				// }).join('&');
 			}
 
 			fullUri = uri + '?' + queryString;
