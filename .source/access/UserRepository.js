@@ -69,6 +69,7 @@ export class UserRepository extends Repository {
 }
 
 Repository.onResponse((response)=>{
+	UserRepository.args = UserRepository.args || Bindable.makeBindable({});
 	if(response && response.meta && response.meta.currentUser)
 	{
 		UserRepository.args.current = response.meta.currentUser;

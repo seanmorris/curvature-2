@@ -94,6 +94,7 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 }(_Repository2.Repository);
 
 _Repository2.Repository.onResponse(function (response) {
+	UserRepository.args = UserRepository.args || _Bindable.Bindable.makeBindable({});
 	if (response && response.meta && response.meta.currentUser) {
 		UserRepository.args.current = response.meta.currentUser;
 	}
