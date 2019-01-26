@@ -186,7 +186,6 @@ var Repository = function () {
 			}
 		}
 	}, {
-<<<<<<< HEAD
 		key: 'encode',
 		value: function encode(obj) {
 			var namespace = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
@@ -211,7 +210,8 @@ var Repository = function () {
 			}
 
 			return formData;
-=======
+		}
+	}, {
 		key: 'onResponse',
 		value: function onResponse(callback) {
 			if (!this._onResponse) {
@@ -219,7 +219,6 @@ var Repository = function () {
 			}
 
 			return this._onResponse.add(callback);
->>>>>>> 7d064e9e15df878ece9770dce5268344b51b05fd
 		}
 	}, {
 		key: 'request',
@@ -344,8 +343,8 @@ var Repository = function () {
 
 										var onResponse = _this3._onResponse.items();
 
-										for (var _i in onResponse) {
-											onResponse[_i](response, true);
+										for (var i in onResponse) {
+											onResponse[i](response, true);
 										}
 
 										resolve(response);
@@ -356,8 +355,8 @@ var Repository = function () {
 
 										var _onResponse = _this3._onResponse.items();
 
-										for (var _i2 in _onResponse) {
-											_onResponse[_i2](response, true);
+										for (var _i in _onResponse) {
+											_onResponse[_i](response, true);
 										}
 
 										reject(response);
@@ -371,8 +370,8 @@ var Repository = function () {
 
 									var _onResponse2 = _this3._onResponse.items();
 
-									for (var _i3 in _onResponse2) {
-										_onResponse2[_i3](xhr, true);
+									for (var _i2 in _onResponse2) {
+										_onResponse2[_i2](xhr, true);
 									}
 
 									resolve(xhr);
