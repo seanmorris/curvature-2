@@ -84,15 +84,14 @@ export class View extends FieldSet
 						[[loader]]
 					</div>
 
-					<div
-						cv-on = "click:addButtonClicked(event)"
-						class = "bubble bottom left-margin add"
-					>+</div>
+					<div cv-if = "createFormReady">
 
-					<div
-						cv-on = "click:addButtonClicked(event)"
-						class = "bubble bottom left-margin add"
-					>+</div>
+						<div
+							cv-on = "click:addButtonClicked(event)"
+							class = "bubble bottom left-margin add"
+						>+</div>
+
+					</div>
 
 				</fieldset>
 
@@ -109,6 +108,10 @@ export class View extends FieldSet
 				: `${this.args.attrs['data-endpoint']}/create`
 		);
 
+		this.args.createForm._onLoad.push((wrap, form)=>{
+			this.args.createFormReady = true;
+		});
+
 		this.args.searchForm = new SearchForm(
 			Object.assign({}, args)
 			, this.args.attrs['data-endpoint']
@@ -122,7 +125,7 @@ export class View extends FieldSet
 
 	addButtonClicked()
 	{
-		this.setCreateForm({view: this});
+		// this.setCreateForm({view: this});
 
 		this.args.creating = this.args.creating ? '' : 'creating';
 	}
@@ -209,7 +212,7 @@ export class View extends FieldSet
 				continue;
 			}
 
-			if(typeof object[i] !== 'object')
+			if(!object[i] || typeof object[i] !== 'object')
 			{
 				_object[i] = object[i];
 

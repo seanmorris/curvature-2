@@ -238,7 +238,7 @@ var Bindable = exports.Bindable = function () {
             }
 
             var set = function set(target, key, value) {
-                if (key.substring(0, 3) === '___' && key.slice(-3) === '___') {
+                if (typeof key === 'string' && key.substring(0, 3) === '___' && key.slice(-3) === '___') {
                     return true;
                 }
 

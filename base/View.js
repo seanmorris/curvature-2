@@ -311,9 +311,9 @@ var View = exports.View = function () {
 
 					tag.matches('[cv-expand]') && _this2.mapExpandableTags(tag);
 
-					tag.matches('[cv-ref]') && _this2.mapRefTags(tag);
-
 					tag.matches('[cv-if]') && _this2.mapIfTags(tag);
+
+					tag.matches('[cv-ref]') && _this2.mapRefTags(tag);
 
 					tag.matches('[cv-on]') && _this2.mapOnTags(tag);
 				} else {
@@ -714,8 +714,8 @@ var View = exports.View = function () {
 
 			tag.___tag___ = tagObject;
 
-			if (parent) {
-				if (1 || !parent.parent) {
+			while (parent) {
+				if (!parent.parent) {
 					var refKeyVal = this.args[refKey];
 
 					if (refKeyVal !== undefined) {
@@ -724,10 +724,11 @@ var View = exports.View = function () {
 						}
 
 						parent.tags[refProp][refKeyVal] = tagObject;
-					} else {
-						parent.tags[refProp] = tagObject;
 					}
 				}
+
+				parent.tags[refProp] = tagObject;
+
 				parent = parent.parent;
 			}
 		}
@@ -787,7 +788,7 @@ var View = exports.View = function () {
 						}
 						tag.value = v == null ? '' : v;
 					} else if (type === 'file') {
-						console.log(v);
+						// console.log(v);	
 					}
 					return;
 				}

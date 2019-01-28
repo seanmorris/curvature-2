@@ -28,6 +28,7 @@ export class FormWrapper extends View
 
 		this._onLoad     = [];
 		this._onSubmit   = [];
+		this._onRender   = [];
 		this._onRequest  = [];
 		this._onResponse = [];
 
@@ -66,8 +67,11 @@ export class FormWrapper extends View
 				return;
 			}
 
-			event.preventDefault();
-			event.stopPropagation();
+			if(event)
+			{
+				event.preventDefault();
+				event.stopPropagation();
+			}
 
 			let formElement = form.tags.formTag.element;
 			let uri         = formElement.getAttribute('action') || this.args.action || this.path;
@@ -201,6 +205,14 @@ export class FormWrapper extends View
 		for(let i in this._onSubmit)
 		{
 			this._onSubmit[i](this);
+		}
+	}
+
+	postRender()
+	{
+		for(let i in this._onRender)
+		{
+			this._onRender[i](this.args.form);
 		}
 	}
 

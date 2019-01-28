@@ -48,6 +48,7 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 
 		_this._onLoad = [];
 		_this._onSubmit = [];
+		_this._onRender = [];
 		_this._onRequest = [];
 		_this._onResponse = [];
 
@@ -82,8 +83,10 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 					return;
 				}
 
-				event.preventDefault();
-				event.stopPropagation();
+				if (event) {
+					event.preventDefault();
+					event.stopPropagation();
+				}
 
 				var formElement = form.tags.formTag.element;
 				var uri = formElement.getAttribute('action') || _this2.args.action || _this2.path;
@@ -210,6 +213,13 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		value: function onSubmit(form, event) {
 			for (var i in this._onSubmit) {
 				this._onSubmit[i](this);
+			}
+		}
+	}, {
+		key: 'postRender',
+		value: function postRender() {
+			for (var i in this._onRender) {
+				this._onRender[i](this.args.form);
 			}
 		}
 	}, {

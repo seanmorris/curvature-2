@@ -309,11 +309,11 @@ export class View
 				tag.matches('[cv-expand]')
 					&& this.mapExpandableTags(tag);
 
-				tag.matches('[cv-ref]')
-					&& this.mapRefTags(tag);
-
 				tag.matches('[cv-if]')
 					&& this.mapIfTags(tag);
+
+				tag.matches('[cv-ref]')
+					&& this.mapRefTags(tag);
 
 				tag.matches('[cv-on]')
 					&& this.mapOnTags(tag);
@@ -732,9 +732,9 @@ export class View
 
 		tag.___tag___ = tagObject;
 
-		if(parent)
+		while(parent)
 		{
-			if(1 || !parent.parent)
+			if(!parent.parent)
 			{
 				let refKeyVal = this.args[refKey];
 
@@ -747,11 +747,10 @@ export class View
 
 					parent.tags[refProp][refKeyVal] = tagObject;
 				}
-				else
-				{
-					parent.tags[refProp] = tagObject;
-				}
 			}
+			
+			parent.tags[refProp] = tagObject;
+
 			parent = parent.parent;
 		}
 	}
@@ -822,7 +821,7 @@ export class View
 					tag.value = v == null ? '' : v;
 				}
 				else if(type === 'file') {
-					console.log(v);	
+					// console.log(v);	
 				}
 				return;
 			}
