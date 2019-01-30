@@ -70,8 +70,13 @@ export class UserRepository extends Repository {
 
 Repository.onResponse((response)=>{
 	UserRepository.args = UserRepository.args || Bindable.makeBindable({});
-	if(response && response.meta && response.meta.currentUser)
-	{
+	if(response
+		&& response.meta
+		&& response.meta.currentUser
+		&& (!UserRepository.args.current
+			|| response.meta.currentUser.id !== UserRepository.args.current.id
+		)
+	){
 		UserRepository.args.current = response.meta.currentUser;
 	}
 }, {wait:0});
