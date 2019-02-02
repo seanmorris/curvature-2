@@ -64,6 +64,7 @@ export class Form extends View
 			}
 		);
 	}
+
 	submitHandler(event)
 	{
 		event.preventDefault();

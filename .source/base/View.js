@@ -328,8 +328,14 @@ export class View
 
 		this.nodes = [];
 
-		this.firstNode = document.createComment(`Template ${this._id} Start`);
-		// this.firstNode = document.createTextNode('');
+		if(window['devmode'] === true)
+		{
+			this.firstNode = document.createComment(`Template ${this._id} Start`);
+		}
+		else
+		{
+			this.firstNode = document.createTextNode('');
+		}
 
 		this.nodes.push(this.firstNode);
 
@@ -371,8 +377,14 @@ export class View
 			newNode.dispatchEvent(attachEvent);
 		}
 
-		this.lastNode = document.createComment(`Template ${this._id} End`);
-		// this.lastNode = document.createTextNode('');
+		if(window['devmode'] === true)
+		{
+			this.lastNode = document.createComment(`Template ${this._id} End`);
+		}
+		else
+		{
+			this.lastNode = document.createTextNode('');
+		}
 
 		this.nodes.push(this.lastNode);
 

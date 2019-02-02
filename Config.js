@@ -10,4 +10,4 @@ var Config = exports.Config = function Config() {
   _classCallCheck(this, Config);
 };
 
-Config.backend = 'http://dev.sean.letsvue.com/';
+Config.backend = '//';

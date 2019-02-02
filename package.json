@@ -1,6 +1,6 @@
 {
 	"name": "curvature",
-	"version": "0.0.17",
+	"version": "0.0.18",
 	"author": "Sean Morris <contact@seanmorr.is> (https://seanmorr.is)",
 	"scripts": {
 		"build": "babel .source --presets babel-preset-latest --out-dir .",
