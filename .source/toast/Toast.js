@@ -40,11 +40,10 @@ export class Toast extends View {
 		alert.decay(((alert)=>()=>{
 			for(let i in this.args.alerts)
 			{
-				if(this.args.alerts)
+				if(this.args.alerts[i] === alert.___ref___)
 				{
+					alert.remve();
 					delete this.args.alerts[i];
-
-					// this.args.alerts.[splice(i, 1)];
 					return;
 				}
 			}

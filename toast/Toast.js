@@ -66,10 +66,9 @@ var Toast = exports.Toast = function (_View) {
 			alert.decay(function (alert) {
 				return function () {
 					for (var i in _this2.args.alerts) {
-						if (_this2.args.alerts) {
+						if (_this2.args.alerts[i] === alert.___ref___) {
+							alert.remve();
 							delete _this2.args.alerts[i];
-
-							// this.args.alerts.[splice(i, 1)];
 							return;
 						}
 					}
