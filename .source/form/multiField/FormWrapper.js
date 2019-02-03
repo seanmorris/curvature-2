@@ -204,7 +204,7 @@ export class FormWrapper extends View
 	{
 		for(let i in this._onSubmit)
 		{
-			this._onSubmit[i](this);
+			this._onSubmit[i](this, event);
 		}
 	}
 

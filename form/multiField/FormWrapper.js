@@ -212,7 +212,7 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		key: 'onSubmit',
 		value: function onSubmit(form, event) {
 			for (var i in this._onSubmit) {
-				this._onSubmit[i](this);
+				this._onSubmit[i](this, event);
 			}
 		}
 	}, {
