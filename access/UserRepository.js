@@ -33,14 +33,16 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 		value: function getCurrentUser() {
 			var _this2 = this;
 
-			var refresh = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+			var refresh = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
 			if (window.prerenderer) {
 				return;
 			}
 			if (!refresh && this.args.response) {
-				console.log(this.args.response);
+				return Promise.resolve(this.args.response);
+			}
+			if (refresh === false) {
 				return Promise.resolve(this.args.response);
 			}
 			return this.request(this.uri + 'current', false, false, false).then(function (response) {
@@ -51,7 +53,7 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 						}
 					}
 				}
-				if (_this2.args.response && _this2.args.response.id) {
+				if (response && response.body.id) {
 					_this2.args.response = response;
 					_this2.args.current = response.body;
 				}

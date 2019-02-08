@@ -4,7 +4,7 @@ import { Repository } from '../base/Repository';
 
 export class UserRepository extends Repository {
 	static get uri() { return Config.backend + '/user/'; }
-	static getCurrentUser(refresh = false) {
+	static getCurrentUser(refresh = null) {
 		this.args = this.args || Bindable.makeBindable({});
 		if(window.prerenderer)
 		{
@@ -12,7 +12,10 @@ export class UserRepository extends Repository {
 		}
 		if(!refresh && this.args.response)
 		{
-			console.log(this.args.response);
+			return Promise.resolve(this.args.response);
+		}
+		if(refresh === false)
+		{
 			return Promise.resolve(this.args.response);
 		}
 		return this.request(
@@ -31,7 +34,7 @@ export class UserRepository extends Repository {
 					}
 				}
 			}
-			if(this.args.response && this.args.response.id)
+			if(response && response.body.id)
 			{
 				this.args.response = response;
 				this.args.current  = response.body;

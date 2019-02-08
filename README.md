@@ -1,6 +1,6 @@
 # Curvature.js
 
-v.0.0.21
+v.0.0.23
 
 ## Getting started
 
