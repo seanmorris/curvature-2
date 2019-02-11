@@ -58,6 +58,10 @@ export class Router {
 
 				if(!silent)
 				{
+					if(silent === false)
+					{
+						this.path = null;
+					}
 					window.dispatchEvent(new Event('popstate'))
 
 					if(route.substring(0,1) === '#')
@@ -74,7 +78,7 @@ export class Router {
 	}
 	static match(path, view, forceRefresh = false)
 	{
-		if(this.path == path && !forceRefresh)
+		if(this.path === path && !forceRefresh)
 		{
 			return;
 		}

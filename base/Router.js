@@ -68,11 +68,16 @@ var Router = exports.Router = function () {
 	}, {
 		key: 'go',
 		value: function go(route, silent) {
+			var _this3 = this;
+
 			document.title = _Config.Config.title;
 			setTimeout(function () {
 				history.pushState(null, null, route);
 
 				if (!silent) {
+					if (silent === false) {
+						_this3.path = null;
+					}
 					window.dispatchEvent(new Event('popstate'));
 
 					if (route.substring(0, 1) === '#') {
@@ -84,11 +89,11 @@ var Router = exports.Router = function () {
 	}, {
 		key: 'match',
 		value: function match(path, view) {
-			var _this3 = this;
+			var _this4 = this;
 
 			var forceRefresh = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
-			if (this.path == path && !forceRefresh) {
+			if (this.path === path && !forceRefresh) {
 				return;
 			}
 
@@ -201,9 +206,9 @@ var Router = exports.Router = function () {
 					result = false;
 
 					_result.then(function (x) {
-						_this3.update(view, path, x);
+						_this4.update(view, path, x);
 					}).catch(function (x) {
-						_this3.update(view, path, x);
+						_this4.update(view, path, x);
 					});
 				} else {
 					result = _result;
@@ -212,9 +217,9 @@ var Router = exports.Router = function () {
 				result = false;
 
 				routes[selected].then(function (x) {
-					_this3.update(view, path, x);
+					_this4.update(view, path, x);
 				}).catch(function (x) {
-					_this3.update(view, path, x);
+					_this4.update(view, path, x);
 				});
 			} else if (routes[selected] instanceof Object) {
 				result = new routes[selected](args);

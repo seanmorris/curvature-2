@@ -249,6 +249,7 @@ var Bindable = exports.Bindable = function () {
                 // console.log(`Setting ${key}`, value);
 
                 if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object' && !(value instanceof Node)) {
+                    // console.log(value);
                     if (value.___isBindable___ !== Bindable) {
                         value = Bindable.makeBindable(value);
 
@@ -311,7 +312,7 @@ var Bindable = exports.Bindable = function () {
                     // );
                 }
 
-                return true;
+                return Reflect.set(target, key, value);
             };
 
             var del = function del(target, key) {

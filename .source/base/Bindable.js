@@ -224,6 +224,7 @@ export class Bindable {
             // console.log(`Setting ${key}`, value);
 
             if (value && typeof value == 'object' && !(value instanceof Node)) {
+                // console.log(value);
                 if (value.___isBindable___ !== Bindable) {
                     value = Bindable.makeBindable(value);
 
@@ -294,7 +295,7 @@ export class Bindable {
                 // );
             }
 
-            return true;
+            return Reflect.set(target, key, value);
         };
 
         let del = (target, key) => {
