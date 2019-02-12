@@ -293,114 +293,123 @@ var Repository = function () {
 			xhr.withCredentials = true;
 			xhr.timeout = 15000;
 
-			var xhrId = this.xhrs.length;
+			var link = document.createElement("a");
+			link.href = fullUri;
+
+			var uriPath = link.pathname;
 
 			if (!post) {
-				this.xhrs.push(xhr);
+				this.xhrs[uriPath] = xhr;
 			}
 
-			return new Promise(function (xhrId) {
-				return function (resolve, reject) {
-					xhr.onreadystatechange = function () {
-						var DONE = 4;
-						var OK = 200;
+			var reqPromise = new Promise(function (resolve, reject) {
+				xhr.onreadystatechange = function () {
+					var DONE = 4;
+					var OK = 200;
 
-						var response = void 0;
+					var response = void 0;
 
-						if (xhr.readyState === DONE) {
+					if (xhr.readyState === DONE) {
 
-							if (!_this3.cache) {
-								_this3.cache = {};
-							}
+						if (!_this3.cache) {
+							_this3.cache = {};
+						}
 
-							if (xhr.status === OK) {
+						if (xhr.status === OK) {
 
-								if (xhr.getResponseHeader("Content-Type") == 'application/json' || xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8' || xhr.getResponseHeader("Content-Type") == 'text/json' || xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8') {
-									response = JSON.parse(xhr.responseText);
-									if (response.code == 0) {
-										// Repository.lastResponse = response;
-
-										if (!post && cache) {
-											// this.cache[fullUri] = response;
-										}
-
-										var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
-
-										var prerendering = window.prerenderer;
-
-										if (prerendering) {
-											if (!_tagCache) {
-												_tagCache = document.createElement('script');
-												_tagCache.type = 'text/json';
-												_tagCache.setAttribute('data-uri', fullUri);
-												document.head.appendChild(_tagCache);
-											}
-
-											// console.log(JSON.stringify(response));
-
-											_tagCache.innerText = JSON.stringify(response);
-										}
-
-										var onResponse = _this3._onResponse.items();
-
-										for (var i in onResponse) {
-											onResponse[i](response, true);
-										}
-
-										resolve(response);
-									} else {
-										if (!post && cache) {
-											// this.cache[fullUri] = response;
-										}
-
-										var _onResponse = _this3._onResponse.items();
-
-										for (var _i in _onResponse) {
-											_onResponse[_i](response, true);
-										}
-
-										reject(response);
-									}
-								} else {
-									// Repository.lastResponse = xhr.responseText;
+							if (xhr.getResponseHeader("Content-Type") == 'application/json' || xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8' || xhr.getResponseHeader("Content-Type") == 'text/json' || xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8') {
+								response = JSON.parse(xhr.responseText);
+								if (response.code == 0) {
+									// Repository.lastResponse = response;
 
 									if (!post && cache) {
-										// this.cache[fullUri] = xhr.responseText;
+										// this.cache[fullUri] = response;
 									}
 
-									var _onResponse2 = _this3._onResponse.items();
+									var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
 
-									for (var _i2 in _onResponse2) {
-										_onResponse2[_i2](xhr, true);
+									var prerendering = window.prerenderer;
+
+									if (prerendering) {
+										if (!_tagCache) {
+											_tagCache = document.createElement('script');
+											_tagCache.type = 'text/json';
+											_tagCache.setAttribute('data-uri', fullUri);
+											document.head.appendChild(_tagCache);
+										}
+
+										// console.log(JSON.stringify(response));
+
+										_tagCache.innerText = JSON.stringify(response);
 									}
 
-									resolve(xhr);
+									var onResponse = _this3._onResponse.items();
+
+									for (var i in onResponse) {
+										onResponse[i](response, true);
+									}
+
+									resolve(response);
+								} else {
+									if (!post && cache) {
+										// this.cache[fullUri] = response;
+									}
+
+									var _onResponse = _this3._onResponse.items();
+
+									for (var _i in _onResponse) {
+										_onResponse[_i](response, true);
+									}
+
+									reject(response);
 								}
 							} else {
-								reject('HTTP' + xhr.status);
+								// Repository.lastResponse = xhr.responseText;
+
+								if (!post && cache) {
+									// this.cache[fullUri] = xhr.responseText;
+								}
+
+								var _onResponse2 = _this3._onResponse.items();
+
+								for (var _i2 in _onResponse2) {
+									_onResponse2[_i2](xhr, true);
+								}
+
+								resolve(xhr);
 							}
-							_this3.xhrs[xhrId] = null;
+						} else {
+							reject('HTTP' + xhr.status);
 						}
-					};
-
-					xhr.open(type, fullUri, true);
-
-					// if(post)
-					// {
-					// 	xhr.setRequestHeader("Content-type", "multipart/form-data");
-					// }
-					xhr.send(formData);
+						delete _this3.xhrs[uriPath];
+					}
 				};
-			}(xhrId));
+
+				xhr.open(type, fullUri, true);
+
+				// if(post)
+				// {
+				// 	xhr.setRequestHeader("Content-type", "multipart/form-data");
+				// }
+				xhr.send(formData);
+			});
+
+			return reqPromise;
 		}
 	}, {
 		key: 'cancel',
 		value: function cancel() {
+			var regex = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : /^.$/;
+
 			for (var i in this.xhrs) {
+				console.log(i);
 				if (!this.xhrs[i]) {
 					continue;
 				}
-				this.xhrs[i].abort();
+				if (i.match(regex)) {
+					console.log('!!!');
+					this.xhrs[i].abort();
+				}
 			}
 			this.xhrList = [];
 		}

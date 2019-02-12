@@ -280,13 +280,16 @@ export class Repository
 		xhr.withCredentials = true;
 		xhr.timeout         = 15000;
 
-		let xhrId = this.xhrs.length;
+		let link = document.createElement("a");
+    	link.href = fullUri;
+
+    	let uriPath = link.pathname;
 
 		if(!post) {
-			this.xhrs.push(xhr);
+			this.xhrs[uriPath] = xhr;
 		}
 
-		return new Promise(((xhrId) => (resolve, reject) => {
+		let reqPromise = new Promise(((resolve, reject) => {
 			xhr.onreadystatechange = () => {
 				let DONE = 4;
 				let OK = 200;
@@ -381,7 +384,7 @@ export class Repository
 					else {
 						reject('HTTP' + xhr.status);
 					}
-					this.xhrs[xhrId] = null;
+					delete this.xhrs[uriPath];
 				}
 			};
 
@@ -392,14 +395,21 @@ export class Repository
 			// 	xhr.setRequestHeader("Content-type", "multipart/form-data");
 			// }
 			xhr.send(formData);
-		})(xhrId));
+		}));
+
+		return reqPromise;
 	}
-	static cancel() {
+	static cancel(regex = /^.$/) {
 		for(var i in this.xhrs) {
+			console.log(i);
 			if(!this.xhrs[i]) {
 				continue;
 			}
-			this.xhrs[i].abort();
+			if(i.match(regex))
+			{
+				console.log('!!!');
+				this.xhrs[i].abort();
+			}
 		}
 		this.xhrList = [];
 	}
