@@ -40,12 +40,13 @@ export class Form extends View
 		this.action      = '';
 		this.template    = `
 			<form
-				class    = "[[_classes]]"
-				method   = "[[method]]"
-				enctype  = "multipart/form-data"
-				cv-on    = "submit:submit(event)"
-				cv-ref   = "formTag:curvature/base/Tag"
-				cv-each  = "fields:field"
+				class     = "[[_classes]]"
+				method    = "[[method]]"
+				enctype   = "multipart/form-data"
+				cv-on     = "submit:submit(event)"
+				cv-ref    = "formTag:curvature/base/Tag"
+				cv-each   = "fields:field"
+				cv-expand = "attrs"
 			>
 				[[field]]
 			</form>

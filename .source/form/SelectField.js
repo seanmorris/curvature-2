@@ -12,10 +12,11 @@ export class SelectField extends Field {
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
 				<select
-					name    = "${this.args.name}"
-					cv-bind = "value"
-					cv-each = "options:option:optionText"
-					cv-ref  = "input:curvature/base/Tag"
+					name      = "${this.args.name}"
+					cv-bind   = "value"
+					cv-each   = "options:option:optionText"
+					cv-ref    = "input:curvature/base/Tag"
+					cv-expand = "attrs"
 				/>
 					<option value = "[[option]]">[[optionText]]</option>
 				</select>

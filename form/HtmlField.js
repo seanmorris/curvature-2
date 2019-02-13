@@ -25,7 +25,7 @@ var HtmlField = exports.HtmlField = function (_View) {
 
 		_this.ignore = _this.args.attrs['data-cv-ignore'] || false;
 		_this.args.contentEditable = _this.args.attrs.contenteditable || false;
-		_this.template = '<div\n\t\t\tname            = "' + _this.args.name + '"\n\t\t\tcv-ref          = "input:curvature/base/Tag"\n\t\t\tcontenteditable = "[[contentEditable]]"\n\t\t>[[$value]]</div>';
+		_this.template = '<div\n\t\t\tname            = "' + _this.args.name + '"\n\t\t\tcv-ref          = "input:curvature/base/Tag"\n\t\t\tcontenteditable = "[[contentEditable]]"\n\t\t\tcv-expand       = "attrs"\n\t\t>[[$value]]</div>';
 		return _this;
 	}
 

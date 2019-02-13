@@ -65,7 +65,7 @@ var Form = exports.Form = function (_View) {
 
 		_this._onSubmit = [];
 		_this.action = '';
-		_this.template = '\n\t\t\t<form\n\t\t\t\tclass    = "[[_classes]]"\n\t\t\t\tmethod   = "[[method]]"\n\t\t\t\tenctype  = "multipart/form-data"\n\t\t\t\tcv-on    = "submit:submit(event)"\n\t\t\t\tcv-ref   = "formTag:curvature/base/Tag"\n\t\t\t\tcv-each  = "fields:field"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t';
+		_this.template = '\n\t\t\t<form\n\t\t\t\tclass     = "[[_classes]]"\n\t\t\t\tmethod    = "[[method]]"\n\t\t\t\tenctype   = "multipart/form-data"\n\t\t\t\tcv-on     = "submit:submit(event)"\n\t\t\t\tcv-ref    = "formTag:curvature/base/Tag"\n\t\t\t\tcv-each   = "fields:field"\n\t\t\t\tcv-expand = "attrs"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t';
 
 		_this.args.fields = Form.renderFields(skeleton, _this, customFields);
 

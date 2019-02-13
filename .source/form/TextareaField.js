@@ -13,10 +13,14 @@ export class TextareaField extends Field {
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
 				<textarea
-						name    = "${this.args.name}"
-						cv-bind = "value"
-						cv-ref  = "input:curvature/base/Tag"
+						name      = "${this.args.name}"
+						cv-bind   = "value"
+						cv-ref    = "input:curvature/base/Tag"
+						cv-expand = "attrs"
 				></textarea>
+				<cv-template cv-if = "attrs.data-caption">
+					<p>[[attrs.data-caption]]</p>
+				</cv-template>
 			</label>
 		`;
 	}

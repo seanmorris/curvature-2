@@ -15,6 +15,8 @@ export class ButtonField extends Field {
 					value  = "[[title]]"
 					cv-on  = "click:clicked(event)"
 					cv-ref = "input:curvature/base/Tag"
+
+					cv-expand = "attrs"
 				/>
 			</label>
 		`;

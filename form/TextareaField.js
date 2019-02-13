@@ -22,7 +22,7 @@ var TextareaField = exports.TextareaField = function (_Field) {
 		var _this = _possibleConstructorReturn(this, (TextareaField.__proto__ || Object.getPrototypeOf(TextareaField)).call(this, values, form, parent, key));
 
 		_this.args.attrs.type = _this.args.attrs.type || 'hidden';
-		_this.template = '\n\t\t\t<label\n\t\t\t\tfor       = "' + _this.args.name + '"\n\t\t\t\tdata-type = "' + _this.args.attrs.type + '"\n\t\t\t\tcv-ref    = "label:curvature/base/Tag">\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\t\t\t\t<textarea\n\t\t\t\t\t\tname    = "' + _this.args.name + '"\n\t\t\t\t\t\tcv-bind = "value"\n\t\t\t\t\t\tcv-ref  = "input:curvature/base/Tag"\n\t\t\t\t></textarea>\n\t\t\t</label>\n\t\t';
+		_this.template = '\n\t\t\t<label\n\t\t\t\tfor       = "' + _this.args.name + '"\n\t\t\t\tdata-type = "' + _this.args.attrs.type + '"\n\t\t\t\tcv-ref    = "label:curvature/base/Tag">\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\t\t\t\t<textarea\n\t\t\t\t\t\tname      = "' + _this.args.name + '"\n\t\t\t\t\t\tcv-bind   = "value"\n\t\t\t\t\t\tcv-ref    = "input:curvature/base/Tag"\n\t\t\t\t\t\tcv-expand = "attrs"\n\t\t\t\t></textarea>\n\t\t\t\t<cv-template cv-if = "attrs.data-caption">\n\t\t\t\t\t<p>[[attrs.data-caption]]</p>\n\t\t\t\t</cv-template>\n\t\t\t</label>\n\t\t';
 		return _this;
 	}
 

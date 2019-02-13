@@ -14,6 +14,7 @@ export class FileField extends Field {
 					type    = "${this.args.attrs.type}"
 					cv-bind = "value"
 					cv-ref  = "input:curvature/base/Tag"
+					cv-expand = "attrs"
 				/>
 				<span style = "display:none" cv-if = "value">[[[value]]]</span>
 			</label>

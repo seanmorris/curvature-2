@@ -39,13 +39,18 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 			if (window.prerenderer) {
 				return;
 			}
+			if (!refresh && this.running) {
+				console.log(this.running);
+				return this.running;
+			}
 			if (!refresh && this.args.response) {
 				return Promise.resolve(this.args.response);
 			}
 			if (refresh === false) {
 				return Promise.resolve(this.args.response);
 			}
-			return this.request(this.uri + 'current', false, false, false).then(function (response) {
+			this.running = this.request(this.uri + 'current', false, false, false).then(function (response) {
+				_this2.running = false;
 				if (response.body.roles) {
 					for (var i in response.body.roles) {
 						if (response.body.roles[i].class == 'SeanMorris\\Access\\Role\\Administrator') {
@@ -59,6 +64,8 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 				}
 				return response;
 			});
+
+			return this.running;
 		}
 	}, {
 		key: 'login',
@@ -71,11 +78,10 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 			var _this3 = this;
 
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
-			this.args.current = null;
-			return this.request(this.uri + 'current', false, {}, false).then(function (user) {
-				_this3.request(_this3.uri + 'logout', false, {}, false).then(function () {
-					return user;
-				});
+			var user = this.args.current;
+
+			return this.request(this.uri + 'logout', false, {}, false).then(function () {
+				_this3.args.current = null;
 				return user;
 			});
 		}

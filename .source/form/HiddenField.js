@@ -11,10 +11,11 @@ export class HiddenField extends Field {
 				style     = "display:none"
 				cv-ref    = "label:curvature/base/Tag">
 				<input
-						name    = "${this.args.name}"
-						type    = "${this.args.attrs.type}"
-						cv-bind = "value"
-						cv-ref  = "input:curvature/base/Tag"
+						name      = "${this.args.name}"
+						type      = "${this.args.attrs.type}"
+						cv-bind   = "value"
+						cv-ref    = "input:curvature/base/Tag"
+						cv-expand = "attrs"
 				/>
 				<span cv-if = "value">[[[value]]]</span>
 			</label>

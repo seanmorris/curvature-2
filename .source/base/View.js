@@ -748,20 +748,23 @@ export class View
 		{
 			if(!parent.parent)
 			{
-				let refKeyVal = this.args[refKey];
-
-				if(refKeyVal !== undefined)
-				{
-					if(!parent.tags[refProp])
-					{
-						parent.tags[refProp] = [];
-					}
-
-					parent.tags[refProp][refKeyVal] = tagObject;
-				}
 			}
-			
-			parent.tags[refProp] = tagObject;
+
+			let refKeyVal = this.args[refKey];
+
+			if(refKeyVal !== undefined)
+			{
+				if(!parent.tags[refProp])
+				{
+					parent.tags[refProp] = [];
+				}
+
+				parent.tags[refProp][refKeyVal] = tagObject;
+			}
+			else
+			{
+				parent.tags[refProp] = tagObject;
+			}
 
 			parent = parent.parent;
 		}
@@ -1292,57 +1295,59 @@ ${tag.outerHTML}`
 		view.template = subTemplate;
 		view.parent   = this;
 
-		let debindA = this.args.bindTo((v,k,t,d)=>{
-			if(k == '_id')
-			{
-				return;
-			}
+		let deBindSync = this.syncBind(view);
 
-			if(view.args[k] !== v)
-			{
-				view.args[k] = v;
-			}
-		});
+		// let debindA = this.args.bindTo((v,k,t,d)=>{
+		// 	if(k == '_id')
+		// 	{
+		// 		return;
+		// 	}
 
-		for(let i in this.args)
-		{
-			if(i == '_id')
-			{
-				continue;
-			}
+		// 	if(view.args[k] !== v)
+		// 	{
+		// 		view.args[k] = v;
+		// 	}
+		// });
 
-			view.args[i] = this.args[i];
-		}
+		// for(let i in this.args)
+		// {
+		// 	if(i == '_id')
+		// 	{
+		// 		continue;
+		// 	}
 
-		let debindB = view.args.bindTo((v,k,t,d,p)=>{
-			if(k == '_id')
-			{
-				return;
-			}
+		// 	view.args[i] = this.args[i];
+		// }
 
-			let newRef = v;
-			let oldRef = p;
+		// let debindB = view.args.bindTo((v,k,t,d,p)=>{
+		// 	if(k == '_id')
+		// 	{
+		// 		return;
+		// 	}
 
-			if(v instanceof View)
-			{
-				newRef = v.___ref___;
-			}
+		// 	let newRef = v;
+		// 	let oldRef = p;
 
-			if(p instanceof View)
-			{
-				oldRef = p.___ref___;
-			}
+		// 	if(v instanceof View)
+		// 	{
+		// 		newRef = v.___ref___;
+		// 	}
 
-			if(newRef !== oldRef && p instanceof View)
-			{
-				p.remove();
-			}
+		// 	if(p instanceof View)
+		// 	{
+		// 		oldRef = p.___ref___;
+		// 	}
 
-			if((k in this.args) && newRef !== oldRef)
-			{
-				this.args[k] = v;
-			}
-		}, {wait:0});
+		// 	if(newRef !== oldRef && p instanceof View)
+		// 	{
+		// 		p.remove();
+		// 	}
+
+		// 	if((k in this.args) && newRef !== oldRef)
+		// 	{
+		// 		this.args[k] = v;
+		// 	}
+		// }, {wait:0});
 
 		let cleaner = this;
 
@@ -1352,8 +1357,7 @@ ${tag.outerHTML}`
 		}
 
 		this.cleanup.push(()=>{
-			debindA();
-			debindB();
+			deBindSync();
 			// view.remove();
 		});
 
@@ -1406,6 +1410,90 @@ ${tag.outerHTML}`
 				Bindable.clearBindings(proxy);
 			}
 		});
+	}
+
+	// mapTemplateTags(tag)
+	// {
+	// 	let subTemplate = tag.innerHTML;
+
+	// 	view.template = subTemplate;
+	// 	view.parent   = this;
+
+	// 	let deBindSync = this.syncBind(view);
+
+	// 	let cleaner = this;
+
+	// 	while(cleaner.parent)
+	// 	{
+	// 		cleaner = cleaner.parent;
+	// 	}
+
+	// 	this.cleanup.push(()=>{
+	// 		deBindSync();
+	// 		// view.remove();
+	// 	});
+
+	// 	view.render(tag);
+	// }
+
+	syncBind(subView)
+	{
+		let debindA = this.args.bindTo((v,k,t,d)=>{
+			if(k == '_id')
+			{
+				return;
+			}
+
+			if(subView.args[k] !== v)
+			{
+				subView.args[k] = v;
+			}
+		});
+
+		for(let i in this.args)
+		{
+			if(i == '_id')
+			{
+				continue;
+			}
+
+			subView.args[i] = this.args[i];
+		}
+
+		let debindB = subView.args.bindTo((v,k,t,d,p)=>{
+			if(k == '_id')
+			{
+				return;
+			}
+
+			let newRef = v;
+			let oldRef = p;
+
+			if(v instanceof View)
+			{
+				newRef = v.___ref___;
+			}
+
+			if(p instanceof View)
+			{
+				oldRef = p.___ref___;
+			}
+
+			if(newRef !== oldRef && p instanceof View)
+			{
+				p.remove();
+			}
+
+			if((k in this.args) && newRef !== oldRef)
+			{
+				this.args[k] = v;
+			}
+		}, {wait:0});
+
+		return () => {
+			debindA();
+			debindB();
+		};
 	}
 
 	postRender(parentNode)

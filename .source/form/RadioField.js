@@ -18,10 +18,11 @@ export class RadioField extends Field {
 				/>
 					<label>
 						<input
-							name    = "${this.args.name}"
-							type    = "radio"
-							value   = "[[option]]"
-							cv-bind = "value"
+							name      = "${this.args.name}"
+							type      = "radio"
+							value     = "[[option]]"
+							cv-bind   = "value"
+							cv-expand = "attrs"
 					/>
 						[[optionText]]
 					</label>
