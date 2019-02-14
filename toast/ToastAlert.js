@@ -23,12 +23,13 @@ var ToastAlert = exports.ToastAlert = function (_View) {
 
 		var _this = _possibleConstructorReturn(this, (ToastAlert.__proto__ || Object.getPrototypeOf(ToastAlert)).call(this, args));
 
-		_this.args.time = _this.args.time || 10000;
+		_this.args.time = _this.args.time || 16000;
 		_this.init = _this.args.time;
 		_this.args.opacity = 1;
 		_this.args.title = _this.args.title || 'Standard alert';
+		_this.args.status = 'new';
 		_this.args.body = _this.args.body || 'This is a standard alert.';
-		_this.template = '\n\t\t\t<div id = "[[_id]]" style = "opacity:[[opacity]]" class = "alert">\n\t\t\t\t<h3>[[title]]</h3>\n\t\t\t\t<p>[[body]]</p>\n\t\t\t</div>\n\t\t';
+		_this.template = '\n\t\t\t<div id = "[[_id]]" style = "opacity:[[opacity]]" class = "alert toast-[[status]]">\n\t\t\t\t<h3>[[title]]</h3>\n\t\t\t\t<p>[[body]]</p>\n\t\t\t</div>\n\t\t';
 		return _this;
 	}
 
@@ -39,6 +40,13 @@ var ToastAlert = exports.ToastAlert = function (_View) {
 
 			var decayInterval = 16;
 			var decay = setInterval(function () {
+				if (_this2.args.time < 300 && _this2.args.status !== 'imminent') {
+					console.log(_this2.args.time);
+					_this2.args.status = 'imminent';
+				} else if (_this2.args.time > 300 && _this2.args.status !== 'decaying') {
+					console.log(_this2.args.time);
+					_this2.args.status = 'decaying';
+				}
 				if (_this2.args.time > 0) {
 					_this2.args.time -= decayInterval;
 					_this2.args.opacity = _this2.args.time / _this2.init;
