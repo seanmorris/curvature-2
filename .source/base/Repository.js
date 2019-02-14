@@ -302,88 +302,95 @@ export class Repository
 						this.cache = {};
 					}
 
-					if (xhr.status === OK) {
-
-						if(xhr.getResponseHeader("Content-Type") == 'application/json'
-							|| xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8'
-							|| xhr.getResponseHeader("Content-Type") == 'text/json'
-							|| xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8'
-						) {
-							response = JSON.parse(xhr.responseText)
-							if(response.code == 0) {
-								// Repository.lastResponse = response;
-
-								if(!post && cache) {
-									// this.cache[fullUri] = response;
-								}
-
-								let tagCache = document.querySelector(
-									'script[data-uri="'
-									+ fullUri
-									+ '"]'
-								);
-
-								let prerendering  = window.prerenderer;
-								
-								if(prerendering)
-								{
-									if(!tagCache)
-									{
-										tagCache  = document.createElement('script');
-										tagCache.type = 'text/json';
-										tagCache.setAttribute('data-uri', fullUri);
-										document.head.appendChild(tagCache);
-									}
-
-									// console.log(JSON.stringify(response));
-									
-									tagCache.innerText = JSON.stringify(response);
-								}
-
-								let onResponse = this._onResponse.items();
-
-								for(let i in onResponse)
-								{
-									onResponse[i](response, true);
-								}
-
-								resolve(response);
-							}
-							else {
-								if(!post && cache) {
-									// this.cache[fullUri] = response;
-								}
-
-								let onResponse = this._onResponse.items();
-
-								for(let i in onResponse)
-								{
-									onResponse[i](response, true);
-								}
-
-								reject(response);
-							}
-						}
-						else {
-							// Repository.lastResponse = xhr.responseText;
+					if(xhr.getResponseHeader("Content-Type") == 'application/json'
+						|| xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8'
+						|| xhr.getResponseHeader("Content-Type") == 'text/json'
+						|| xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8'
+					) {
+						response = JSON.parse(xhr.responseText)
+						if(response.code == 0) {
+							// Repository.lastResponse = response;
 
 							if(!post && cache) {
-								// this.cache[fullUri] = xhr.responseText;
+								// this.cache[fullUri] = response;
+							}
+
+							let tagCache = document.querySelector(
+								'script[data-uri="'
+								+ fullUri
+								+ '"]'
+							);
+
+							let prerendering  = window.prerenderer;
+							
+							if(prerendering)
+							{
+								if(!tagCache)
+								{
+									tagCache  = document.createElement('script');
+									tagCache.type = 'text/json';
+									tagCache.setAttribute('data-uri', fullUri);
+									document.head.appendChild(tagCache);
+								}
+
+								// console.log(JSON.stringify(response));
+								
+								tagCache.innerText = JSON.stringify(response);
 							}
 
 							let onResponse = this._onResponse.items();
 
 							for(let i in onResponse)
 							{
-								onResponse[i](xhr, true);
+								onResponse[i](response, true);
 							}
 
-							resolve(xhr);
+							response._http = xhr.status;
+
+							if (xhr.status === OK) {
+								resolve(response);
+							}
+							else {
+								reject(response);
+							}
+						}
+						else {
+							if(!post && cache) {
+								// this.cache[fullUri] = response;
+							}
+
+							let onResponse = this._onResponse.items();
+
+							for(let i in onResponse)
+							{
+								onResponse[i](response, true);
+							}
+
+							reject(response);
 						}
 					}
 					else {
-						reject('HTTP' + xhr.status);
+						// Repository.lastResponse = xhr.responseText;
+
+						if(!post && cache) {
+							// this.cache[fullUri] = xhr.responseText;
+						}
+
+						let onResponse = this._onResponse.items();
+
+						for(let i in onResponse)
+						{
+							onResponse[i](xhr, true);
+						}
+
+						if (xhr.status === OK) {
+							resolve(xhr);
+						}
+						else {
+							reject(xhr);
+						}
 					}
+
 					delete this.xhrs[uriPath];
 				}
 			};

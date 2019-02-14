@@ -315,72 +315,78 @@ var Repository = function () {
 							_this3.cache = {};
 						}
 
-						if (xhr.status === OK) {
+						if (xhr.getResponseHeader("Content-Type") == 'application/json' || xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8' || xhr.getResponseHeader("Content-Type") == 'text/json' || xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8') {
+							response = JSON.parse(xhr.responseText);
+							if (response.code == 0) {
+								// Repository.lastResponse = response;
 
-							if (xhr.getResponseHeader("Content-Type") == 'application/json' || xhr.getResponseHeader("Content-Type") == 'application/json; charset=utf-8' || xhr.getResponseHeader("Content-Type") == 'text/json' || xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8') {
-								response = JSON.parse(xhr.responseText);
-								if (response.code == 0) {
-									// Repository.lastResponse = response;
+								if (!post && cache) {
+									// this.cache[fullUri] = response;
+								}
 
-									if (!post && cache) {
-										// this.cache[fullUri] = response;
+								var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
+
+								var prerendering = window.prerenderer;
+
+								if (prerendering) {
+									if (!_tagCache) {
+										_tagCache = document.createElement('script');
+										_tagCache.type = 'text/json';
+										_tagCache.setAttribute('data-uri', fullUri);
+										document.head.appendChild(_tagCache);
 									}
 
-									var _tagCache = document.querySelector('script[data-uri="' + fullUri + '"]');
+									// console.log(JSON.stringify(response));
 
-									var prerendering = window.prerenderer;
+									_tagCache.innerText = JSON.stringify(response);
+								}
 
-									if (prerendering) {
-										if (!_tagCache) {
-											_tagCache = document.createElement('script');
-											_tagCache.type = 'text/json';
-											_tagCache.setAttribute('data-uri', fullUri);
-											document.head.appendChild(_tagCache);
-										}
+								var onResponse = _this3._onResponse.items();
 
-										// console.log(JSON.stringify(response));
+								for (var i in onResponse) {
+									onResponse[i](response, true);
+								}
 
-										_tagCache.innerText = JSON.stringify(response);
-									}
+								response._http = xhr.status;
 
-									var onResponse = _this3._onResponse.items();
-
-									for (var i in onResponse) {
-										onResponse[i](response, true);
-									}
-
+								if (xhr.status === OK) {
 									resolve(response);
 								} else {
-									if (!post && cache) {
-										// this.cache[fullUri] = response;
-									}
-
-									var _onResponse = _this3._onResponse.items();
-
-									for (var _i in _onResponse) {
-										_onResponse[_i](response, true);
-									}
-
 									reject(response);
 								}
 							} else {
-								// Repository.lastResponse = xhr.responseText;
-
 								if (!post && cache) {
-									// this.cache[fullUri] = xhr.responseText;
+									// this.cache[fullUri] = response;
 								}
 
-								var _onResponse2 = _this3._onResponse.items();
+								var _onResponse = _this3._onResponse.items();
 
-								for (var _i2 in _onResponse2) {
-									_onResponse2[_i2](xhr, true);
+								for (var _i in _onResponse) {
+									_onResponse[_i](response, true);
 								}
 
-								resolve(xhr);
+								reject(response);
 							}
 						} else {
-							reject('HTTP' + xhr.status);
+							// Repository.lastResponse = xhr.responseText;
+
+							if (!post && cache) {
+								// this.cache[fullUri] = xhr.responseText;
+							}
+
+							var _onResponse2 = _this3._onResponse.items();
+
+							for (var _i2 in _onResponse2) {
+								_onResponse2[_i2](xhr, true);
+							}
+
+							if (xhr.status === OK) {
+								resolve(xhr);
+							} else {
+								reject(xhr);
+							}
 						}
+
 						delete _this3.xhrs[uriPath];
 					}
 				};
