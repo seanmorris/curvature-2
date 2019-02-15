@@ -37,13 +37,8 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 		_this.element.removeAttribute('cv-pop-to');
 
-		_this.leftDuration = 0;
-		_this.topDuration = 0;
-		_this.rightDuration = 0;
-		_this.bottomDuration = 0;
-
-		_this.verticalDuration = 0;
-		_this.horizontalDuration = 0;
+		_this.verticalDuration = 0.4;
+		_this.horizontalDuration = 0.1;
 
 		_this.unpoppedStyle = '';
 		_this.previousScroll = 0;
@@ -77,11 +72,11 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				_this.horizontalDuration = horizontalAverage / cut;
 				_this.verticalDuration = vericalAverage / cut;
 
-				if (_this.horizontalDuration < 0.01) {
-					_this.horizontalDuration = 0.01;
+				if (_this.horizontalDuration < 0.1) {
+					_this.horizontalDuration = 0.1;
 				}
-				if (_this.verticalDuration < 0.01) {
-					_this.verticalDuration = 0.01;
+				if (_this.verticalDuration < 0.1) {
+					_this.verticalDuration = 0.1;
 				}
 
 				if (_this.horizontalDuration > 0.4) {
@@ -182,7 +177,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 			var hostRect = hostTag.getBoundingClientRect();
 
 			window.requestAnimationFrame(function () {
-
 				_this2.unpoppedStyle = '\n\t\t\t\t;position:  fixed;\n\t\t\t\tleft:       ' + _this2.rect.x + 'px;\n\t\t\t\ttop:        ' + _this2.rect.y + 'px;\n\t\t\t\twidth:      ' + _this2.rect.width + 'px;\n\t\t\t\theight:     ' + _this2.rect.height + 'px;\n\t\t\t\tz-index:    99999;\n\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's  ease-out\n\t\t\t\t\t\t\t, top ' + _this2.verticalDuration + 's    ease-out\n\t\t\t\t\t\t\t, left ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t\t\t, height ' + _this2.verticalDuration + 's ease-out\n\t\t\t\t\t\t\t, all ' + _this2.horizontalDuration + 's  ease-out;\n\t\t\t\toverflow: hidden;\n\t\t\t';
 
 				var style = _this2.style + _this2.unpoppedStyle;

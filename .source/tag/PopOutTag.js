@@ -16,13 +16,8 @@ export class PopOutTag extends Tag
 
 		this.element.removeAttribute('cv-pop-to');
 
-		this.leftDuration   = 0;
-		this.topDuration    = 0;
-		this.rightDuration  = 0;
-		this.bottomDuration = 0;
-
-		this.verticalDuration   = 0;
-		this.horizontalDuration = 0;
+		this.verticalDuration   = 0.4;
+		this.horizontalDuration = 0.1;
 
 		this.unpoppedStyle  = '';
 		this.previousScroll = 0;
@@ -60,13 +55,13 @@ export class PopOutTag extends Tag
 				this.horizontalDuration = horizontalAverage / cut;
 				this.verticalDuration   = vericalAverage / cut;
 
-				if(this.horizontalDuration < 0.01)
+				if(this.horizontalDuration < 0.1)
 				{
-					this.horizontalDuration = 0.01;
+					this.horizontalDuration = 0.1;
 				}
-				if(this.verticalDuration < 0.01)
+				if(this.verticalDuration < 0.1)
 				{
-					this.verticalDuration = 0.01;
+					this.verticalDuration = 0.1;
 				}
 
 				if(this.horizontalDuration > 0.4)
@@ -201,7 +196,6 @@ export class PopOutTag extends Tag
 		let hostRect = hostTag.getBoundingClientRect();
 
 		window.requestAnimationFrame(()=>{
-
 			this.unpoppedStyle = `
 				;position:  fixed;
 				left:       ${this.rect.x}px;
