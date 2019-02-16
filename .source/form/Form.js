@@ -248,19 +248,22 @@ export class Form extends View
 
 						for(let i = 0; i < files.length; i++)
 						{
+							if(!files[i])
+							{
+								continue;
+							}
 							append.append(fieldName + '[]', files[i]);
 						}
 					}
-					else
+					else if(field.args.fields[i].tags.input.element.files[0])
 					{
 						append.append(
 							fieldName
 							, field.args.fields[i].tags.input.element.files[0]
 						);
 					}
-
 				}
-				else
+				else if(field.args.fields[i].args.type !== 'file')
 				{
 					append.append(
 						fieldName

@@ -41,10 +41,10 @@ var ToastAlert = exports.ToastAlert = function (_View) {
 			var decayInterval = 16;
 			var decay = setInterval(function () {
 				if (_this2.args.time < 300 && _this2.args.status !== 'imminent') {
-					console.log(_this2.args.time);
+					// console.log(this.args.time);
 					_this2.args.status = 'imminent';
 				} else if (_this2.args.time > 300 && _this2.args.status !== 'decaying') {
-					console.log(_this2.args.time);
+					// console.log(this.args.time);
 					_this2.args.status = 'decaying';
 				}
 				if (_this2.args.time > 0) {

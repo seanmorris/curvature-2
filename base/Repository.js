@@ -408,12 +408,10 @@ var Repository = function () {
 			var regex = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : /^.$/;
 
 			for (var i in this.xhrs) {
-				console.log(i);
 				if (!this.xhrs[i]) {
 					continue;
 				}
 				if (i.match(regex)) {
-					console.log('!!!');
 					this.xhrs[i].abort();
 				}
 			}

@@ -408,13 +408,11 @@ export class Repository
 	}
 	static cancel(regex = /^.$/) {
 		for(var i in this.xhrs) {
-			console.log(i);
 			if(!this.xhrs[i]) {
 				continue;
 			}
 			if(i.match(regex))
 			{
-				console.log('!!!');
 				this.xhrs[i].abort();
 			}
 		}

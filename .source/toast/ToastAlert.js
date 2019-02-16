@@ -21,11 +21,11 @@ export class ToastAlert extends View {
 		let decay = setInterval(
 			()=>{
 				if(this.args.time < 300 && this.args.status !== 'imminent') {
-					console.log(this.args.time);
+					// console.log(this.args.time);
 					this.args.status = 'imminent';
 				}
 				else if(this.args.time > 300 && this.args.status !== 'decaying'){
-					console.log(this.args.time);
+					// console.log(this.args.time);
 					this.args.status = 'decaying';
 				}
 				if(this.args.time > 0) {

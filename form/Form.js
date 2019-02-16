@@ -143,12 +143,15 @@ var Form = exports.Form = function (_View) {
 							var files = field.args.fields[i].tags.input.element.files;
 
 							for (var _i = 0; _i < files.length; _i++) {
+								if (!files[_i]) {
+									continue;
+								}
 								append.append(fieldName + '[]', files[_i]);
 							}
-						} else {
+						} else if (field.args.fields[i].tags.input.element.files[0]) {
 							append.append(fieldName, field.args.fields[i].tags.input.element.files[0]);
 						}
-					} else {
+					} else if (field.args.fields[i].args.type !== 'file') {
 						append.append(fieldName, field.args.fields[i].args.value === undefined ? '' : field.args.fields[i].args.value);
 					}
 				}
