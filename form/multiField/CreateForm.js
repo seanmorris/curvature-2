@@ -60,6 +60,7 @@ var CreateForm = exports.CreateForm = function (_FormWrapper) {
 	}, {
 		key: 'onRequest',
 		value: function onRequest() {
+			this.args.view.args.addIcon = this.args.view.args.loader;
 			this.args.view.args.loading = true;
 			this.args.view.args.classes += ' loading';
 
@@ -78,6 +79,9 @@ var CreateForm = exports.CreateForm = function (_FormWrapper) {
 			}
 
 			this.args.view.addButtonClicked();
+
+			this.args.view.args.addIcon = '+';
+			this.args.view.args.creating = '';
 
 			_get(CreateForm.prototype.__proto__ || Object.getPrototypeOf(CreateForm.prototype), 'onResponse', this).call(this, response);
 		}

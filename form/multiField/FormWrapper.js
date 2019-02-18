@@ -156,7 +156,14 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 
 					if (_promises) {
 						_promises.then(function () {
-							_Repository.Repository.request(uri, { api: 'json' }, formData).then(function (response) {
+							_Repository.Repository.request(uri, { api: 'json' }, formData, false, {
+								progressDown: function progressDown(event) {
+									_this2.progressDown(event);
+								},
+								progressUp: function progressUp(event) {
+									_this2.progressUp(event);
+								}
+							}).then(function (response) {
 								_this2.onResponse(response);
 							}).catch(function (error) {
 								_this2.onRequestError(error);
@@ -231,6 +238,16 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		key: 'submit',
 		value: function submit() {
 			// console.log(this);
+		}
+	}, {
+		key: 'progressUp',
+		value: function progressUp(event) {
+			console.log(event.loaded, event.total, event.loaded / event.total);
+		}
+	}, {
+		key: 'progressDown',
+		value: function progressDown(event) {
+			console.log(event.loaded, event.total, event.loaded / event.total);
 		}
 	}]);
 

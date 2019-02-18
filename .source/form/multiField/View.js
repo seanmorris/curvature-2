@@ -4,7 +4,7 @@ import { CreateForm  } from './CreateForm';
 import { SearchForm  } from './SearchForm';
 import { FormWrapper } from './FormWrapper';
 import { Wrapper     } from './Wrapper';
-// import { Loader     } from '../Ui/Loader';
+// import { Loader     } from '../Ui/ZZ';
 
 export class View extends FieldSet
 {
@@ -29,12 +29,16 @@ export class View extends FieldSet
 
 		// this.args.loader = new Loader;
 		// this.args.loader = 'LOADING!!!';
-		this.args.loader = null;
 
 		this.args.createForm = this.args.createForm || '';
 		this.args.searchForm = this.args.searchForm || '';
 
 		this.setCreateForm({view: this});
+
+		this.args.loader  = '...';
+		this.args.addIcon = '&#215;';
+		this.args.addIcon = 'a';
+		this.args.addIcon = '+';
 
 		this.template = `
 			<label
@@ -89,7 +93,7 @@ export class View extends FieldSet
 						<div
 							cv-on = "click:addButtonClicked(event)"
 							class = "bubble bottom left-margin add"
-						>+</div>
+						>[[addIcon]]</div>
 
 					</div>
 
@@ -125,9 +129,10 @@ export class View extends FieldSet
 
 	addButtonClicked()
 	{
-		// this.setCreateForm({view: this});
-
-		this.args.creating = this.args.creating ? '' : 'creating';
+		if(!this.args.creating)
+		{
+			this.args.creating = 'creating';
+		}
 	}
 
 	addRecord(record)

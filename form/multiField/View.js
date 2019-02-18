@@ -27,7 +27,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-// import { Loader     } from '../Ui/Loader';
+// import { Loader     } from '../Ui/ZZ';
 
 var View = exports.View = function (_FieldSet) {
 	_inherits(View, _FieldSet);
@@ -53,14 +53,18 @@ var View = exports.View = function (_FieldSet) {
 
 		// this.args.loader = new Loader;
 		// this.args.loader = 'LOADING!!!';
-		_this.args.loader = null;
 
 		_this.args.createForm = _this.args.createForm || '';
 		_this.args.searchForm = _this.args.searchForm || '';
 
 		_this.setCreateForm({ view: _this });
 
-		_this.template = '\n\t\t\t<label\n\t\t\t\tfor        = "' + _this.args.name + '"\n\t\t\t\tdata-type  = "' + _this.args.attrs.type + '"\n\t\t\t\tdata-multi = "' + (_this.args.attrs['data-multi'] ? 'true' : 'false') + '"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\n\t\t\t\t<fieldset\n\t\t\t\t\tname  = "' + _this.args.name + '"\n\t\t\t\t\tclass = "multi-field [[creating]] [[fieldType]]"\n\t\t\t\t>\n\n\t\t\t\t\t<div class = "record-list" cv-each = "_fields:field:f">\n\t\t\t\t\t\t<div\n\t\t\t\t\t\t\tclass     = "single-record"\n\t\t\t\t\t\t\tdata-for  = "[[f]]"\n\t\t\t\t\t\t\tdraggable = "true"\n\t\t\t\t\t\t\tcv-on     = "\n\t\t\t\t\t\t\t\tdrop:drop(event);\n\t\t\t\t\t\t\t\tdragstart:drag(event);\n\t\t\t\t\t\t\t\tdragend:dragStop(event);\n\t\t\t\t\t\t\t\tdragover:dragOver(event);\n\t\t\t\t\t\t\t"\n\t\t\t\t\t\t>\n\t\t\t\t\t\t\t[[field]]\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class = "overlay create">\n\t\t\t\t\t\t<div class = "form constrict">\n\t\t\t\t\t\t\t<div\n\t\t\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\t\t\tclass = "bubble bottom left-margin close"\n\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t&#215;\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t[[createForm]]\n\t\t\t\t\t\t[[searchForm]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class = "overlay loading">\n\t\t\t\t\t\t[[loader]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div cv-if = "createFormReady">\n\n\t\t\t\t\t\t<div\n\t\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\t\tclass = "bubble bottom left-margin add"\n\t\t\t\t\t\t>+</div>\n\n\t\t\t\t\t</div>\n\n\t\t\t\t</fieldset>\n\n\t\t\t</label>\n\t\t';
+		_this.args.loader = '...';
+		_this.args.addIcon = '&#215;';
+		_this.args.addIcon = 'a';
+		_this.args.addIcon = '+';
+
+		_this.template = '\n\t\t\t<label\n\t\t\t\tfor        = "' + _this.args.name + '"\n\t\t\t\tdata-type  = "' + _this.args.attrs.type + '"\n\t\t\t\tdata-multi = "' + (_this.args.attrs['data-multi'] ? 'true' : 'false') + '"\n\t\t\t>\n\t\t\t\t<span cv-if = "title">\n\t\t\t\t\t<span cv-ref = "title:curvature/base/Tag">[[title]]</span>\n\t\t\t\t</span>\n\n\t\t\t\t<fieldset\n\t\t\t\t\tname  = "' + _this.args.name + '"\n\t\t\t\t\tclass = "multi-field [[creating]] [[fieldType]]"\n\t\t\t\t>\n\n\t\t\t\t\t<div class = "record-list" cv-each = "_fields:field:f">\n\t\t\t\t\t\t<div\n\t\t\t\t\t\t\tclass     = "single-record"\n\t\t\t\t\t\t\tdata-for  = "[[f]]"\n\t\t\t\t\t\t\tdraggable = "true"\n\t\t\t\t\t\t\tcv-on     = "\n\t\t\t\t\t\t\t\tdrop:drop(event);\n\t\t\t\t\t\t\t\tdragstart:drag(event);\n\t\t\t\t\t\t\t\tdragend:dragStop(event);\n\t\t\t\t\t\t\t\tdragover:dragOver(event);\n\t\t\t\t\t\t\t"\n\t\t\t\t\t\t>\n\t\t\t\t\t\t\t[[field]]\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class = "overlay create">\n\t\t\t\t\t\t<div class = "form constrict">\n\t\t\t\t\t\t\t<div\n\t\t\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\t\t\tclass = "bubble bottom left-margin close"\n\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t&#215;\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t[[createForm]]\n\t\t\t\t\t\t[[searchForm]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div class = "overlay loading">\n\t\t\t\t\t\t[[loader]]\n\t\t\t\t\t</div>\n\n\t\t\t\t\t<div cv-if = "createFormReady">\n\n\t\t\t\t\t\t<div\n\t\t\t\t\t\t\tcv-on = "click:addButtonClicked(event)"\n\t\t\t\t\t\t\tclass = "bubble bottom left-margin add"\n\t\t\t\t\t\t>[[addIcon]]</div>\n\n\t\t\t\t\t</div>\n\n\t\t\t\t</fieldset>\n\n\t\t\t</label>\n\t\t';
 		return _this;
 	}
 
@@ -85,9 +89,9 @@ var View = exports.View = function (_FieldSet) {
 	}, {
 		key: 'addButtonClicked',
 		value: function addButtonClicked() {
-			// this.setCreateForm({view: this});
-
-			this.args.creating = this.args.creating ? '' : 'creating';
+			if (!this.args.creating) {
+				this.args.creating = 'creating';
+			}
 		}
 	}, {
 		key: 'addRecord',

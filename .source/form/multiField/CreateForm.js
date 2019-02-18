@@ -43,6 +43,7 @@ export class CreateForm extends FormWrapper
 
 	onRequest()
 	{
+		this.args.view.args.addIcon = this.args.view.args.loader;
 		this.args.view.args.loading = true;
 		this.args.view.args.classes += ' loading';
 
@@ -64,6 +65,9 @@ export class CreateForm extends FormWrapper
 		}
 
 		this.args.view.addButtonClicked();
+
+		this.args.view.args.addIcon  = '+';
+		this.args.view.args.creating = '';
 
 		super.onResponse(response);
 	}

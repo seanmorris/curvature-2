@@ -278,7 +278,7 @@ export class Repository
 		}
 
 		xhr.withCredentials = true;
-		xhr.timeout         = 15000;
+		
 
 		let link = document.createElement("a");
     	link.href = fullUri;
@@ -286,10 +286,21 @@ export class Repository
     	let uriPath = link.pathname;
 
 		if(!post) {
+			xhr.timeout        = 15000;
 			this.xhrs[uriPath] = xhr;
 		}
 
 		let reqPromise = new Promise(((resolve, reject) => {
+			if(post) {
+				if('progressUp' in options) {
+					xhr.upload.onprogress = options.progressUp;
+				}
+			}
+
+			if('progressDown' in options) {
+				xhr.onprogress = options.progressDown;
+			}
+
 			xhr.onreadystatechange = () => {
 				let DONE = 4;
 				let OK = 200;

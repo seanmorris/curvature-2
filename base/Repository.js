@@ -291,7 +291,6 @@ var Repository = function () {
 			}
 
 			xhr.withCredentials = true;
-			xhr.timeout = 15000;
 
 			var link = document.createElement("a");
 			link.href = fullUri;
@@ -299,10 +298,21 @@ var Repository = function () {
 			var uriPath = link.pathname;
 
 			if (!post) {
+				xhr.timeout = 15000;
 				this.xhrs[uriPath] = xhr;
 			}
 
 			var reqPromise = new Promise(function (resolve, reject) {
+				if (post) {
+					if ('progressUp' in options) {
+						xhr.upload.onprogress = options.progressUp;
+					}
+				}
+
+				if ('progressDown' in options) {
+					xhr.onprogress = options.progressDown;
+				}
+
 				xhr.onreadystatechange = function () {
 					var DONE = 4;
 					var OK = 200;

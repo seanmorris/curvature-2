@@ -132,6 +132,15 @@ export class FormWrapper extends View
 							uri
 							, {api: 'json'}
 							, formData
+							, false
+							, {
+								progressDown: (event)=>{
+									this.progressDown(event);
+								}
+								, progressUp: (event)=>{
+									this.progressUp(event);
+								}
+							}
 						).then((response) => {
 							this.onResponse(response);
 						}).catch((error) => {
@@ -224,5 +233,15 @@ export class FormWrapper extends View
 	submit()
 	{
 		// console.log(this);
+	}
+
+	progressUp(event)
+	{
+		console.log(event.loaded, event.total, event.loaded / event.total);
+	}
+
+	progressDown(event)
+	{
+		console.log(event.loaded, event.total, event.loaded / event.total);
 	}
 }
