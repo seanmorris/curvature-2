@@ -263,8 +263,10 @@ export class Form extends View
 						);
 					}
 				}
-				else if(field.args.fields[i].args.type !== 'file')
-				{
+				else if(
+					field.args.fields[i].args.type !== 'file'
+					|| field.args.fields[i].args.value
+				){
 					append.append(
 						fieldName
 						, field.args.fields[i].args.value === undefined

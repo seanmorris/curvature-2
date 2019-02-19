@@ -151,7 +151,7 @@ var Form = exports.Form = function (_View) {
 						} else if (field.args.fields[i].tags.input.element.files[0]) {
 							append.append(fieldName, field.args.fields[i].tags.input.element.files[0]);
 						}
-					} else if (field.args.fields[i].args.type !== 'file') {
+					} else if (field.args.fields[i].args.type !== 'file' || field.args.fields[i].args.value) {
 						append.append(fieldName, field.args.fields[i].args.value === undefined ? '' : field.args.fields[i].args.value);
 					}
 				}
