@@ -203,7 +203,8 @@ export class Bindable {
         for (let i in object) {
             if (object[i] &&
                 typeof object[i] == 'object' &&
-                !object[i] instanceof Node
+                !object[i] instanceof Node &&
+                !object[i] instanceof Promise
             ) {
                 object[i] = Bindable.makeBindable(object[i]);
             }
@@ -341,11 +342,15 @@ export class Bindable {
 
                     // console.log(`Start ${key}()`);
 
-                   for (let i in target.___before___) {
+                    for (let i in target.___before___) {
                         target.___before___[i](target, key, object);
                     }
 
-                    let ret = target[key].apply(object.___ref___, arguments);
+                    let objRef = object instanceof Promise
+                        ? object
+                        : object.___ref___
+
+                    let ret = target[key].apply(objRef, arguments);
 
                     for (let i in target.___after___) {
                         target.___after___[i](target, key, object);

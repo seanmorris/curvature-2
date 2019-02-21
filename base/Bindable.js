@@ -232,7 +232,7 @@ var Bindable = exports.Bindable = function () {
             // });
 
             for (var i in object) {
-                if (object[i] && _typeof(object[i]) == 'object' && !object[i] instanceof Node) {
+                if (object[i] && _typeof(object[i]) == 'object' && !object[i] instanceof Node && !object[i] instanceof Promise) {
                     object[i] = Bindable.makeBindable(object[i]);
                 }
             }
@@ -361,7 +361,9 @@ var Bindable = exports.Bindable = function () {
                             target.___before___[_i7](target, key, object);
                         }
 
-                        var ret = target[key].apply(object.___ref___, arguments);
+                        var objRef = object instanceof Promise ? object : object.___ref___;
+
+                        var ret = target[key].apply(objRef, arguments);
 
                         for (var _i8 in target.___after___) {
                             target.___after___[_i8](target, key, object);

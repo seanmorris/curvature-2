@@ -37,6 +37,7 @@ export class Form extends View
 		});
 
 		this._onSubmit   = [];
+		this._onRender   = [];
 		this.action      = '';
 		this.template    = `
 			<form
@@ -92,6 +93,10 @@ export class Form extends View
 	onSubmit(callback)
 	{
 		this._onSubmit.push(callback);
+	}
+	onRender(callback)
+	{
+		this._onRender.push(callback);
 	}
 	static renderFields(skeleton, parent = null, customFields = {})
 	{
@@ -307,5 +312,12 @@ export class Form extends View
 	hasChildren()
 	{
 		return !!Object.keys(this.args.fields).length;
+	}
+	postRender()
+	{
+		for(let i in this._onRender)
+		{
+			this._onRender[i](this);
+		}
 	}
 }

@@ -64,6 +64,7 @@ var Form = exports.Form = function (_View) {
 		});
 
 		_this._onSubmit = [];
+		_this._onRender = [];
 		_this.action = '';
 		_this.template = '\n\t\t\t<form\n\t\t\t\tclass     = "[[_classes]]"\n\t\t\t\tmethod    = "[[method]]"\n\t\t\t\tenctype   = "multipart/form-data"\n\t\t\t\tcv-on     = "submit:submit(event)"\n\t\t\t\tcv-ref    = "formTag:curvature/base/Tag"\n\t\t\t\tcv-each   = "fields:field"\n\t\t\t\tcv-expand = "attrs"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t';
 
@@ -103,6 +104,11 @@ var Form = exports.Form = function (_View) {
 		key: 'onSubmit',
 		value: function onSubmit(callback) {
 			this._onSubmit.push(callback);
+		}
+	}, {
+		key: 'onRender',
+		value: function onRender(callback) {
+			this._onRender.push(callback);
 		}
 	}, {
 		key: 'formData',
@@ -189,6 +195,13 @@ var Form = exports.Form = function (_View) {
 		key: 'hasChildren',
 		value: function hasChildren() {
 			return !!Object.keys(this.args.fields).length;
+		}
+	}, {
+		key: 'postRender',
+		value: function postRender() {
+			for (var i in this._onRender) {
+				this._onRender[i](this);
+			}
 		}
 	}], [{
 		key: 'renderFields',
