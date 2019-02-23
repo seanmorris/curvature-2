@@ -50,6 +50,7 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		_this._onSubmit = [];
 		_this._onRender = [];
 		_this._onRequest = [];
+		_this._onError = [];
 		_this._onResponse = [];
 
 		if (path instanceof _Form.Form) {
@@ -194,7 +195,17 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 		}
 	}, {
 		key: 'onRequestError',
-		value: function onRequestError(error) {}
+		value: function onRequestError(error) {
+			for (var i in this._onError) {
+				this._onError[i](error, this);
+			}
+
+			if (error.messages) {
+				for (var _i in error.messages) {
+					_Toast.Toast.instance().alert(error.body && error.body.id ? 'Success!' : 'Error!', error.messages[_i], 3500);
+				}
+			}
+		}
 	}, {
 		key: 'onResponse',
 		value: function onResponse(response) {
@@ -203,8 +214,8 @@ var FormWrapper = exports.FormWrapper = function (_View) {
 			}
 
 			if (response.messages) {
-				for (var _i in response.messages) {
-					_Toast.Toast.instance().alert(response.body && response.body.id ? 'Success!' : 'Error!', response.messages[_i], 3500);
+				for (var _i2 in response.messages) {
+					_Toast.Toast.instance().alert(response.body && response.body.id ? 'Success!' : 'Error!', response.messages[_i2], 3500);
 				}
 			}
 		}

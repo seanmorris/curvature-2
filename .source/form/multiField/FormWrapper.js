@@ -30,6 +30,7 @@ export class FormWrapper extends View
 		this._onSubmit   = [];
 		this._onRender   = [];
 		this._onRequest  = [];
+		this._onError    = [];
 		this._onResponse = [];
 
 		if(path instanceof Form)
@@ -176,7 +177,24 @@ export class FormWrapper extends View
 
 	onRequestError(error)
 	{
+		for(let i in this._onError)
+		{
+			this._onError[i](error, this);
+		}
 
+		if(error.messages)
+		{
+			for(let i in error.messages)
+			{
+				Toast.instance().alert(
+					error.body && error.body.id
+						? 'Success!'
+						: 'Error!'
+					, error.messages[i]
+					, 3500
+				);
+			}
+		}
 	}
 
 	onResponse(response)

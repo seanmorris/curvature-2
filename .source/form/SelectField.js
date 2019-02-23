@@ -24,7 +24,7 @@ export class SelectField extends Field {
 		`;
 
 		this.args.bindTo('value', (v,k,t,d,p)=>{
-			console.log(this.args.name,v,p);
+			// console.log(this.args.name,v,p);
 		});
 	}
 
