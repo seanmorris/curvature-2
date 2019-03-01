@@ -32,6 +32,7 @@ export class View extends FieldSet
 
 		this.args.createForm = this.args.createForm || '';
 		this.args.searchForm = this.args.searchForm || '';
+		this.args.createFormReady = false;
 
 		this.setCreateForm({view: this});
 
@@ -39,6 +40,7 @@ export class View extends FieldSet
 		this.args.addIcon = '&#215;';
 		this.args.addIcon = 'a';
 		this.args.addIcon = '+';
+
 
 		this.template = `
 			<label
@@ -87,8 +89,7 @@ export class View extends FieldSet
 					<div class = "overlay loading">
 						[[loader]]
 					</div>
-
-					<div cv-if = "createFormReady">
+					<div cv-if = "createFormReady" class="add-button-holder">
 
 						<div
 							cv-on = "click:addButtonClicked(event)"
@@ -105,16 +106,30 @@ export class View extends FieldSet
 
 	setCreateForm(args)
 	{
-		this.args.createForm = new CreateForm(
-			Object.assign({}, args)
-			, args.publicId
-				? `${this.args.attrs['data-endpoint']}/${args.publicId}/edit`
-				: `${this.args.attrs['data-endpoint']}/create`
-		);
+		console.log(this.args.attrs['data-create-endpoint']);
 
-		this.args.createForm._onLoad.push((wrap, form)=>{
+		if(this.args.attrs['data-create-endpoint'] !== false)
+		{
+			this.args.createForm = new CreateForm(
+				Object.assign({}, args)
+				, this.args.attrs['data-create-endpoint']
+					? this.args.attrs['data-create-endpoint']
+					: (args.publicId
+						? `${this.args.attrs['data-endpoint']}/${args.publicId}/edit`
+						: `${this.args.attrs['data-endpoint']}/create`
+					)
+			);
+
+			this.args.createForm._onLoad.push((wrap, form)=>{
+				this.args.createFormReady = true;
+			});
+		}
+		else
+		{
 			this.args.createFormReady = true;
-		});
+		}
+
+		console.log(this.args.createFormReady);
 
 		this.args.searchForm = new SearchForm(
 			Object.assign({}, args)
@@ -132,6 +147,10 @@ export class View extends FieldSet
 		if(!this.args.creating)
 		{
 			this.args.creating = 'creating';
+		}
+		else
+		{
+			this.args.creating = '';
 		}
 	}
 

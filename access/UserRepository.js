@@ -51,14 +51,14 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 			}
 			this.running = this.request(this.uri + 'current', false, false, false).then(function (response) {
 				_this2.running = false;
-				if (response.body.roles) {
+				if (response.body && response.body.roles) {
 					for (var i in response.body.roles) {
 						if (response.body.roles[i].class == 'SeanMorris\\Access\\Role\\Administrator') {
 							response.body.isAdmin = true;
 						}
 					}
 				}
-				if (response && response.body.id) {
+				if (response.body && response.body.id) {
 					_this2.args.response = response;
 					_this2.args.current = response.body;
 				}

@@ -30,7 +30,7 @@ export class UserRepository extends Repository {
 			, false
 		).then((response) => {
 			this.running = false;
-			if(response.body.roles)
+			if(response.body && response.body.roles)
 			{
 				for(let i in response.body.roles)
 				{
@@ -40,7 +40,7 @@ export class UserRepository extends Repository {
 					}
 				}
 			}
-			if(response && response.body.id)
+			if(response.body && response.body.id)
 			{
 				this.args.response = response;
 				this.args.current  = response.body;

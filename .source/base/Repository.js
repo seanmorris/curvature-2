@@ -279,7 +279,6 @@ export class Repository
 
 		xhr.withCredentials = true;
 		
-
 		let link = document.createElement("a");
     	link.href = fullUri;
 
