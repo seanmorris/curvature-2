@@ -22,3 +22,22 @@ exports.watcher = {
 exports.paths = {
   public: '.dist', watched: ['app']
 };
+
+// const { exec } = require('child_process');
+
+// exports.hooks  = {};
+
+// exports.hooks.preCompile = () => {
+//   console.log("About to compile...");
+
+//   exec(
+//     `cd ../frontend \\
+//       && npm link curvature`
+//     , (err, stdout, stderr)=>{
+//       console.log(stdout);
+//       console.log(stderr);
+
+//       return Promise.resolve();
+//     }
+//   );
+// };

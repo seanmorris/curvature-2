@@ -191,8 +191,6 @@ export class PopOutTag extends Tag
 			hostTag = hostTag.parentNode;
 		}
 
-		// console.log(hostTag);
-
 		let hostRect = hostTag.getBoundingClientRect();
 
 		window.requestAnimationFrame(()=>{
@@ -218,7 +216,7 @@ export class PopOutTag extends Tag
 			window.requestAnimationFrame(()=>{
 				style += `
 					;left:      ${hostRect.x}px;
-					top:        ${hostRect.y}px;
+					top:        ${hostRect.y + document.documentElement.scrollTop}px;
 					width:      ${hostRect.width}px;
 					height:     ${hostRect.height}px;
 					overflow-y: auto;
