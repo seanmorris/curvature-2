@@ -172,8 +172,6 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				hostTag = hostTag.parentNode;
 			}
 
-			console.log(hostTag);
-
 			var hostRect = hostTag.getBoundingClientRect();
 
 			window.requestAnimationFrame(function () {

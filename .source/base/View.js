@@ -1572,6 +1572,29 @@ ${tag.outerHTML}`
 		// Bindable.clearBindings(this.args);
 	}
 
+	findTag(selector)
+	{
+		for(let i in this.nodes)
+		{
+			let result;
+
+			if(!this.nodes[i].querySelector)
+			{
+				continue;
+			}
+
+			if(this.nodes[i].matches(selector))
+			{
+				return this.nodes[i];
+			}
+
+			if(result = this.nodes[i].querySelector(selector))
+			{
+				return result;
+			}
+		}
+	}
+
 	update()
 	{
 

@@ -1478,6 +1478,25 @@ var View = exports.View = function () {
 			// Bindable.clearBindings(this.args);
 		}
 	}, {
+		key: 'findTag',
+		value: function findTag(selector) {
+			for (var i in this.nodes) {
+				var result = void 0;
+
+				if (!this.nodes[i].querySelector) {
+					continue;
+				}
+
+				if (this.nodes[i].matches(selector)) {
+					return this.nodes[i];
+				}
+
+				if (result = this.nodes[i].querySelector(selector)) {
+					return result;
+				}
+			}
+		}
+	}, {
 		key: 'update',
 		value: function update() {}
 	}, {

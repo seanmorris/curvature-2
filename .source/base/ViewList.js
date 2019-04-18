@@ -103,6 +103,8 @@ export class ViewList
 			for(let j in views)
 			{
 				if(views[j]
+					&& this.args.value[i]
+					&& typeof this.args.value[i] == 'object'
 					&& this.args.value[i] === views[j].args[ this.subProperty ]
 				){
 					found = true;
