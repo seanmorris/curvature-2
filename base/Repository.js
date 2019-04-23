@@ -244,6 +244,10 @@ var Repository = function () {
 				this._onResponse = new _Bag.Bag();
 			}
 
+			if (!this.runningRequests) {
+				this.runningRequests = {};
+			}
+
 			queryArgs.api = queryArgs.api || 'json';
 
 			queryString = Object.keys(queryArgs).map(function (arg) {
@@ -300,6 +304,10 @@ var Repository = function () {
 			if (!post) {
 				xhr.timeout = 15000;
 				this.xhrs[uriPath] = xhr;
+			}
+
+			if (!post && this.runningRequests[uriPath]) {
+				return this.runningRequests[uriPath];
 			}
 
 			var reqPromise = new Promise(function (resolve, reject) {
@@ -398,6 +406,7 @@ var Repository = function () {
 						}
 
 						delete _this3.xhrs[uriPath];
+						delete _this3.runningRequests[uriPath];
 					}
 				};
 
@@ -409,6 +418,10 @@ var Repository = function () {
 				// }
 				xhr.send(formData);
 			});
+
+			if (!post) {
+				this.runningRequests[uriPath] = reqPromise;
+			}
 
 			return reqPromise;
 		}

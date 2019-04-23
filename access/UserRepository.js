@@ -35,22 +35,18 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 
 			var refresh = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
+
 			this.args = this.args || _Bindable.Bindable.makeBindable({});
+
 			if (window.prerenderer) {
 				return;
 			}
-			if (!refresh && this.running) {
-				console.log(this.running);
-				return this.running;
-			}
-			if (!refresh && this.args.response) {
-				return Promise.resolve(this.args.response);
-			}
+
 			if (refresh === false) {
 				return Promise.resolve(this.args.response);
 			}
-			this.running = this.request(this.uri + 'current', false, false, false).then(function (response) {
-				_this2.running = false;
+
+			return this.request(this.uri + 'current', false, false, false).then(function (response) {
 				if (response.body && response.body.roles) {
 					for (var i in response.body.roles) {
 						if (response.body.roles[i].class == 'SeanMorris\\Access\\Role\\Administrator') {
@@ -64,8 +60,6 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 				}
 				return response;
 			});
-
-			return this.running;
 		}
 	}, {
 		key: 'login',
@@ -107,8 +101,3 @@ _Repository2.Repository.onResponse(function (response) {
 		UserRepository.args.current = response.meta.currentUser;
 	}
 }, { wait: 0 });
-
-// setInterval(() => {
-// 	UserRepository.getCurrentUser();
-// 	console.log('!!!');
-// }, 5000);

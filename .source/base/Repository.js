@@ -223,6 +223,11 @@ export class Repository
 			this._onResponse = new Bag;
 		}
 
+		if(!this.runningRequests)
+		{
+			this.runningRequests = {};
+		}
+
 		queryArgs.api = queryArgs.api || 'json';
 
 		queryString = Object.keys(queryArgs).map((arg) => {
@@ -287,6 +292,10 @@ export class Repository
 		if(!post) {
 			xhr.timeout        = 15000;
 			this.xhrs[uriPath] = xhr;
+		}
+
+		if(!post && this.runningRequests[uriPath]) {
+			return this.runningRequests[uriPath];
 		}
 
 		let reqPromise = new Promise(((resolve, reject) => {
@@ -402,6 +411,7 @@ export class Repository
 					}
 
 					delete this.xhrs[uriPath];
+					delete this.runningRequests[uriPath];
 				}
 			};
 
@@ -413,6 +423,10 @@ export class Repository
 			// }
 			xhr.send(formData);
 		}));
+
+		if(!post) {
+			this.runningRequests[uriPath] = reqPromise;
+		}
 
 		return reqPromise;
 	}

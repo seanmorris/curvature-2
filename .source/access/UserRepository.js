@@ -5,31 +5,25 @@ import { Repository } from '../base/Repository';
 export class UserRepository extends Repository {
 	static get uri() { return Config.backend + '/user/'; }
 	static getCurrentUser(refresh = null) {
+
 		this.args = this.args || Bindable.makeBindable({});
+
 		if(window.prerenderer)
 		{
 			return;
 		}
-		if(!refresh && this.running)
-		{
-			console.log(this.running);
-			return this.running;
-		}
-		if(!refresh && this.args.response)
-		{
-			return Promise.resolve(this.args.response);
-		}
+
 		if(refresh === false)
 		{
 			return Promise.resolve(this.args.response);
 		}
-		this.running = this.request(
+
+		return this.request(
 			this.uri + 'current'
 			, false
 			, false
 			, false
 		).then((response) => {
-			this.running = false;
 			if(response.body && response.body.roles)
 			{
 				for(let i in response.body.roles)
@@ -47,8 +41,6 @@ export class UserRepository extends Repository {
 			}
 			return response;
 		});
-
-		return this.running;
 	}
 	static login() {
 		return this.request(this.uri + '/login');
@@ -85,8 +77,3 @@ Repository.onResponse((response)=>{
 		UserRepository.args.current = response.meta.currentUser;
 	}
 }, {wait:0});
-
-// setInterval(() => {
-// 	UserRepository.getCurrentUser();
-// 	console.log('!!!');
-// }, 5000);
