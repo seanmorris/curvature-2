@@ -238,6 +238,11 @@ export class Repository
 
 		let fullUri    = uri;
 		// let postString = '';
+		fullUri = uri + '?' + queryString;
+
+		if(!post && this.runningRequests[fullUri]) {
+			return this.runningRequests[fullUri];
+		}
 
 		if(post) {
 			cache = false;
@@ -256,8 +261,6 @@ export class Repository
 			// 	+ encodeURIComponent(post[arg])
 			// }).join('&');
 		}
-
-		fullUri = uri + '?' + queryString;
 
 		let xhr = new XMLHttpRequest();
 
@@ -287,15 +290,9 @@ export class Repository
 		let link = document.createElement("a");
     	link.href = fullUri;
 
-    	let uriPath = link.pathname;
-
-		if(!post) {
+    	if(!post) {
 			xhr.timeout        = 15000;
-			this.xhrs[uriPath] = xhr;
-		}
-
-		if(!post && this.runningRequests[uriPath]) {
-			return this.runningRequests[uriPath];
+			this.xhrs[fullUri] = xhr;
 		}
 
 		let reqPromise = new Promise(((resolve, reject) => {
@@ -316,6 +313,9 @@ export class Repository
 				let response;
 
 				if (xhr.readyState === DONE) {
+
+					delete this.xhrs[fullUri];
+					delete this.runningRequests[fullUri];
 
 					if(!this.cache) {
 						this.cache = {};
@@ -409,9 +409,6 @@ export class Repository
 							reject(xhr);
 						}
 					}
-
-					delete this.xhrs[uriPath];
-					delete this.runningRequests[uriPath];
 				}
 			};
 
@@ -425,7 +422,7 @@ export class Repository
 		}));
 
 		if(!post) {
-			this.runningRequests[uriPath] = reqPromise;
+			this.runningRequests[fullUri] = reqPromise;
 		}
 
 		return reqPromise;

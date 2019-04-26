@@ -168,15 +168,17 @@ export class View extends FieldSet
 			let skeleton   = Object.assign({}, this.args.fields[-1].skeleton);
 			let name       = Object.values(this.args.fields).length - 1;
 
+			console.log(name);
+
 			skeleton = this.cloneSkeleton(skeleton);
 
 			skeleton = this.correctNames(skeleton, name);
 
 			let superSkeleton = {};
 
-			superSkeleton[name + 1] = skeleton;
+			superSkeleton[name] = skeleton;
 
-			let newField = Form.renderFields(superSkeleton, this)[name + 1];
+			let newField = Form.renderFields(superSkeleton, this)[name];
 
 			this.args.fields[name] = newField;
 
@@ -206,6 +208,8 @@ export class View extends FieldSet
 
 	deleteImage(index)
 	{
+		console.log(index, this.args.fields);
+
 		this.args.fields[index].disable();
 		this.args._fields[index].args.classes = 'deleted';
 	}

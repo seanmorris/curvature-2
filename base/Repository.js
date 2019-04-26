@@ -256,6 +256,11 @@ var Repository = function () {
 
 			var fullUri = uri;
 			// let postString = '';
+			fullUri = uri + '?' + queryString;
+
+			if (!post && this.runningRequests[fullUri]) {
+				return this.runningRequests[fullUri];
+			}
 
 			if (post) {
 				cache = false;
@@ -271,8 +276,6 @@ var Repository = function () {
 				// 	+ encodeURIComponent(post[arg])
 				// }).join('&');
 			}
-
-			fullUri = uri + '?' + queryString;
 
 			var xhr = new XMLHttpRequest();
 
@@ -299,15 +302,9 @@ var Repository = function () {
 			var link = document.createElement("a");
 			link.href = fullUri;
 
-			var uriPath = link.pathname;
-
 			if (!post) {
 				xhr.timeout = 15000;
-				this.xhrs[uriPath] = xhr;
-			}
-
-			if (!post && this.runningRequests[uriPath]) {
-				return this.runningRequests[uriPath];
+				this.xhrs[fullUri] = xhr;
 			}
 
 			var reqPromise = new Promise(function (resolve, reject) {
@@ -328,6 +325,9 @@ var Repository = function () {
 					var response = void 0;
 
 					if (xhr.readyState === DONE) {
+
+						delete _this3.xhrs[fullUri];
+						delete _this3.runningRequests[fullUri];
 
 						if (!_this3.cache) {
 							_this3.cache = {};
@@ -404,9 +404,6 @@ var Repository = function () {
 								reject(xhr);
 							}
 						}
-
-						delete _this3.xhrs[uriPath];
-						delete _this3.runningRequests[uriPath];
 					}
 				};
 
@@ -420,7 +417,7 @@ var Repository = function () {
 			});
 
 			if (!post) {
-				this.runningRequests[uriPath] = reqPromise;
+				this.runningRequests[fullUri] = reqPromise;
 			}
 
 			return reqPromise;

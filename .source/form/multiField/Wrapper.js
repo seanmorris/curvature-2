@@ -27,6 +27,8 @@ export class Wrapper extends View
 			<div style = "display:none">[[field]]</div>
 		`;
 
+		// console.log(this.args.field);
+
 		this.args.field     = this.args.field || '!';
 		this.args.keyword   = '';
 		this.args.title     = '';
@@ -49,7 +51,7 @@ export class Wrapper extends View
 			this.args.field.args.value.id = v;
 		});
 
-		this.args.field.args.value.bindTo('id', (v)=>{
+		this.args.field.args.value.bindTo('id', (v,k)=>{
 			if(!v)
 			{
 				return;

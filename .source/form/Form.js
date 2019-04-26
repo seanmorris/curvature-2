@@ -149,7 +149,6 @@ export class Form extends View
 						}
 						break;
 					case 'select':
-						// console.log(skeleton[i]);
 						field = new SelectField(skeleton[i], form, parent, i);
 						break;
 					case 'radios':

@@ -117,15 +117,17 @@ var View = exports.View = function (_FieldSet) {
 				var skeleton = Object.assign({}, this.args.fields[-1].skeleton);
 				var name = Object.values(this.args.fields).length - 1;
 
+				console.log(name);
+
 				skeleton = this.cloneSkeleton(skeleton);
 
 				skeleton = this.correctNames(skeleton, name);
 
 				var superSkeleton = {};
 
-				superSkeleton[name + 1] = skeleton;
+				superSkeleton[name] = skeleton;
 
-				var newField = _Form.Form.renderFields(superSkeleton, this)[name + 1];
+				var newField = _Form.Form.renderFields(superSkeleton, this)[name];
 
 				this.args.fields[name] = newField;
 
@@ -154,6 +156,8 @@ var View = exports.View = function (_FieldSet) {
 	}, {
 		key: 'deleteImage',
 		value: function deleteImage(index) {
+			console.log(index, this.args.fields);
+
 			this.args.fields[index].disable();
 			this.args._fields[index].args.classes = 'deleted';
 		}

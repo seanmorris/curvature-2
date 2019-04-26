@@ -29,6 +29,8 @@ var Wrapper = exports.Wrapper = function (_View) {
 
 		_this.template = '\n\t\t\t<div\n\t\t\t\tclass = "wrapped-field [[classes]]"\n\t\t\t\tcv-on = "click:editRecord(event, key)"\n\t\t\t\ttitle = "[[fieldName]]: [[id]]"\n\t\t\t>\n\t\t\t\t<div\n\t\t\t\t\tcv-on = "click:deleteImage(event, key)"\n\t\t\t\t\tstyle = "display: inline; cursor:pointer;"\n\t\t\t\t>\n\t\t\t\t\t[[icon]]\n\t\t\t\t</div>\n\t\t\t\t<div class = "field-content">\n\t\t\t\t\t[[title]]\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div style = "display:none">[[field]]</div>\n\t\t';
 
+		// console.log(this.args.field);
+
 		_this.args.field = _this.args.field || '!';
 		_this.args.keyword = '';
 		_this.args.title = '';
@@ -50,7 +52,7 @@ var Wrapper = exports.Wrapper = function (_View) {
 			_this.args.field.args.value.id = v;
 		});
 
-		_this.args.field.args.value.bindTo('id', function (v) {
+		_this.args.field.args.value.bindTo('id', function (v, k) {
 			if (!v) {
 				return;
 			}
