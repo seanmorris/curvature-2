@@ -132,6 +132,11 @@ var Repository = function () {
 
 			return model;
 		}
+
+		// static get xhrs(){
+		// 	return this.xhrs = this.xhrs || [];
+		// }
+
 	}], [{
 		key: 'loadPage',
 		value: function loadPage() {
@@ -305,6 +310,8 @@ var Repository = function () {
 			if (!post) {
 				xhr.timeout = 15000;
 				this.xhrs[fullUri] = xhr;
+
+				console.log(this.xhrs);
 			}
 
 			var reqPromise = new Promise(function (resolve, reject) {
@@ -433,21 +440,19 @@ var Repository = function () {
 				}
 				if (i.match(regex)) {
 					this.xhrs[i].abort();
+					delete this.xhrs[i];
 				}
 			}
-			this.xhrList = [];
-		}
-	}, {
-		key: 'xhrs',
-		get: function get() {
-			return this.xhrList = this.xhrList || [];
+			// this.xhrs = [];
 		}
 	}]);
 
 	return Repository;
 }();
 
-// Repository.lastResponse = null;
-
-
 exports.Repository = Repository;
+
+
+Repository.xhrs = [];
+
+// Repository.lastResponse = null;

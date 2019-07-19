@@ -127,9 +127,9 @@ export class Repository
 		return model;
 	}
 
-	static get xhrs(){
-		return this.xhrList = this.xhrList || [];
-	}
+	// static get xhrs(){
+	// 	return this.xhrs = this.xhrs || [];
+	// }
 
 	static loadPage(args = {}, refresh = false) {
 		return this.request(this.uri, args).then((response) => {
@@ -293,6 +293,8 @@ export class Repository
     	if(!post) {
 			xhr.timeout        = 15000;
 			this.xhrs[fullUri] = xhr;
+
+			console.log(this.xhrs);
 		}
 
 		let reqPromise = new Promise(((resolve, reject) => {
@@ -435,10 +437,13 @@ export class Repository
 			if(i.match(regex))
 			{
 				this.xhrs[i].abort();
+				delete this.xhrs[i];
 			}
 		}
-		this.xhrList = [];
+		// this.xhrs = [];
 	}
 }
+
+Repository.xhrs = [];
 
 // Repository.lastResponse = null;
