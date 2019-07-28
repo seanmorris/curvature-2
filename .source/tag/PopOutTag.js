@@ -193,6 +193,8 @@ export class PopOutTag extends Tag
 
 		let hostRect = hostTag.getBoundingClientRect();
 
+		this.element.classList.add('popping');
+
 		window.requestAnimationFrame(()=>{
 			this.unpoppedStyle = `
 				;position:  fixed;
@@ -201,19 +203,21 @@ export class PopOutTag extends Tag
 				width:      ${this.rect.width}px;
 				height:     ${this.rect.height}px;
 				z-index:    99999;
-				transition: width ${this.horizontalDuration}s  ease-out
-							, top ${this.verticalDuration}s    ease-out
-							, left ${this.horizontalDuration}s ease-out
-							, height ${this.verticalDuration}s ease-out
-							, all ${this.horizontalDuration}s  ease-out;
+				transition-duration: 0s;
 				overflow: hidden;
 			`;
+
+			// transition: width ${this.horizontalDuration}s  ease-out
+			// , top ${this.verticalDuration}s    ease-out
+			// , left ${this.horizontalDuration}s ease-out
+			// , height ${this.verticalDuration}s ease-out
+			// , all ${this.horizontalDuration}s  ease-out;
 
 			let style = this.style + this.unpoppedStyle;
 
 			this.element.setAttribute('style', style);
 
-			window.requestAnimationFrame(()=>{
+			setTimeout( ()=>{
 				style += `
 					;left:      ${hostRect.x}px;
 					top:        ${hostRect.y + document.documentElement.scrollTop}px;
@@ -232,6 +236,7 @@ export class PopOutTag extends Tag
 				this.element.setAttribute('style', style);
 				this.element.classList.add('popped');
 				this.element.classList.remove('unpopped');
+				this.element.classList.remove('popping');
 				
 				this.popTimeout = setTimeout(()=>{
 					if(!this.element)
@@ -261,7 +266,7 @@ export class PopOutTag extends Tag
 					this.element.dispatchEvent(event);
 
 				}, this.horizontalDuration*1000);
-			});
+			}, 16.7*2);
 
 			this.poppedOut = true;
 		});

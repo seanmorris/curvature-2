@@ -174,14 +174,22 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 
 			var hostRect = hostTag.getBoundingClientRect();
 
+			this.element.classList.add('popping');
+
 			window.requestAnimationFrame(function () {
-				_this2.unpoppedStyle = '\n\t\t\t\t;position:  fixed;\n\t\t\t\tleft:       ' + _this2.rect.x + 'px;\n\t\t\t\ttop:        ' + _this2.rect.y + 'px;\n\t\t\t\twidth:      ' + _this2.rect.width + 'px;\n\t\t\t\theight:     ' + _this2.rect.height + 'px;\n\t\t\t\tz-index:    99999;\n\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's  ease-out\n\t\t\t\t\t\t\t, top ' + _this2.verticalDuration + 's    ease-out\n\t\t\t\t\t\t\t, left ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t\t\t, height ' + _this2.verticalDuration + 's ease-out\n\t\t\t\t\t\t\t, all ' + _this2.horizontalDuration + 's  ease-out;\n\t\t\t\toverflow: hidden;\n\t\t\t';
+				_this2.unpoppedStyle = '\n\t\t\t\t;position:  fixed;\n\t\t\t\tleft:       ' + _this2.rect.x + 'px;\n\t\t\t\ttop:        ' + _this2.rect.y + 'px;\n\t\t\t\twidth:      ' + _this2.rect.width + 'px;\n\t\t\t\theight:     ' + _this2.rect.height + 'px;\n\t\t\t\tz-index:    99999;\n\t\t\t\ttransition-duration: 0s;\n\t\t\t\toverflow: hidden;\n\t\t\t';
+
+				// transition: width ${this.horizontalDuration}s  ease-out
+				// , top ${this.verticalDuration}s    ease-out
+				// , left ${this.horizontalDuration}s ease-out
+				// , height ${this.verticalDuration}s ease-out
+				// , all ${this.horizontalDuration}s  ease-out;
 
 				var style = _this2.style + _this2.unpoppedStyle;
 
 				_this2.element.setAttribute('style', style);
 
-				window.requestAnimationFrame(function () {
+				setTimeout(function () {
 					style += '\n\t\t\t\t\t;left:      ' + hostRect.x + 'px;\n\t\t\t\t\ttop:        ' + (hostRect.y + document.documentElement.scrollTop) + 'px;\n\t\t\t\t\twidth:      ' + hostRect.width + 'px;\n\t\t\t\t\theight:     ' + hostRect.height + 'px;\n\t\t\t\t\toverflow-y: auto;\n\t\t\t\t\ttransition: width ' + _this2.horizontalDuration + 's ease-out\n\t\t\t\t\t\t, top ' + _this2.verticalDuration + 's           ease-out\n\t\t\t\t\t\t, left ' + _this2.horizontalDuration + 's        ease-out\n\t\t\t\t\t\t, height ' + _this2.verticalDuration + 's        ease-out\n\t\t\t\t\t\t, all ' + _this2.horizontalDuration + 's         ease-out;\n\t\t\t\t';
 
 					_this2.moving = true;
@@ -189,6 +197,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 					_this2.element.setAttribute('style', style);
 					_this2.element.classList.add('popped');
 					_this2.element.classList.remove('unpopped');
+					_this2.element.classList.remove('popping');
 
 					_this2.popTimeout = setTimeout(function () {
 						if (!_this2.element) {
@@ -216,7 +225,7 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 						});
 						_this2.element.dispatchEvent(event);
 					}, _this2.horizontalDuration * 1000);
-				});
+				}, 16.7 * 2);
 
 				_this2.poppedOut = true;
 			});
