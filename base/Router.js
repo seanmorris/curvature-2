@@ -72,7 +72,11 @@ var Router = exports.Router = function () {
 
 			document.title = _Config.Config.title;
 			setTimeout(function () {
-				history.pushState(null, null, route);
+				if (silent === 2) {
+					history.replaceState(null, null, route);
+				} else {
+					history.pushState(null, null, route);
+				}
 
 				if (!silent) {
 					if (silent === false) {

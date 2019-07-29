@@ -54,7 +54,14 @@ export class Router {
 		document.title = Config.title;
 		setTimeout(
 			() => {
-				history.pushState(null, null, route);
+				if(silent === 2)
+				{
+					history.replaceState(null, null, route)
+				}
+				else
+				{
+					history.pushState(null, null, route)
+				}
 
 				if(!silent)
 				{
@@ -297,6 +304,7 @@ export class Router {
 
 		return finalArgs;
 	}
+
 	static queryToString(args = {}, fresh = false)
 	{
 		let parts = [], finalArgs = args;
@@ -317,6 +325,7 @@ export class Router {
 
 		return parts.join('&');
 	}
+
 	static setQuery(name, value, silent)
 	{
 		let args = {};
