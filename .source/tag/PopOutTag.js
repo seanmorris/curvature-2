@@ -101,12 +101,54 @@ export class PopOutTag extends Tag
 
 
 		this.escapeListener = (event) => {
-			// console.log(event);
+			if(!this.poppedOut)
+			{
+				return;
+			}
+			
 			if(event.key !== 'Escape')
 			{
 				return;
 			}
 			this.unpop();
+		};
+
+		this.resizeListener = (event) => {
+			if(!this.poppedOut)
+			{
+				return;
+			}
+
+			let hostTag  = this.element;
+
+			while(hostTag.parentNode && !hostTag.matches(this.hostSelector))
+			{
+				if(hostTag.parentNode == document)
+				{
+					break;
+				}
+				hostTag = hostTag.parentNode;
+			}
+
+			let hostRect = hostTag.getBoundingClientRect();
+
+			let style = this.style + this.unpoppedStyle;
+
+			style += `
+				;
+				z-index:    99999;
+				transition-duration: 0s;
+				overflow: hidden;
+				position:  fixed;
+				left:      ${hostRect.x}px;
+				top:        ${hostRect.y + document.documentElement.scrollTop}px;
+				width:      ${hostRect.width}px;
+				height:     ${hostRect.height}px;
+				overflow-y: auto;
+				transition-duration: 0s;
+			`;
+
+			this.element.setAttribute('style', style);
 		};
 
 		if(!this.element.___clickListener___)
@@ -116,15 +158,19 @@ export class PopOutTag extends Tag
 				, writable: true
 			});
 
-			this.element.___clickListener___ = this.clickListener;
-			this.element.___escapeListener___ = this.escapeListener;
+			element.___clickListener___ = this.clickListener;
+			element.___escapeListener___ = this.escapeListener;
+			element.___resizeListener___ = this.resizeListener;
 
 			this.element.addEventListener('click',  element.___clickListener___);
+
 			window.addEventListener('keyup',  element.___escapeListener___);
+			window.addEventListener('resize', element.___resizeListener___);
 
 			this.cleanup.push(((element)=>()=>{
-				element.removeEventListener('click',  element.___clickListener___);
+				element.removeEventListener('click', element.___clickListener___);
 				window.removeEventListener('keyup',  element.___escapeListener___);
+				window.removeEventListener('resize', element.___resizeListener___);
 			})(element));
 		}
 	}

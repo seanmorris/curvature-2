@@ -536,37 +536,35 @@ var View = exports.View = function () {
 
 					tag.parentNode.insertBefore(dynamicNode, tag);
 
-					var debind = proxy.bindTo(property, function (dynamicNode, unsafeHtml) {
-						return function (v, k, t) {
-							if (t[k] instanceof View && t[k] !== v) {
-								if (!t[k].preserve) {
-									t[k].remove();
+					var debind = proxy.bindTo(property, function (v, k, t) {
+						if (t[k] instanceof View && t[k] !== v) {
+							if (!t[k].preserve) {
+								t[k].remove();
+							}
+						}
+
+						dynamicNode.nodeValue = '';
+
+						if (v instanceof View) {
+							v.render(tag.parentNode, dynamicNode);
+
+							_this5.cleanup.push(function () {
+								if (!v.preserve) {
+									v.remove();
 								}
+							});
+						} else {
+							if (v instanceof Object && v.__toString instanceof Function) {
+								v = v.__toString();
 							}
 
-							dynamicNode.nodeValue = '';
-
-							if (v instanceof View) {
-								v.render(tag.parentNode, dynamicNode);
-
-								_this5.cleanup.push(function () {
-									if (!v.preserve) {
-										v.remove();
-									}
-								});
+							if (unsafeHtml) {
+								dynamicNode.innerHTML = v;
 							} else {
-								if (v instanceof Object && v.__toString instanceof Function) {
-									v = v.__toString();
-								}
-
-								if (unsafeHtml) {
-									dynamicNode.innerHTML = v;
-								} else {
-									dynamicNode.nodeValue = v;
-								}
+								dynamicNode.nodeValue = v;
 							}
-						};
-					}(dynamicNode, unsafeHtml));
+						}
+					});
 
 					_this5.cleanup.push(function () {
 						debind();

@@ -293,8 +293,6 @@ export class Repository
     	if(!post) {
 			xhr.timeout        = 15000;
 			this.xhrs[fullUri] = xhr;
-
-			console.log(this.xhrs);
 		}
 
 		let reqPromise = new Promise(((resolve, reject) => {

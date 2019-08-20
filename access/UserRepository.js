@@ -42,7 +42,7 @@ var UserRepository = exports.UserRepository = function (_Repository) {
 				return;
 			}
 
-			if (refresh === false) {
+			if (this.args.response && refresh === false) {
 				return Promise.resolve(this.args.response);
 			}
 

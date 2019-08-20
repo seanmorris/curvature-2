@@ -557,7 +557,7 @@ export class View
 
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
-				let debind = proxy.bindTo(property, ((dynamicNode,unsafeHtml) => (v,k,t) => {
+				let debind = proxy.bindTo(property, (v,k,t) => {
 					if(t[k] instanceof View && t[k] !== v)
 					{
 						if(!t[k].preserve)
@@ -595,7 +595,7 @@ export class View
 							dynamicNode.nodeValue = v;
 						}
 					}
-				})(dynamicNode,unsafeHtml));
+				});
 
 				this.cleanup.push(()=>{
 					debind();

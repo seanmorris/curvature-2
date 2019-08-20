@@ -108,11 +108,37 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 		};
 
 		_this.escapeListener = function (event) {
-			// console.log(event);
+			if (!_this.poppedOut) {
+				return;
+			}
+
 			if (event.key !== 'Escape') {
 				return;
 			}
 			_this.unpop();
+		};
+
+		_this.resizeListener = function (event) {
+			if (!_this.poppedOut) {
+				return;
+			}
+
+			var hostTag = _this.element;
+
+			while (hostTag.parentNode && !hostTag.matches(_this.hostSelector)) {
+				if (hostTag.parentNode == document) {
+					break;
+				}
+				hostTag = hostTag.parentNode;
+			}
+
+			var hostRect = hostTag.getBoundingClientRect();
+
+			var style = _this.style + _this.unpoppedStyle;
+
+			style += '\n\t\t\t\t;\n\t\t\t\tz-index:    99999;\n\t\t\t\ttransition-duration: 0s;\n\t\t\t\toverflow: hidden;\n\t\t\t\tposition:  fixed;\n\t\t\t\tleft:      ' + hostRect.x + 'px;\n\t\t\t\ttop:        ' + (hostRect.y + document.documentElement.scrollTop) + 'px;\n\t\t\t\twidth:      ' + hostRect.width + 'px;\n\t\t\t\theight:     ' + hostRect.height + 'px;\n\t\t\t\toverflow-y: auto;\n\t\t\t\ttransition-duration: 0s;\n\t\t\t';
+
+			_this.element.setAttribute('style', style);
 		};
 
 		if (!_this.element.___clickListener___) {
@@ -121,16 +147,20 @@ var PopOutTag = exports.PopOutTag = function (_Tag) {
 				writable: true
 			});
 
-			_this.element.___clickListener___ = _this.clickListener;
-			_this.element.___escapeListener___ = _this.escapeListener;
+			element.___clickListener___ = _this.clickListener;
+			element.___escapeListener___ = _this.escapeListener;
+			element.___resizeListener___ = _this.resizeListener;
 
 			_this.element.addEventListener('click', element.___clickListener___);
+
 			window.addEventListener('keyup', element.___escapeListener___);
+			window.addEventListener('resize', element.___resizeListener___);
 
 			_this.cleanup.push(function (element) {
 				return function () {
 					element.removeEventListener('click', element.___clickListener___);
 					window.removeEventListener('keyup', element.___escapeListener___);
+					window.removeEventListener('resize', element.___resizeListener___);
 				};
 			}(element));
 		}

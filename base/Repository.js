@@ -310,8 +310,6 @@ var Repository = function () {
 			if (!post) {
 				xhr.timeout = 15000;
 				this.xhrs[fullUri] = xhr;
-
-				console.log(this.xhrs);
 			}
 
 			var reqPromise = new Promise(function (resolve, reject) {
