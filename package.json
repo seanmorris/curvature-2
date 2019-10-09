@@ -1,11 +1,7 @@
 {
 	"name": "curvature",
-	"version": "0.0.34",
+	"version": "0.0.35",
 	"author": "Sean Morris <contact@seanmorr.is> (https://seanmorr.is)",
-	"scripts": {
-		"build": "babel .source --presets babel-preset-latest --out-dir .",
-		"build-prod": "babel .source --presets babel-preset-latest  --out-file .dist/curvature.js"
-	},
 	"devDependencies": {
 		"babel-brunch": "^6.1.1",
 		"babel-cli": "^6.26.0",
