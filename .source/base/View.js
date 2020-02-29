@@ -808,6 +808,8 @@ export class View
 				p.remove();
 			}
 
+			const autoChangedEvent = new CustomEvent('cvAutoChanged', {bubbles: true});
+
 			if(tag.tagName == 'INPUT'
 				|| tag.tagName == 'SELECT'
 				|| tag.tagName == 'TEXTAREA'
@@ -834,6 +836,7 @@ export class View
 						}
 					}
 					tag.value = v == null ? '' : v;
+					tag.dispatchEvent(autoChangedEvent);
 				}
 				else if(type === 'file') {
 					// console.log(v);	
@@ -844,10 +847,12 @@ export class View
 			if(v instanceof View)
 			{
 				v.render(tag);
+				tag.dispatchEvent(autoChangedEvent);
 			}
 			else
 			{
 				tag.innerText = v;
+				tag.dispatchEvent(autoChangedEvent);
 			}
 		});
 
