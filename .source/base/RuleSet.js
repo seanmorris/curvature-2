@@ -36,10 +36,8 @@ export class RuleSet
 
 	add(selector, callback)
 	{
-		this.rules = this.rules
-			|| {};
-		this.rules[selector] = this.rules[selector]
-			|| [];
+		this.rules = this.rules || {};
+		this.rules[selector] = this.rules[selector] || [];
 
 		this.rules[selector].push(callback);
 

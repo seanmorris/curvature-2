@@ -45,6 +45,9 @@ export class Field extends View {
 					cv-expand = "attrs"
 					${extra}
 				/>
+				<span cv-each = "errors:error:e">
+					<p class = "cv-error">[[error]]</p>
+				</span>
 			</label>
 		`;
 		//type    = "${this.args.attrs.type||'text'}"
@@ -88,6 +91,9 @@ export class Field extends View {
 
 				this.parent.args.value[key] = v;
 			}
+
+			this.args.errors = [];
+
 			setting = null;
 		}, {wait: 0});
 
@@ -104,7 +110,7 @@ export class Field extends View {
 
 			setting = k;
 
-			
+
 			if(this.args.attrs.type == 'file')
 			{
 				if(this.tags.input

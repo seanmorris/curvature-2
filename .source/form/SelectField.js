@@ -20,6 +20,9 @@ export class SelectField extends Field {
 				/>
 					<option value = "[[option]]">[[optionText]]</option>
 				</select>
+				<span cv-each = "errors:error:e">
+					<p class = "cv-error">[[error]]</p>
+				</span>
 			</label>
 		`;
 

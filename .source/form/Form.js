@@ -214,7 +214,7 @@ export class Form extends View
 		}
 
 		let parts = [];
-		
+
 		for(let i in field.args.fields)
 		{
 
@@ -240,7 +240,7 @@ export class Form extends View
 			else if(field.args.fields[i])
 			{
 				// let fieldName = field.args.fields[i].args.name;
-				
+
 				let fieldName = field.args.fields[i].getName();
 
 				if(field.args.fields[i].args.type == 'file'
@@ -286,7 +286,7 @@ export class Form extends View
 	queryString(args = {})
 	{
 		let parts = [];
-		
+
 		for(let i in this.args.flatValue)
 		{
 			args[i] = args[i] || this.args.flatValue[i];
@@ -308,6 +308,50 @@ export class Form extends View
 			this.args.value[i] = values[i];
 		}
 	}
+
+	static _updateFields(parent, skeleton)
+	{
+		for(const i in parent.args.fields)
+		{
+			const field = parent.args.fields[i];
+
+			console.log(i, field, skeleton[i]);
+
+			if(skeleton[i])
+			{
+				if(skeleton[i].value)
+				{
+					field.args.value = skeleton[i].value;
+				}
+
+				if(skeleton[i].errors)
+				{
+					field.args.errors = skeleton[i].errors;
+				}
+
+				if(skeleton[i].title)
+				{
+					field.args.title = skeleton[i].title;
+				}
+
+				if(skeleton[i].options)
+				{
+					field.args.options = skeleton[i].options;
+				}
+
+				if(skeleton[i].attrs)
+				{
+					field.args.attrs = skeleton[i].attrs;
+				}
+
+				if(field.children && skeleton[i].children)
+				{
+					this._updateFields(field, skeleton[i].children);
+				}
+			}
+		}
+	}
+
 	hasChildren()
 	{
 		return !!Object.keys(this.args.fields).length;

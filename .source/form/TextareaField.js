@@ -21,6 +21,9 @@ export class TextareaField extends Field {
 				<cv-template cv-if = "attrs.data-caption">
 					<p>[[attrs.data-caption]]</p>
 				</cv-template>
+				<span cv-each = "errors:error:e">
+					<p class = "cv-error">[[error]]</p>
+				</span>
 			</label>
 		`;
 	}

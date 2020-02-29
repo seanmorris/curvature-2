@@ -16,7 +16,7 @@ export class View extends FieldSet
 
 		this.dragging = false;
 		this.dropping = false;
-		
+
 		for(let i in this.args.fields)
 		{
 			this.args._fields[i] = this.wrapSubfield(this.args.fields[i]);
@@ -99,6 +99,10 @@ export class View extends FieldSet
 					</div>
 
 				</fieldset>
+
+				<span cv-each = "errors:error:e">
+					<p class = "cv-error">[[error]]</p>
+				</span>
 
 			</label>
 		`;

@@ -27,6 +27,9 @@ export class RadioField extends Field {
 						[[optionText]]
 					</label>
 				</span>
+				<span cv-each = "errors:error:e">
+					<p class = "cv-error">[[error]]</p>
+				</span>
 			</label>
 		`;
 	}

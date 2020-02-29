@@ -833,10 +833,7 @@ export class View
 
 							if(option.value == v)
 							{
-								tag.value = v == null ? '' : v;
 								tag.selectedIndex = i;
-								tag.dispatchEvent(autoChangedEvent);
-								return;
 							}
 						}
 					}

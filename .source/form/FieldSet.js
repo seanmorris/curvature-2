@@ -27,6 +27,9 @@ export class FieldSet extends Field
 				>
 					[[field]]
 				</fieldset>
+				<span cv-each = "errors:error:e">
+					<p class = "cv-error">[[error]]</p>
+				</span>
 			</label>
 		`;
 	}

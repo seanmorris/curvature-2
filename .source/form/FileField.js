@@ -17,6 +17,9 @@ export class FileField extends Field {
 					cv-expand = "attrs"
 				/>
 				<span style = "display:none" cv-if = "value">[[[value]]]</span>
+				<span cv-each = "errors:error:e">
+					<p class = "cv-error">[[error]]</p>
+				</span>
 			</label>
 		`;
 	}
