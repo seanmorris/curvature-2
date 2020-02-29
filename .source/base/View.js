@@ -817,9 +817,11 @@ export class View
 				let type = tag.getAttribute('type');
 				if(type && type.toLowerCase() == 'checkbox') {
 					tag.checked = !!v;
+					tag.dispatchEvent(autoChangedEvent);
 				}
 				else if(type && type.toLowerCase() == 'radio') {
 					tag.checked = (v == tag.value);
+					tag.dispatchEvent(autoChangedEvent);
 				}
 				else if(type !== 'file') {
 					if(tag.tagName == 'SELECT')
@@ -831,7 +833,10 @@ export class View
 
 							if(option.value == v)
 							{
+								tag.value = v == null ? '' : v;
 								tag.selectedIndex = i;
+								tag.dispatchEvent(autoChangedEvent);
+								return;
 							}
 						}
 					}
