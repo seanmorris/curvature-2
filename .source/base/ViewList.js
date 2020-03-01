@@ -31,10 +31,10 @@ export class ViewList
 				return;
 			}
 
-			this.paused = t.___stack___.length > 1;	
+			this.paused = t.___stack___.length > 1;
 
 			this.reRender();
-			
+
 		});
 
 		let debind = this.args.value.bindTo((v, k, t, d) => {
@@ -46,26 +46,31 @@ export class ViewList
 
 			if(d)
 			{
-				if(this.views[k])
-				{
-					this.views[k].remove();
-				}
+				window.requestAnimationFrame(() => {
+					if(this.views[k])
+					{
+						this.views[k].remove();
+					}
 
-				this.views.splice(k,1);
+					this.views.splice(k,1);
 
-				for(let i in this.views)
-				{
-					this.views[i].args[ this.keyProperty ] = i;
-				}
-
-				return;
+					for(let i in this.views)
+					{
+						window.requestAnimationFrame(()=>{
+							this.views[i].args[ this.keyProperty ] = i;
+						});
+					}
+				});
 			}
 
 			if(!this.views[k])
 			{
-				this.reRender();	
+				window.requestAnimationFrame(()=>{
+					this.reRender();
+				});
 			}
-		}, {wait: 0});
+
+		});
 
 		this.cleanup.push(debind);
 	}
@@ -74,7 +79,9 @@ export class ViewList
 	{
 		for(let i in this.views)
 		{
-			this.views[i].render(tag);
+			window.requestAnimationFrame(()=>{
+				this.views[i].render(tag);
+			});
 		}
 
 		this.tag = tag;
@@ -165,13 +172,15 @@ export class ViewList
 
 			if(!found)
 			{
-				views[i].remove();
+				window.requestAnimationFrame(()=>{
+					views[i].remove();
+				});
 			}
 		}
 
 		let appendOnly = true;
 
-		for(let i in this.views)
+	for(let i in this.views)
 		{
 			if(this.views[i] !== finalViews[i])
 			{
@@ -232,7 +241,7 @@ export class ViewList
 
 		if(!this.args.value.isBound())
 		{
-			Bindable.clearBindings(this.args.value);			
+			Bindable.clearBindings(this.args.value);
 		}
 	}
 }

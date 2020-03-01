@@ -21,7 +21,7 @@ export class View
 		this._id       = this.uuid();
 		this.args._id  = this._id;
 		this.template  = ``;
-		this.document  = ``;		
+		this.document  = ``;
 
 		this.firstNode = null;
 		this.lastNode  = null;
@@ -50,7 +50,7 @@ export class View
 		this.preRuleSet  = new RuleSet;
 		this.subBindings = {};
 
-		this.removed   = false;	
+		this.removed   = false;
 		this.preserve  = false;
 
 		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
@@ -94,7 +94,7 @@ export class View
 	clearTimeout(timeout) {
 		for(var i in this.timeouts) {
 			if(timeout === this.timeouts[i].timeout) {
-				clearInterval(this.timeouts[i].timeout);
+				clearTimeout(this.timeouts[i].timeout);
 
 				delete this.timeouts[i];
 			}
@@ -841,7 +841,7 @@ export class View
 					tag.dispatchEvent(autoChangedEvent);
 				}
 				else if(type === 'file') {
-					// console.log(v);	
+					// console.log(v);
 				}
 				return;
 			}
@@ -907,118 +907,162 @@ export class View
 
 	mapOnTags(tag)
 	{
-		let action = String(tag.getAttribute('cv-on'))
-			.split(/;/)
-			.map((a) => a.split(':'))
-			.map(((object, tag) => (a) => {
-				let eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
-				let callbackName = a[1];
-				let argList      = [];
-				let groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
-				if(groups.length) {
-					callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
-					if(groups[2]) {
-						argList = groups[2].split(',').map(s => s.trim());
-					}
-				}
+		const referent = String(tag.getAttribute('cv-on'));
 
-				let eventMethod;
-				let parent = this;
+		let action = referent.split(';').map(a=> a.split(':')).map((a)=>{
+			a = a.map(a => a.trim());
 
-				while(parent)
+			let eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+			let callbackName = a[1];
+			let eventFlags   = String(a[2] || '');
+			let argList      = [];
+			let groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
+
+			if(!groups)
+			{
+				throw new Error(
+					'Invalid event method referent: '
+					+ tag.getAttribute('cv-on')
+				);
+			}
+
+			if(groups.length)
+			{
+				callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+
+				if(groups[2])
 				{
-					if(typeof parent[callbackName] == 'function')
-					{
-						let _parent       = parent;
-						let _callBackName = callbackName;
-						eventMethod = (...args) => {
-							_parent[ _callBackName ](...args);
-						};
-						break;
-					}
+					argList = groups[2].split(',').map(s => s.trim());
+				}
+			}
 
-					if(parent.viewList && parent.viewList.parent)
-					{
-						parent = parent.viewList.parent;
-					}
-					else if(parent.parent)
-					{
-						parent = parent.parent;
-					}
-					else
-					{
-						break;
-					}
+			let eventMethod;
+			let parent = this;
+
+			while(parent)
+			{
+				if(typeof parent[callbackName] == 'function')
+				{
+					let _parent       = parent;
+					let _callBackName = callbackName;
+					eventMethod = (...args) => {
+						_parent[ _callBackName ](...args);
+					};
+					break;
 				}
 
-				let eventListener = ((object, parent, eventMethod, tag) => (event) => {
-					let argRefs = argList.map((arg) => {
-						let match;
-						if(parseInt(arg) == arg)
-						{
-							return arg;
-						}
-						else if(arg === 'event' || arg === '$event') {
-							return event;
-						}
-						else if(arg === '$view') {
-							return parent;
-						}
-						else if(arg === '$tag') {
-							return tag;
-						}
-						else if(arg === '$parent') {
-							return this.parent;
-						}
-						else if(arg === '$subview') {
-							return this;
-						}
-						else if(arg in this.args) {
-							return this.args[arg];
-						}
-						else if(match = /^['"](\w+?)["']$/.exec(arg))
-						{
-							return match[1];
-						}
+				if(parent.viewList && parent.viewList.parent)
+				{
+					parent = parent.viewList.parent;
+				}
+				else if(parent.parent)
+				{
+					parent = parent.parent;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			let eventListener = ((event) => {
+				let argRefs = argList.map((arg) => {
+					let match;
+					if(parseInt(arg) == arg)
+					{
+						return arg;
+					}
+					else if(arg === 'event' || arg === '$event') {
+						return event;
+					}
+					else if(arg === '$view') {
+						return parent;
+					}
+					else if(arg === '$tag') {
+						return tag;
+					}
+					else if(arg === '$parent') {
+						return this.parent;
+					}
+					else if(arg === '$subview') {
+						return this;
+					}
+					else if(arg in this.args) {
+						return this.args[arg];
+					}
+					else if(match = /^['"](\w+?)["']$/.exec(arg))
+					{
+						return match[1];
+					}
+				});
+
+
+				if(!(typeof eventMethod == 'function'))
+				{
+					throw new Error(
+						`${callbackName} is not defined on View object.`
+						+ "\n" + `Tag:`
+						+ "\n" + `${tag.outerHTML}`
+					);
+				}
+
+				eventMethod(...argRefs);
+			});
+
+			let eventOptions = {};
+
+			if(eventFlags.includes('p'))
+			{
+				eventOptions.passive = true;
+			}
+			else if(eventFlags.includes('P'))
+			{
+				eventOptions.passive = false;
+			}
+
+			if(eventFlags.includes('c'))
+			{
+				eventOptions.capture = true;
+			}
+			else if(eventFlags.includes('C'))
+			{
+				eventOptions.capture = false;
+			}
+
+			if(eventFlags.includes('o'))
+			{
+				eventOptions.once = true;
+			}
+			else if(eventFlags.includes('O'))
+			{
+				eventOptions.once = false;
+			}
+
+			switch(eventName)
+			{
+				case '_init':
+					eventListener();
+					break;
+
+				case '_attach':
+					this.attach.push(eventListener);
+					break;
+
+				case '_detach':
+					this.detach.push(eventListener);
+					break;
+
+				default:
+					tag.addEventListener(eventName, eventListener, eventOptions);
+
+					this.cleanup.push(()=>{
+						tag.removeEventListener(eventName, eventListener, eventOptions);
 					});
-					if(!(typeof eventMethod == 'function')) {
-						throw new Error(
-							`${callbackName} is not defined on View object.
+					break;
+			}
 
-Tag:
-
-${tag.outerHTML}`
-						);
-					}
-					eventMethod(...argRefs);
-				})(object, parent, eventMethod, tag);
-
-
-				switch(eventName)
-				{
-					case '_init':
-						eventListener();
-						break;
-
-					case '_attach':
-						this.attach.push(eventListener);
-						break;
-
-					case '_detach':
-						this.detach.push(eventListener);
-						break;
-
-					default:
-						tag.addEventListener(eventName, eventListener);
-
-						this.cleanup.push(()=>{
-							tag.removeEventListener(eventName, eventListener);
-						});
-						break;
-				}
-
-				return [eventName, callbackName, argList];
-			})(this, tag));
+			return [eventName, callbackName, argList];
+		});
 
 		tag.removeAttribute('cv-on');
 	}
@@ -1277,11 +1321,11 @@ ${tag.outerHTML}`
 	mapIfTags(tag)
 	{
 		let ifProperty = tag.getAttribute('cv-if');
-		
+
 		tag.removeAttribute('cv-if');
 
 		let subTemplate = tag.innerHTML;
-		
+
 		let inverted = false;
 
 		if(ifProperty.substr(0, 1) === '!')
