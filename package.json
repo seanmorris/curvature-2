@@ -1,6 +1,6 @@
 {
 	"name": "curvature",
-	"version": "0.0.38",
+	"version": "0.0.39",
 	"author": "Sean Morris <contact@seanmorr.is> (https://seanmorr.is)",
 	"devDependencies": {
 		"babel-brunch": "^6.1.1",

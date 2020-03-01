@@ -28,9 +28,6 @@ export class View extends FieldSet
 		this.args.creating  = '';
 		this.args.fieldType = '';
 
-		// this.args.loader = new Loader;
-		// this.args.loader = 'LOADING!!!';
-
 		this.args.createForm = this.args.createForm || '';
 		this.args.searchForm = this.args.searchForm || '';
 		this.args.createFormReady = false;
@@ -176,8 +173,6 @@ export class View extends FieldSet
 
 			let skeleton   = Object.assign({}, this.args.fields[-1].skeleton);
 			let name       = Object.values(this.args.fields).length - 1;
-
-			console.log(name);
 
 			skeleton = this.cloneSkeleton(skeleton);
 
