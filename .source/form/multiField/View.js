@@ -1,3 +1,4 @@
+import { Config      } from 'Config';
 import { Form        } from '../../form/Form';
 import { FieldSet    } from '../../form/FieldSet';
 import { CreateForm  } from './CreateForm';
@@ -40,7 +41,6 @@ export class View extends FieldSet
 		this.args.addIcon = '&#215;';
 		this.args.addIcon = 'a';
 		this.args.addIcon = '+';
-
 
 		this.template = `
 			<label
@@ -110,17 +110,22 @@ export class View extends FieldSet
 
 	setCreateForm(args)
 	{
-		console.log(this.args.attrs['data-create-endpoint']);
+		let origin = '';
+
+		if(Config.backend)
+		{
+			origin = Config.backend;
+		}
 
 		if(this.args.attrs['data-create-endpoint'] !== false)
 		{
 			this.args.createForm = new CreateForm(
 				Object.assign({}, args)
 				, this.args.attrs['data-create-endpoint']
-					? this.args.attrs['data-create-endpoint']
+					? origin + this.args.attrs['data-create-endpoint']
 					: (args.publicId
-						? `${this.args.attrs['data-endpoint']}/${args.publicId}/edit`
-						: `${this.args.attrs['data-endpoint']}/create`
+						? origin + `${this.args.attrs['data-endpoint']}/${args.publicId}/edit`
+						: origin + `${this.args.attrs['data-endpoint']}/create`
 					)
 			);
 
@@ -137,7 +142,7 @@ export class View extends FieldSet
 
 		this.args.searchForm = new SearchForm(
 			Object.assign({}, args)
-			, this.args.attrs['data-endpoint']
+			, origin + this.args.attrs['data-endpoint']
 		);
 	}
 
