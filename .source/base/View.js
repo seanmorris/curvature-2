@@ -241,15 +241,9 @@ export class View
 		{
 			subDoc = this.template;
 		}
-		else if(this.document)
-		{
-			subDoc = this.document;
-		}
 		else
 		{
 			subDoc = document.createRange().createContextualFragment(this.template);
-
-			this.document = subDoc;
 		}
 
 		const blit = () => {
@@ -428,9 +422,9 @@ export class View
 
 		this.postRender(parentNode);
 
-		if(parentNode.getRootNode == document)
+		if(parentNode.getRootNode() == document)
 		{
-			requestAnimationFrame(render);
+			requestAnimationFrame(blit);
 
 			this.document = document;
 		}
@@ -1266,7 +1260,7 @@ export class View
 		let bindOptions = {};
 		if(this.document === document)
 		{
-			bindOptions = {frame: true};
+			// bindOptions = {wait: true};
 		}
 
 		let debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
@@ -1285,7 +1279,6 @@ export class View
 
 				if(viewList.args.subArgs[k] !== v)
 				{
-					// view.args[k] = v;
 					viewList.args.subArgs[k] = v;
 				}
 			}, bindOptions);
@@ -1307,7 +1300,7 @@ export class View
 				}
 
 				let newRef = v;
-				let oldRef = p;//t[k];
+				let oldRef = p;
 
 				if(v instanceof View)
 				{
@@ -1330,29 +1323,7 @@ export class View
 				}
 			}, {wait: 0});
 
-			// let debindC = viewList.args.subArgs.bindTo((v,k,t,d,p)=>{
-			// 	if(k == '_id')
-			// 	{
-			// 		return;
-			// 	}
-
-			// 	console.log(k,v,p,this.args[k]);
-
-			// 	if(this.args[k] === v)
-			// 	{
-			// 		// return;
-			// 	}
-
-			// 	if(k in this.args)
-			// 	{
-			// 		this.args[k] = v;
-			// 	}
-			// });
-
-			this.cleanup.push(()=>{
-				debindA();
-				debindB();
-			});
+			this.cleanup.push(debindA, debindB);
 
 			while(tag.firstChild)
 			{
@@ -1364,9 +1335,7 @@ export class View
 			viewList.render(tag);
 		});
 
-		this.cleanup.push(()=>{
-			debind();
-		});
+		this.cleanup.push(debind);
 	}
 
 	mapIfTags(tag)
@@ -1548,11 +1517,11 @@ export class View
 	syncBind(subView)
 	{
 		let bindOptionsA = {};
-		let bindOptionsB = {};
+		let bindOptionsB = {wait: 0};
 		if(this.document === document)
 		{
 			bindOptionsA = {frame: true};
-			bindOptionsB = {frame: true};
+			bindOptionsB = {frame: true, wait: 0};
 		}
 
 		let debindA = this.args.bindTo((v,k,t,d)=>{

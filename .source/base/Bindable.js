@@ -545,28 +545,39 @@ export class Bindable {
 
 	static wrapWaitCallback(callback, wait)
 	{
-		return ((callback) => {
+		let waiter = false;
 
-			let waiter = false;
+		const wrappedCallback = (v,k,t,d,p) => {
+			const start = Date.now();
 
-			return (v,k,t,d) => {
+			callback(v,k,t,d,p)
 
-				if (waiter)
+			if(Date.now() - start > 30)
+			{
+				console.trace('Timeout callback took over 30ms.', callback);
+			}
+
+		};
+
+		return () => {
+
+			return (v,k,t,d,p) => {
+
+				if (!waiter)
 				{
-					clearTimeout(waiter);
-					waiter = false;
+					waiter = setTimeout(wrappedCallback, wait);
 				}
 
-				waiter = setTimeout(()=>callback(v,k,t,d,t[k]), wait);
+				clearTimeout(waiter);
 
 			}
-		})(callback);
+		};
 	}
 
 	static wrapFrameCallback(callback)
 	{
-		return (v,k,t,d) => {
-			window.requestAnimationFrame(() => callback(v,k,t,d,t[k]));
+		return (v,k,t,d,p) => {
+			window.requestAnimationFrame(() => callback(v,k,t,d,p));
 		};
 
 	}

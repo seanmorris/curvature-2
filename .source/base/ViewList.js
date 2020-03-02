@@ -71,12 +71,20 @@ export class ViewList
 
 	render(tag)
 	{
-		requestAnimationFrame(() => {
-			for(let i in this.views)
+		for(let i in this.views)
+		{
+			console.log(tag, this.views[i]);
+
+			if(tag.getRootNode() === document)
+			{
+				requestAnimationFrame(() => this.views[i].render(tag));
+			}
+			else
 			{
 				this.views[i].render(tag);
 			}
-		});
+
+		}
 
 		this.tag = tag;
 	}
@@ -151,27 +159,24 @@ export class ViewList
 			}
 		}
 
-		requestAnimationFrame(() => {
+		for(let i in views)
+		{
+			let found = false;
 
-			for(let i in views)
+			for(let j in finalViews)
 			{
-				let found = false;
-
-				for(let j in finalViews)
+				if(views[i] === finalViews[j])
 				{
-					if(views[i] === finalViews[j])
-					{
-						found = true;
-						break;
-					}
-				}
-
-				if(!found)
-				{
-					views[i].remove();
+					found = true;
+					break;
 				}
 			}
-		});
+
+			if(!found)
+			{
+				views[i].remove();
+			}
+		}
 
 		let appendOnly = true;
 
@@ -183,18 +188,13 @@ export class ViewList
 			}
 		}
 
-		const subDoc = document.createRange().createContextualFragment('');
+		let renderDoc  = this.tag;
+		let inDocument = false;
 
-		for(let i in finalViews)
+		if(this.tag.getRootNode() === document)
 		{
-			if(finalViews[i] === this.views[i])
-			{
-				continue;
-			}
-
-			views.splice(i+1, 0, finalViews[i]);
-
-			finalViews[i].render(subDoc);
+			renderDoc = document.createRange().createContextualFragment('');
+			inDocument = true;
 		}
 
 		for(let i in finalViews)
@@ -202,9 +202,17 @@ export class ViewList
 			finalViews[i].args[ this.keyProperty ] = i;
 		}
 
-		requestAnimationFrame(() => this.tag.appendChild(subDoc));
-
 		this.views = finalViews;
+
+		if(inDocument)
+		{
+			requestAnimationFrame(() => finalViews.map(fv => fv.render(this.tag)));
+		}
+		else
+		{
+			finalViews.map(fv => fv.render(renderDoc));
+		}
+
 	}
 	pause(pause=true)
 	{
