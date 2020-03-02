@@ -16,29 +16,28 @@ export class ToastAlert extends View {
 		`;
 	}
 	decay(complete) {
-		const  decayInterval = 50;
 
-		const decayFunc = ()=>{
-			if(this.args.time < 300 && this.args.status !== 'imminent') {
-				// console.log(this.args.time);
-				this.args.status = 'imminent';
-			}
-			else if(this.args.time > 1200 && this.args.status !== 'decaying'){
-				// console.log(this.args.time);
-				this.args.status = 'decaying';
-			}
-			if(this.args.time > 0) {
-				this.args.time -= decayInterval;
+		const  decayInterval = 1000;
 
-				if(this.args.time <= 0) {
-					if(complete) {
-						complete();
-					}
-					clearInterval(decay);
-				}
-			}
-		};
+		this.onTimeout(this.args.time - 300, () => {
 
-		let decay = setInterval(decayFunc, decayInterval);
+			this.args.status = 'imminent';
+
+		});
+
+		this.onTimeout(200, () => {
+
+			this.args.status = 'decaying';
+
+		});
+
+		this.onTimeout(this.args.time, () => {
+
+			this.args.status = 'done';
+
+			complete();
+
+		});
+
 	}
 }

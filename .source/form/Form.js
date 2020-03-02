@@ -57,9 +57,8 @@ export class Form extends View
 
 		this.fields = this.args.fields;
 
-		this.args.bindTo(
-			'value'
-			, (v) => {
+		this.args.bindTo('value', (v) => {
+				console.trace(v);
 				this.args.valueString = JSON.stringify(v, null, 4);
 				this.valueString = this.args.valueString;
 				this.value = v;

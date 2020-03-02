@@ -17,15 +17,15 @@ export class ViewList
 		this.paused       = false;
 		this.parent       = parent;
 
-		this.args.value.___before___.push((t)=>{
+		this.cleanup.push(this.args.value.___before((t)=>{
 			if(t.___executing___ == 'bindTo')
 			{
 				return;
 			}
 			this.paused = true;
-		});
+		}));
 
-		this.args.value.___after___.push((t)=>{
+		this.cleanup.push(this.args.value.___after((t)=>{
 			if(t.___executing___ == 'bindTo')
 			{
 				return;
@@ -35,9 +35,9 @@ export class ViewList
 
 			this.reRender();
 
-		});
+		}));
 
-		let debind = this.args.value.bindTo((v, k, t, d) => {
+		this.cleanup.push(this.args.value.bindTo((v, k, t, d) => {
 
 			if(this.paused)
 			{
@@ -46,43 +46,37 @@ export class ViewList
 
 			if(d)
 			{
-				window.requestAnimationFrame(() => {
-					if(this.views[k])
-					{
-						this.views[k].remove();
-					}
+				if(this.views[k])
+				{
+					this.views[k].remove();
+				}
 
-					this.views.splice(k,1);
+				this.views.splice(k,1);
 
-					for(let i in this.views)
-					{
-						window.requestAnimationFrame(()=>{
-							this.views[i].args[ this.keyProperty ] = i;
-						});
-					}
-				});
+				for(let i in this.views)
+				{
+					this.views[i].args[ this.keyProperty ] = i;
+				}
+
+				return;
 			}
 
 			if(!this.views[k])
 			{
-				window.requestAnimationFrame(()=>{
-					this.reRender();
-				});
+				this.reRender();
 			}
 
-		});
-
-		this.cleanup.push(debind);
+		}, {wait: 0}));
 	}
 
 	render(tag)
 	{
-		for(let i in this.views)
-		{
-			window.requestAnimationFrame(()=>{
+		requestAnimationFrame(() => {
+			for(let i in this.views)
+			{
 				this.views[i].render(tag);
-			});
-		}
+			}
+		});
 
 		this.tag = tag;
 	}
@@ -157,36 +151,39 @@ export class ViewList
 			}
 		}
 
-		for(let i in views)
-		{
-			let found = false;
+		requestAnimationFrame(() => {
 
-			for(let j in finalViews)
+			for(let i in views)
 			{
-				if(views[i] === finalViews[j])
+				let found = false;
+
+				for(let j in finalViews)
 				{
-					found = true;
-					break;
+					if(views[i] === finalViews[j])
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if(!found)
+				{
+					views[i].remove();
 				}
 			}
-
-			if(!found)
-			{
-				window.requestAnimationFrame(()=>{
-					views[i].remove();
-				});
-			}
-		}
+		});
 
 		let appendOnly = true;
 
-	for(let i in this.views)
+		for(let i in this.views)
 		{
 			if(this.views[i] !== finalViews[i])
 			{
 				appendOnly = false;
 			}
 		}
+
+		const subDoc = document.createRange().createContextualFragment('');
 
 		for(let i in finalViews)
 		{
@@ -197,13 +194,15 @@ export class ViewList
 
 			views.splice(i+1, 0, finalViews[i]);
 
-			finalViews[i].render(this.tag);
+			finalViews[i].render(subDoc);
 		}
 
 		for(let i in finalViews)
 		{
 			finalViews[i].args[ this.keyProperty ] = i;
 		}
+
+		requestAnimationFrame(() => this.tag.appendChild(subDoc));
 
 		this.views = finalViews;
 	}
