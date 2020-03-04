@@ -1,6 +1,7 @@
 import { Bindable } from './Bindable';
 import { ViewList } from './ViewList';
 import { Router   } from './Router';
+import { Cookie   } from './Cookie';
 import { Dom      } from './Dom';
 import { Tag      } from './Tag';
 import { RuleSet  } from './RuleSet';
@@ -53,13 +54,6 @@ export class View
 		this.preserve  = false;
 
 		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
-
-		this.cleanup.push(()=>{
-			for(let i in this.viewLists)
-			{
-				this.viewLists[i];
-			}
-		});
 	}
 
 	static isView()
@@ -70,30 +64,20 @@ export class View
 	onFrame(callback) {
 		let c = (timestamp) => {
 			callback(timestamp);
-			requestAnimationFrame(c);
+			window.requestAnimationFrame(c);
 		};
 
 		c();
 	}
 
 	onTimeout(time, callback) {
-		let index   = this.timeouts.length;
-
 		let wrappedCallback = () => {
 			this.timeouts[index].fired    = true;
 			this.timeouts[index].callback = null;
-
-			const start = Date.now();
-
 			callback();
-
-			if(Date.now() - start > 30)
-			{
-				console.trace('Timeout callback took over 30ms.', callback);
-			}
 		};
-
-		let timeout = setTimeout(wrappedCallback, time);
+		let timeout = setTimeout(wrappedCallback, time)
+		let index   = this.timeouts.length;
 
 		this.timeouts.push({
 			timeout:    timeout
@@ -230,109 +214,67 @@ export class View
 
 	render(parentNode = null, insertPoint = null)
 	{
+		if(parentNode instanceof View)
+		{
+			parentNode = parentNode.firstNode;
+		}
+
 		if(insertPoint instanceof View)
 		{
 			insertPoint = insertPoint.firstNode;
 		}
 
-		let subDoc;
-
-		if(this.template == document)
-		{
-			subDoc = this.template;
-		}
-		else
-		{
-			subDoc = document.createRange().createContextualFragment(this.template);
-		}
-
-		const blit = () => {
-			if(parentNode)
-			{
-				if(insertPoint)
-				{
-					parentNode.insertBefore(this.firstNode, insertPoint);
-				}
-				else
-				{
-					parentNode.appendChild(this.firstNode);
-				}
-			}
-
-			if(parentNode)
-			{
-				if(insertPoint)
-				{
-					parentNode.insertBefore(subDoc, insertPoint);
-				}
-				else
-				{
-					parentNode.appendChild(subDoc);
-				}
-			}
-
-			if(parentNode)
-			{
-				if(insertPoint)
-				{
-					parentNode.insertBefore(this.lastNode, insertPoint);
-				}
-				else
-				{
-					parentNode.appendChild(this.lastNode);
-				}
-			}
-		};
-
 		if(this.nodes)
 		{
+			const subDoc = document.createRange().createContextualFragment('');
 
 			for(let i in this.detach)
 			{
 				this.detach[i]();
 			}
 
-			for(let i in this.nodes)
-			{
-				const tag = this.nodes[i];
-				const detachEvent = new Event('cvDomAttached', {bubbles: true, target: this.nodes[i]});
+			this.nodes.map(child => {
+				child.dispatchEvent(new Event('cvDomDetached', {
+					bubbles: true, target: child
+				}));
+			});
 
-				tag.dispatchEvent(detachEvent);
+			subDoc.appendChild(this.firstNode);
+			subDoc.appendChild(this.lastNode);
+
+			if(parentNode)
+			{
+				if(insertPoint)
+				{
+					parentNode.insertBefore(this.firstNode, insertPoint);
+					parentNode.insertBefore(this.lastNode, insertPoint);
+				}
+				else
+				{
+					parentNode.appendChild(this.firstNode);
+					parentNode.appendChild(this.lastNode);
+				}
+
+				parentNode.insertBefore(subDoc, this.lastNode);
+
+				this.nodes.map(child => {
+					child.dispatchEvent(new Event('cvDomAttached', {
+						bubbles: true, target: child
+					}));
+				});
+
+				for(let i in this.attach)
+				{
+					this.attach[i]();
+				}
 			}
 
-			this.nodes.map(tag => subDoc.appendChild(tag));
-
-			if(parentNode.getRootNode == document)
-			{
-				requestAnimationFrame(blit);
-
-				this.document = document;
-			}
-			else
-			{
-				blit();
-			}
-
-
-			for(let i in this.nodes)
-			{
-				const tag = this.nodes[i];
-				const attachEvent = new Event('cvDomAttached', {bubbles: true, target: this.nodes[i]});
-
-				tag.dispatchEvent(attachEvent);
-			}
-
-			for(let i in this.attach)
-			{
-				this.attach[i]();
-			}
-
-			return;
+			return this.nodes;
 		}
 
-		this.preRuleSet.apply(subDoc, this);
+		const subDoc = document.createRange().createContextualFragment(this.template);
 
-		this.nodes = [];
+		this.preRuleSet.apply(subDoc, this);
 
 		Dom.mapTags(subDoc, false, (tag)=>{
 			if(tag.matches)
@@ -377,61 +319,49 @@ export class View
 
 		this.ruleSet.apply(subDoc, this);
 
+		this.nodes = [];
+
 		if(window['devmode'] === true)
 		{
 			this.firstNode = document.createComment(`Template ${this._id} Start`);
-		}
-		else
-		{
-			this.firstNode = document.createTextNode('');
-		}
-
-		this.nodes.push(this.firstNode);
-
-		Dom.mapTags(subDoc, false, (tag)=>{
-
-			const detachEvent = new Event('cvDomDetached', {bubbles: true, target: tag});
-
-			tag.dispatchEvent(detachEvent);
-		});
-
-		this.nodes.push(...Array.from(subDoc.childNodes));
-
-		if(window['devmode'] === true)
-		{
 			this.lastNode = document.createComment(`Template ${this._id} End`);
 		}
 		else
 		{
+			this.firstNode = document.createTextNode('');
 			this.lastNode = document.createTextNode('');
 		}
 
-		this.nodes.push(this.lastNode);
+		this.nodes.push(this.lastNode, ...Array.from(subDoc.childNodes), this.firstNode);
 
-		this.nodes.map((tag)=>{
-
-			const attachEvent = new Event('cvDomAttached', {bubbles: true, target: tag});
-
-			tag.dispatchEvent(attachEvent);
-		});
-
-		for(let i in this.attach)
+		if(parentNode)
 		{
-			this.attach[i]();
+			if(insertPoint)
+			{
+				parentNode.insertBefore(this.firstNode, insertPoint);
+				parentNode.insertBefore(this.lastNode, insertPoint);
+			}
+			else
+			{
+				parentNode.appendChild(this.firstNode);
+				parentNode.appendChild(this.lastNode);
+			}
+
+			parentNode.insertBefore(subDoc, this.lastNode);
+
+			this.nodes.map(child => {
+				child.dispatchEvent(new Event('cvDomAttached', {
+					bubbles: true, target: child
+				}));
+			});
+
+			for(let i in this.attach)
+			{
+				this.attach[i]();
+			}
 		}
 
 		this.postRender(parentNode);
-
-		if(parentNode.getRootNode() == document)
-		{
-			requestAnimationFrame(blit);
-
-			this.document = document;
-		}
-		else
-		{
-			blit();
-		}
 
 		return this.nodes;
 	}
@@ -452,9 +382,9 @@ export class View
 				continue;
 			}
 
-			let debind = expandArg.bindTo(i, (v)=>{
+			let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
 				tag.setAttribute(i, v);
-			});
+			})(tag,i));
 
 			this.cleanup.push(()=>{
 				debind();
@@ -500,13 +430,6 @@ export class View
 
 			let attrib = attrs[i][0];
 
-
-			let bindOptions = {};
-			if(this.document === document)
-			{
-				bindOptions = {frame: true};
-			}
-
 			this.cleanup.push(proxy.bindTo(
 				property
 				, (v)=>{
@@ -517,7 +440,6 @@ export class View
 					}
 					tag.setAttribute(attrib, v);
 				}
-				, bindOptions
 			));
 		}
 	}
@@ -566,9 +488,16 @@ export class View
 
 				tag.parentNode.insertBefore(staticNode, tag);
 
-				const dynamicNode = unsafeHtml
-					? document.createElement('div')
-					: document.createTextNode('');
+				let dynamicNode;
+
+				if(unsafeHtml)
+				{
+					dynamicNode = document.createElement('div');
+				}
+				else
+				{
+					dynamicNode = document.createTextNode('');
+				}
 
 				let proxy    = this.args;
 				let property = bindProperty;
@@ -584,14 +513,7 @@ export class View
 
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
-				let bindOptions = {};
-				if(this.document === document)
-				{
-					bindOptions = {frame: true};
-				}
-
 				let debind = proxy.bindTo(property, (v,k,t) => {
-
 					if(t[k] instanceof View && t[k] !== v)
 					{
 						if(!t[k].preserve)
@@ -629,7 +551,7 @@ export class View
 							dynamicNode.nodeValue = v;
 						}
 					}
-				}, bindOptions);
+				});
 
 				this.cleanup.push(()=>{
 					debind();
@@ -647,16 +569,11 @@ export class View
 			tag.parentNode.insertBefore(staticNode, tag);
 
 			tag.nodeValue = '';
+
 		}
 
 		if(tag.nodeType == Node.ELEMENT_NODE)
 		{
-			let bindOptions = {};
-			if(this.document === document)
-			{
-				bindOptions = {frame: true};
-			}
-
 			for (let i = 0; i < tag.attributes.length; i++)
 			{
 				if(!this.interpolatable(tag.attributes[i].value))
@@ -706,7 +623,7 @@ export class View
 
 					let longProperty = j;
 
-					let debind = proxy.bindTo(property, (v, k, t, d) => {
+					this.cleanup.push(proxy.bindTo(property, (v, k, t, d) => {
 						for(let i in bindProperties)
 						{
 							for(let j in bindProperties[longProperty])
@@ -721,10 +638,9 @@ export class View
 						}
 
 						tag.setAttribute(attribute.name, segments.join(''));
-					}, bindOptions);
+					}));
 
 					this.cleanup.push(()=>{
-						debind();
 						if(!proxy.isBound())
 						{
 							Bindable.clearBindings(proxy);
@@ -737,7 +653,7 @@ export class View
 
 	mapRefTags(tag)
 	{
-		let refAttr                         = tag.getAttribute('cv-ref');
+		let refAttr = tag.getAttribute('cv-ref');
 		let [refProp, refClassname, refKey] = refAttr.split(':');
 
 		let refClass = this.stringToClass(refClassname);
@@ -830,20 +746,12 @@ export class View
 		{
 			this.subBindings[bindArg] = this.subBindings[bindArg] || [];
 
-			this.cleanup.push(
-				this.args.bindTo(top, ()=>{
-					while(this.subBindings.length)
-					{
-						this.subBindings.shift()();
-					}
-				})
-			);
-		}
-
-		let bindOptions = {};
-		if(this.document === document)
-		{
-			bindOptions = {frame: true};
+			this.cleanup.push(this.args.bindTo(top, ()=>{
+				while(this.subBindings.length)
+				{
+					this.subBindings.shift()();
+				}
+			}));
 		}
 
 		let debind = proxy.bindTo(property, (v,k,t,d,p) => {
@@ -901,7 +809,7 @@ export class View
 				tag.innerText = v;
 				tag.dispatchEvent(autoChangedEvent);
 			}
-		}, bindOptions);
+		});
 
 		if(proxy !== this.args)
 		{
@@ -911,13 +819,17 @@ export class View
 		this.cleanup.push(debind);
 
 		let inputListener = (event) => {
+			console.log(event, proxy, property, event.target.value);
+
 			if(event.target !== tag) {
 				return;
 			}
 
 			let type  = tag.getAttribute('type');
 			let multi = tag.getAttribute('multiple');
-			if (type && type.toLowerCase() == 'checkbox') {
+
+			if (type && type.toLowerCase() == 'checkbox')
+			{
 				if (tag.checked) {
 					proxy[property] = event.target.value;
 				}
@@ -925,13 +837,33 @@ export class View
 					proxy[property] = false;
 				}
 			}
-			else if(type !== 'file')
-			{
-				proxy[property] = event.target.value;
-			}
 			else if(type == 'file' && multi)
 			{
-				proxy[property] = Array.from(event.target.files);
+				const files = Array.from(event.target.files);
+
+				if(!proxy[property] || !files.length)
+				{
+					proxy[property] = files;
+				}
+
+				for(const i in files)
+				{
+					console.log(i, files[i], proxy[property][i]);
+
+					if(files[i] !== proxy[property][i])
+					{
+						proxy[property] = files;
+						break;
+					}
+				}
+			}
+			else if(type == 'file' && !multi)
+			{
+				proxy[property] = event.target.files.item(0);
+			}
+			else
+			{
+				proxy[property] = event.target.value;
 			}
 		};
 
@@ -943,8 +875,8 @@ export class View
 			tag.removeEventListener('input',         inputListener);
 			tag.removeEventListener('change',        inputListener);
 			tag.removeEventListener('value-changed', inputListener);
-			eventListener = undefined;
 			tag           = undefined;
+			eventListener = undefined;
 		})(tag, inputListener));
 
 		tag.removeAttribute('cv-bind');
@@ -1257,12 +1189,6 @@ export class View
 
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		let bindOptions = {};
-		if(this.document === document)
-		{
-			// bindOptions = {wait: true};
-		}
-
 		let debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
 			if(this.viewLists[eachProp])
 			{
@@ -1271,7 +1197,12 @@ export class View
 
 			let viewList = new ViewList(subTemplate, asProp, v, this, keyProp);
 
+			this.cleanup.push(()=>{
+				viewList.remove();
+			});
+
 			let debindA = this.args.bindTo((v,k,t,d)=>{
+
 				if(k == '_id')
 				{
 					return;
@@ -1281,7 +1212,8 @@ export class View
 				{
 					viewList.args.subArgs[k] = v;
 				}
-			}, bindOptions);
+
+			});
 
 			for(let i in this.args)
 			{
@@ -1294,6 +1226,7 @@ export class View
 			}
 
 			let debindB = viewList.args.bindTo((v,k,t,d,p)=>{
+
 				if(k == '_id' || k.substring(0,3) === '___')
 				{
 					return;
@@ -1321,7 +1254,8 @@ export class View
 				{
 					this.args[k] = v;
 				}
-			}, {wait: 0});
+
+			}, {wait:0});
 
 			this.cleanup.push(debindA, debindB);
 
@@ -1366,59 +1300,7 @@ export class View
 		view.template = subTemplate;
 		view.parent   = this;
 
-		let deBindSync = this.syncBind(view);
-
-		// let debindA = this.args.bindTo((v,k,t,d)=>{
-		// 	if(k == '_id')
-		// 	{
-		// 		return;
-		// 	}
-
-		// 	if(view.args[k] !== v)
-		// 	{
-		// 		view.args[k] = v;
-		// 	}
-		// });
-
-		// for(let i in this.args)
-		// {
-		// 	if(i == '_id')
-		// 	{
-		// 		continue;
-		// 	}
-
-		// 	view.args[i] = this.args[i];
-		// }
-
-		// let debindB = view.args.bindTo((v,k,t,d,p)=>{
-		// 	if(k == '_id')
-		// 	{
-		// 		return;
-		// 	}
-
-		// 	let newRef = v;
-		// 	let oldRef = p;
-
-		// 	if(v instanceof View)
-		// 	{
-		// 		newRef = v.___ref___;
-		// 	}
-
-		// 	if(p instanceof View)
-		// 	{
-		// 		oldRef = p.___ref___;
-		// 	}
-
-		// 	if(newRef !== oldRef && p instanceof View)
-		// 	{
-		// 		p.remove();
-		// 	}
-
-		// 	if((k in this.args) && newRef !== oldRef)
-		// 	{
-		// 		this.args[k] = v;
-		// 	}
-		// }, {wait:0});
+		this.cleanup.push(this.syncBind(view));
 
 		let cleaner = this;
 
@@ -1427,12 +1309,12 @@ export class View
 			cleaner = cleaner.parent;
 		}
 
-		this.cleanup.push(()=>{
-			deBindSync();
-			// view.remove();
-		});
+		view.render(ifDoc);
 
-		view.render(tag);
+		if(this.args[property])
+		{
+			tag.appendChild(ifDoc);
+		}
 
 		let proxy    = this.args;
 		let property = ifProperty;
@@ -1446,13 +1328,7 @@ export class View
 			);
 		}
 
-		let bindOptions = {};
-		if(this.document === document)
-		{
-			bindOptions = {frame: true};
-		}
-
-		let debind = proxy.bindTo(
+		this.cleanup.push(proxy.bindTo(
 			property
 			, (v,k) => {
 				if(Array.isArray(v))
@@ -1467,22 +1343,16 @@ export class View
 
 				if(v)
 				{
-					view.render(tag);
+					tag.appendChild(ifDoc);
 				}
 				else
 				{
-					while(tag.firstChild)
-					{
-						tag.firstChild.remove();
-					}
-					view.render(ifDoc);
+					view.nodes.map(n=>ifDoc.appendChild(n));
 				}
 			}
-			, bindOptions
-		);
+		));
 
 		this.cleanup.push(()=>{
-			debind();
 			if(!proxy.isBound())
 			{
 				Bindable.clearBindings(proxy);
@@ -1516,14 +1386,6 @@ export class View
 
 	syncBind(subView)
 	{
-		let bindOptionsA = {};
-		let bindOptionsB = {wait: 0};
-		if(this.document === document)
-		{
-			bindOptionsA = {frame: true};
-			bindOptionsB = {frame: true, wait: 0};
-		}
-
 		let debindA = this.args.bindTo((v,k,t,d)=>{
 			if(k == '_id')
 			{
@@ -1534,7 +1396,7 @@ export class View
 			{
 				subView.args[k] = v;
 			}
-		}, bindOptionsA);
+		});
 
 		for(let i in this.args)
 		{
@@ -1574,7 +1436,7 @@ export class View
 			{
 				this.args[k] = v;
 			}
-		}, bindOptionsB);
+		}, {wait:0});
 
 		return () => {
 			debindA();
@@ -1600,80 +1462,65 @@ export class View
 			).toString(16)
 		);
 	}
-	remove()
+	remove(now = false)
 	{
-		const detachEvent = new Event('cvDomDetached');
-
 		const remover = () => {
-
-			for(let i in this.tags)
-			{
-				if(Array.isArray(this.tags[i]))
-				{
-					for(var j in this.tags[i])
-					{
-						this.tags[i][j].remove();
-					}
-					continue;
-				}
-				this.tags[i].remove();
-			}
-
 			for(let i in this.nodes)
 			{
-				this.nodes[i].dispatchEvent(detachEvent);
+				this.nodes[i].dispatchEvent(new Event('cvDomDetached'));
 				this.nodes[i].remove();
 			}
-
-			let cleanup;
-
-			while(cleanup = this.cleanup.shift())
-			{
-				cleanup();
-			}
-
-			for(let i in this.viewLists)
-			{
-				if(!this.viewLists[i])
-				{
-					continue;
-				}
-				this.viewLists[i].remove();
-			}
-
-			this.viewLists = [];
-
-			for(let i in this.timeouts)
-			{
-				clearTimeout(this.timeouts[i].timeout);
-				delete this.timeouts[i];
-			}
-
-			for(var i in this.intervals)
-			{
-				clearInterval(this.intervals[i].timeout);
-				delete this.intervals[i];
-			}
-
-			this.removed = true;
+			// Bindable.clearBindings(this.args);
 		};
 
-		if(this.document === document)
-		{
-			requestAnimationFrame(remover);
-		}
-		else
+		if(now)
 		{
 			remover();
+			return;
 		}
 
-		// Bindable.clearBindings(this.args);
+		requestAnimationFrame(remover);
+
+		let cleanup;
+
+		while(cleanup = this.cleanup.shift())
+		{
+			cleanup();
+		}
+
+		for(let i in this.viewLists)
+		{
+			if(!this.viewLists[i])
+			{
+				continue;
+			}
+			this.viewLists[i].remove();
+		}
+
+		this.viewLists = [];
+
+		for(let i in this.timeouts)
+		{
+			clearInterval(this.timeouts[i].timeout);
+			delete this.timeouts[i];
+		}
+
+		for(var i in this.intervals)
+		{
+			clearInterval(this.intervals[i].timeout);
+			delete this.intervals[i];
+		}
+
+		this.removed = true;
+
 	}
 
 	findTag(selector)
 	{
 		for(let i in this.nodes)
 		{
+			let result;
+
 			if(!this.nodes[i].querySelector)
 			{
 				continue;
@@ -1684,8 +1531,6 @@ export class View
 				return this.nodes[i];
 			}
 
-			let result;
-
 			if(result = this.nodes[i].querySelector(selector))
 			{
 				return result;
@@ -1695,29 +1540,7 @@ export class View
 
 	findTags(selector)
 	{
-		const tags = [];
-
-		for(let i in this.nodes)
-		{
-			if(!this.nodes[i].querySelector)
-			{
-				continue;
-			}
-
-			if(this.nodes[i].matches(selector))
-			{
-				tags.push(this.nodes[i]);
-			}
-
-			let result;
-
-			if(result = this.nodes[i].querySelectorAll(selector))
-			{
-				tags.push(...Array.from(result));
-			}
-		}
-
-		return tags;
+		return this.nodes,map(n=> n.querySelectorAll(selector)).flat();
 	}
 
 	update()

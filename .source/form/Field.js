@@ -79,7 +79,22 @@ export class Field extends View {
 				}
 				else
 				{
-					this.parent.args.value[key] = Array.from(this.tags.input.element.files);
+					const files = Array.from(this.tags.input.element.files);
+
+					if(!proxy[property] || !files.length)
+					{
+						this.parent.args.value[key] = files;
+					}
+
+					for(const i in files)
+					{
+						if(files[i] !== proxy[property][i])
+						{
+							this.parent.args.value[key] = files;
+							break;
+						}
+					}
+					// this.parent.args.value[key] = Array.from(this.tags.input.element.files);
 				}
 			}
 			else
@@ -123,7 +138,13 @@ export class Field extends View {
 					}
 					else
 					{
-						this.parent.args.value[key] = Array.from(this.tags.input.element.files);
+						const files = Array.from(this.tags.input.element.files);
+
+						if(!proxy[property] || !files.length)
+						{
+							this.parent.args.value[key] = files;
+						}
+						// this.parent.args.value[key] = Array.from();
 					}
 				}
 				else

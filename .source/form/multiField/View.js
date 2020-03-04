@@ -154,14 +154,12 @@ export class View extends FieldSet
 		{
 			this.args.creating = 'creating';
 		}
-		else
-		{
-			this.args.creating = '';
-		}
 	}
 
 	addRecord(record)
 	{
+		this.args.creating = '';
+
 		if(!Array.isArray(record))
 		{
 			record = [record];

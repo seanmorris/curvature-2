@@ -57,8 +57,9 @@ export class Form extends View
 
 		this.fields = this.args.fields;
 
-		this.args.bindTo('value', (v, k) => {
-				// console.trace(k,v);
+		this.args.bindTo(
+			'value'
+			, (v) => {
 				this.args.valueString = JSON.stringify(v, null, 4);
 				this.valueString = this.args.valueString;
 				this.value = v;
@@ -85,18 +86,22 @@ export class Form extends View
 			this._onSubmit[i](this, event);
 		}
 	}
+
 	buttonClick(event)
 	{
 		// console.log(event);
 	}
+
 	onSubmit(callback)
 	{
 		this._onSubmit.push(callback);
 	}
+
 	onRender(callback)
 	{
 		this._onRender.push(callback);
 	}
+
 	static renderFields(skeleton, parent = null, customFields = {})
 	{
 		let fields = {};
@@ -174,32 +179,31 @@ export class Form extends View
 
 			fields[i] = field;
 
-			field.args.bindTo(
-				'value'
-				, (v, k ,t, d) => {
-					// console.log(t,v);
-					if(t.type == 'html'
-							&& !t.contentEditable
-							|| t.type == 'fieldset'
-					){
-						return;
-					}
-
-					// let fieldName = field.args.name;
-					let fieldName = field.getName();
-
-					if(t.disabled)
-					{
-						delete form.args.flatValue[ fieldName ];
-
-						return;
-					}
-					form.args.flatValue[ fieldName ] = v;
+			field.args.bindTo('value', (v, k ,t, d) => {
+				// console.log(t,v);
+				if(t.type == 'html'
+					&& !t.contentEditable
+					|| t.type == 'fieldset'
+				){
+					return;
 				}
-			);
+
+				// let fieldName = field.args.name;
+				let fieldName = field.getName();
+
+				if(t.disabled)
+				{
+					delete form.args.flatValue[ fieldName ];
+
+					return;
+				}
+				parent.args.value[ fieldName ] = v;
+				form.args.flatValue[ fieldName ] = v;
+			});
 		}
 		return fields;
 	}
+
 	formData(append = null, field = null, chain = [])
 	{
 		if(!append)
@@ -282,6 +286,7 @@ export class Form extends View
 
 		return append;
 	}
+
 	queryString(args = {})
 	{
 		let parts = [];
@@ -298,6 +303,7 @@ export class Form extends View
 
 		return parts.join('&');
 	}
+
 	populate(values)
 	{
 		// console.log(values);
@@ -355,6 +361,7 @@ export class Form extends View
 	{
 		return !!Object.keys(this.args.fields).length;
 	}
+
 	postRender()
 	{
 		for(let i in this._onRender)

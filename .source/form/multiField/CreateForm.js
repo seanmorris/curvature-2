@@ -63,9 +63,6 @@ export class CreateForm extends FormWrapper
 			this.args.wrapper.refresh(response.body);
 		}
 
-		this.args.view.addButtonClicked();
-
-
 		this.args.view.args.creating = '';
 
 		super.onResponse(response);

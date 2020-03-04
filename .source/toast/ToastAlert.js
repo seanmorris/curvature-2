@@ -1,8 +1,11 @@
 import { View } from '../base/View';
 
-export class ToastAlert extends View {
-	constructor(args) {
+export class ToastAlert extends View
+{
+	constructor(args)
+	{
 		super(args);
+		this.args.running = false;
 		this.args.time    = this.args.time || 16000;
 		this.init         = this.args.time;
 		this.args.title   = this.args.title || 'Standard alert';
@@ -15,29 +18,25 @@ export class ToastAlert extends View {
 			</div>
 		`;
 	}
-	decay(complete) {
 
-		const  decayInterval = 1000;
+	decay(complete)
+	{
+		this.args.running = true;
 
-		this.onTimeout(this.args.time - 300, () => {
-
-			this.args.status = 'imminent';
-
+		this.onTimeout(50, () => {
+			this.args.status = '';
 		});
 
-		this.onTimeout(200, () => {
-
+		this.onTimeout(300, () => {
 			this.args.status = 'decaying';
-
 		});
 
-		this.onTimeout(this.args.time, () => {
-
-			this.args.status = 'done';
-
-			complete();
-
+		this.onTimeout(2400, () => {
+			this.args.status = 'imminent';
 		});
 
+		this.onTimeout(3500, () => {
+			this.remove();
+		});
 	}
 }

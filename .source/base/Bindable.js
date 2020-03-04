@@ -1,12 +1,17 @@
-export class Bindable {
-	static isBindable(object) {
-		if (!object.___binding___) {
+export class Bindable
+{
+	static isBindable(object)
+	{
+		if (!object.___binding___)
+		{
 			return false;
 		}
 
 		return object.___binding___ === Bindable;
 	}
-	static makeBindable(object) {
+
+	static makeBindable(object)
+	{
 
 		if (!object
 			|| object.___binding___
@@ -92,6 +97,7 @@ export class Bindable {
 			writable: false,
 			value: object
 		});
+
 		object.___isBindable___ = Bindable;
 		object.___wrapped___    = {};
 		object.___binding___    = {};
@@ -283,11 +289,6 @@ export class Bindable {
 				return true;
 			}
 
-			if (object.___deck___[key] === value) {
-				return true;
-			}
-
-
 			if (value && typeof value == 'object' && !(value instanceof Node)) {
 				// console.log(value);
 				if (value.___isBindable___ !== Bindable) {
@@ -299,6 +300,10 @@ export class Bindable {
 						}
 					}
 				}
+			}
+
+			if (object.___deck___[key] === value) {
+				return true;
 			}
 
 			object.___deck___[key] = value;
@@ -554,7 +559,7 @@ export class Bindable {
 
 			if(Date.now() - start > 30)
 			{
-				console.trace('Timeout callback took over 30ms.', callback);
+				console.trace('onTimeout callback took over 30ms.', callback);
 			}
 
 		};
@@ -563,13 +568,13 @@ export class Bindable {
 
 			return (v,k,t,d,p) => {
 
-				if (!waiter)
+				if (waiter)
 				{
-					waiter = setTimeout(wrappedCallback, wait);
+					clearTimeout(waiter);
 				}
 
-				clearTimeout(waiter);
 
+				waiter = setTimeout(wrappedCallback, wait);
 			}
 		};
 	}

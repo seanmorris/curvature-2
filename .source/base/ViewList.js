@@ -17,15 +17,17 @@ export class ViewList
 		this.paused       = false;
 		this.parent       = parent;
 
-		this.cleanup.push(this.args.value.___before((t)=>{
+		this.willReRender = false;
+
+		this.args.___before((t)=>{
 			if(t.___executing___ == 'bindTo')
 			{
 				return;
 			}
 			this.paused = true;
-		}));
+		});
 
-		this.cleanup.push(this.args.value.___after((t)=>{
+		this.args.___after((t) => {
 			if(t.___executing___ == 'bindTo')
 			{
 				return;
@@ -34,10 +36,9 @@ export class ViewList
 			this.paused = t.___stack___.length > 1;
 
 			this.reRender();
+		});
 
-		}));
-
-		this.cleanup.push(this.args.value.bindTo((v, k, t, d) => {
+		let debind = this.args.value.bindTo((v, k, t, d) => {
 
 			if(this.paused)
 			{
@@ -57,33 +58,31 @@ export class ViewList
 				{
 					this.views[i].args[ this.keyProperty ] = i;
 				}
+			}
 
-				return;
+			if(this.willReRender !== false)
+			{
+				cancelAnimationFrame(this.willReRender);
 			}
 
 			if(!this.views[k])
 			{
-				this.reRender();
+				this.willReRender = requestAnimationFrame(()=>{
+					this.reRender();
+				});
 			}
 
-		}, {wait: 0}));
+
+		});
+
+		this.cleanup.push(debind);
 	}
 
 	render(tag)
 	{
 		for(let i in this.views)
 		{
-			console.log(tag, this.views[i]);
-
-			if(tag.getRootNode() === document)
-			{
-				requestAnimationFrame(() => this.views[i].render(tag));
-			}
-			else
-			{
-				this.views[i].render(tag);
-			}
-
+			this.views[i].render(tag);
 		}
 
 		this.tag = tag;
@@ -188,30 +187,30 @@ export class ViewList
 			}
 		}
 
-		let renderDoc  = this.tag;
-		let inDocument = false;
+		// const renderDoc = document.createRange().createContextualFragment('');
 
-		if(this.tag.getRootNode() === document)
+		for(let i in finalViews)
 		{
-			renderDoc = document.createRange().createContextualFragment('');
-			inDocument = true;
+			if(finalViews[i] === this.views[i])
+			{
+				continue;
+			}
+
+			views.splice(i+1, 0, finalViews[i]);
+
+			finalViews[i].render(this.tag);
 		}
+
+		this.views = finalViews;
 
 		for(let i in finalViews)
 		{
 			finalViews[i].args[ this.keyProperty ] = i;
 		}
 
-		this.views = finalViews;
+		// this.tag.append(renderDoc);
 
-		if(inDocument)
-		{
-			requestAnimationFrame(() => finalViews.map(fv => fv.render(this.tag)));
-		}
-		else
-		{
-			finalViews.map(fv => fv.render(renderDoc));
-		}
+		this.willReRender = false;
 
 	}
 	pause(pause=true)
