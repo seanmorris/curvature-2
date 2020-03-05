@@ -14,9 +14,12 @@ export class Bindable
 	{
 
 		if (!object
+			|| !(object instanceof Object)
 			|| object.___binding___
-			|| typeof object !== 'object'
 			|| object instanceof Node
+			|| object instanceof IntersectionObserver
+			|| Object.isSealed(object)
+			|| !Object.isExtensible(object)
 		) {
 			return object;
 		}
@@ -107,7 +110,6 @@ export class Bindable
 		object.___before___     = [];
 		object.___after___      = [];
 		object.___setCount___   = {};
-
 
 		const bindTo = (property, callback = null, options = {}) => {
 			let bindToAll = false;
@@ -268,10 +270,10 @@ export class Bindable
 		});
 
 		for (let i in object) {
-			if (object[i] &&
-				typeof object[i] == 'object' &&
-				!object[i] instanceof Node &&
-				!object[i] instanceof Promise
+			if (object[i]
+				&& object[i] instanceof Object
+				&& !object[i] instanceof Node
+				&& !object[i] instanceof Promise
 			) {
 				object[i] = Bindable.makeBindable(object[i]);
 			}
@@ -289,14 +291,16 @@ export class Bindable
 				return true;
 			}
 
-			if (value && typeof value == 'object' && !(value instanceof Node)) {
-				// console.log(value);
+			if (value && value instanceof Object && !(value instanceof Node)) {
 				if (value.___isBindable___ !== Bindable) {
 					value = Bindable.makeBindable(value);
 
-					for (let i in value) {
-						if (value[i] && typeof value[i] == 'object') {
-							value[i] = Bindable.makeBindable(value[i]);
+					if(this.isBindable(value))
+					{
+						for (let i in value) {
+							if (value[i] && typeof value[i] == 'object') {
+								value[i] = Bindable.makeBindable(value[i]);
+							}
 						}
 					}
 				}
@@ -346,6 +350,7 @@ export class Bindable
 
 				if(!excluded
 					&& (!descriptor || descriptor.writable)
+					&& target[key] === value
 				){
 					target[key] = value;
 				}

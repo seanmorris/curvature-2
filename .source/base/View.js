@@ -1,9 +1,9 @@
 import { Bindable } from './Bindable';
 import { ViewList } from './ViewList';
 import { Router   } from './Router';
-import { Cookie   } from './Cookie';
 import { Dom      } from './Dom';
 import { Tag      } from './Tag';
+import { Bag      } from './Bag';
 import { RuleSet  } from './RuleSet';
 
 export class View
@@ -28,6 +28,12 @@ export class View
 		this.nodes     = null;
 
 		this.cleanup   = [];
+
+		this._onRemove = new Bag((i,s,a) => {
+
+			// console.log('View _onRemove', i, s, a);
+
+		});
 
 		this.attach    = [];
 		this.detach    = [];
@@ -332,7 +338,7 @@ export class View
 			this.lastNode = document.createTextNode('');
 		}
 
-		this.nodes.push(this.lastNode, ...Array.from(subDoc.childNodes), this.firstNode);
+		this.nodes.push(this.firstNode, ...Array.from(subDoc.childNodes), this.lastNode);
 
 		if(parentNode)
 		{
@@ -386,7 +392,7 @@ export class View
 				tag.setAttribute(i, v);
 			})(tag,i));
 
-			this.cleanup.push(()=>{
+			this.onRemove(()=>{
 				debind();
 				if(expandArg.isBound())
 				{
@@ -430,7 +436,7 @@ export class View
 
 			let attrib = attrs[i][0];
 
-			this.cleanup.push(proxy.bindTo(
+			this.onRemove(proxy.bindTo(
 				property
 				, (v)=>{
 					if(v == null)
@@ -528,12 +534,16 @@ export class View
 					{
 						v.render(tag.parentNode, dynamicNode);
 
-						this.cleanup.push(()=>{
+						const cleanup = ()=>{
 							if(!v.preserve)
 							{
 								v.remove();
 							}
-						});
+						};
+
+						this.onRemove(cleanup);
+
+						v.onRemove( ()=> this._onRemove.remove(cleanup) );
 					}
 					else
 					{
@@ -553,7 +563,7 @@ export class View
 					}
 				});
 
-				this.cleanup.push(()=>{
+				this.onRemove(()=>{
 					debind();
 					if(!proxy.isBound())
 					{
@@ -623,7 +633,7 @@ export class View
 
 					let longProperty = j;
 
-					this.cleanup.push(proxy.bindTo(property, (v, k, t, d) => {
+					this.onRemove(proxy.bindTo(property, (v, k, t, d) => {
 						for(let i in bindProperties)
 						{
 							for(let j in bindProperties[longProperty])
@@ -640,7 +650,7 @@ export class View
 						tag.setAttribute(attribute.name, segments.join(''));
 					}));
 
-					this.cleanup.push(()=>{
+					this.onRemove(()=>{
 						if(!proxy.isBound())
 						{
 							Bindable.clearBindings(proxy);
@@ -665,7 +675,7 @@ export class View
             writable: true
         });
 
-        this.cleanup.push(()=>{
+        this.onRemove(()=>{
         	tag.___tag___ = null;
 			tag.remove()
 		});
@@ -746,7 +756,7 @@ export class View
 		{
 			this.subBindings[bindArg] = this.subBindings[bindArg] || [];
 
-			this.cleanup.push(this.args.bindTo(top, ()=>{
+			this.onRemove(this.args.bindTo(top, ()=>{
 				while(this.subBindings.length)
 				{
 					this.subBindings.shift()();
@@ -816,7 +826,7 @@ export class View
 			this.subBindings[bindArg].push(debind);
 		}
 
-		this.cleanup.push(debind);
+		this.onRemove(debind);
 
 		let inputListener = (event) => {
 			console.log(event, proxy, property, event.target.value);
@@ -871,7 +881,7 @@ export class View
 		tag.addEventListener('change',        inputListener);
 		tag.addEventListener('value-changed', inputListener);
 
-		this.cleanup.push( ((tag, eventListener) => ()=>{
+		this.onRemove( ((tag, eventListener) => ()=>{
 			tag.removeEventListener('input',         inputListener);
 			tag.removeEventListener('change',        inputListener);
 			tag.removeEventListener('value-changed', inputListener);
@@ -1032,7 +1042,7 @@ export class View
 				default:
 					tag.addEventListener(eventName, eventListener, eventOptions);
 
-					this.cleanup.push(()=>{
+					this.onRemove(()=>{
 						tag.removeEventListener(eventName, eventListener, eventOptions);
 					});
 					break;
@@ -1066,7 +1076,7 @@ export class View
 
 		tag.addEventListener('click', linkClick);
 
-		this.cleanup.push( ((tag, eventListener) => ()=>{
+		this.onRemove( ((tag, eventListener) => ()=>{
 			tag.removeEventListener('click', eventListener);
 			tag           = undefined;
 			eventListener = undefined;
@@ -1116,7 +1126,7 @@ export class View
 
 			let view = new View();
 
-			this.cleanup.push(((view)=>()=>{
+			this.onRemove(((view)=>()=>{
 				view.remove();
 			})(view));
 
@@ -1129,8 +1139,9 @@ export class View
 					view.args[k] = v;
 				});
 
-				view.cleanup.push(debind);
-				this.cleanup.push(()=>{
+				view.onRemove(debind);
+
+				this.onRemove(()=>{
 					debind();
 					view.remove();
 				});
@@ -1142,7 +1153,7 @@ export class View
 					view.args[k] = v;
 				});
 
-				this.cleanup.push(()=>{
+				this.onRemove(()=>{
 					debind();
 					if(!v.isBound())
 					{
@@ -1151,7 +1162,7 @@ export class View
 					view.remove();
 				});
 
-				view.cleanup.push(()=>{
+				view.onRemove(()=>{
 					debind();
 					if(!v.isBound())
 					{
@@ -1165,7 +1176,7 @@ export class View
 			this.withViews[k] = view;
 		});
 
-		this.cleanup.push(debind);
+		this.onRemove(debind);
 	}
 
 	mapEachTags(tag)
@@ -1175,18 +1186,6 @@ export class View
 
 		let subTemplate = tag.innerHTML;
 
-		while(tag.firstChild)
-		{
-			tag.removeChild(tag.firstChild);
-		}
-
-		// let carryProps = [];
-
-		// if(carryAttr)
-		// {
-		// 	carryProps = carryAttr.split(',');
-		// }
-
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
 		let debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
@@ -1195,11 +1194,12 @@ export class View
 				this.viewLists[eachProp].remove();
 			}
 
-			let viewList = new ViewList(subTemplate, asProp, v, this, keyProp);
+			const viewList = new ViewList(subTemplate, asProp, v, this, keyProp);
+			const viewListRemover = ()=>viewList.remove();
 
-			this.cleanup.push(()=>{
-				viewList.remove();
-			});
+			this.onRemove(viewListRemover);
+
+			viewList.onRemove(()=>this._onRemove.remove(viewListRemover));
 
 			let debindA = this.args.bindTo((v,k,t,d)=>{
 
@@ -1257,7 +1257,8 @@ export class View
 
 			}, {wait:0});
 
-			this.cleanup.push(debindA, debindB);
+			this.onRemove(debindA);
+			this.onRemove(debindB);
 
 			while(tag.firstChild)
 			{
@@ -1269,7 +1270,12 @@ export class View
 			viewList.render(tag);
 		});
 
-		this.cleanup.push(debind);
+		this.onRemove(debind);
+
+		while(tag.firstChild)
+		{
+			tag.removeChild(tag.firstChild);
+		}
 	}
 
 	mapIfTags(tag)
@@ -1300,7 +1306,7 @@ export class View
 		view.template = subTemplate;
 		view.parent   = this;
 
-		this.cleanup.push(this.syncBind(view));
+		this.syncBind(view);
 
 		let cleaner = this;
 
@@ -1328,36 +1334,50 @@ export class View
 			);
 		}
 
-		this.cleanup.push(proxy.bindTo(
-			property
-			, (v,k) => {
-				if(Array.isArray(v))
-				{
-					v = !!v.length;
-				}
+		let propertyDebind = proxy.bindTo(property, (v,k) => {
 
-				if(inverted)
-				{
-					v = !v;
-				}
-
-				if(v)
-				{
-					tag.appendChild(ifDoc);
-				}
-				else
-				{
-					view.nodes.map(n=>ifDoc.appendChild(n));
-				}
+			if(Array.isArray(v))
+			{
+				v = !!v.length;
 			}
-		));
 
-		this.cleanup.push(()=>{
+			if(inverted)
+			{
+				v = !v;
+			}
+
+			if(v)
+			{
+				tag.appendChild(ifDoc);
+			}
+			else
+			{
+				view.nodes.map(n=>ifDoc.appendChild(n));
+			}
+
+		})
+
+		this.onRemove(propertyDebind);
+
+		let bindableDebind = () => {
+
 			if(!proxy.isBound())
 			{
 				Bindable.clearBindings(proxy);
 			}
-		});
+
+		};
+
+		let viewDebind = ()=>{
+			syncDebind();
+			propertyDebind();
+			bindableDebind();
+			this._onRemove.remove(syncDebind);
+			this._onRemove.remove(propertyDebind);
+			this._onRemove.remove(bindableDebind);
+		};
+
+		view.onRemove(viewDebind);
 	}
 
 	// mapTemplateTags(tag)
@@ -1438,10 +1458,13 @@ export class View
 			}
 		}, {wait:0});
 
-		return () => {
-			debindA();
-			debindB();
-		};
+		this.onRemove(debindA);
+		this.onRemove(debindB);
+
+		subView.onRemove(()=>{
+			this._onRemove.remove(debindA);
+			this._onRemove.remove(debindB);
+		});
 	}
 
 	postRender(parentNode)
@@ -1465,27 +1488,42 @@ export class View
 	remove(now = false)
 	{
 		const remover = () => {
+
+			this.firstNode = this.lastNode = undefined;
+
 			for(let i in this.nodes)
 			{
 				this.nodes[i].dispatchEvent(new Event('cvDomDetached'));
 				this.nodes[i].remove();
 			}
+
 			// Bindable.clearBindings(this.args);
+
 		};
 
 		if(now)
 		{
 			remover();
-			return;
+		}
+		else
+		{
+			requestAnimationFrame(remover);
 		}
 
-		requestAnimationFrame(remover);
+		let onRemove = this._onRemove.items();
+
+		for(const i in onRemove)
+		{
+			this._onRemove.remove(onRemove[i]);
+
+			onRemove[i]();
+		}
 
 		let cleanup;
 
 		while(cleanup = this.cleanup.shift())
 		{
-			cleanup();
+			cleanup && cleanup();
 		}
 
 		for(let i in this.viewLists)
@@ -1541,6 +1579,11 @@ export class View
 	findTags(selector)
 	{
 		return this.nodes,map(n=> n.querySelectorAll(selector)).flat();
+	}
+
+	onRemove(callback)
+	{
+		this._onRemove.add(callback);
 	}
 
 	update()

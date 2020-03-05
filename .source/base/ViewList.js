@@ -1,5 +1,6 @@
 import { Bindable } from './Bindable';
 import { View     } from './View';
+import { Bag      } from './Bag';
 
 export class ViewList
 {
@@ -10,6 +11,7 @@ export class ViewList
 		this.args.subArgs = Bindable.makeBindable({});
 		this.views        = [];
 		this.cleanup      = [];
+		this._onRemove    = new Bag();
 		this.template     = template;
 		this.subProperty  = subProperty;
 		this.keyProperty  = keyProperty;
@@ -71,11 +73,9 @@ export class ViewList
 					this.reRender();
 				});
 			}
-
-
 		});
 
-		this.cleanup.push(debind);
+		this._onRemove.add(debind);
 	}
 
 	render(tag)
@@ -134,25 +134,31 @@ export class ViewList
 				finalViews[i].args[ this.keyProperty ] = i;
 				finalViews[i].args[ this.subProperty ] = this.args.value[i];
 
-				this.cleanup.push(
-					this.args.value.bindTo(i, (v,k,t)=>{
-						// viewArgs[ this.keyProperty ] = k;
-						// viewArgs[ this.subProperty ] = v;
-					})
-				);
+				// this._onRemove.add(
+				// 	this.args.value.bindTo(i, (v,k,t)=>{
+				// 		// viewArgs[ this.keyProperty ] = k;
+				// 		// viewArgs[ this.subProperty ] = v;
+				// 	})
+				// );
 
-				this.cleanup.push(
-					viewArgs.bindTo(this.subProperty, (v,k)=>{
-						let index = viewArgs[ this.keyProperty ];
-						this.args.value[index] = v;
-					}
-				));
+				const upBind = viewArgs.bindTo(this.subProperty, (v,k)=>{
+					let index = viewArgs[ this.keyProperty ];
+					this.args.value[index] = v;
+				});
 
-				this.cleanup.push(
-					this.args.subArgs.bindTo((v, k, t, d) => {
-						viewArgs[k] = v;
-					})
-				);
+				const downBind = this.args.subArgs.bindTo((v, k, t, d) => {
+					viewArgs[k] = v;
+				});
+
+				view.onRemove(()=>{
+					upBind();
+					downBind();
+					this._onRemove.remove(upBind);
+					this._onRemove.remove(downBind);
+				});
+
+				this._onRemove.add(upBind);
+				this._onRemove.add(downBind);
 
 				viewArgs[this.subProperty] = this.args.value[i];
 			}
@@ -213,6 +219,7 @@ export class ViewList
 		this.willReRender = false;
 
 	}
+
 	pause(pause=true)
 	{
 		for(let i in this.views)
@@ -220,11 +227,26 @@ export class ViewList
 			this.views[i].pause(pause);
 		}
 	}
+
+	onRemove(callback)
+	{
+		this._onRemove.add(callback);
+	}
+
 	remove()
 	{
 		for(let i in this.views)
 		{
 			this.views[i].remove();
+		}
+
+		let onRemove = this._onRemove.items();
+
+		for(const i in onRemove)
+		{
+			this._onRemove.remove(onRemove[i]);
+
+			onRemove[i]();
 		}
 
 		let cleanup;

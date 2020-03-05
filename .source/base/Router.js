@@ -21,31 +21,35 @@ export class Router {
 			route += location.hash;
 		}
 
-		window.addEventListener(
-			'popstate'
-			, (event) => {
-				event.preventDefault();
+		window.addEventListener('popstate', (event) => {
+			event.preventDefault();
 
-				if(routeHistory.length && prevHistoryLength == history.length)
+			if(routeHistory.length && prevHistoryLength == history.length)
+			{
+				if(location.toString() == routeHistory[routeHistory.length - 2])
 				{
-					if(location.toString() == routeHistory[routeHistory.length - 2])
-					{
-						routeHistory.pop();
-					}
-					else
-					{
-						routeHistory.push(location.toString());
-					}
+					routeHistory.pop();
 				}
 				else
 				{
 					routeHistory.push(location.toString());
-					prevHistoryLength = history.length;
 				}
-
-				this.match(location.pathname, mainView);
 			}
-		);
+			else
+			{
+				routeHistory.push(location.toString());
+				prevHistoryLength = history.length;
+			}
+
+			this.match(location.pathname, mainView);
+
+			for(const i in this.query)
+			{
+				delete this.query[i];
+			}
+
+			Object.assign(Router.query, Router.queryOver({}));
+		});
 
 		this.go(route);
 	}
@@ -79,6 +83,13 @@ export class Router {
 					}
 
 				}
+
+				for(const i in this.query)
+				{
+					delete this.query[i];
+				}
+
+				Object.assign(Router.query, Router.queryOver({}));
 			}
 			, 0
 		);
@@ -99,7 +110,12 @@ export class Router {
 		let routes  = view.routes;
 
 		this.path   = path;
-		this.query  = {};
+		// this.query  = {};
+
+		for(const i in this.query)
+		{
+			delete this.query[i];
+		}
 
 		let query   = new URLSearchParams(location.search);
 
@@ -340,3 +356,9 @@ export class Router {
 		);
 	}
 }
+
+Object.defineProperty(Router, 'query', {
+	configurable: false
+	, writeable: false
+	, value: {}
+});

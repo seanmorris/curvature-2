@@ -97,12 +97,12 @@ export class Repository
 
 		let resourceUri = this.uri + '/' + model.publicId;
 
-		Cache.store(
-			resourceUri
-			, model
-			, 10
-			, 'model-uri-repo'
-		);
+		// Cache.store(
+		// 	resourceUri
+		// 	, model
+		// 	, 10
+		// 	, 'model-uri-repo'
+		// );
 
 		if(model.class)
 		{
@@ -116,12 +116,12 @@ export class Repository
 			// 	return cached;
 			// }
 
-			Cache.store(
-				cacheKey
-				, model
-				, 10
-				, 'model-type-repo'
-			);
+			// Cache.store(
+			// 	cacheKey
+			// 	, model
+			// 	, 10
+			// 	, 'model-type-repo'
+			// );
 		}
 
 		return model;
@@ -281,12 +281,12 @@ export class Repository
 
 		if(!post && cache && tagCache) {
 			let tagCacheContent = JSON.parse(tagCache.innerText);
-			
+
 			return Promise.resolve(tagCacheContent);
 		}
 
 		xhr.withCredentials = true;
-		
+
 		let link = document.createElement("a");
     	link.href = fullUri;
 
@@ -341,7 +341,7 @@ export class Repository
 							);
 
 							let prerendering  = window.prerenderer;
-							
+
 							if(prerendering)
 							{
 								if(!tagCache)
@@ -353,7 +353,7 @@ export class Repository
 								}
 
 								// console.log(JSON.stringify(response));
-								
+
 								tagCache.innerText = JSON.stringify(response);
 							}
 
