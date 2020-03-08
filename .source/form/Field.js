@@ -81,20 +81,22 @@ export class Field extends View {
 				{
 					const files = Array.from(this.tags.input.element.files);
 
-					if(!proxy[property] || !files.length)
+					if(!this.parent.args.value[k] || !files.length)
 					{
 						this.parent.args.value[key] = files;
 					}
-
-					for(const i in files)
+					else
 					{
-						if(files[i] !== proxy[property][i])
+						for(const i in files)
 						{
-							this.parent.args.value[key] = files;
-							break;
+							if(files[i] !== this.parent.args.value[key][i])
+							{
+								this.parent.args.value[key] = files;
+							}
+
+							this.parent.args.value.splice(files.length);
 						}
 					}
-					// this.parent.args.value[key] = Array.from(this.tags.input.element.files);
 				}
 			}
 			else
@@ -140,11 +142,23 @@ export class Field extends View {
 					{
 						const files = Array.from(this.tags.input.element.files);
 
-						if(!proxy[property] || !files.length)
+						if(!this.parent.args.value[key] || !files.length)
 						{
 							this.parent.args.value[key] = files;
 						}
-						// this.parent.args.value[key] = Array.from();
+						else
+						{
+							for(const i in files)
+							{
+								if(files[i] !== this.parent.args.value[key][i])
+								{
+									this.parent.args.value[key] = files;
+								}
+							}
+
+							this.parent.args.value[key].splice(files.length);
+						}
+
 					}
 				}
 				else

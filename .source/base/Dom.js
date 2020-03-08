@@ -15,7 +15,7 @@ export class Dom
 
 		var treeWalker = document.createTreeWalker(
 			doc,
-			NodeFilter.SHOW_ALL,
+			NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
 			{
 				acceptNode: (node) => {
 					if(!started)
@@ -39,7 +39,6 @@ export class Dom
 					}
 					if(selector)
 					{
-						// console.log(selector, node, !!(node instanceof Element));
 						if(node instanceof Element)
 						{
 							if(node.matches(selector))

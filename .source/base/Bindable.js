@@ -280,6 +280,10 @@ export class Bindable
 		}
 
 		let set = (target, key, value) => {
+			if (object.___deck___[key] === value) {
+				return true;
+			}
+
 			if(typeof key === 'string'
 				&& key.substring(0,3) === '___'
 				&& key.slice(-3) === '___'
@@ -298,16 +302,12 @@ export class Bindable
 					if(this.isBindable(value))
 					{
 						for (let i in value) {
-							if (value[i] && typeof value[i] == 'object') {
+							if (value[i] && value[i] instanceof Object) {
 								value[i] = Bindable.makeBindable(value[i]);
 							}
 						}
 					}
 				}
-			}
-
-			if (object.___deck___[key] === value) {
-				return true;
 			}
 
 			object.___deck___[key] = value;
@@ -356,15 +356,15 @@ export class Bindable
 				}
 			}
 
-			if (!target.___setCount___[key]) {
-				target.___setCount___[key] = 0;
-			}
+			// if (!target.___setCount___[key]) {
+			// 	target.___setCount___[key] = 0;
+			// }
 
-			target.___setCount___[key]++;
+			// target.___setCount___[key]++;
 
-			const warnOn = 10;
+			// const warnOn = 10;
 
-			if (target.___setCount___[key] > warnOn && value instanceof Object) {
+			// if (target.___setCount___[key] > warnOn && value instanceof Object) {
 				// console.log(
 				//     'Warning: Resetting bindable reference "' +
 				//     key +
@@ -372,7 +372,7 @@ export class Bindable
 				//     target.___setCount___[key] +
 				//     ' times.'
 				// );
-			}
+			// }
 
 			return Reflect.set(target, key, value);
 		};
@@ -547,7 +547,7 @@ export class Bindable
 
 				throttle = true;
 
-				setTimeout(()=> {throttle = false}, options.throttle);
+				setTimeout(()=> {throttle = false}, throttle);
 
 			}
 		})(callback);
@@ -557,30 +557,15 @@ export class Bindable
 	{
 		let waiter = false;
 
-		const wrappedCallback = (v,k,t,d,p) => {
-			const start = Date.now();
+		return (v,k,t,d) => {
 
-			callback(v,k,t,d,p)
-
-			if(Date.now() - start > 30)
+			if (waiter)
 			{
-				console.trace('onTimeout callback took over 30ms.', callback);
+				clearTimeout(waiter);
+				waiter = false;
 			}
 
-		};
-
-		return () => {
-
-			return (v,k,t,d,p) => {
-
-				if (waiter)
-				{
-					clearTimeout(waiter);
-				}
-
-
-				waiter = setTimeout(wrappedCallback, wait);
-			}
+			waiter = setTimeout(()=> callback(v,k,t,d,t[k]), wait);
 		};
 	}
 

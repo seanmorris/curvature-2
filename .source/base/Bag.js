@@ -3,7 +3,7 @@ export class Bag
 	constructor(changeCallback = undefined)
 	{
 		this.meta    = Symbol('meta');
-		this.content = {};
+		this.content = new Set;
 		this._items  = false;
 
 		this.changeCallback = changeCallback;
@@ -11,79 +11,51 @@ export class Bag
 
 	add(item)
 	{
-		if(item === undefined || !item instanceof Object)
+		if(item === undefined || !(item instanceof Object))
 		{
 			throw new Error('Only objects may be added to Bags.');
 		}
 
-		if(!item[this.meta])
+		if(this.content.has(item))
 		{
-			item[this.meta] = Symbol('bagId');
+			return;
 		}
 
-		this.content[ item[this.meta] ] = item;
+		this.content.add(item);
 
 		if(this.changeCallback)
 		{
-			this.changeCallback(
-				this.content[ item[this.meta] ]
-				, this.meta
-				, 1
-			);
+			this.changeCallback(item, this.meta, 1);
 		}
 	}
 
 	remove(item)
 	{
-		if(item === undefined || !item instanceof Object)
+		if(item === undefined || !(item instanceof Object))
 		{
 			throw new Error('Only objects may be removed from Bags.');
 		}
 
-		if(!item[this.meta] || !this.content[ item[this.meta] ])
+		if(!this.content.has(item))
 		{
 			if(this.changeCallback)
 			{
-				this.changeCallback(
-					undefined
-					, this.meta
-					, 0
-				);
+				this.changeCallback(undefined, this.meta, 0);
 			}
+
 			return false;
 		}
 
-		let removed = this.content[ item[this.meta] ];
-
-		delete this.content[ item[this.meta] ];
+		this.content.delete(item);
 
 		if(this.changeCallback)
 		{
-			this.changeCallback(
-				removed
-				, this.meta
-				, -1
-			);
+			this.changeCallback(item, this.meta, -1);
 		}
-	}
-
-	id(item)
-	{
-		return item[ this.meta ];
-	}
-
-	get(key)
-	{
-		return this.content[ key ];
-	}
-
-	keys()
-	{
-		return Object.getOwnPropertySymbols(this.content);
 	}
 
 	items()
 	{
-		return this.keys().map((key)=>this.get(key));
+		return Array.from(this.content.entries()).map(entry => entry[0]);
 	}
 }

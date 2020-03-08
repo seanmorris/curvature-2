@@ -9,12 +9,16 @@ export class PopOutTag extends Tag
 		super(element, parent, ref, index, direct);
 
 		this.poppedOut = false;
-		this.style     = element.getAttribute('style');
+		this.style     = element.getAttribute('style') || '';
 		this.moving    = false;
 
-		this.hostSelector = this.element.getAttribute('cv-pop-to');
+		this.hostSelector = element.getAttribute('cv-pop-to');
+		this.popMargin = element.getAttribute('cv-pop-margin') || 0;
+		this.popSpeed = element.getAttribute('data-pop-speed') || 1750;
 
-		this.element.removeAttribute('cv-pop-to');
+		element.removeAttribute('cv-pop-to');
+		element.removeAttribute('cv-pop-margin');
+		element.removeAttribute('data-pop-speed');
 
 		this.verticalDuration   = 0.4;
 		this.horizontalDuration = 0.1;
@@ -27,16 +31,19 @@ export class PopOutTag extends Tag
 
 		this.element.classList.add('unpopped');
 
-		this.scrollStyle;
+		this.scrollStyle = '';
+
+		this.style = '';
 
 		this.popTimeout = null;
 
 		// this.element.addEventListener('cvDomDetached', this.detachListener);
-		this.rect;
+		this.rect = null;
+		this.transformRect = null;
 
 		this.clickListener = (event) => {
 			this.rect = this.element.getBoundingClientRect();
-			
+
 			if(!this.poppedOut)
 			{
 				this.distance = Math.sqrt(
@@ -44,7 +51,7 @@ export class PopOutTag extends Tag
 					+ this.rect.left ** 2
 				);
 
-				const cut = element.getAttribute('data-pop-speed') || 1750;
+				const cut = this.popSpeed;
 
 				let fromRight  = window.innerWidth  - this.rect.right;
 				let fromBottom = window.innerHeight - this.rect.bottom;
@@ -105,7 +112,7 @@ export class PopOutTag extends Tag
 			{
 				return;
 			}
-			
+
 			if(event.key !== 'Escape')
 			{
 				return;
@@ -127,6 +134,7 @@ export class PopOutTag extends Tag
 				{
 					break;
 				}
+
 				hostTag = hostTag.parentNode;
 			}
 
@@ -134,16 +142,31 @@ export class PopOutTag extends Tag
 
 			let style = this.style + this.unpoppedStyle;
 
-			style += `
-				;
+			let x = hostRect.x;
+			let y = hostRect.y  + document.documentElement.scrollTop;
+			let w = hostRect.width;
+			let h = hostRect.height;
+
+			if(this.transformRect)
+			{
+				x -= this.transformRect.x;
+				y -= this.transformRect.y;
+			}
+
+			x + this.popMargin;
+			y + this.popMargin;
+			w + this.popMargin * 2;
+			h + this.popMargin * 2;
+
+			style += `;
 				z-index:    99999;
 				transition-duration: 0s;
 				overflow: hidden;
 				position:  fixed;
-				left:      ${hostRect.x}px;
-				top:        ${hostRect.y + document.documentElement.scrollTop}px;
-				width:      ${hostRect.width}px;
-				height:     ${hostRect.height}px;
+				left:      ${x}px;
+				top:        ${y}px;
+				width:      ${w}px;
+				height:     ${h}px;
 				overflow-y: auto;
 				transition-duration: 0s;
 			`;
@@ -226,6 +249,8 @@ export class PopOutTag extends Tag
 
 		let hostTag = this.element;
 
+		this.transformRect = null;
+
 		// console.log(hostTag);
 
 		while(hostTag.parentNode && !hostTag.matches(this.hostSelector))
@@ -234,24 +259,61 @@ export class PopOutTag extends Tag
 			{
 				break;
 			}
+
 			hostTag = hostTag.parentNode;
+
+			if(!this.transformRect && getComputedStyle(hostTag).transform !== 'none')
+			{
+				this.transformRect = hostTag.getBoundingClientRect();
+			}
 		}
+
+		console.log(this.transformRect);
 
 		let hostRect = hostTag.getBoundingClientRect();
 
 		this.element.classList.add('popping');
 
+		let oX = this.rect.x;
+		let oY = this.rect.y;
+		let oW = this.rect.width;
+		let oH = this.rect.height;
+
+		if(this.transformRect)
+		{
+			oX -= this.transformRect.x;
+			oY -= this.transformRect.y;
+		}
+
 		window.requestAnimationFrame(()=>{
 			this.unpoppedStyle = `
 				;position:  fixed;
-				left:       ${this.rect.x}px;
-				top:        ${this.rect.y}px;
-				width:      ${this.rect.width}px;
-				height:     ${this.rect.height}px;
+				left:       ${oX}px;
+				top:        ${oY}px;
+				width:      ${oW}px;
+				height:     ${oH}px;
 				z-index:    99999;
 				transition-duration: 0s;
 				overflow: hidden;
 			`;
+
+			let x = hostRect.x;
+			let y = hostRect.y  + document.documentElement.scrollTop;
+			let w = hostRect.width;
+			let h = hostRect.height;
+
+			console.log(this.transformRect);
+
+			if(this.transformRect)
+			{
+				x -= this.transformRect.x;
+				y -= this.transformRect.y;
+			}
+
+			x + this.popMargin;
+			y + this.popMargin;
+			w + this.popMargin * 2;
+			h + this.popMargin * 2;
 
 			// transition: width ${this.horizontalDuration}s  ease-out
 			// , top ${this.verticalDuration}s    ease-out
@@ -265,10 +327,10 @@ export class PopOutTag extends Tag
 
 			setTimeout( ()=>{
 				style += `
-					;left:      ${hostRect.x}px;
-					top:        ${hostRect.y + document.documentElement.scrollTop}px;
-					width:      ${hostRect.width}px;
-					height:     ${hostRect.height}px;
+					;left:      ${x}px;
+					top:        ${y + document.documentElement.scrollTop}px;
+					width:      ${w}px;
+					height:     ${h}px;
 					overflow-y: auto;
 					transition: width ${this.horizontalDuration}s ease-out
 						, top ${this.verticalDuration}s           ease-out
@@ -283,16 +345,16 @@ export class PopOutTag extends Tag
 				this.element.classList.add('popped');
 				this.element.classList.remove('unpopped');
 				this.element.classList.remove('popping');
-				
+
 				this.popTimeout = setTimeout(()=>{
 					if(!this.element)
 					{
 						return;
 					}
 					this.bodyStyle = document.body.getAttribute('style');
-					
+
 					document.body.setAttribute('style', 'height:100%;overflow:hidden;');
-					
+
 					this.moving = false;
 					Dom.mapTags(this.element, false, (tag)=>{
 						let event = new CustomEvent('cvPopped');

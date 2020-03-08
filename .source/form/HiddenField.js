@@ -2,8 +2,13 @@ import { Field } from './Field';
 
 export class HiddenField extends Field {
 	constructor(values, form, parent, key) {
+
+		values.type = 'hidden';
+
 		super(values, form, parent, key);
-		this.args.attrs.type = this.args.attrs.type || 'hidden';
+
+		this.args.type = this.args.attrs.type = 'hidden';
+
 		this.template = `
 			<label
 				for       = "${this.args.name}"
@@ -12,7 +17,7 @@ export class HiddenField extends Field {
 				cv-ref    = "label:curvature/base/Tag">
 				<input
 						name      = "${this.args.name}"
-						type      = "${this.args.attrs.type}"
+						type      = "hidden"
 						cv-bind   = "value"
 						cv-ref    = "input:curvature/base/Tag"
 						cv-expand = "attrs"

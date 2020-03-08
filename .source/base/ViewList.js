@@ -62,12 +62,7 @@ export class ViewList
 				}
 			}
 
-			if(this.willReRender !== false)
-			{
-				cancelAnimationFrame(this.willReRender);
-			}
-
-			if(!this.views[k])
+			if(!this.views[k] && !this.willReRender !== false)
 			{
 				this.willReRender = requestAnimationFrame(()=>{
 					this.reRender();
@@ -127,7 +122,9 @@ export class ViewList
 				let viewArgs = {};
 				let view = finalViews[i] = new View(viewArgs);
 
-				finalViews[i].template = this.template;
+				finalViews[i].template = this.template instanceof Object
+					? this.template
+					: this.template;
 				finalViews[i].parent   = this.parent;
 				finalViews[i].viewList = this;
 

@@ -8,6 +8,20 @@ import { RuleSet  } from './RuleSet';
 
 export class View
 {
+	get _id()
+	{
+		if (!this.__id)
+		{
+			Object.defineProperty(this, '__id', {
+				configurable: false
+				, writable:   false
+				, value:      this.uuid()
+			});
+		}
+
+		return this.__id;
+	}
+
 	constructor(args = {})
 	{
 		Object.defineProperty(this, '___VIEW___', {
@@ -17,9 +31,19 @@ export class View
 
 		this.___VIEW___ = View;
 
-		this.args      = Bindable.makeBindable(args);
-		this._id       = this.uuid();
-		this.args._id  = this._id;
+		Object.defineProperty(this, 'args', {
+			configurable: false
+			, writable:   false
+			, value:      Bindable.makeBindable(args)
+		});
+
+		const _this = this;
+
+		Object.defineProperty(this.args, '_id', {
+			configurable: false
+			, get: function() { return _this._id }
+		});
+
 		this.template  = ``;
 		this.document  = ``;
 
@@ -232,18 +256,23 @@ export class View
 
 		if(this.nodes)
 		{
-			const subDoc = document.createRange().createContextualFragment('');
+			const templateParsed = new DocumentFragment();
 
-			for(let i in this.detach)
+			const subDoc = new DocumentFragment;
+
+			if(this.firstNode.getRootNode() === document)
 			{
-				this.detach[i]();
-			}
+				for(let i in this.detach)
+				{
+					this.detach[i]();
+				}
 
-			this.nodes.map(child => {
-				child.dispatchEvent(new Event('cvDomDetached', {
-					bubbles: true, target: child
-				}));
-			});
+				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+					child.dispatchEvent(new Event('cvDomDetached', {
+						bubbles: true, target: child
+					}));
+				});
+			}
 
 			subDoc.appendChild(this.firstNode);
 			subDoc.appendChild(this.lastNode);
@@ -263,63 +292,93 @@ export class View
 
 				parentNode.insertBefore(subDoc, this.lastNode);
 
-				this.nodes.map(child => {
-					child.dispatchEvent(new Event('cvDomAttached', {
-						bubbles: true, target: child
-					}));
-				});
-
-				for(let i in this.attach)
+				if(parentNode.getRootNode() === document)
 				{
-					this.attach[i]();
+					this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+						child.dispatchEvent(new Event('cvDomAttached', {
+							bubbles: true, target: child
+						}));
+					});
+
+					for(let i in this.attach)
+					{
+						this.attach[i]();
+					}
 				}
+
 			}
 
 			return this.nodes;
 		}
 
-		const subDoc = document.createRange().createContextualFragment(this.template);
+		const templateParsed = (this.template instanceof DocumentFragment)
+			? this.template.cloneNode(true)
+			: View.templates.has(this.template);
+
+		const subDoc = templateParsed
+			? ((this.template instanceof DocumentFragment)
+				? templateParsed
+				: View.templates.get(this.template).cloneNode(true)
+			)
+			: document.createRange().createContextualFragment(this.template);
+
+		if(!templateParsed && !(this.template instanceof DocumentFragment))
+		{
+			View.templates.set(this.template, subDoc.cloneNode(true));
+		}
 
 		this.preRuleSet.apply(subDoc, this);
 
 		Dom.mapTags(subDoc, false, (tag)=>{
 			if(tag.matches)
 			{
-				tag.matches('[cv-each]')
-					&& this.mapEachTags(tag);
-
-				tag.matches('[cv-with]')
-					&& this.mapWithTags(tag);
+				this.mapInterpolatableTag(tag)
 
 				tag.matches('[cv-prerender]')
-					&& this.mapPrendererTags(tag);
+					&& this.mapPrendererTag(tag);
 
 				tag.matches('[cv-link]')
-					&& this.mapLinkTags(tag);
-
-				tag.matches('[cv-bind]')
-					&& this.mapBindTags(tag);
+					&& this.mapLinkTag(tag);
 
 				tag.matches('[cv-attr]')
-					&& this.mapAttrTags(tag);
-
-				this.mapInterpolatableTags(tag);
+					&& this.mapAttrTag(tag);
 
 				tag.matches('[cv-expand]')
-					&& this.mapExpandableTags(tag);
-
-				tag.matches('[cv-if]')
-					&& this.mapIfTags(tag);
+					&& this.mapExpandableTag(tag);
 
 				tag.matches('[cv-ref]')
-					&& this.mapRefTags(tag);
+					&& this.mapRefTag(tag);
 
 				tag.matches('[cv-on]')
-					&& this.mapOnTags(tag);
+					&& this.mapOnTag(tag);
+
+				if(tag.matches('[cv-if]'))
+				{
+					this.mapIfTag(tag);
+					return;
+				}
+
+				if(tag.matches('[cv-with]'))
+				{
+					this.mapWithTag(tag);
+					return;
+				}
+
+				if(tag.matches('[cv-bind]'))
+				{
+					this.mapBindTag(tag);
+				}
+
+				if(tag.matches('[cv-each]'))
+				{
+					this.mapEachTag(tag);
+					return;
+				}
+
 			}
 			else
 			{
-				this.mapInterpolatableTags(tag);
+				this.mapInterpolatableTag(tag);
 			}
 		});
 
@@ -355,16 +414,20 @@ export class View
 
 			parentNode.insertBefore(subDoc, this.lastNode);
 
-			this.nodes.map(child => {
-				child.dispatchEvent(new Event('cvDomAttached', {
-					bubbles: true, target: child
-				}));
-			});
-
-			for(let i in this.attach)
+			if(parentNode.getRootNode() === document)
 			{
-				this.attach[i]();
+				for(let i in this.attach)
+				{
+					this.attach[i]();
+				}
+
+				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+					child.dispatchEvent(new Event('cvDomAttached', {
+						bubbles: true, target: child
+					}));
+				});
 			}
+
 		}
 
 		this.postRender(parentNode);
@@ -372,7 +435,7 @@ export class View
 		return this.nodes;
 	}
 
-	mapExpandableTags(tag)
+	mapExpandableTag(tag)
 	{
 		let expandProperty = tag.getAttribute('cv-expand');
 		let expandArg = Bindable.makeBindable(
@@ -402,7 +465,7 @@ export class View
 		}
 	}
 
-	mapAttrTags(tag)
+	mapAttrTag(tag)
 	{
 		let attrProperty = tag.getAttribute('cv-attr');
 
@@ -426,14 +489,6 @@ export class View
 				);
 			}
 
-			if(proxy[ attrs[i][1] ])
-			{
-				tag.setAttribute(
-					attrs[i][0]
-					, proxy[ attrs[i][1] ]
-				);
-			}
-
 			let attrib = attrs[i][0];
 
 			this.onRemove(proxy.bindTo(
@@ -450,7 +505,7 @@ export class View
 		}
 	}
 
-	mapInterpolatableTags(tag)
+	mapInterpolatableTag(tag)
 	{
 		let regex = this.interpolateRegex;
 
@@ -661,7 +716,7 @@ export class View
 		}
 	}
 
-	mapRefTags(tag)
+	mapRefTag(tag)
 	{
 		let refAttr = tag.getAttribute('cv-ref');
 		let [refProp, refClassname, refKey] = refAttr.split(':');
@@ -736,7 +791,7 @@ export class View
 		}
 	}
 
-	mapBindTags(tag)
+	mapBindTag(tag)
 	{
 		let bindArg  = tag.getAttribute('cv-bind');
 		let proxy    = this.args;
@@ -812,12 +867,12 @@ export class View
 			if(v instanceof View)
 			{
 				v.render(tag);
-				tag.dispatchEvent(autoChangedEvent);
+				// tag.dispatchEvent(autoChangedEvent);
 			}
 			else
 			{
-				tag.innerText = v;
-				tag.dispatchEvent(autoChangedEvent);
+				tag.textContent = v;
+				// tag.dispatchEvent(autoChangedEvent);
 			}
 		});
 
@@ -828,15 +883,15 @@ export class View
 
 		this.onRemove(debind);
 
+		const type  = tag.getAttribute('type');
+		const multi = tag.getAttribute('multiple');
+
 		let inputListener = (event) => {
-			console.log(event, proxy, property, event.target.value);
+			// console.log(event, proxy, property, event.target.value);
 
 			if(event.target !== tag) {
 				return;
 			}
-
-			let type  = tag.getAttribute('type');
-			let multi = tag.getAttribute('multiple');
 
 			if (type && type.toLowerCase() == 'checkbox')
 			{
@@ -849,23 +904,25 @@ export class View
 			}
 			else if(type == 'file' && multi)
 			{
-				const files = Array.from(event.target.files);
+				const files   = Array.from(event.target.files);
+				const current = proxy[property] || proxy.___deck___[property];
 
-				if(!proxy[property] || !files.length)
+				if(!current || !files.length)
 				{
 					proxy[property] = files;
 				}
-
-				for(const i in files)
+				else
 				{
-					console.log(i, files[i], proxy[property][i]);
-
-					if(files[i] !== proxy[property][i])
+					for(const i in files)
 					{
-						proxy[property] = files;
-						break;
+						if(files[i] !== current[i])
+						{
+							current[i] = files[i];
+							break;
+						}
 					}
 				}
+
 			}
 			else if(type == 'file' && !multi)
 			{
@@ -877,14 +934,29 @@ export class View
 			}
 		};
 
-		tag.addEventListener('input',         inputListener);
-		tag.addEventListener('change',        inputListener);
-		tag.addEventListener('value-changed', inputListener);
+		if(type == 'file')
+		{
+			tag.addEventListener('change', inputListener);
+		}
+		else
+		{
+			tag.addEventListener('input',         inputListener);
+			tag.addEventListener('change',        inputListener);
+			tag.addEventListener('value-changed', inputListener);
+		}
 
 		this.onRemove( ((tag, eventListener) => ()=>{
-			tag.removeEventListener('input',         inputListener);
-			tag.removeEventListener('change',        inputListener);
-			tag.removeEventListener('value-changed', inputListener);
+			if(type == 'file')
+			{
+				tag.removeEventListener('change', inputListener);
+			}
+			else
+			{
+				tag.removeEventListener('input',         inputListener);
+				tag.removeEventListener('change',        inputListener);
+				tag.removeEventListener('value-changed', inputListener);
+			}
+
 			tag           = undefined;
 			eventListener = undefined;
 		})(tag, inputListener));
@@ -892,14 +964,20 @@ export class View
 		tag.removeAttribute('cv-bind');
 	}
 
-	mapOnTags(tag)
+	mapOnTag(tag)
 	{
 		const referent = String(tag.getAttribute('cv-on'));
 
 		let action = referent.split(';').map(a=> a.split(':')).map((a)=>{
 			a = a.map(a => a.trim());
 
-			let eventName    = a[0].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+			let eventName    = a[0].trim();
+
+			if(!eventName)
+			{
+				return;
+			}
+
 			let callbackName = a[1];
 			let eventFlags   = String(a[2] || '');
 			let argList      = [];
@@ -1054,7 +1132,7 @@ export class View
 		tag.removeAttribute('cv-on');
 	}
 
-	mapLinkTags(tag)
+	mapLinkTag(tag)
 	{
 		let linkAttr = tag.getAttribute('cv-link');
 
@@ -1085,7 +1163,7 @@ export class View
 		tag.removeAttribute('cv-link');
 	}
 
-	mapPrendererTags(tag)
+	mapPrendererTag(tag)
 	{
 		let prerenderAttr = tag.getAttribute('cv-prerender');
 		let prerendering  = window.prerenderer;
@@ -1097,14 +1175,16 @@ export class View
 		}
 	}
 
-	mapWithTags(tag)
+	mapWithTag(tag)
 	{
 		let withAttr = tag.getAttribute('cv-with');
 		let carryAttr = tag.getAttribute('cv-carry');
 		tag.removeAttribute('cv-with');
 		tag.removeAttribute('cv-carry');
 
-		let subTemplate = tag.innerHTML;
+		let subTemplate = new DocumentFragment;
+
+		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
 
 		let carryProps = [];
 
@@ -1179,12 +1259,14 @@ export class View
 		this.onRemove(debind);
 	}
 
-	mapEachTags(tag)
+	mapEachTag(tag)
 	{
 		let eachAttr = tag.getAttribute('cv-each');
 		tag.removeAttribute('cv-each');
 
-		let subTemplate = tag.innerHTML;
+		let subTemplate = new DocumentFragment();
+
+		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
 
 		let [eachProp, asProp, keyProp] = eachAttr.split(':');
 
@@ -1271,20 +1353,16 @@ export class View
 		});
 
 		this.onRemove(debind);
-
-		while(tag.firstChild)
-		{
-			tag.removeChild(tag.firstChild);
-		}
 	}
 
-	mapIfTags(tag)
+	mapIfTag(tag)
 	{
 		let ifProperty = tag.getAttribute('cv-if');
 
 		tag.removeAttribute('cv-if');
 
-		let subTemplate = tag.innerHTML;
+		const ifDoc = new DocumentFragment;
+		const subTemplate = new DocumentFragment;
 
 		let inverted = false;
 
@@ -1294,14 +1372,9 @@ export class View
 			ifProperty = ifProperty.substr(1);
 		}
 
-		while(tag.firstChild)
-		{
-			tag.removeChild(tag.firstChild);
-		}
+		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
 
-		let ifDoc = document.createRange().createContextualFragment('');
-
-		let view = new View();
+		let view = new View;
 
 		view.template = subTemplate;
 		view.parent   = this;
@@ -1315,11 +1388,13 @@ export class View
 			cleaner = cleaner.parent;
 		}
 
-		view.render(ifDoc);
-
-		if(this.args[property])
+		if(this.args[property] || (inverted && !this.args[property]))
 		{
-			tag.appendChild(ifDoc);
+			view.render(tag);
+		}
+		else
+		{
+			view.render(ifDoc);
 		}
 
 		let proxy    = this.args;
@@ -1380,7 +1455,7 @@ export class View
 		view.onRemove(viewDebind);
 	}
 
-	// mapTemplateTags(tag)
+	// mapTemplateTag(tag)
 	// {
 	// 	let subTemplate = tag.innerHTML;
 
@@ -1418,17 +1493,18 @@ export class View
 			}
 		});
 
-		for(let i in this.args)
-		{
-			if(i == '_id')
-			{
-				continue;
-			}
+		// for(let i in this.args)
+		// {
+		// 	if(i == '_id')
+		// 	{
+		// 		continue;
+		// 	}
 
-			subView.args[i] = this.args[i];
-		}
+		// 	subView.args[i] = this.args[i];
+		// }
 
 		let debindB = subView.args.bindTo((v,k,t,d,p)=>{
+
 			if(k == '_id')
 			{
 				return;
@@ -1437,26 +1513,27 @@ export class View
 			let newRef = v;
 			let oldRef = p;
 
-			if(v instanceof View)
+			if(newRef instanceof View)
 			{
-				newRef = v.___ref___;
+				newRef = newRef.___ref___;
 			}
 
-			if(p instanceof View)
+			if(oldRef instanceof View)
 			{
-				oldRef = p.___ref___;
+				oldRef = oldRef.___ref___;
 			}
 
-			if(newRef !== oldRef && p instanceof View)
+			if(newRef !== oldRef && oldRef instanceof View)
 			{
 				p.remove();
 			}
 
-			if((k in this.args) && newRef !== oldRef)
+			if(k in this.args)
 			{
 				this.args[k] = v;
 			}
-		}, {wait:0});
+
+		});
 
 		this.onRemove(debindA);
 		this.onRemove(debindB);
@@ -1510,13 +1587,13 @@ export class View
 			requestAnimationFrame(remover);
 		}
 
-		let onRemove = this._onRemove.items();
+		const callbacks = this._onRemove.items();
 
-		for(const i in onRemove)
+		for(let callback of callbacks)
 		{
-			this._onRemove.remove(onRemove[i]);
+			this._onRemove.remove(callback);
 
-			onRemove[i]();
+			callback();
 		}
 
 		let cleanup;
@@ -1603,10 +1680,29 @@ export class View
 
 	stringToClass(refClassname)
 	{
+		if(View.refClasses.has(refClassname))
+		{
+			return View.refClasses.get(refClassname);
+		}
+
 		let refClassSplit           = refClassname.split('/');
 		let refShortClassname       = refClassSplit[ refClassSplit.length - 1 ];
 		let refClass                = require(refClassname);
 
+		View.refClasses.set(refClassname, refClass[refShortClassname]);
+
 		return refClass[refShortClassname];
 	}
 }
+
+Object.defineProperty(View, 'templates', {
+	enumerable: false,
+	writable: false,
+	value: new Map()
+});
+
+Object.defineProperty(View, 'refClasses', {
+	enumerable: false,
+	writable: false,
+	value: new Map()
+});

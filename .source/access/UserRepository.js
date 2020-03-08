@@ -3,11 +3,11 @@ import { Bindable   } from '../base/Bindable';
 import { Repository } from '../base/Repository';
 
 export class UserRepository extends Repository {
+
 	static get uri() { return Config.backend + '/user/'; }
-	static getCurrentUser(refresh = null) {
 
-		this.args = this.args || Bindable.makeBindable({});
-
+	static getCurrentUser(refresh = null)
+	{
 		if(window.prerenderer)
 		{
 			return;
@@ -42,12 +42,17 @@ export class UserRepository extends Repository {
 			return response;
 		});
 	}
-	static login() {
+
+	static login()
+	{
 		return this.request(this.uri + '/login');
 	}
-	static logout() {
-		this.args = this.args || Bindable.makeBindable({});
-		let user  = this.args.current;
+
+	static logout()
+	{
+		const user  = this.args.current;
+
+		delete this.args.current;
 
 		return this.request(
 			this.uri + 'logout'
@@ -59,21 +64,28 @@ export class UserRepository extends Repository {
 			return user;
 		});
 	}
-	static onChange(callback) {
-		this.args = this.args || Bindable.makeBindable({});
+
+	static onChange(callback)
+	{
 		return this.args.bindTo('current', callback);
 	}
 }
 
-Repository.onResponse((response)=>{
-	UserRepository.args = UserRepository.args || Bindable.makeBindable({});
+Object.defineProperty(UserRepository, 'args', {
+	configurable: false
+	, writable:   false
+	, value:      Bindable.makeBindable({})
+});
+
+Repository.onResponse( response =>{
+
 	if(response
 		&& response.meta
-		&& response.meta.currentUser
-		&& (!UserRepository.args.current
-			|| response.meta.currentUser.id !== UserRepository.args.current.id
+		&& 'currentUser' in response.meta
+		&& (!UserRepository.args.current || response.meta.currentUser.id !== UserRepository.args.current.id
 		)
 	){
 		UserRepository.args.current = response.meta.currentUser;
 	}
-}, {wait:0});
+
+});

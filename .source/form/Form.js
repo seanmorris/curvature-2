@@ -32,6 +32,8 @@ export class Form extends View
 
 		this.args.classes   = this.args.classes || [];
 
+		this.skeleton       = skeleton;
+
 		this.args.bindTo('classes', (v)=>{
 			this.args._classes = v.join(' ');
 		});
@@ -197,7 +199,30 @@ export class Form extends View
 
 					return;
 				}
-				parent.args.value[ fieldName ] = v;
+
+				const multiple = t.attrs.multiple;
+				const newArray = Array.isArray(v);
+				const oldArray = parent.args.value[fieldName];
+
+				const exists = t.attrs.multiple && Array.isArray(v) && Array.isArray(oldArray);
+
+				if(exists)
+				{
+					for(const i in v)
+					{
+						if(files[i] !== parent.args.value[fieldName][i])
+						{
+							parent.args.value[ fieldName ] = files;
+						}
+
+						parent.args.value[ fieldName ].splice(files.length);
+					}
+				}
+				else
+				{
+					parent.args.value[ fieldName ] = v;
+				}
+
 				form.args.flatValue[ fieldName ] = v;
 			});
 		}
@@ -320,7 +345,7 @@ export class Form extends View
 		{
 			const field = parent.args.fields[i];
 
-			console.log(i, field, skeleton[i]);
+			// console.log(i, field, skeleton[i]);
 
 			if(skeleton[i])
 			{

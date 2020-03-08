@@ -39,6 +39,8 @@ export class View extends FieldSet
 		this.args.addIcon = 'a';
 		this.args.addIcon = '+';
 
+		this.args.draggable = 'true';
+
 		this.template = `
 			<label
 				for        = "${this.args.name}"
@@ -58,7 +60,7 @@ export class View extends FieldSet
 						<div
 							class     = "single-record"
 							data-for  = "[[f]]"
-							draggable = "true"
+							draggable = "[[draggable]]"
 							cv-on     = "
 								drop:drop(event);
 								dragstart:drag(event);
@@ -91,6 +93,7 @@ export class View extends FieldSet
 						<div
 							cv-on = "click:addButtonClicked(event)"
 							class = "bubble bottom left-margin add"
+							tab-index = "0"
 						>[[addIcon]]</div>
 
 					</div>
