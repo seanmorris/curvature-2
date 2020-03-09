@@ -39,10 +39,14 @@ export class View
 
 		const _this = this;
 
-		Object.defineProperty(this.args, '_id', {
-			configurable: false
-			, get: function() { return _this._id }
-		});
+		if(!this.args._id)
+		{
+			Object.defineProperty(this.args, '_id', {
+				configurable: false
+				, get: function() { return _this._id }
+			});
+		}
+
 
 		this.template  = ``;
 		this.document  = ``;

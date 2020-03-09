@@ -101,6 +101,12 @@ export class Form extends View
 
 	onRender(callback)
 	{
+		if(this.fields)
+		{
+			callback(this);
+			return;
+		}
+
 		this._onRender.push(callback);
 	}
 
@@ -226,6 +232,7 @@ export class Form extends View
 				form.args.flatValue[ fieldName ] = v;
 			});
 		}
+
 		return fields;
 	}
 
