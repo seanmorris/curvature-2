@@ -112,7 +112,7 @@ export class Field extends View {
 			this.args.errors = [];
 
 			setting = null;
-		}, {wait: 0});
+		});
 
 		// this.parent.args.value = Bindable.makeBindable(this.parent.args.value);
 

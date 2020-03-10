@@ -1,6 +1,6 @@
 {
 	"name": "curvature",
-	"version": "0.0.43",
+	"version": "0.0.44",
 	"author": "Sean Morris <contact@seanmorr.is> (https://seanmorr.is)",
 	"devDependencies": {
 		"@babel/cli": "^7.8.4",

@@ -1,3 +1,5 @@
+let traversals = 0;
+
 export class Dom
 {
 	static mapTags(doc, selector, callback, startNode, endNode)
@@ -18,6 +20,7 @@ export class Dom
 			NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
 			{
 				acceptNode: (node) => {
+
 					if(!started)
 					{
 						if(node === startNode)
@@ -29,14 +32,17 @@ export class Dom
 							return NodeFilter.FILTER_SKIP;
 						}
 					}
+
 					if(endNode && node === endNode)
 					{
 						ended = true;
 					}
+
 					if(ended)
 					{
 						return NodeFilter.FILTER_SKIP;
 					}
+
 					if(selector)
 					{
 						if(node instanceof Element)
@@ -55,6 +61,8 @@ export class Dom
 			},
 			false
 		);
+
+		const traversal = traversals++;
 
 		while(treeWalker.nextNode())
 		{

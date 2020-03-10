@@ -6,6 +6,8 @@ import { Tag      } from './Tag';
 import { Bag      } from './Bag';
 import { RuleSet  } from './RuleSet';
 
+let moveIndex = 0;
+
 export class View
 {
 	get _id()
@@ -47,7 +49,6 @@ export class View
 			});
 		}
 
-
 		this.template  = ``;
 		this.document  = ``;
 
@@ -88,6 +89,16 @@ export class View
 		this.preserve  = false;
 
 		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
+
+		this.rendered = new Promise((accept, reject) => {
+
+			Object.defineProperty(this, 'renderComplete', {
+				configurable: false
+				, writable:   false
+				, value:      accept
+			});
+
+		});
 	}
 
 	static isView()
@@ -260,59 +271,7 @@ export class View
 
 		if(this.nodes)
 		{
-			const templateParsed = new DocumentFragment();
-
-			const subDoc = new DocumentFragment;
-
-			if(this.firstNode.getRootNode() === document)
-			{
-				for(let i in this.detach)
-				{
-					this.detach[i]();
-				}
-
-				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
-					child.dispatchEvent(new Event('cvDomDetached', {
-						bubbles: true, target: child
-					}));
-				});
-			}
-
-			subDoc.appendChild(this.firstNode);
-			subDoc.appendChild(this.lastNode);
-
-			if(parentNode)
-			{
-				if(insertPoint)
-				{
-					parentNode.insertBefore(this.firstNode, insertPoint);
-					parentNode.insertBefore(this.lastNode, insertPoint);
-				}
-				else
-				{
-					parentNode.appendChild(this.firstNode);
-					parentNode.appendChild(this.lastNode);
-				}
-
-				parentNode.insertBefore(subDoc, this.lastNode);
-
-				if(parentNode.getRootNode() === document)
-				{
-					this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
-						child.dispatchEvent(new Event('cvDomAttached', {
-							bubbles: true, target: child
-						}));
-					});
-
-					for(let i in this.attach)
-					{
-						this.attach[i]();
-					}
-				}
-
-			}
-
-			return this.nodes;
+			return this.reRender();
 		}
 
 		const templateParsed = (this.template instanceof DocumentFragment)
@@ -356,6 +315,11 @@ export class View
 				tag.matches('[cv-on]')
 					&& this.mapOnTag(tag);
 
+				if(tag.matches('[cv-bind]'))
+				{
+					this.mapBindTag(tag);
+				}
+
 				if(tag.matches('[cv-if]'))
 				{
 					this.mapIfTag(tag);
@@ -368,17 +332,11 @@ export class View
 					return;
 				}
 
-				if(tag.matches('[cv-bind]'))
-				{
-					this.mapBindTag(tag);
-				}
-
 				if(tag.matches('[cv-each]'))
 				{
 					this.mapEachTag(tag);
 					return;
 				}
-
 			}
 			else
 			{
@@ -405,6 +363,77 @@ export class View
 
 		if(parentNode)
 		{
+			let toRoot = false;
+			let moveType = 'internal';
+
+			if(parentNode.getRootNode() === document)
+			{
+				toRoot = true;
+				moveType = 'external';
+			}
+
+			if(insertPoint)
+			{
+				parentNode.insertBefore(this.firstNode, insertPoint);
+				parentNode.insertBefore(this.lastNode, insertPoint);
+			}
+			else
+			{
+				parentNode.appendChild(this.firstNode);
+				parentNode.appendChild(this.lastNode);
+			}
+
+			parentNode.insertBefore(subDoc, this.lastNode);
+
+			moveIndex++;
+
+			if(toRoot)
+			{
+				for(let i in this.attach)
+				{
+					this.attach[i]();
+				}
+
+				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+					child.dispatchEvent(new Event('cvDomAttached', {
+						bubbles: true, target: child
+					}));
+				});
+			}
+		}
+
+		this.renderComplete(this.nodes);
+
+		this.postRender(parentNode);
+
+		return this.nodes;
+	}
+
+	reRender(parentNode, insertPoint)
+	{
+		const templateParsed = new DocumentFragment();
+
+		const subDoc = new DocumentFragment;
+
+		if(this.firstNode.getRootNode() === document)
+		{
+			for(let i in this.detach)
+			{
+				this.detach[i]();
+			}
+
+			this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+				child.dispatchEvent(new Event('cvDomDetached', {
+					bubbles: true, target: child
+				}));
+			});
+		}
+
+		subDoc.appendChild(this.firstNode);
+		subDoc.appendChild(this.lastNode);
+
+		if(parentNode)
+		{
 			if(insertPoint)
 			{
 				parentNode.insertBefore(this.firstNode, insertPoint);
@@ -420,21 +449,19 @@ export class View
 
 			if(parentNode.getRootNode() === document)
 			{
-				for(let i in this.attach)
-				{
-					this.attach[i]();
-				}
-
 				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
 					child.dispatchEvent(new Event('cvDomAttached', {
 						bubbles: true, target: child
 					}));
 				});
+
+				for(let i in this.attach)
+				{
+					this.attach[i]();
+				}
 			}
 
 		}
-
-		this.postRender(parentNode);
 
 		return this.nodes;
 	}
@@ -1313,7 +1340,7 @@ export class View
 
 			let debindB = viewList.args.bindTo((v,k,t,d,p)=>{
 
-				if(k == '_id' || k.substring(0,3) === '___')
+				if(k == '_id' || k == 'value' || k.substring(0,3) === '___')
 				{
 					return;
 				}
@@ -1321,27 +1348,28 @@ export class View
 				let newRef = v;
 				let oldRef = p;
 
-				if(v instanceof View)
-				{
-					newRef = v.___ref___;
-				}
+				// if(v instanceof View)
+				// {
+				// 	newRef = v.___ref___;
+				// }
 
-				if(p instanceof View)
-				{
-					oldRef = p.___ref___;
-				}
+				// if(p instanceof View)
+				// {
+				// 	oldRef = p.___ref___;
+				// }
 
-				if(newRef !== oldRef && t[k] instanceof View)
-				{
-					t[k].remove();
-				}
 
 				if((k in this.args) && newRef !== oldRef)
 				{
+					// if(newRef !== oldRef && t[k] instanceof View)
+					// {
+					// 	t[k].remove();
+					// }
+
 					this.args[k] = v;
 				}
 
-			}, {wait:0});
+			});
 
 			this.onRemove(debindA);
 			this.onRemove(debindB);

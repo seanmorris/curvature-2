@@ -101,7 +101,7 @@ export class Form extends View
 
 	onRender(callback)
 	{
-		if(this.fields)
+		if(this.nodes)
 		{
 			callback(this);
 			return;
@@ -210,18 +210,18 @@ export class Form extends View
 				const newArray = Array.isArray(v);
 				const oldArray = parent.args.value[fieldName];
 
-				const exists = t.attrs.multiple && Array.isArray(v) && Array.isArray(oldArray);
+				const exists = t.attrs.multiple && newArray && Array.isArray(oldArray);
 
 				if(exists)
 				{
 					for(const i in v)
 					{
-						if(files[i] !== parent.args.value[fieldName][i])
+						if(v[i] !== parent.args.value[fieldName][i])
 						{
-							parent.args.value[ fieldName ] = files;
+							parent.args.value[ fieldName ][i] = v[i];
 						}
 
-						parent.args.value[ fieldName ].splice(files.length);
+						parent.args.value[ fieldName ].splice(v.length);
 					}
 				}
 				else
@@ -232,7 +232,6 @@ export class Form extends View
 				form.args.flatValue[ fieldName ] = v;
 			});
 		}
-
 		return fields;
 	}
 
