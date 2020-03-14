@@ -24,7 +24,7 @@ export class View
 		return this.__id;
 	}
 
-	constructor(args = {})
+	constructor(args = {}, mainView = null)
 	{
 		Object.defineProperty(this, '___VIEW___', {
 			enumerable: false,
@@ -55,6 +55,8 @@ export class View
 		this.firstNode = null;
 		this.lastNode  = null;
 		this.nodes     = null;
+
+		this.mainView  = null;
 
 		this.cleanup   = [];
 
@@ -88,7 +90,7 @@ export class View
 		this.removed   = false;
 		this.preserve  = false;
 
-		this.interpolateRegex = /(\[\[((?:\$)?[\w\.]+)\]\])/g;
+		this.interpolateRegex = /(\[\[((?:\$)?[\w\.\|]+)\]\])/g;
 
 		this.rendered = new Promise((accept, reject) => {
 
@@ -261,7 +263,7 @@ export class View
 	{
 		if(parentNode instanceof View)
 		{
-			parentNode = parentNode.firstNode;
+			parentNode = parentNode.firstNode.parentNode;
 		}
 
 		if(insertPoint instanceof View)
@@ -290,7 +292,7 @@ export class View
 			View.templates.set(this.template, subDoc.cloneNode(true));
 		}
 
-		this.preRuleSet.apply(subDoc, this);
+		this.mainView || this.preRuleSet.apply(subDoc, this);
 
 		Dom.mapTags(subDoc, false, (tag)=>{
 			if(tag.matches)
@@ -344,7 +346,7 @@ export class View
 			}
 		});
 
-		this.ruleSet.apply(subDoc, this);
+		this.mainView || this.ruleSet.apply(subDoc, this);
 
 		this.nodes = [];
 
@@ -558,6 +560,16 @@ export class View
 
 				let unsafeHtml = false;
 
+				const propertySplit = bindProperty.split('|');
+				let transformer = false;
+
+				if(propertySplit.length > 1)
+				{
+					transformer = this.stringTransformer(propertySplit.slice(1));
+
+					bindProperty = propertySplit[0];
+				}
+
 				if(bindProperty.substr(0, 1) === '$')
 				{
 					unsafeHtml   = true;
@@ -633,6 +645,11 @@ export class View
 					}
 					else
 					{
+						if(transformer)
+						{
+							v = transformer(v);
+						}
+
 						if(v instanceof Object && v.__toString instanceof Function)
 						{
 							v = v.__toString();
@@ -706,20 +723,35 @@ export class View
 				for(let j in bindProperties)
 				{
 					let proxy    = this.args;
-					let property = j
+					let property = j;
 
-					if(j.match(/\./))
+					const propertySplit = j.split('|');
+					let transformer = false;
+
+					let longProperty = j;
+
+					if(propertySplit.length > 1)
+					{
+						transformer = this.stringTransformer(propertySplit.slice(1));
+
+						property = propertySplit[0];
+					}
+
+					if(property.match(/\./))
 					{
 						[proxy, property] = Bindable.resolve(
 							this.args
-							, j
+							, property
 							, true
 						);
 					}
 
-					let longProperty = j;
-
 					this.onRemove(proxy.bindTo(property, (v, k, t, d) => {
+						if(transformer)
+						{
+							v = transformer(v);
+						}
+
 						for(let i in bindProperties)
 						{
 							for(let j in bindProperties[longProperty])
@@ -856,6 +888,8 @@ export class View
 			{
 				p.remove();
 			}
+
+			Array.from(tag.childNodes).map(c=>c.remove());
 
 			const autoChangedEvent = new CustomEvent('cvAutoChanged', {bubbles: true});
 
@@ -1235,7 +1269,7 @@ export class View
 				tag.removeChild(tag.firstChild);
 			}
 
-			let view = new View();
+			let view = new View({}, this);
 
 			this.onRemove(((view)=>()=>{
 				view.remove();
@@ -1406,7 +1440,7 @@ export class View
 
 		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
 
-		let view = new View;
+		let view = new View({}, this);
 
 		view.template = subTemplate;
 		view.parent   = this;
@@ -1708,6 +1742,32 @@ export class View
 	afterUpdate(args)
 	{
 
+	}
+
+	stringTransformer(methods)
+	{
+		return (x) => {
+
+			for(const m in methods)
+			{
+				let parent   = this;
+				const method = methods[m];
+
+				while(parent && !parent[ method ])
+				{
+					parent = parent.parent;
+				}
+
+				if(!parent)
+				{
+					return;
+				}
+
+				x = parent[ methods[m] ](x);
+			}
+
+			return x;
+		};
 	}
 
 	stringToClass(refClassname)

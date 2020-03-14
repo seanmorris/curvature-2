@@ -285,13 +285,15 @@ export class Repository
 			return Promise.resolve(tagCacheContent);
 		}
 
-		xhr.withCredentials = true;
+		xhr.withCredentials = ('withCredentials' in options)
+			? options.withCredentials
+			: true;
 
 		let link = document.createElement("a");
     	link.href = fullUri;
 
     	if(!post) {
-			xhr.timeout        = 15000;
+			xhr.timeout        = options.timeout || 15000;
 			this.xhrs[fullUri] = xhr;
 		}
 
@@ -414,10 +416,14 @@ export class Repository
 
 			xhr.open(type, fullUri, true);
 
-			// if(post)
-			// {
-			// 	xhr.setRequestHeader("Content-type", "multipart/form-data");
-			// }
+			if(options.headers)
+			{
+				for(const header in options.headers)
+				{
+					xhr.setRequestHeader(header, options.headers[header]);
+				}
+			}
+
 			xhr.send(formData);
 		}));
 

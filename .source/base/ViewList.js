@@ -190,8 +190,6 @@ export class ViewList
 			}
 		}
 
-		// const renderDoc = document.createRange().createContextualFragment('');
-
 		for(let i in finalViews)
 		{
 			if(finalViews[i] === this.views[i])
@@ -210,8 +208,6 @@ export class ViewList
 		{
 			finalViews[i].args[ this.keyProperty ] = i;
 		}
-
-		// this.tag.append(renderDoc);
 
 		this.willReRender = false;
 

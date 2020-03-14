@@ -73,6 +73,7 @@ export class Router {
 					{
 						this.path = null;
 					}
+
 					window.dispatchEvent(new Event('popstate'))
 
 					if(route.substring(0,1) === '#')
@@ -81,7 +82,6 @@ export class Router {
 							'hashchange'
 						));
 					}
-
 				}
 
 				for(const i in this.query)
@@ -137,7 +137,8 @@ export class Router {
 		L1: for(let i in routes)
 		{
 			let route = i.split('/');
-			if(route.length < path.length)
+
+			if(route.length < path.length && route[route.length-1] !== '*')
 			{
 				continue;
 			}
@@ -165,7 +166,7 @@ export class Router {
 						args[ argName ] = path[j];
 					}
 				}
-				else if(path[j] !== route[j]) {
+				else if(route[j] !== '*' && path[j] !== route[j]) {
 					continue L1;
 				}
 			}
@@ -185,8 +186,14 @@ export class Router {
 			selected = i;
 			result   = routes[i];
 
+			if(route[route.length-1] === '*')
+			{
+				args.pathparts = path.slice(route.length - 1);
+			}
+
 			break;
 		}
+
 
 		document.dispatchEvent(eventStart);
 
