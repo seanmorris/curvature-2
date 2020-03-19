@@ -108,7 +108,8 @@ export class View
 		return View;
 	}
 
-	onFrame(callback) {
+	onFrame(callback)
+	{
 		let c = (timestamp) => {
 			callback(timestamp);
 			window.requestAnimationFrame(c);
@@ -117,7 +118,8 @@ export class View
 		c();
 	}
 
-	onTimeout(time, callback) {
+	onTimeout(time, callback)
+	{
 		let wrappedCallback = () => {
 			this.timeouts[index].fired    = true;
 			this.timeouts[index].callback = null;
@@ -138,7 +140,8 @@ export class View
 		return timeout;
 	}
 
-	clearTimeout(timeout) {
+	clearTimeout(timeout)
+	{
 		for(var i in this.timeouts) {
 			if(timeout === this.timeouts[i].timeout) {
 				clearTimeout(this.timeouts[i].timeout);
@@ -148,7 +151,8 @@ export class View
 		}
 	}
 
-	onInterval(time, callback) {
+	onInterval(time, callback)
+	{
 		let timeout = setInterval(callback, time);
 
 		this.intervals.push({
@@ -161,7 +165,8 @@ export class View
 		return timeout;
 	}
 
-	clearInterval(timeout) {
+	clearInterval(timeout)
+	{
 		for(var i in this.intervals) {
 			if(timeout === this.intervals[i].timeout) {
 				clearInterval(this.intervals[i].timeout);
@@ -294,57 +299,7 @@ export class View
 
 		this.mainView || this.preRuleSet.apply(subDoc, this);
 
-		Dom.mapTags(subDoc, false, (tag)=>{
-			if(tag.matches)
-			{
-				this.mapInterpolatableTag(tag)
-
-				tag.matches('[cv-prerender]')
-					&& this.mapPrendererTag(tag);
-
-				tag.matches('[cv-link]')
-					&& this.mapLinkTag(tag);
-
-				tag.matches('[cv-attr]')
-					&& this.mapAttrTag(tag);
-
-				tag.matches('[cv-expand]')
-					&& this.mapExpandableTag(tag);
-
-				tag.matches('[cv-ref]')
-					&& this.mapRefTag(tag);
-
-				tag.matches('[cv-on]')
-					&& this.mapOnTag(tag);
-
-				if(tag.matches('[cv-bind]'))
-				{
-					this.mapBindTag(tag);
-				}
-
-				if(tag.matches('[cv-if]'))
-				{
-					this.mapIfTag(tag);
-					return;
-				}
-
-				if(tag.matches('[cv-with]'))
-				{
-					this.mapWithTag(tag);
-					return;
-				}
-
-				if(tag.matches('[cv-each]'))
-				{
-					this.mapEachTag(tag);
-					return;
-				}
-			}
-			else
-			{
-				this.mapInterpolatableTag(tag);
-			}
-		});
+		this.mapTags(subDoc);
 
 		this.mainView || this.ruleSet.apply(subDoc, this);
 
@@ -424,7 +379,7 @@ export class View
 				this.detach[i]();
 			}
 
-			this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+			this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
 				child.dispatchEvent(new Event('cvDomDetached', {
 					bubbles: true, target: child
 				}));
@@ -451,7 +406,7 @@ export class View
 
 			if(parentNode.getRootNode() === document)
 			{
-				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+				this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
 					child.dispatchEvent(new Event('cvDomAttached', {
 						bubbles: true, target: child
 					}));
@@ -468,8 +423,76 @@ export class View
 		return this.nodes;
 	}
 
+	mapTags(subDoc)
+	{
+		Dom.mapTags(subDoc, false, (tag, walker)=>{
+			if(tag.matches)
+			{
+				tag = this.mapInterpolatableTag(tag)
+
+				tag = tag.matches('[cv-prerender]')
+					&& this.mapPrendererTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-link]')
+					&& this.mapLinkTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-attr]')
+					&& this.mapAttrTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-expand]')
+					&& this.mapExpandableTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-ref]')
+					&& this.mapRefTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-on]')
+					&& this.mapOnTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-each]')
+					&& this.mapEachTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-bind]')
+					&& this.mapBindTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-if]')
+					&& this.mapIfTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-with]')
+					&& this.mapWithTag(tag)
+					|| tag;
+			}
+			else
+			{
+				tag = this.mapInterpolatableTag(tag);
+			}
+
+			if(tag !== walker.currentNode)
+			{
+				walker.currentNode = tag;
+			}
+		});
+	}
+
 	mapExpandableTag(tag)
 	{
+		/*/
+		const tagCompiler = this.compileExpandableTag(tag);
+
+		const newTag = tagCompiler(this);
+
+		tag.replaceWith(newTag);
+
+		return newTag;
+		/*/
 		let expandProperty = tag.getAttribute('cv-expand');
 		let expandArg = Bindable.makeBindable(
 			this.args[expandProperty] || {}
@@ -479,7 +502,7 @@ export class View
 
 		for(let i in expandArg)
 		{
-			if(i == 'name' || i == 'type')
+			if(i === 'name' || i === 'type')
 			{
 				continue;
 			}
@@ -496,10 +519,61 @@ export class View
 				}
 			});
 		}
+
+		return tag;
+		//*/
+	}
+
+	compileExpandableTag(sourceTag)
+	{
+		return (bindingView) => {
+
+			const tag = sourceTag.cloneNode(true);
+
+			let expandProperty = tag.getAttribute('cv-expand');
+			let expandArg = Bindable.makeBindable(
+				bindingView.args[expandProperty] || {}
+			);
+
+			tag.removeAttribute('cv-expand');
+
+			for(let i in expandArg)
+			{
+				if(i === 'name' || i === 'type')
+				{
+					continue;
+				}
+
+				let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
+					tag.setAttribute(i, v);
+				})(tag,i));
+
+				bindingView.onRemove(()=>{
+					debind();
+					if(expandArg.isBound())
+					{
+						Bindable.clearBindings(expandArg);
+					}
+				});
+			}
+
+			return tag;
+		};
 	}
 
 	mapAttrTag(tag)
 	{
+		//*/
+		const tagCompiler = this.compileAttrTag(tag);
+
+		const newTag = tagCompiler(this);
+
+		tag.replaceWith(newTag);
+
+		return newTag;
+
+		/*/
+
 		let attrProperty = tag.getAttribute('cv-attr');
 
 		tag.removeAttribute('cv-attr');
@@ -536,19 +610,66 @@ export class View
 				}
 			));
 		}
+
+		return tag;
+
+		//*/
+	}
+
+	compileAttrTag(sourceTag)
+	{
+		const attrProperty = sourceTag.getAttribute('cv-attr');
+
+		const pairs = attrProperty.split(',');
+		const attrs = pairs.map((p) => p.split(':'));
+
+		sourceTag.removeAttribute('cv-attr');
+
+		return (bindingView) => {
+
+			const tag = sourceTag.cloneNode(true);
+
+			for (let i in attrs)
+			{
+				const bindProperty = attrs[i][1];
+
+				const [proxy, property] = Bindable.resolve(
+					bindingView.args
+					, bindProperty
+					, true
+				);
+
+				const attrib = attrs[i][0];
+
+				bindingView.onRemove(proxy.bindTo( property , (v) => {
+
+					if(v == null)
+					{
+						tag.setAttribute(attrib, '');
+
+						return;
+					}
+
+					tag.setAttribute(attrib, v);
+
+				}));
+			}
+
+			return tag;
+		};
 	}
 
 	mapInterpolatableTag(tag)
 	{
 		let regex = this.interpolateRegex;
 
-		if(tag.nodeType == Node.TEXT_NODE)
+		if(tag.nodeType === Node.TEXT_NODE)
 		{
 			let original = tag.nodeValue;
 
 			if(!this.interpolatable(original))
 			{
-				return;
+				return tag;
 			}
 
 			let header   = 0;
@@ -685,14 +806,17 @@ export class View
 
 		}
 
-		if(tag.nodeType == Node.ELEMENT_NODE)
+		if(tag.nodeType === Node.ELEMENT_NODE)
 		{
 			for (let i = 0; i < tag.attributes.length; i++)
 			{
 				if(!this.interpolatable(tag.attributes[i].value))
 				{
+					// console.log('!!', tag.attributes[i].value);
 					continue;
 				}
+
+				// console.log(tag.attributes[i].value);
 
 				let header    = 0;
 				let match;
@@ -777,6 +901,8 @@ export class View
 				}
 			}
 		}
+
+		return tag;
 	}
 
 	mapRefTag(tag)
@@ -852,6 +978,8 @@ export class View
 
 			parent = parent.parent;
 		}
+
+		return tag;
 	}
 
 	mapBindTag(tag)
@@ -889,25 +1017,21 @@ export class View
 				p.remove();
 			}
 
-			Array.from(tag.childNodes).map(c=>c.remove());
-
 			const autoChangedEvent = new CustomEvent('cvAutoChanged', {bubbles: true});
 
-			if(tag.tagName == 'INPUT'
-				|| tag.tagName == 'SELECT'
-				|| tag.tagName == 'TEXTAREA'
-			) {
+			if(tag.tagName === 'INPUT' || tag.tagName === 'SELECT' || tag.tagName === 'TEXTAREA')
+			{
 				let type = tag.getAttribute('type');
-				if(type && type.toLowerCase() == 'checkbox') {
+				if(type && type.toLowerCase() === 'checkbox') {
 					tag.checked = !!v;
 					tag.dispatchEvent(autoChangedEvent);
 				}
-				else if(type && type.toLowerCase() == 'radio') {
+				else if(type && type.toLowerCase() === 'radio') {
 					tag.checked = (v == tag.value);
 					tag.dispatchEvent(autoChangedEvent);
 				}
 				else if(type !== 'file') {
-					if(tag.tagName == 'SELECT')
+					if(tag.tagName === 'SELECT')
 					{
 						// console.log(k, v, tag.outerHTML, tag.options.length);
 						for(let i in tag.options)
@@ -923,22 +1047,24 @@ export class View
 					tag.value = v == null ? '' : v;
 					tag.dispatchEvent(autoChangedEvent);
 				}
-				else if(type === 'file') {
-					// console.log(v);
-				}
-				return;
-			}
-
-			if(v instanceof View)
-			{
-				v.render(tag);
-				// tag.dispatchEvent(autoChangedEvent);
 			}
 			else
 			{
-				tag.textContent = v;
-				// tag.dispatchEvent(autoChangedEvent);
+				for(const node of tag.childNodes)
+				{
+					node.remove();
+				}
+
+				if(v instanceof View)
+				{
+					v.render(tag);
+				}
+				else
+				{
+					tag.textContent = v;
+				}
 			}
+
 		});
 
 		if(proxy !== this.args)
@@ -954,11 +1080,12 @@ export class View
 		let inputListener = (event) => {
 			// console.log(event, proxy, property, event.target.value);
 
-			if(event.target !== tag) {
+			if(event.target !== tag)
+			{
 				return;
 			}
 
-			if (type && type.toLowerCase() == 'checkbox')
+			if (type && type.toLowerCase() === 'checkbox')
 			{
 				if (tag.checked) {
 					proxy[property] = event.target.value;
@@ -967,7 +1094,7 @@ export class View
 					proxy[property] = false;
 				}
 			}
-			else if(type == 'file' && multi)
+			else if(type === 'file' && multi)
 			{
 				const files   = Array.from(event.target.files);
 				const current = proxy[property] || proxy.___deck___[property];
@@ -989,7 +1116,7 @@ export class View
 				}
 
 			}
-			else if(type == 'file' && !multi)
+			else if(type === 'file' && !multi)
 			{
 				proxy[property] = event.target.files.item(0);
 			}
@@ -999,7 +1126,7 @@ export class View
 			}
 		};
 
-		if(type == 'file')
+		if(type === 'file')
 		{
 			tag.addEventListener('change', inputListener);
 		}
@@ -1011,7 +1138,7 @@ export class View
 		}
 
 		this.onRemove( ((tag, eventListener) => ()=>{
-			if(type == 'file')
+			if(type === 'file')
 			{
 				tag.removeEventListener('change', inputListener);
 			}
@@ -1027,6 +1154,8 @@ export class View
 		})(tag, inputListener));
 
 		tag.removeAttribute('cv-bind');
+
+		return tag;
 	}
 
 	mapOnTag(tag)
@@ -1071,7 +1200,7 @@ export class View
 
 			while(parent)
 			{
-				if(typeof parent[callbackName] == 'function')
+				if(typeof parent[callbackName] === 'function')
 				{
 					let _parent       = parent;
 					let _callBackName = callbackName;
@@ -1127,7 +1256,7 @@ export class View
 				});
 
 
-				if(!(typeof eventMethod == 'function'))
+				if(!(typeof eventMethod === 'function'))
 				{
 					throw new Error(
 						`${callbackName} is not defined on View object.`
@@ -1195,10 +1324,21 @@ export class View
 		});
 
 		tag.removeAttribute('cv-on');
+
+		return tag;
 	}
 
 	mapLinkTag(tag)
 	{
+		/*/
+		const tagCompiler = this.compileLinkTag(tag);
+
+		const newTag = tagCompiler(this);
+
+		tag.replaceWith(newTag);
+
+		return newTag;
+		/*/
 		let linkAttr = tag.getAttribute('cv-link');
 
 		tag.setAttribute('href', linkAttr);
@@ -1206,8 +1346,8 @@ export class View
 		let linkClick = (event) => {
 			event.preventDefault();
 
-			if(linkAttr.substring(0, 4) == 'http'
-				|| linkAttr.substring(0, 2) == '//'
+			if(linkAttr.substring(0, 4) === 'http'
+				|| linkAttr.substring(0, 2) === '//'
 			){
 				window.open(tag.getAttribute('href', linkAttr));
 
@@ -1226,6 +1366,31 @@ export class View
 		})(tag, linkClick));
 
 		tag.removeAttribute('cv-link');
+
+		return tag;
+		//*/
+	}
+
+	compileLinkTag(sourceTag)
+	{
+		const linkAttr = sourceTag.getAttribute('cv-link');
+
+		sourceTag.removeAttribute('cv-link');
+
+		return (bindingView) => {
+
+			const tag = sourceTag.cloneNode(true);
+
+			tag.setAttribute('href', linkAttr);
+
+			tag.addEventListener('click', View.linkClicked);
+
+			bindingView.onRemove(
+				() => tag.removeEventListener(View.linkClicked)
+			);
+
+			return tag;
+		};
 	}
 
 	mapPrendererTag(tag)
@@ -1233,11 +1398,13 @@ export class View
 		let prerenderAttr = tag.getAttribute('cv-prerender');
 		let prerendering  = window.prerenderer;
 
-		if(prerenderAttr == 'never' && prerendering
-			|| prerenderAttr == 'only' && !prerendering
+		if(prerenderAttr === 'never' && prerendering
+			|| prerenderAttr === 'only' && !prerendering
 		){
 			tag.parentNode.removeChild(tag);
 		}
+
+		return tag;
 	}
 
 	mapWithTag(tag)
@@ -1322,84 +1489,53 @@ export class View
 		});
 
 		this.onRemove(debind);
+
+		return tag;
 	}
 
 	mapEachTag(tag)
 	{
-		let eachAttr = tag.getAttribute('cv-each');
+		const eachAttr = tag.getAttribute('cv-each');
 		tag.removeAttribute('cv-each');
 
-		let subTemplate = new DocumentFragment();
+		const subTemplate = new DocumentFragment();
 
 		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
 
-		let [eachProp, asProp, keyProp] = eachAttr.split(':');
+		const [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		let debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
+		const debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
 			if(this.viewLists[eachProp])
 			{
 				this.viewLists[eachProp].remove();
 			}
 
 			const viewList = new ViewList(subTemplate, asProp, v, this, keyProp);
-			const viewListRemover = ()=>viewList.remove();
+			const viewListRemover = () => viewList.remove();
 
 			this.onRemove(viewListRemover);
 
 			viewList.onRemove(()=>this._onRemove.remove(viewListRemover));
 
-			let debindA = this.args.bindTo((v,k,t,d)=>{
+			const debindA = this.args.bindTo((v,k,t,d)=>{
 
-				if(k == '_id')
+				if(k === '_id')
 				{
 					return;
 				}
 
-				if(viewList.args.subArgs[k] !== v)
-				{
-					viewList.args.subArgs[k] = v;
-				}
-
+				viewList.args.subArgs[k] = v;
 			});
 
-			for(let i in this.args)
-			{
-				if(i == '_id')
-				{
-					continue;
-				}
+			const debindB = viewList.args.bindTo((v,k,t,d,p)=>{
 
-				viewList.args.subArgs[k] = this.args[i];
-			}
-
-			let debindB = viewList.args.bindTo((v,k,t,d,p)=>{
-
-				if(k == '_id' || k == 'value' || k.substring(0,3) === '___')
+				if(k === '_id' || k === 'value' || k.substring(0,3) === '___')
 				{
 					return;
 				}
 
-				let newRef = v;
-				let oldRef = p;
-
-				// if(v instanceof View)
-				// {
-				// 	newRef = v.___ref___;
-				// }
-
-				// if(p instanceof View)
-				// {
-				// 	oldRef = p.___ref___;
-				// }
-
-
-				if((k in this.args) && newRef !== oldRef)
+				if(k in this.args)
 				{
-					// if(newRef !== oldRef && t[k] instanceof View)
-					// {
-					// 	t[k].remove();
-					// }
-
 					this.args[k] = v;
 				}
 
@@ -1419,63 +1555,81 @@ export class View
 		});
 
 		this.onRemove(debind);
+
+		return tag;
 	}
 
 	mapIfTag(tag)
 	{
-		let ifProperty = tag.getAttribute('cv-if');
+		/*/
+		const tagCompiler = this.compileIfTag(tag);
 
-		tag.removeAttribute('cv-if');
+		const newTag = tagCompiler(this);
 
-		const ifDoc = new DocumentFragment;
-		const subTemplate = new DocumentFragment;
+		tag.replaceWith(newTag);
 
-		let inverted = false;
+		return newTag;
+
+		/*/
+
+		const sourceTag = tag;
+
+		let ifProperty = sourceTag.getAttribute('cv-if');
+		let inverted   = false;
+
+		sourceTag.removeAttribute('cv-if');
 
 		if(ifProperty.substr(0, 1) === '!')
 		{
-			inverted   = true;
 			ifProperty = ifProperty.substr(1);
+			inverted   = true;
 		}
 
-		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
+		const subTemplate = new DocumentFragment;
 
-		let view = new View({}, this);
+		Array.from(sourceTag.childNodes).map(
+			n => subTemplate.appendChild(n)
+			// n => subTemplate.appendChild(n.cloneNode(true))
+		);
+
+		const bindingView = this;
+
+		const ifDoc = new DocumentFragment;
+
+		let view = new View(this.args, bindingView);
 
 		view.template = subTemplate;
-		view.parent   = this;
+		view.parent   = bindingView;
 
-		this.syncBind(view);
+		// bindingView.syncBind(view);
 
-		let cleaner = this;
-
-		while(cleaner.parent)
-		{
-			cleaner = cleaner.parent;
-		}
-
-		if(this.args[property] || (inverted && !this.args[property]))
-		{
-			view.render(tag);
-		}
-		else
-		{
-			view.render(ifDoc);
-		}
-
-		let proxy    = this.args;
+		let proxy    = bindingView.args;
 		let property = ifProperty;
 
 		if(ifProperty.match(/\./))
 		{
 			[proxy, property] = Bindable.resolve(
-				this.args
+				bindingView.args
 				, ifProperty
 				, true
 			);
 		}
 
-		let propertyDebind = proxy.bindTo(property, (v,k) => {
+		let hasRendered = false;
+
+		const propertyDebind = proxy.bindTo(property, (v,k) => {
+
+			if(!hasRendered)
+			{
+				const renderDoc = (bindingView.args[property] || inverted)
+					? tag : ifDoc;
+
+				view.render(renderDoc);
+
+				hasRendered = true;
+
+				return;
+			}
 
 			if(Array.isArray(v))
 			{
@@ -1496,9 +1650,16 @@ export class View
 				view.nodes.map(n=>ifDoc.appendChild(n));
 			}
 
-		})
+		});
 
-		this.onRemove(propertyDebind);
+		// let cleaner = bindingView;
+
+		// while(cleaner.parent)
+		// {
+		// 	cleaner = cleaner.parent;
+		// }
+
+		bindingView.onRemove(propertyDebind);
 
 		let bindableDebind = () => {
 
@@ -1510,45 +1671,170 @@ export class View
 		};
 
 		let viewDebind = ()=>{
-			syncDebind();
 			propertyDebind();
 			bindableDebind();
-			this._onRemove.remove(syncDebind);
-			this._onRemove.remove(propertyDebind);
-			this._onRemove.remove(bindableDebind);
+			bindingView._onRemove.remove(propertyDebind);
+			bindingView._onRemove.remove(bindableDebind);
 		};
 
-		view.onRemove(viewDebind);
+		bindingView.onRemove(viewDebind);
+
+		return tag;
+
+		//*/
 	}
 
-	// mapTemplateTag(tag)
+	compileIfTag(sourceTag)
+	{
+		let ifProperty = sourceTag.getAttribute('cv-if');
+		let inverted   = false;
+
+		sourceTag.removeAttribute('cv-if');
+
+		if(ifProperty.substr(0, 1) === '!')
+		{
+			ifProperty = ifProperty.substr(1);
+			inverted   = true;
+		}
+
+		const subTemplate = new DocumentFragment;
+
+		Array.from(sourceTag.childNodes).map(
+			n => subTemplate.appendChild(n.cloneNode(true))
+		);
+
+		return (bindingView) => {
+
+			const tag = sourceTag.cloneNode();
+
+			const ifDoc = new DocumentFragment;
+
+			let view = new View({}, bindingView);
+
+			view.template = subTemplate;
+			view.parent   = bindingView;
+
+			bindingView.syncBind(view);
+
+			let proxy    = bindingView.args;
+			let property = ifProperty;
+
+			if(ifProperty.match(/\./))
+			{
+				[proxy, property] = Bindable.resolve(
+					bindingView.args
+					, ifProperty
+					, true
+				);
+			}
+
+			let hasRendered = false;
+
+			const propertyDebind = proxy.bindTo(property, (v,k) => {
+
+				if(!hasRendered)
+				{
+					const renderDoc = (bindingView.args[property] || inverted)
+						? tag : ifDoc;
+
+					view.render(renderDoc);
+
+					hasRendered = true;
+
+					return;
+				}
+
+				if(Array.isArray(v))
+				{
+					v = !!v.length;
+				}
+
+				if(inverted)
+				{
+					v = !v;
+				}
+
+				if(v)
+				{
+					tag.appendChild(ifDoc);
+				}
+				else
+				{
+					view.nodes.map(n=>ifDoc.appendChild(n));
+				}
+
+			});
+
+			// let cleaner = bindingView;
+
+			// while(cleaner.parent)
+			// {
+			// 	cleaner = cleaner.parent;
+			// }
+
+			bindingView.onRemove(propertyDebind);
+
+			let bindableDebind = () => {
+
+				if(!proxy.isBound())
+				{
+					Bindable.clearBindings(proxy);
+				}
+
+			};
+
+			let viewDebind = ()=>{
+				propertyDebind();
+				bindableDebind();
+				bindingView._onRemove.remove(propertyDebind);
+				bindingView._onRemove.remove(bindableDebind);
+			};
+
+			view.onRemove(viewDebind);
+
+			return tag;
+		};
+	}
+
+	mapTemplateTag(tag)
+	{
+		let subTemplate = tag.innerHTML;
+
+		view.template = subTemplate;
+		view.parent   = this;
+
+		let deBindSync = this.syncBind(view);
+
+		let cleaner = this;
+
+		while(cleaner.parent)
+		{
+			cleaner = cleaner.parent;
+		}
+
+		this.cleanup.push(()=>{
+			deBindSync();
+			// view.remove();
+		});
+
+		view.render(tag);
+	}
+
+	// compileTag(sourceTag)
 	// {
-	// 	let subTemplate = tag.innerHTML;
+	// 	return (bindingView) => {
 
-	// 	view.template = subTemplate;
-	// 	view.parent   = this;
+	// 		const tag = sourceTag.cloneNode(true);
 
-	// 	let deBindSync = this.syncBind(view);
+	// 		return tag;
 
-	// 	let cleaner = this;
-
-	// 	while(cleaner.parent)
-	// 	{
-	// 		cleaner = cleaner.parent;
-	// 	}
-
-	// 	this.cleanup.push(()=>{
-	// 		deBindSync();
-	// 		// view.remove();
-	// 	});
-
-	// 	view.render(tag);
+	// 	};
 	// }
 
 	syncBind(subView)
 	{
 		let debindA = this.args.bindTo((v,k,t,d)=>{
-			if(k == '_id')
+			if(k === '_id')
 			{
 				return;
 			}
@@ -1571,7 +1857,7 @@ export class View
 
 		let debindB = subView.args.bindTo((v,k,t,d,p)=>{
 
-			if(k == '_id')
+			if(k === '_id')
 			{
 				return;
 			}
@@ -1620,7 +1906,8 @@ export class View
 		return !!(String(str).match(this.interpolateRegex));
 	}
 
-	uuid() {
+	uuid()
+	{
 		return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(
 			/[018]/g
 			, c => (
@@ -1628,6 +1915,7 @@ export class View
 			).toString(16)
 		);
 	}
+
 	remove(now = false)
 	{
 		const remover = () => {
@@ -1779,6 +2067,9 @@ export class View
 
 		let refClassSplit           = refClassname.split('/');
 		let refShortClassname       = refClassSplit[ refClassSplit.length - 1 ];
+
+		console.log(refClassname);
+
 		let refClass                = require(refClassname);
 
 		View.refClasses.set(refClassname, refClass[refShortClassname]);
@@ -1797,4 +2088,21 @@ Object.defineProperty(View, 'refClasses', {
 	enumerable: false,
 	writable: false,
 	value: new Map()
+});
+
+Object.defineProperty(View, 'linkClicked', (event) => {
+
+	event.preventDefault();
+
+	const href = event.target.getAttribute('href');
+
+	if(href.substring(0, 4) === 'http'|| href.substring(0, 2) === '//')
+	{
+		window.open(href);
+
+		return;
+	}
+
+	Router.go(href);
+
 });

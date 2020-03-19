@@ -4,7 +4,7 @@ export class Dom
 {
 	static mapTags(doc, selector, callback, startNode, endNode)
 	{
-		let result = [];
+		const result = [];
 
 		let started = true;
 
@@ -15,11 +15,11 @@ export class Dom
 
 		let ended = false;
 
-		var treeWalker = document.createTreeWalker(
+		const treeWalker = document.createTreeWalker(
 			doc,
 			NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
 			{
-				acceptNode: (node) => {
+				acceptNode: (node, walker) => {
 
 					if(!started)
 					{
@@ -66,7 +66,7 @@ export class Dom
 
 		while(treeWalker.nextNode())
 		{
-			result.push(callback(treeWalker.currentNode));
+			result.push(callback(treeWalker.currentNode, treeWalker));
 		}
 
 		return result;

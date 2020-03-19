@@ -62,7 +62,7 @@ export class ViewList
 				}
 			}
 
-			if(!this.views[k] && !this.willReRender !== false)
+			if(!this.views[k] && !this.willReRender)
 			{
 				this.willReRender = requestAnimationFrame(()=>{
 					this.reRender();

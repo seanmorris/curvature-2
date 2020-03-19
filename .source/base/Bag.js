@@ -52,6 +52,8 @@ export class Bag
 		{
 			this.changeCallback(item, this.meta, -1);
 		}
+
+		return item;
 	}
 
 	items()
