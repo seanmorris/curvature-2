@@ -90,7 +90,7 @@ export class View
 		this.removed   = false;
 		this.preserve  = false;
 
-		this.interpolateRegex = /(\[\[((?:\$)?[\w\.\|]+)\]\])/g;
+		this.interpolateRegex = /(\[\[((?:\$+)?[\w\.\|]+)\]\])/g;
 
 		this.rendered = new Promise((accept, reject) => {
 
@@ -680,6 +680,7 @@ export class View
 				let bindProperty = match[2];
 
 				let unsafeHtml = false;
+				let unsafeView = false;
 
 				const propertySplit = bindProperty.split('|');
 				let transformer = false;
@@ -689,6 +690,13 @@ export class View
 					transformer = this.stringTransformer(propertySplit.slice(1));
 
 					bindProperty = propertySplit[0];
+				}
+
+				if(bindProperty.substr(0, 2) === '$$')
+				{
+					unsafeHtml   = true;
+					unsafeView   = true;
+					bindProperty = bindProperty.substr(2);
 				}
 
 				if(bindProperty.substr(0, 1) === '$')
@@ -748,6 +756,16 @@ export class View
 					}
 
 					dynamicNode.nodeValue = '';
+
+					if(unsafeView && !(v instanceof View))
+					{
+						const unsafeTemplate = v;
+
+						console.log(unsafeTemplate);
+
+						v = new View(this.args, this);
+						v.template = unsafeTemplate;
+					}
 
 					if(v instanceof View)
 					{

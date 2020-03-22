@@ -10,7 +10,7 @@ export class HtmlField extends View {
 			cv-ref          = "input:curvature/base/Tag"
 			contenteditable = "[[contentEditable]]"
 			cv-expand       = "attrs"
-		>[[$value]]</div>`;
+		>[[$$value]]</div>`;
 	}
 	hasChildren()
 	{
