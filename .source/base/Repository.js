@@ -329,7 +329,7 @@ export class Repository
 						|| xhr.getResponseHeader("Content-Type") == 'text/json; charset=utf-8'
 					) {
 						response = JSON.parse(xhr.responseText)
-						if(response.code == 0) {
+						if(response && response.code == 0) {
 							// Repository.lastResponse = response;
 
 							if(!post && cache) {
