@@ -1639,7 +1639,9 @@ export class View
 
 			if(!hasRendered)
 			{
-				const renderDoc = (bindingView.args[property] || inverted)
+				let initValue = bindingView.args[property];
+
+				const renderDoc  = (!!initValue ^ !!inverted)
 					? tag : ifDoc;
 
 				view.render(renderDoc);

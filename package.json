@@ -1,7 +1,7 @@
 {
 	"name": "curvature",
 	"version": "0.0.48",
-	"author": "Sean Morris <contact@seanmorr.is> (https://seanmorr.is)",
+	"author": "Sean Morris <curvature@seanmorr.is> (https://seanmorr.is)",
 	"devDependencies": {
 		"@babel/cli": "^7.8.4",
 		"@babel/core": "^7.8.7",
