@@ -685,6 +685,8 @@ export class View
 				const propertySplit = bindProperty.split('|');
 				let transformer = false;
 
+				let property = bindProperty;
+
 				if(propertySplit.length > 1)
 				{
 					transformer = this.stringTransformer(propertySplit.slice(1));
@@ -733,20 +735,18 @@ export class View
 				}
 
 				let proxy    = this.args;
-				let property = bindProperty;
+				
+				// if(bindProperty.match(/\./))
+				// {
+				// 	[proxy, bindProperty] = Bindable.resolve(
+				// 		this.args
+				// 		, bindProperty
+				// 		, true
+				// 	);
+				// }
 
-				if(bindProperty.match(/\./))
-				{
-					[proxy, property] = Bindable.resolve(
-						this.args
-						, bindProperty
-						, true
-					);
-				}
+				let debind = this.args.bindChain(property, (v,k,t) => {
 
-				tag.parentNode.insertBefore(dynamicNode, tag);
-
-				let debind = proxy.bindTo(property, (v,k,t) => {
 					if(t[k] instanceof View && t[k] !== v)
 					{
 						if(!t[k].preserve)
@@ -760,8 +760,6 @@ export class View
 					if(unsafeView && !(v instanceof View))
 					{
 						const unsafeTemplate = v;
-
-						console.log(unsafeTemplate);
 
 						v = new View(this.args, this);
 						v.template = unsafeTemplate;
@@ -804,6 +802,67 @@ export class View
 						}
 					}
 				});
+
+				tag.parentNode.insertBefore(dynamicNode, tag);
+
+				// let debind = proxy.bindTo(property, (v,k,t) => {
+				// 	if(t[k] instanceof View && t[k] !== v)
+				// 	{
+				// 		if(!t[k].preserve)
+				// 		{
+				// 			t[k].remove();
+				// 		}
+				// 	}
+
+				// 	dynamicNode.nodeValue = '';
+
+				// 	if(unsafeView && !(v instanceof View))
+				// 	{
+				// 		const unsafeTemplate = v;
+
+				// 		console.log(unsafeTemplate);
+
+				// 		v = new View(this.args, this);
+				// 		v.template = unsafeTemplate;
+				// 	}
+
+				// 	if(v instanceof View)
+				// 	{
+				// 		v.render(tag.parentNode, dynamicNode);
+
+				// 		const cleanup = ()=>{
+				// 			if(!v.preserve)
+				// 			{
+				// 				v.remove();
+				// 			}
+				// 		};
+
+				// 		this.onRemove(cleanup);
+
+				// 		v.onRemove( ()=> this._onRemove.remove(cleanup) );
+				// 	}
+				// 	else
+				// 	{
+				// 		if(transformer)
+				// 		{
+				// 			v = transformer(v);
+				// 		}
+
+				// 		if(v instanceof Object && v.__toString instanceof Function)
+				// 		{
+				// 			v = v.__toString();
+				// 		}
+
+				// 		if(unsafeHtml)
+				// 		{
+				// 			dynamicNode.innerHTML = v;
+				// 		}
+				// 		else
+				// 		{
+				// 			dynamicNode.nodeValue = v;
+				// 		}
+				// 	}
+				// });
 
 				this.onRemove(()=>{
 					debind();
@@ -879,33 +938,37 @@ export class View
 						property = propertySplit[0];
 					}
 
-					if(property.match(/\./))
-					{
-						[proxy, property] = Bindable.resolve(
-							this.args
-							, property
-							, true
-						);
-					}
+					// if(property.match(/\./))
+					// {
+					// 	[proxy, property] = Bindable.resolve(
+					// 		this.args
+					// 		, property
+					// 		, true
+					// 	);
+					// }
 
-					this.onRemove(proxy.bindTo(property, (v, k, t, d) => {
+					// console.log(this.args, property);
+
+					const matching = [];
+					const bindProperty = j;
+
+					const matchingSegments = bindProperties[property];
+
+					this.onRemove(this.args.bindChain(property, (v, k, t, d) => {
+						
 						if(transformer)
 						{
 							v = transformer(v);
 						}
 
-						for(let i in bindProperties)
+						if(matchingSegments)
 						{
-							for(let j in bindProperties[longProperty])
+							for(const matchingSegment of matchingSegments)
 							{
-								segments[ bindProperties[longProperty][j] ] = t[i];
-
-								if(k === property)
-								{
-									segments[ bindProperties[longProperty][j] ] = v;
-								}
+								segments[ matchingSegment ] = v;
 							}
 						}
+
 
 						tag.setAttribute(attribute.name, segments.join(''));
 					}));
@@ -1007,28 +1070,28 @@ export class View
 		let property = bindArg;
 		let top      = null;
 
-		if(bindArg.match(/\./))
-		{
-			[proxy, property, top] = Bindable.resolve(
-				this.args
-				, bindArg
-				, true
-			);
-		}
+		// if(bindArg.match(/\./))
+		// {
+		// 	[proxy, property, top] = Bindable.resolve(
+		// 		this.args
+		// 		, bindArg
+		// 		, true
+		// 	);
+		// }
 
-		if(proxy !== this.args)
-		{
-			this.subBindings[bindArg] = this.subBindings[bindArg] || [];
+		// if(proxy !== this.args)
+		// {
+		// 	this.subBindings[bindArg] = this.subBindings[bindArg] || [];
 
-			this.onRemove(this.args.bindTo(top, ()=>{
-				while(this.subBindings.length)
-				{
-					this.subBindings.shift()();
-				}
-			}));
-		}
+		// 	this.onRemove(this.args.bindTo(top, ()=>{
+		// 		while(this.subBindings.length)
+		// 		{
+		// 			this.subBindings.shift()();
+		// 		}
+		// 	}));
+		// }
 
-		let debind = proxy.bindTo(property, (v,k,t,d,p) => {
+		let debind = this.args.bindChain(property, (v,k,t,d,p) => {
 
 			if(p instanceof View && p !== v)
 			{
@@ -1635,7 +1698,7 @@ export class View
 
 		let hasRendered = false;
 
-		const propertyDebind = proxy.bindTo(property, (v,k) => {
+		const onUpdate = (v,k) => {
 
 			if(!hasRendered)
 			{
@@ -1670,7 +1733,11 @@ export class View
 				view.nodes.map(n=>ifDoc.appendChild(n));
 			}
 
-		});
+		};
+
+		this.args.bindChain(ifProperty, onUpdate);
+
+		const propertyDebind = proxy.bindTo(property, onUpdate);
 
 		// let cleaner = bindingView;
 
@@ -2087,8 +2154,6 @@ export class View
 
 		let refClassSplit           = refClassname.split('/');
 		let refShortClassname       = refClassSplit[ refClassSplit.length - 1 ];
-
-		console.log(refClassname);
 
 		let refClass                = require(refClassname);
 
