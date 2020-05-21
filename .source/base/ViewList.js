@@ -122,9 +122,7 @@ export class ViewList
 				let viewArgs = {};
 				let view = finalViews[i] = new View(viewArgs);
 
-				finalViews[i].template = this.template instanceof Object
-					? this.template
-					: this.template;
+				finalViews[i].template = this.template;
 				finalViews[i].parent   = this.parent;
 				finalViews[i].viewList = this;
 
