@@ -234,6 +234,39 @@ export class Bindable
 			value: bindTo
 		});
 
+		Object.defineProperty(object, 'bindChain', {
+			enumerable: false,
+			writable: false,
+			value: (path, callback) => {
+				const parts    = path.split('.');
+				const node     = parts.shift();
+				const subParts = parts.slice(0);
+				let   debind   = [];
+
+				debind.push(object.bindTo(node, (v,k,t,d) => {
+
+					const rest = subParts.join('.');
+
+					if(subParts.length === 0)
+					{
+						callback(v,k,t,d);
+						return;
+					}
+
+					if(v === undefined)
+					{
+						v = t[k] = this.makeBindable({});
+					}
+
+					debind = debind.concat(v.bindChain(rest, callback));
+				}));
+
+				// console.log(debind);
+
+				return () => debind.map(x=>x());
+			}
+		});
+
 		Object.defineProperty(object, '___before', {
 			enumerable: false,
 			writable: false,

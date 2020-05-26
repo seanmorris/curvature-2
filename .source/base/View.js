@@ -276,9 +276,9 @@ export class View
 			insertPoint = insertPoint.firstNode;
 		}
 
-		if(this.nodes)
+		if(this.firstNode)
 		{
-			return this.reRender();
+			return this.reRender(parentNode, insertPoint);
 		}
 
 		const templateParsed = (this.template instanceof DocumentFragment)
@@ -316,7 +316,11 @@ export class View
 			this.lastNode = document.createTextNode('');
 		}
 
-		this.nodes.push(this.firstNode, ...Array.from(subDoc.childNodes), this.lastNode);
+		this.nodes.push(
+			this.firstNode
+			, ...Array.from(subDoc.childNodes)
+			, this.lastNode
+		);
 
 		if(parentNode)
 		{
@@ -368,8 +372,6 @@ export class View
 
 	reRender(parentNode, insertPoint)
 	{
-		const templateParsed = new DocumentFragment();
-
 		const subDoc = new DocumentFragment;
 
 		if(this.firstNode.getRootNode() === document)
@@ -386,8 +388,9 @@ export class View
 			});
 		}
 
-		subDoc.appendChild(this.firstNode);
-		subDoc.appendChild(this.lastNode);
+		subDoc.append(...this.nodes);
+		// subDoc.appendChild(this.firstNode);
+		// subDoc.appendChild(this.lastNode);
 
 		if(parentNode)
 		{
@@ -887,6 +890,22 @@ export class View
 							, true
 						);
 					}
+					// if(property.match(/\./))
+					// {
+					// 	[proxy, property] = Bindable.resolve(
+					// 		this.args
+					// 		, property
+					// 		, true
+					// 	);
+					// }
+
+					// console.log(this.args, property);
+
+					const matching = [];
+					const bindProperty = j;
+
+					const matchingSegments = bindProperties[longProperty];
+
 
 					this.onRemove(proxy.bindTo(property, (v, k, t, d) => {
 						if(transformer)
@@ -1639,10 +1658,11 @@ export class View
 
 			if(!hasRendered)
 			{
-				let initValue = bindingView.args[property];
+				let initValue = proxy[property];
 
 				const renderDoc  = (!!initValue ^ !!inverted)
-					? tag : ifDoc;
+					? tag
+					: ifDoc;
 
 				view.render(renderDoc);
 
@@ -1672,12 +1692,7 @@ export class View
 
 		});
 
-		// let cleaner = bindingView;
-
-		// while(cleaner.parent)
-		// {
-		// 	cleaner = cleaner.parent;
-		// }
+		// const propertyDebind = this.args.bindChain(property, onUpdate);
 
 		bindingView.onRemove(propertyDebind);
 

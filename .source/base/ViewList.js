@@ -52,6 +52,7 @@ export class ViewList
 				if(this.views[k])
 				{
 					this.views[k].remove();
+					delete this.views[k];
 				}
 
 				this.views.splice(k,1);
@@ -61,13 +62,18 @@ export class ViewList
 					this.views[i].args[ this.keyProperty ] = i;
 				}
 			}
-
-			if(!this.views[k] && !this.willReRender)
+			else if(!this.views[k] && !this.willReRender)
 			{
 				this.willReRender = requestAnimationFrame(()=>{
 					this.reRender();
 				});
 			}
+			else if(this.views[k])
+			{
+				this.views[k].args[ this.keyProperty ] = k;
+				this.views[k].args[ this.subProperty ] = v;
+			}
+
 		});
 
 		this._onRemove.add(debind);
@@ -106,7 +112,7 @@ export class ViewList
 			for(let j in views)
 			{
 				if(views[j]
-					&& this.args.value[i]
+					&& this.args.value[i] !== undefined
 					&& this.args.value[i] === views[j].args[ this.subProperty ]
 				){
 					found = true;
@@ -131,31 +137,25 @@ export class ViewList
 				finalViews[i].args[ this.keyProperty ] = i;
 				finalViews[i].args[ this.subProperty ] = this.args.value[i];
 
-				// this._onRemove.add(
-				// 	this.args.value.bindTo(i, (v,k,t)=>{
-				// 		// viewArgs[ this.keyProperty ] = k;
-				// 		// viewArgs[ this.subProperty ] = v;
-				// 	})
-				// );
 
-				const upBind = viewArgs.bindTo(this.subProperty, (v,k)=>{
+				const upDebind = viewArgs.bindTo(this.subProperty, (v,k)=>{
 					let index = viewArgs[ this.keyProperty ];
 					this.args.value[index] = v;
 				});
 
-				const downBind = this.args.subArgs.bindTo((v, k, t, d) => {
+				const downDebind = this.args.subArgs.bindTo((v, k, t, d) => {
 					viewArgs[k] = v;
 				});
 
 				view.onRemove(()=>{
-					upBind();
-					downBind();
-					this._onRemove.remove(upBind);
-					this._onRemove.remove(downBind);
+					upDebind();
+					downDebind();
+					this._onRemove.remove(upDebind);
+					this._onRemove.remove(downDebind);
 				});
 
-				this._onRemove.add(upBind);
-				this._onRemove.add(downBind);
+				this._onRemove.add(upDebind);
+				this._onRemove.add(downDebind);
 
 				viewArgs[this.subProperty] = this.args.value[i];
 			}
@@ -180,27 +180,62 @@ export class ViewList
 			}
 		}
 
-		let appendOnly = true;
+		const renderRecurse = (i = 0) => {
 
-		for(let i in this.views)
-		{
-			if(this.views[i] !== finalViews[i])
+			const ii = (finalViews.length - i) - 1;
+
+			if(!finalViews[ii])
 			{
-				appendOnly = false;
+				return;
+			}
+
+			if(finalViews[ii] === this.views[ii])
+			{
+				if(!finalViews[ii].firstNode)
+				{
+					finalViews[ii].render(this.tag, finalViews[ii+1]);
+
+					return finalViews[ii].rendered.then(() => renderRecurse( i+1 ));
+				}
+
+				return renderRecurse( i+1 );
+			}
+
+			finalViews[ii].render(this.tag, finalViews[ii+1]);
+
+			this.views.splice(ii, 0, finalViews[ii]);
+
+			finalViews[ii].rendered.then( () => renderRecurse( i+1 ) );
+		}
+
+		if(Array.isArray(this.args.value))
+		{
+			renderRecurse();
+		}
+		else
+		{
+			const leftovers = Object.assign({}, finalViews);
+
+			for(const i in finalViews)
+			{
+				delete leftovers[i];
+
+				if(finalViews[i].firstNode && finalViews[i] === this.views[i])
+				{
+					continue;
+				}
+
+				finalViews[i].render(this.tag);
+			}
+
+			for(const i in leftovers)
+			{
+				delete this.args.views[i];
+				leftovers.remove();
 			}
 		}
 
-		for(let i in finalViews)
-		{
-			if(finalViews[i] === this.views[i])
-			{
-				continue;
-			}
-
-			views.splice(i+1, 0, finalViews[i]);
-
-			finalViews[i].render(this.tag);
-		}
+		console.log(finalViews);
 
 		this.views = finalViews;
 
