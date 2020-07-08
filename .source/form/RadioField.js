@@ -3,10 +3,15 @@ import { Field } from './Field';
 export class RadioField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
+
+		const attrs = this.args.attrs || {};
+
+		this.args.name = attrs.name = attrs.name || this.args.name || key;
+
 		this.template = `
 			<label
 				for       = "${this.args.name}"
-				data-type = "${this.args.attrs.type}"
+				data-type = "${attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
 				<span cv-if = "title">
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>

@@ -3,6 +3,11 @@ import { Field } from './Field';
 export class FileField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
+
+		const attrs = this.args.attrs || {};
+
+		attrs.type = attrs.type || this.args.type || null;
+
 		this.template = `
 			<label
 				for       = "${this.args.name}"

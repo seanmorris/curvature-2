@@ -9,14 +9,19 @@ export class ButtonField extends Field
 		this.args.title = this.args.title || this.args.value;
 		this._onClick   = [];
 
+		const attrs = this.args.attrs || {};
+
+		attrs.type = attrs.type || this.args.type;
+		this.args.name = attrs.name = attrs.name || this.args.name || key;
+
 		this.template   = `
 			<label
 				for       = "${this.args.name}"
-				data-type = "${this.args.attrs.type}"
+				data-type = "${attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
 				<input
 					name      = "${this.args.name}"
-					type      = "${this.args.attrs.type}"
+					type      = "${attrs.type}"
 					value     = "[[title]]"
 					cv-on     = "click:clicked(event)"
 					cv-ref    = "input:curvature/base/Tag"
@@ -25,7 +30,7 @@ export class ButtonField extends Field
 			</label>
 		`;
 	}
-	
+
 	clicked(event)
 	{
 		const cancels = this._onClick.map((callback)=>{

@@ -33,7 +33,21 @@ export class SelectField extends Field {
 	postRender()
 	{
 		this.args.bindTo('value', v => this.selectOptionByValue(v));
-		this.args.bindTo('options', v => this.selectOptionByValue(this.args.value), {frame:true});
+
+		this.args.bindTo('options', v => {
+
+			const optionsList = this.viewLists.options;
+
+			console.log(optionsList);
+
+			optionsList.rendered.then((rendered)=>{
+
+				console.log(rendered);
+
+				this.selectOptionByValue(this.args.value)
+			});
+
+		}, {frame:true});
 	}
 
 	selectOptionByValue(value)

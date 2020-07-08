@@ -28,6 +28,7 @@ export class Field extends View {
 		const attrs = this.args.attrs || {};
 
 		attrs.type = attrs.type || skeleton.type || null;
+		this.args.name = attrs.name = attrs.name || this.args.name || key;
 
 		if(attrs.type == 'checkbox')
 		{

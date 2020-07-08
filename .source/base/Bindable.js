@@ -146,6 +146,11 @@ export class Bindable
 				callback = this.wrapFrameCallback(callback);
 			}
 
+			if(options.idle)
+			{
+				callback = this.wrapIdleCallback(callback);
+			}
+
 			if(bindToAll)
 			{
 				let bindIndex = object.___bindingAll___.length;
@@ -608,8 +613,14 @@ export class Bindable
 	static wrapFrameCallback(callback)
 	{
 		return (v,k,t,d,p) => {
-			window.requestAnimationFrame(() => callback(v,k,t,d,p));
+			requestAnimationFrame(() => callback(v,k,t,d,p));
 		};
+	}
 
+	static wrapIdleCallback(callback)
+	{
+		return (v,k,t,d,p) => {
+			requestIdleCallback(() => callback(v,k,t,d,p));
+		};
 	}
 }

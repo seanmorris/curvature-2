@@ -12,6 +12,8 @@ export class FieldSet extends Field
 
 		const attrs = this.args.attrs || {};
 
+		attrs.type = attrs.type || 'fieldset';
+
 		this.template    = `
 			<label
 				for        = "${this.args.name}"

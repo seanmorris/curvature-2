@@ -11,7 +11,7 @@ export class TextareaField extends Field {
 		this.template = `
 			<label
 				for       = "${this.args.name}"
-				data-type = "${attrs.type || 'textarea'}"
+				data-type = "${attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
 				<span cv-if = "title">
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>

@@ -7,12 +7,15 @@ export class HiddenField extends Field {
 
 		super(values, form, parent, key);
 
-		this.args.type = this.args.attrs.type = 'hidden';
+		const attrs = this.args.attrs || {};
+
+		this.args.type = attrs.type = 'hidden';
+		this.args.name = attrs.name = attrs.name || this.args.name || key;
 
 		this.template = `
 			<label
 				for       = "${this.args.name}"
-				data-type = "${this.args.attrs.type}"
+				data-type = "${attrs.type}"
 				style     = "display:none"
 				cv-ref    = "label:curvature/base/Tag">
 				<input

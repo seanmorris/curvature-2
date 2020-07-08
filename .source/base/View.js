@@ -112,12 +112,37 @@ export class View
 
 	onFrame(callback)
 	{
-		let c = (timestamp) => {
-			callback(timestamp);
-			window.requestAnimationFrame(c);
+		let stopped = false;
+
+		const cancel = () => {
+			stopped = true;
 		};
 
-		c();
+		let c = (timestamp) => {
+
+			callback(Date.getNow());
+
+			if(this.removed || stopped)
+			{
+				return;
+			}
+
+			requestAnimationFrame(c);
+		};
+
+		requestAnimationFrame(() => c(Date.getNow()));
+
+		return cancel;
+	}
+
+	onNextFrame(callback)
+	{
+		return requestAnimationFrame(() => callback(Date.getNow()));
+	}
+
+	onIdle(callback)
+	{
+		return requestIdleCallback(() => callback(Date.getNow()));
 	}
 
 	onTimeout(time, callback)

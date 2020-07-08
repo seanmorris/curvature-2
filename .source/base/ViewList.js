@@ -18,6 +18,13 @@ export class ViewList
 		this.tag          = null;
 		this.paused       = false;
 		this.parent       = parent;
+		this.rendered     = new Promise((accept, reject) => {
+			Object.defineProperty(this, 'renderComplete', {
+				configurable: false
+				, writable:   true
+				, value:      accept
+			});
+		});
 
 		this.willReRender = false;
 
@@ -93,12 +100,18 @@ export class ViewList
 
 	render(tag)
 	{
-		for(let i in this.views)
+		const renders = [];
+
+		for(const view of this.views)
 		{
-			this.views[i].render(tag);
+			view.render(tag);
+
+			renders.push(view.rendered.then(()=>view));
 		}
 
 		this.tag = tag;
+
+		Promise.all(renders).then(views => this.renderComplete(views));
 	}
 
 	reRender()
@@ -126,7 +139,7 @@ export class ViewList
 			{
 				k = '_' + i;
 			}
-			
+
 			for(let j in views)
 			{
 				if(views[j]
@@ -198,40 +211,41 @@ export class ViewList
 			}
 		}
 
-		const renderRecurse = (i = 0) => {
-
-			const ii = (finalViews.length - i) - 1;
-
-			if(!finalViews[ii])
-			{
-				return;
-			}
-
-			if(finalViews[ii] === this.views[ii])
-			{
-				if(!finalViews[ii].firstNode)
-				{
-					finalViews[ii].render(this.tag, finalViews[ii+1]);
-
-					return finalViews[ii].rendered.then(() => renderRecurse( i+1 ));
-				}
-
-				return renderRecurse( i+1 );
-			}
-
-			finalViews[ii].render(this.tag, finalViews[ii+1]);
-
-			this.views.splice(ii, 0, finalViews[ii]);
-
-			finalViews[ii].rendered.then( () => renderRecurse( i+1 ) );
-		}
-
 		if(Array.isArray(this.args.value))
 		{
-			renderRecurse();
+			const renderRecurse = (i = 0) => {
+
+				const ii = (finalViews.length - i) - 1;
+
+				if(!finalViews[ii])
+				{
+					return Promise.resolve();
+				}
+
+				if(finalViews[ii] === this.views[ii])
+				{
+					if(!finalViews[ii].firstNode)
+					{
+						finalViews[ii].render(this.tag, finalViews[ii+1]);
+
+						return finalViews[ii].rendered.then(() => renderRecurse( i+1 ));
+					}
+
+					return renderRecurse( i+1 );
+				}
+
+				finalViews[ii].render(this.tag, finalViews[ii+1]);
+
+				this.views.splice(ii, 0, finalViews[ii]);
+
+				return finalViews[ii].rendered.then( () => renderRecurse( i+1 ) );
+			}
+
+			this.rendered = renderRecurse();
 		}
 		else
 		{
+			const renders = [];
 			const leftovers = Object.assign({}, finalViews);
 
 			for(const i in finalViews)
@@ -244,13 +258,18 @@ export class ViewList
 				}
 
 				finalViews[i].render(this.tag);
+
+				renders.push( finalViews[i].rendered.then(()=>finalViews[i]) );
 			}
 
 			for(const i in leftovers)
 			{
 				delete this.args.views[i];
+
 				leftovers.remove();
 			}
+
+			this.rendered = Promise.all(renders);
 		}
 
 		this.views = finalViews;
@@ -267,7 +286,6 @@ export class ViewList
 		}
 
 		this.willReRender = false;
-
 	}
 
 	pause(pause=true)
