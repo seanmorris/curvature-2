@@ -37,7 +37,7 @@ export class Wrapper extends View
 		this.args.classes   = '';
 		this.args.icon      = '×';
 		this.deleted        = false;
-		
+
 
 		this.args.field.args.bindTo('fieldName', (v)=>{
 			this.args.fieldName = v;
@@ -110,7 +110,9 @@ export class Wrapper extends View
 
 	backendPath()
 	{
-		return Config.backend + this.args.parent.args.attrs['data-endpoint'];
+		const backend = Config ? Config.backend : '//';
+
+		return backend + this.args.parent.args.attrs['data-endpoint'];
 	}
 
 	getRecordTitle(record)

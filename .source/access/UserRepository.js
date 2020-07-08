@@ -22,7 +22,6 @@ export class UserRepository extends Repository {
 			this.uri + 'current'
 			, false
 			, false
-			, false
 		).then((response) => {
 			if(response.body && response.body.roles)
 			{

@@ -1,5 +1,3 @@
-import { Config     } from 'Config';
-
 import { Repository } from '../../base/Repository';
 import { Form       } from '../../form/Form';
 import { Toast      } from '../../toast/Toast';

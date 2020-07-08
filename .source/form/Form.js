@@ -11,6 +11,8 @@ import { TextareaField } from './TextareaField';
 
 import { View as MultiField } from './multiField/View';
 
+import { Bindable } from '../base/Bindable';
+
 // import { Router           } from 'Router';
 
 // import { Repository       } from '../Repository';
@@ -25,13 +27,11 @@ export class Form extends View
 	constructor(skeleton, customFields = {})
 	{
 		super({});
+
 		this.args.flatValue = this.args.flatValue || {};
 		this.args.value     = this.args.value     || {};
-
 		this.args.method    = skeleton._method || 'GET';
-
 		this.args.classes   = this.args.classes || [];
-
 		this.skeleton       = skeleton;
 
 		this.args.bindTo('classes', (v)=>{
@@ -59,14 +59,22 @@ export class Form extends View
 
 		this.fields = this.args.fields;
 
+		const _this = Bindable.makeBindable(this);
+
 		this.args.bindTo(
 			'value'
 			, (v) => {
-				this.args.valueString = JSON.stringify(v, null, 4);
-				this.valueString = this.args.valueString;
-				this.value = v;
+				_this.value = v;
 			}
 		);
+		this.args.bindTo(
+			'valueString'
+			, (v) => {
+				_this.json = v;
+			}
+		);
+
+		return _this;
 	}
 
 	submitHandler(event)
@@ -151,7 +159,7 @@ export class Form extends View
 				switch(skeleton[i].type)
 				{
 					case 'fieldset':
-						if(skeleton[i].attrs['data-multi'])
+						if(skeleton[i].attrs && skeleton[i].attrs['data-multi'])
 						{
 							field = new MultiField(skeleton[i], form, parent, i);
 						}
@@ -197,7 +205,7 @@ export class Form extends View
 				}
 
 				// let fieldName = field.args.name;
-				let fieldName = field.getName();
+				let fieldName = field.key;//field.getName();
 
 				if(t.disabled)
 				{
@@ -205,6 +213,8 @@ export class Form extends View
 
 					return;
 				}
+
+				t.attrs = t.attrs || {};
 
 				const multiple = t.attrs.multiple;
 				const newArray = Array.isArray(v);
@@ -230,6 +240,11 @@ export class Form extends View
 				}
 
 				form.args.flatValue[ fieldName ] = v;
+
+				form.args.valueString = JSON.stringify(form.args.value, null, 4);
+				console.log();
+
+
 			});
 		}
 		return fields;

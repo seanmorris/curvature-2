@@ -1,68 +1,95 @@
 export class Theme
 {
-	constructor()
+	static get(key = '')
 	{
-		this.views = {
-			'SeanMorris\\TheWhtRbt\\Location' : {
-				single: 'twr9/LocationPreview'
-				, list: 'twr9/LocationList'
-			}
-			, 'SeanMorris\\TheWhtRbt\\Image' : {
-				single: 'DetailView'
-				, list: 'DetailListView'
-			}
-		};
+		if(!this.instances)
+		{
+			this.instances = {};
+		}
+
+		if(!this.instances[key])
+		{
+			this.instances[key] = new this(key);
+		}
+
+		return this.instances[key];
 	}
 
-	resolve(model)
+	constructor(key)
 	{
-		let modelClass;
+		this.key         = key;
+		this.viewMap     = new Map();
+		this.templateMap = new Map();
+		this.fallbacks   = [];
+	}
 
-		if(Array.isArray(model))
+	setFallback(...fallbacks)
+	{
+		this.fallbacks.push(...fallbacks);
+
+		return this;
+	}
+
+	setView(type, viewType)
+	{
+		this.viewMap.set(type, viewType);
+
+		return this;
+	}
+
+	getView(object)
+	{
+		return this.resolve(object, 'viewMap');
+	}
+
+	setTemplate(type, viewType)
+	{
+		this.viewMap.set(type, viewType);
+
+		return this;
+	}
+
+	getTemplate(object)
+	{
+		return this.resolve(object, 'templateMap');
+	}
+
+	resolve(object, whichMap)
+	{
+		const type = object.constructor;
+		const map  = this[whichMap];
+
+		if(map.has(type))
 		{
-			for(let i in model)
-			{
-				let _modelClass = model[i].class || model[i].content_type;
-
-				if(modelClass && modelClass !== _modelClass)
-				{
-					throw new Error('Model list mismatch!');
-				}
-				else
-				{
-					modelClass = _modelClass;
-				}
-			}
-
-			if(this.views[modelClass])
-			{
-				if(this.views[modelClass].list)
-				{
-					return this.views[modelClass].list;
-				}
-
-				return this.views[modelClass];
-			}
-
-			return 'DetailListView';
+			return map.get(type);
 		}
-		else if(model)
+
+		let result = false;
+
+		for(const [key, value] of map)
 		{
-			modelClass = model.class || model.content_type;
-
-			if(this.views[modelClass])
+			if(type.prototype instanceof key)
 			{
-				if(this.views[modelClass].single)
-				{
-					return this.views[modelClass].single;
-				}
-
-				return this.views[modelClass];
+				result = value;
 			}
-
-			return 'DetailView';
 		}
 
-		return false;
+		if(!result)
+		{
+			for(const theme of this.fallbacks)
+			{
+				if(result = theme.resolve(object, whichMap))
+				{
+					return result;
+				}
+			}
+		}
+
+		if(result)
+		{
+			map.set(type, result);
+		}
+
+		return result;
 	}
 }

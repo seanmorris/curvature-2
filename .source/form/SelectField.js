@@ -3,10 +3,13 @@ import { Field } from './Field';
 export class SelectField extends Field {
 	constructor(values, form, parent, key) {
 		super(values, form, parent, key);
+
+		const attrs = this.args.attrs || {};
+
 		this.template = `
 			<label
 				for       = "${this.args.name}"
-				data-type = "${this.args.attrs.type}"
+				data-type = "${attrs.type || 'select'}"
 				cv-ref    = "label:curvature/base/Tag">
 				<span cv-if = "title">
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
@@ -25,27 +28,25 @@ export class SelectField extends Field {
 				</span>
 			</label>
 		`;
-
-		this.args.bindTo('value', (v,k,t,d,p)=>{
-			// console.log(this.args.name,v,p);
-		});
 	}
 
-	postRender(parentNode)
+	postRender()
 	{
-		this.onTimeout(0,()=>{
-			let tag = this.tags.input.element;
+		this.args.bindTo('value', v => this.selectOptionByValue(v));
+		this.args.bindTo('options', v => this.selectOptionByValue(this.args.value), {frame:true});
+	}
 
-			for(let i in tag.options)
+	selectOptionByValue(value)
+	{
+		let tag = this.tags.input.element;
+
+		for(const option of tag.options)
+		{
+			if(option.value == value)
 			{
-				let option = tag.options[i];
-
-				if(option.value == this.args.value)
-				{
-					tag.selectedIndex = i;
-				}
+				tag.selectedIndex = option.index;
 			}
-		});
+		}
 	}
 
 	getLabel()

@@ -53,7 +53,7 @@ var UserRepository = /*#__PURE__*/function (_Repository) {
         return Promise.resolve(this.args.response);
       }
 
-      return this.request(this.uri + 'current', false, false, false).then(function (response) {
+      return this.request(this.uri + 'current', false, false).then(function (response) {
         if (response.body && response.body.roles) {
           for (var i in response.body.roles) {
             if (response.body.roles[i]["class"] == 'SeanMorris\\Access\\Role\\Administrator') {

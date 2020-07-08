@@ -87,6 +87,8 @@ export class View
 		this.preRuleSet  = new RuleSet;
 		this.subBindings = {};
 
+		this.subTemplates = {};
+
 		this.removed   = false;
 		this.preserve  = false;
 
@@ -348,6 +350,8 @@ export class View
 
 			moveIndex++;
 
+			this.attachedTo(parentNode);
+
 			if(toRoot)
 			{
 				for(let i in this.attach)
@@ -431,7 +435,15 @@ export class View
 		Dom.mapTags(subDoc, false, (tag, walker)=>{
 			if(tag.matches)
 			{
-				tag = this.mapInterpolatableTag(tag)
+				tag = this.mapInterpolatableTag(tag);
+
+				tag = tag.matches('[cv-template]')
+					&& this.mapTemplateTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-slot]')
+					&& this.mapSlotTag(tag)
+					|| tag;
 
 				tag = tag.matches('[cv-prerender]')
 					&& this.mapPrendererTag(tag)
@@ -1833,26 +1845,41 @@ export class View
 
 	mapTemplateTag(tag)
 	{
-		let subTemplate = tag.innerHTML;
+		const templateName = tag.getAttribute('cv-template');
 
-		view.template = subTemplate;
-		view.parent   = this;
+		tag.removeAttribute('cv-template');
 
-		let deBindSync = this.syncBind(view);
+		this.subTemplates[ templateName ] = () => {
+			return tag.tagName === 'TEMPLATE'
+				? tag.content.cloneNode(true)
+				: new DocumentFragment(tag.innerHTML);
+		};
 
-		let cleaner = this;
+		return tag;
+	}
 
-		while(cleaner.parent)
+	mapSlotTag(tag)
+	{
+		const templateName = tag.getAttribute('cv-slot');
+		const getTemplate  = this.subTemplates[ templateName ];
+
+		if(!getTemplate)
 		{
-			cleaner = cleaner.parent;
+			return;
 		}
 
-		this.cleanup.push(()=>{
-			deBindSync();
-			// view.remove();
-		});
+		const template = getTemplate();
 
-		view.render(tag);
+		tag.removeAttribute('cv-slot');
+
+		while(tag.firstChild)
+		{
+			tag.firstChild.remove();
+		}
+
+		tag.appendChild(template);
+
+		return tag;
 	}
 
 	// compileTag(sourceTag)
@@ -1932,6 +1959,11 @@ export class View
 	}
 
 	postRender(parentNode)
+	{
+
+	}
+
+	attachedTo(parentNode)
 	{
 
 	}
@@ -2102,8 +2134,6 @@ export class View
 
 		let refClassSplit           = refClassname.split('/');
 		let refShortClassname       = refClassSplit[ refClassSplit.length - 1 ];
-
-		console.log(refClassname);
 
 		let refClass                = require(refClassname);
 

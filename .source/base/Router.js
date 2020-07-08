@@ -21,6 +21,8 @@ export class Router {
 			route += location.hash;
 		}
 
+		Object.assign(Router.query, Router.queryOver({}));
+
 		window.addEventListener('popstate', (event) => {
 			event.preventDefault();
 
@@ -55,7 +57,8 @@ export class Router {
 	}
 	static go(route, silent)
 	{
-		document.title = Config.title;
+		document.title = Config ? Config.title : 'Curvature 2';
+
 		setTimeout(
 			() => {
 				if(silent === 2)
@@ -351,14 +354,22 @@ export class Router {
 
 	static setQuery(name, value, silent)
 	{
-		let args = {};
+		const args = this.queryOver();
 
 		args[name] = value;
 
+		if(value === undefined)
+		{
+			delete args[name];
+		}
+
+		const queryString = this.queryToString(args, true);
+
 		this.go(
-			this.path
-				+ '?'
-				+ this.queryToString(args)
+			this.path + ( queryString
+				? '?' + queryString
+				: ''
+			)
 			, silent
 		);
 	}

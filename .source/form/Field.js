@@ -7,7 +7,7 @@ export class Field extends View {
 
 		super(skeleton);
 
-		this.args.title = this.args.title || '';
+		this.args.title = this.args.title ?? key;
 		this.args.value = this.args.value === null ?  '' : this.args.value;
 		this.value      = this.args.value;
 		this.skeleton   = skeleton;
@@ -19,11 +19,17 @@ export class Field extends View {
 		this.parent = parent;
 		this.key    = key;
 
-		this.ignore = this.args.attrs['data-cv-ignore'] || false;
+		this.ignore = this.args.attrs
+			? this.args.attrs['data-cv-ignore'] || false
+			: false;
 
 		let extra = '';
 
-		if(this.args.attrs.type == 'checkbox')
+		const attrs = this.args.attrs || {};
+
+		attrs.type = attrs.type || skeleton.type || null;
+
+		if(attrs.type == 'checkbox')
 		{
 			extra = 'value = "1"';
 		}
@@ -31,7 +37,7 @@ export class Field extends View {
 		this.template = `
 			<label
 				for           = "${this.args.name}"
-				data-type     = "${this.args.attrs.type}"
+				data-type     = "${attrs.type || 'text'}"
 				cv-ref        = "label:curvature/base/Tag"
 			>
 				<span cv-if = "title">
@@ -39,7 +45,7 @@ export class Field extends View {
 				</span>
 				<input
 					name      = "${this.args.name}"
-					type      = "${this.args.attrs.type||'text'}"
+					type      = "${attrs.type || 'text'}"
 					cv-bind   = "value"
 					cv-ref    = "input:curvature/base/Tag"
 					cv-expand = "attrs"
@@ -68,12 +74,12 @@ export class Field extends View {
 			this.args.valueString = JSON.stringify(v||'', null, 4);
 			this.valueString = this.args.valueString;
 
-			if(this.args.attrs.type == 'file'
+			if(attrs.type == 'file'
 				&& this.tags.input
 				&& this.tags.input.element.files
 				&& this.tags.input.element.length
 			){
-				if(!this.args.attrs.multiple)
+				if(!attrs.multiple)
 				{
 					this.parent.args.value[key] = this.tags.input.element.files[0];
 				}
@@ -128,13 +134,13 @@ export class Field extends View {
 			setting = k;
 
 
-			if(this.args.attrs.type == 'file')
+			if(attrs.type == 'file')
 			{
 				if(this.tags.input
 					 && this.tags.input.element.files
 					 && this.tags.input.element.files.length
 				){
-					if(!this.args.attrs.multiple)
+					if(!attrs.multiple)
 					{
 						this.parent.args.value[key] = this.tags.input.element.files[0];
 					}
@@ -213,6 +219,6 @@ export class Field extends View {
 			return this.tags.input.element.getAttribute('name');
 		}
 
-		return this.args.name;
+		return this.args.name || this.key;
 	}
 }

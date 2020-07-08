@@ -3,6 +3,8 @@ import { FormWrapper } from './FormWrapper';
 import { HiddenField } from '../../form/HiddenField';
 import { Repository  } from '../../base/Repository';
 
+const backend = Config ? Config.backend : '//';
+
 export class SearchForm extends FormWrapper
 {
 	constructor(args, path, method = 'GET', customFields = {})
@@ -67,7 +69,7 @@ export class SearchForm extends FormWrapper
 			console.log(this.path, v);
 
 			Repository.request(
-				Config.backend + this.path
+				backend + this.path
 				, {keyword: v}
 			).then((response)=>{
 				console.log(response.body);
@@ -134,7 +136,7 @@ export class SearchForm extends FormWrapper
 		return;
 
 		Repository.request(
-			Config.backend
+			backend
 				+ this.path
 				+ '/'
 				+ publicId
@@ -157,7 +159,7 @@ export class SearchForm extends FormWrapper
 		if(this.selected)
 		{
 			this.args.view.addRecord(this.selected);
-			this.args.view.addButtonClicked();	
+			this.args.view.addButtonClicked();
 		}
 		return false;
 	}

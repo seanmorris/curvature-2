@@ -9,11 +9,14 @@ export class FieldSet extends Field
 		this.args.value  = {};
 		this.args.fields = Form.renderFields(values.children, this);
 		this.fields      = this.args.fields;
+
+		const attrs = this.args.attrs || {};
+
 		this.template    = `
 			<label
 				for        = "${this.args.name}"
-				data-type  = "${this.args.attrs.type}"
-				data-multi = "${this.args.attrs['data-multi'] ? 'true' : 'false'}"
+				data-type  = "${attrs.type}"
+				data-multi = "${attrs['data-multi'] ? 'true' : 'false'}"
 				cv-ref     = "label:curvature/base/Tag"
 			>
 				<span cv-if = "title">

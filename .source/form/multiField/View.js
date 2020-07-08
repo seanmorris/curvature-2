@@ -112,7 +112,7 @@ export class View extends FieldSet
 	{
 		let origin = '';
 
-		if(Config.backend)
+		if(Config && Config.backend)
 		{
 			origin = Config.backend;
 		}

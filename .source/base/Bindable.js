@@ -24,6 +24,11 @@ export class Bindable
 			return object;
 		}
 
+		if(object.___ref___)
+		{
+			return object.___ref___;
+		}
+
 		Object.defineProperty(object, '___ref___', {
 			enumerable: false,
 			writable: true
@@ -141,7 +146,8 @@ export class Bindable
 				callback = this.wrapFrameCallback(callback);
 			}
 
-			if(bindToAll) {
+			if(bindToAll)
+			{
 				let bindIndex = object.___bindingAll___.length;
 
 				object.___bindingAll___.push(callback);
@@ -155,7 +161,8 @@ export class Bindable
 				};
 			}
 
-			if (!object.___binding___[property]) {
+			if (!object.___binding___[property])
+			{
 				object.___binding___[property] = [];
 			}
 
@@ -428,11 +435,7 @@ export class Bindable
 				}
 			}
 
-			if (Array.isArray(target)) {
-				target.splice(key, 1);
-			} else {
-				delete target[key];
-			}
+			delete target[key];
 
 			return true;
 		};

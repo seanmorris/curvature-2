@@ -47,33 +47,45 @@ export class ViewList
 				return;
 			}
 
+			let kk = k;
+
+			if(isNaN(k))
+			{
+				kk = '_' + k;
+			}
+
 			if(d)
 			{
-				if(this.views[k])
+				if(this.views[kk])
 				{
-					this.views[k].remove();
-					delete this.views[k];
+					this.views[kk].remove();
 				}
 
-				this.views.splice(k,1);
+				delete this.views[kk];
+				// this.views.splice(k,1);
 
 				for(let i in this.views)
 				{
+					if(typeof i === 'string')
+					{
+						this.views[i].args[ this.keyProperty ] = i.substr(1);
+						continue;
+					}
+
 					this.views[i].args[ this.keyProperty ] = i;
 				}
 			}
-			else if(!this.views[k] && !this.willReRender)
+			else if(!this.views[kk] && !this.willReRender)
 			{
 				this.willReRender = requestAnimationFrame(()=>{
 					this.reRender();
 				});
 			}
-			else if(this.views[k])
+			else if(this.views[kk] && this.views[kk].args)
 			{
-				this.views[k].args[ this.keyProperty ] = k;
-				this.views[k].args[ this.subProperty ] = v;
+				this.views[kk].args[ this.keyProperty ] = k;
+				this.views[kk].args[ this.subProperty ] = v;
 			}
-
 		});
 
 		this._onRemove.add(debind);
@@ -108,7 +120,13 @@ export class ViewList
 		for(let i in this.args.value)
 		{
 			let found = false;
+			let k = i;
 
+			if(isNaN(k))
+			{
+				k = '_' + i;
+			}
+			
 			for(let j in views)
 			{
 				if(views[j]
@@ -116,8 +134,8 @@ export class ViewList
 					&& this.args.value[i] === views[j].args[ this.subProperty ]
 				){
 					found = true;
-					finalViews[i] = views[j];
-					finalViews[i].args[ this.keyProperty ] = i;
+					finalViews[k] = views[j];
+					finalViews[k].args[ this.keyProperty ] = i;
 					delete views[j];
 					break;
 				}
@@ -126,16 +144,16 @@ export class ViewList
 			if(!found)
 			{
 				let viewArgs = {};
-				let view = finalViews[i] = new View(viewArgs);
+				let view = finalViews[k] = new View(viewArgs);
 
-				finalViews[i].template = this.template instanceof Object
+				finalViews[k].template = this.template instanceof Object
 					? this.template
 					: this.template;
-				finalViews[i].parent   = this.parent;
-				finalViews[i].viewList = this;
+				finalViews[k].parent   = this.parent;
+				finalViews[k].viewList = this;
 
-				finalViews[i].args[ this.keyProperty ] = i;
-				finalViews[i].args[ this.subProperty ] = this.args.value[i];
+				finalViews[k].args[ this.keyProperty ] = i;
+				finalViews[k].args[ this.subProperty ] = this.args.value[i];
 
 
 				const upDebind = viewArgs.bindTo(this.subProperty, (v,k)=>{
@@ -235,12 +253,16 @@ export class ViewList
 			}
 		}
 
-		console.log(finalViews);
-
 		this.views = finalViews;
 
 		for(let i in finalViews)
 		{
+			if(isNaN(i))
+			{
+				finalViews[i].args[ this.keyProperty ] = i.substr(1);
+				continue;
+			}
+
 			finalViews[i].args[ this.keyProperty ] = i;
 		}
 
