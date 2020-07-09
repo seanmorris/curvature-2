@@ -6,6 +6,12 @@ export class FieldSet extends Field
 	constructor(values, form, parent, key)
 	{
 		super(values, form, parent, key);
+
+		if(values.array || attrs['data-array'] || attrs['data-multi'])
+		{
+			this.array = true;
+		}
+
 		this.args.value  = {};
 		this.args.fields = Form.renderFields(values.children, this);
 		this.fields      = this.args.fields;
@@ -14,9 +20,12 @@ export class FieldSet extends Field
 
 		attrs.type = attrs.type || 'fieldset';
 
+		this.array = false;
+
+
 		this.template    = `
 			<label
-				for        = "${this.args.name}"
+				for        = "${this.getName()}"
 				data-type  = "${attrs.type}"
 				data-multi = "${attrs['data-multi'] ? 'true' : 'false'}"
 				cv-ref     = "label:curvature/base/Tag"
@@ -25,7 +34,7 @@ export class FieldSet extends Field
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
 				<fieldset
-					name   = "${this.args.name}"
+					name   = "${this.getName()}"
 					cv-ref = "input:curvature/base/Tag"
 					cv-expand="attrs"
 					cv-each = "fields:field"

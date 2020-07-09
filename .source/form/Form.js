@@ -195,6 +195,8 @@ export class Form extends View
 
 			fields[i] = field;
 
+			const fieldName = field.key;//field.getName();
+
 			field.args.bindTo('value', (v, k ,t, d) => {
 				// console.log(t,v);
 				if(t.type == 'html'
@@ -205,7 +207,6 @@ export class Form extends View
 				}
 
 				// let fieldName = field.args.name;
-				let fieldName = field.key;//field.getName();
 
 				if(t.disabled)
 				{

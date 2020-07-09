@@ -8,8 +8,8 @@ export class Field extends View {
 		super(skeleton);
 
 		this.args.title = this.args.title ?? key;
-		this.args.value = this.args.value === null ?  '' : this.args.value;
-		this.value      = this.args.value;
+		this.args.value = this.args.value ?? '';
+		this.value      = this.args.value ?? '';
 		this.skeleton   = skeleton;
 		this.disabled   = null;
 
@@ -37,7 +37,7 @@ export class Field extends View {
 
 		this.template = `
 			<label
-				for           = "${this.args.name}"
+				for           = "${this.getName()}"
 				data-type     = "${attrs.type || 'text'}"
 				cv-ref        = "label:curvature/base/Tag"
 			>
@@ -45,7 +45,7 @@ export class Field extends View {
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
 				<input
-					name      = "${this.args.name}"
+					name      = "${this.getName()}"
 					type      = "${attrs.type || 'text'}"
 					cv-bind   = "value"
 					cv-ref    = "input:curvature/base/Tag"
@@ -213,13 +213,35 @@ export class Field extends View {
 		return false;
 	}
 
-	getName()
+	getName(cascadeIfPossible = true)
 	{
 		if(this.tags.input)
 		{
 			return this.tags.input.element.getAttribute('name');
 		}
 
-		return this.args.name || this.key;
+		let name = this.key;
+
+		if(cascadeIfPossible)
+		{
+			let parent = this.parent;
+
+			const names = [name];
+
+			while(parent && parent.array && typeof parent.key !== 'undefined')
+			{
+				names.unshift(parent.key);
+				parent = parent.parent;
+			}
+
+			name = names.shift();
+
+			if(names.length)
+			{
+				name += `[${names.join('][')}]`;
+			}
+		}
+
+		return name;
 	}
 }

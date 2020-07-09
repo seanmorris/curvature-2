@@ -9,17 +9,17 @@ export class HiddenField extends Field {
 
 		const attrs = this.args.attrs || {};
 
-		this.args.type = attrs.type = 'hidden';
+		this.args.type = attrs.type = attrs.type || this.args.type || 'hidden';
 		this.args.name = attrs.name = attrs.name || this.args.name || key;
 
 		this.template = `
 			<label
-				for       = "${this.args.name}"
+				for       = "${this.getName()}"
 				data-type = "${attrs.type}"
 				style     = "display:none"
 				cv-ref    = "label:curvature/base/Tag">
 				<input
-						name      = "${this.args.name}"
+						name      = "${this.getName()}"
 						type      = "hidden"
 						cv-bind   = "value"
 						cv-ref    = "input:curvature/base/Tag"

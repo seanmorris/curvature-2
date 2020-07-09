@@ -16,11 +16,11 @@ export class ButtonField extends Field
 
 		this.template   = `
 			<label
-				for       = "${this.args.name}"
+				for       = "${this.getName()}"
 				data-type = "${attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
 				<input
-					name      = "${this.args.name}"
+					name      = "${this.getName()}"
 					type      = "${attrs.type}"
 					value     = "[[title]]"
 					cv-on     = "click:clicked(event)"

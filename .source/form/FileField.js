@@ -6,17 +6,17 @@ export class FileField extends Field {
 
 		const attrs = this.args.attrs || {};
 
-		attrs.type = attrs.type || this.args.type || null;
+		attrs.type = attrs.type || this.args.type || 'file';
 
 		this.template = `
 			<label
-				for       = "${this.args.name}"
-				data-type = "${this.args.attrs.type}"
+				for       = "${this.getName()}"
+				data-type = "${attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
 			>
 				<input
-					name    = "${this.args.name}"
-					type    = "${this.args.attrs.type}"
+					name    = "${this.getName()}"
+					type    = "${attrs.type}"
 					cv-bind = "value"
 					cv-ref  = "input:curvature/base/Tag"
 					cv-expand = "attrs"

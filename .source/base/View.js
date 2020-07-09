@@ -6,6 +6,8 @@ import { Tag      } from './Tag';
 import { Bag      } from './Bag';
 import { RuleSet  } from './RuleSet';
 
+const dontParse = Symbol('dontParse');
+
 let moveIndex = 0;
 
 export class View
@@ -77,7 +79,7 @@ export class View
 
 		this.withViews = {};
 
-		this.tags      = {};
+		this.tags      = Bindable.makeBindable({});
 
 		this.intervals = [];
 		this.timeouts  = [];
@@ -120,29 +122,29 @@ export class View
 
 		let c = (timestamp) => {
 
-			callback(Date.getNow());
-
 			if(this.removed || stopped)
 			{
 				return;
 			}
 
+			callback(Date.now());
+
 			requestAnimationFrame(c);
 		};
 
-		requestAnimationFrame(() => c(Date.getNow()));
+		requestAnimationFrame(() => c(Date.now()));
 
 		return cancel;
 	}
 
 	onNextFrame(callback)
 	{
-		return requestAnimationFrame(() => callback(Date.getNow()));
+		return requestAnimationFrame(() => callback(Date.now()));
 	}
 
 	onIdle(callback)
 	{
-		return requestIdleCallback(() => callback(Date.getNow()));
+		return requestIdleCallback(() => callback(Date.now()));
 	}
 
 	onTimeout(time, callback)
@@ -458,6 +460,12 @@ export class View
 	mapTags(subDoc)
 	{
 		Dom.mapTags(subDoc, false, (tag, walker)=>{
+
+			if(tag[dontParse])
+			{
+				return;
+			}
+
 			if(tag.matches)
 			{
 				tag = this.mapInterpolatableTag(tag);
@@ -759,6 +767,8 @@ export class View
 
 				let staticNode = document.createTextNode(staticPrefix);
 
+				staticNode[dontParse] = true;
+
 				tag.parentNode.insertBefore(staticNode, tag);
 
 				let dynamicNode;
@@ -771,6 +781,8 @@ export class View
 				{
 					dynamicNode = document.createTextNode('');
 				}
+
+				dynamicNode[dontParse] = true;
 
 				let proxy    = this.args;
 				let property = bindProperty;
@@ -842,6 +854,8 @@ export class View
 						{
 							dynamicNode.nodeValue = v;
 						}
+
+						dynamicNode[dontParse] = true;
 					}
 				});
 
@@ -854,9 +868,11 @@ export class View
 				});
 			}
 
-			let staticSuffix = original.substring(header)
+			let staticSuffix = original.substring(header);
 
 			let staticNode = document.createTextNode(staticSuffix);
+
+			staticNode[dontParse] = true;
 
 			tag.parentNode.insertBefore(staticNode, tag);
 
@@ -984,6 +1000,11 @@ export class View
 		let refAttr = tag.getAttribute('cv-ref');
 		let [refProp, refClassname, refKey] = refAttr.split(':');
 
+		if(!refClassname)
+		{
+			refClassname = 'curvature/base/Tag';
+		}
+
 		let refClass = this.stringToClass(refClassname);
 
 		tag.removeAttribute('cv-ref');
@@ -1027,6 +1048,8 @@ export class View
 		);
 
 		tag.___tag___ = tagObject;
+
+		this.tags[refProp] = tag;
 
 		while(parent)
 		{
@@ -1200,7 +1223,7 @@ export class View
 			}
 		};
 
-		if(type === 'file')
+		if(type === 'file' || type === 'radio')
 		{
 			tag.addEventListener('change', inputListener);
 		}
@@ -1212,7 +1235,7 @@ export class View
 		}
 
 		this.onRemove( ((tag, eventListener) => ()=>{
-			if(type === 'file')
+			if(type === 'file' || type === 'radio')
 			{
 				tag.removeEventListener('change', inputListener);
 			}
@@ -2165,6 +2188,11 @@ export class View
 		View.refClasses.set(refClassname, refClass[refShortClassname]);
 
 		return refClass[refShortClassname];
+	}
+
+	preventParsing(node)
+	{
+		node[dontParse] = true;
 	}
 }
 

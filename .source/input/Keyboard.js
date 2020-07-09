@@ -2,6 +2,11 @@ import { Bindable } from '../base/Bindable';
 
 export class Keyboard
 {
+	static get()
+	{
+		return this.instance = this.instance || new this;
+	}
+
 	constructor()
 	{
 		this.maxDecay = 120;

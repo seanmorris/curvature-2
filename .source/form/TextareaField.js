@@ -10,14 +10,14 @@ export class TextareaField extends Field {
 
 		this.template = `
 			<label
-				for       = "${this.args.name}"
+				for       = "${this.getName()}"
 				data-type = "${attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
 				<span cv-if = "title">
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
 				<textarea
-						name      = "${this.args.name}"
+						name      = "${this.getName()}"
 						cv-bind   = "value"
 						cv-ref    = "input:curvature/base/Tag"
 						cv-expand = "attrs"

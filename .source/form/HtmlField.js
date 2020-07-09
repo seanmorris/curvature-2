@@ -6,7 +6,7 @@ export class HtmlField extends View {
 		this.ignore = this.args.attrs['data-cv-ignore'] || false;
 		this.args.contentEditable = this.args.attrs.contenteditable || false;
 		this.template = `<div
-			name            = "${this.args.name}"
+			name            = "${this.getName()}"
 			cv-ref          = "input:curvature/base/Tag"
 			contenteditable = "[[contentEditable]]"
 			cv-expand       = "attrs"

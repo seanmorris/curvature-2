@@ -8,19 +8,17 @@ export class RadioField extends Field {
 
 		this.args.name = attrs.name = attrs.name || this.args.name || key;
 
+		this.args.value = this.args.value || '';
+
 		this.template = `
 			<label
-				for       = "${this.args.name}"
+				for       = "${this.getName()}"
 				data-type = "${attrs.type}"
 				cv-ref    = "label:curvature/base/Tag">
 				<span cv-if = "title">
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
-				<span
-					cv-each  = "options:option:optionText"
-					cv-carry = "value"
-					--cv-ref  = "input:curvature/base/Tag"
-				/>
+				<span cv-each  = "options:option:optionText"/>
 					<label>
 						<input
 							name      = "${this.args.name}"
@@ -28,6 +26,7 @@ export class RadioField extends Field {
 							value     = "[[option]]"
 							cv-bind   = "value"
 							cv-expand = "attrs"
+							cv-on     = "change:changed(event)"
 					/>
 						[[optionText]]
 					</label>
@@ -38,6 +37,7 @@ export class RadioField extends Field {
 			</label>
 		`;
 	}
+
 	getLabel()
 	{
 		for(let i in this.args.options)
@@ -47,5 +47,10 @@ export class RadioField extends Field {
 				return i;
 			}
 		}
+	}
+
+	changed(event)
+	{
+		this.args.value = event.target.value;
 	}
 }

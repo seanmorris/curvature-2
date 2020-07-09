@@ -8,14 +8,14 @@ export class SelectField extends Field {
 
 		this.template = `
 			<label
-				for       = "${this.args.name}"
+				for       = "${this.getName()}"
 				data-type = "${attrs.type || 'select'}"
 				cv-ref    = "label:curvature/base/Tag">
 				<span cv-if = "title">
 					<span cv-ref = "title:curvature/base/Tag">[[title]]</span>
 				</span>
 				<select
-					name      = "${this.args.name}"
+					name      = "${this.getName()}"
 					cv-bind   = "value"
 					cv-each   = "options:option:optionText"
 					cv-ref    = "input:curvature/base/Tag"
