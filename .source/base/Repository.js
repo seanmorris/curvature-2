@@ -342,7 +342,7 @@ export class Repository
 								+ '"]'
 							);
 
-							let prerendering  = window.prerenderer;
+							let prerendering  = window.prerenderer || navigator.userAgent.match(/prerender/i);
 
 							if(prerendering)
 							{

@@ -198,6 +198,15 @@ export class Form extends View
 			const fieldName = field.key;//field.getName();
 
 			field.args.bindTo('value', (v, k ,t, d) => {
+
+				if(!isNaN(v)
+					&& v.length
+					&& v == Number(v)
+					&& v.length === String(Number(v)).length
+				){
+					v = Number(v);
+				}
+
 				// console.log(t,v);
 				if(t.type == 'html'
 					&& !t.contentEditable

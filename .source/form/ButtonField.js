@@ -12,7 +12,8 @@ export class ButtonField extends Field
 		const attrs = this.args.attrs || {};
 
 		attrs.type = attrs.type || this.args.type;
-		this.args.name = attrs.name = attrs.name || this.args.name || key;
+
+		this.args.name = attrs.name = this.args.name || key;
 
 		this.template   = `
 			<label
@@ -22,7 +23,7 @@ export class ButtonField extends Field
 				<input
 					name      = "${this.getName()}"
 					type      = "${attrs.type}"
-					value     = "[[title]]"
+					value     = "[[value]]"
 					cv-on     = "click:clicked(event)"
 					cv-ref    = "input:curvature/base/Tag"
 					cv-expand = "attrs"

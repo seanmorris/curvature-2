@@ -63,6 +63,15 @@ export class Field extends View {
 		let setting = null;
 
 		this.args.bindTo('value', (v, k) => {
+
+			if(!isNaN(v)
+				&& v.length
+				&& v == Number(v)
+				&& v.length === String(Number(v)).length
+			){
+				v = Number(v);
+			}
+
 			this.value = v;
 
 			if(setting == k)
@@ -100,9 +109,9 @@ export class Field extends View {
 							{
 								this.parent.args.value[key] = files;
 							}
-
-							this.parent.args.value.splice(files.length);
 						}
+
+						this.parent.args.value.splice(files.length);
 					}
 				}
 			}

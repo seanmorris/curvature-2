@@ -38,11 +38,7 @@ export class SelectField extends Field {
 
 			const optionsList = this.viewLists.options;
 
-			console.log(optionsList);
-
 			optionsList.rendered.then((rendered)=>{
-
-				console.log(rendered);
 
 				this.selectOptionByValue(this.args.value)
 			});

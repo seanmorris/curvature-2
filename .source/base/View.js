@@ -68,8 +68,8 @@ export class View
 
 		});
 
-		this.attach    = [];
-		this.detach    = [];
+		this.attach    = new Bag((i,s,a) => {});
+		this.detach    = new Bag((i,s,a) => {});
 
 		this.eventCleanup = [];
 
@@ -353,10 +353,11 @@ export class View
 
 		if(parentNode)
 		{
-			let toRoot = false;
-			let moveType = 'internal';
+			const rootNode = parentNode.getRootNode();
+			let toRoot     = false;
+			let moveType   = 'internal';
 
-			if(parentNode.getRootNode() === document)
+			if(rootNode === document)
 			{
 				toRoot = true;
 				moveType = 'external';
@@ -377,13 +378,15 @@ export class View
 
 			moveIndex++;
 
-			this.attachedTo(parentNode);
-
 			if(toRoot)
 			{
-				for(let i in this.attach)
+				this.attached(rootNode, parentNode);
+
+				const attach = this.attach.items();
+
+				for(let i in attach)
 				{
-					this.attach[i]();
+					attach[i](rootNode, parentNode);
 				}
 
 				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
@@ -438,7 +441,9 @@ export class View
 
 			parentNode.insertBefore(subDoc, this.lastNode);
 
-			if(parentNode.getRootNode() === document)
+			const rootNode = parentNode.getRootNode();
+
+			if(rootNode === document)
 			{
 				this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
 					child.dispatchEvent(new Event('cvDomAttached', {
@@ -446,9 +451,11 @@ export class View
 					}));
 				});
 
-				for(let i in this.attach)
+				const attach = this.attach.items();
+
+				for(let i in attach)
 				{
-					this.attach[i]();
+					attach[i](rootNode, parentNode);
 				}
 			}
 
@@ -816,11 +823,18 @@ export class View
 						console.log(unsafeTemplate);
 
 						v = new View(this.args, this);
+
 						v.template = unsafeTemplate;
 					}
 
 					if(v instanceof View)
 					{
+						const onAttach = (parentNode) => {
+							v.attached(parentNode);
+						};
+
+						this.attach.add(onAttach);
+
 						v.render(tag.parentNode, dynamicNode);
 
 						const cleanup = ()=>{
@@ -832,7 +846,10 @@ export class View
 
 						this.onRemove(cleanup);
 
-						v.onRemove( ()=> this._onRemove.remove(cleanup) );
+						v.onRemove(() => {
+							this.attach.remove(onAttach);
+							this._onRemove.remove(cleanup);
+						});
 					}
 					else
 					{
@@ -1107,6 +1124,14 @@ export class View
 			}));
 		}
 
+		let unsafeHtml = false;
+
+		if(property.substr(0, 1) === '$')
+		{
+			property = property.substr(1);
+			unsafeHtml = true;
+		}
+
 		let debind = proxy.bindTo(property, (v,k,t,d,p) => {
 
 			if(p instanceof View && p !== v)
@@ -1154,7 +1179,19 @@ export class View
 
 				if(v instanceof View)
 				{
+					const onAttach = (parentNode) => {
+						v.attached(parentNode);
+					};
+
+					this.attach.add(onAttach);
+
 					v.render(tag);
+
+					v.onRemove(()=>this.attach.remove(onAttach));
+				}
+				else if(unsafeHtml)
+				{
+					tag.innerHTML = v;
 				}
 				else
 				{
@@ -1185,7 +1222,7 @@ export class View
 			if (type && type.toLowerCase() === 'checkbox')
 			{
 				if (tag.checked) {
-					proxy[property] = event.target.value;
+					proxy[property] = event.target.getAttribute('value');
 				}
 				else {
 					proxy[property] = false;
@@ -1206,7 +1243,17 @@ export class View
 					{
 						if(files[i] !== current[i])
 						{
+							files[i].toJSON = () => {
+								return {
+									name: file[i].name
+									, size: file[i].size
+									, type: file[i].type
+									, date: file[i].lastModified
+								};
+							}
+
 							current[i] = files[i];
+
 							break;
 						}
 					}
@@ -1215,7 +1262,18 @@ export class View
 			}
 			else if(type === 'file' && !multi)
 			{
-				proxy[property] = event.target.files.item(0);
+				const file = event.target.files.item(0);
+
+				file.toJSON = () => {
+					return {
+						name: file.name
+						, size: file.size
+						, type: file.type
+						, date: file.lastModified
+					};
+				};
+
+				proxy[property] = file;
 			}
 			else
 			{
@@ -1401,11 +1459,11 @@ export class View
 					break;
 
 				case '_attach':
-					this.attach.push(eventListener);
+					this.attach.add(eventListener);
 					break;
 
 				case '_detach':
-					this.detach.push(eventListener);
+					this.detach.add(eventListener);
 					break;
 
 				default:
@@ -1493,7 +1551,7 @@ export class View
 	mapPrendererTag(tag)
 	{
 		let prerenderAttr = tag.getAttribute('cv-prerender');
-		let prerendering  = window.prerenderer;
+		let prerendering  = window.prerenderer || navigator.userAgent.match(/prerender/i);
 
 		if(prerenderAttr === 'never' && prerendering
 			|| prerenderAttr === 'only' && !prerendering
@@ -2011,7 +2069,7 @@ export class View
 
 	}
 
-	attachedTo(parentNode)
+	attached(parentNode)
 	{
 
 	}

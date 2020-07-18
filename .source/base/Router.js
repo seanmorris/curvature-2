@@ -366,7 +366,7 @@ export class Router {
 		const queryString = this.queryToString(args, true);
 
 		this.go(
-			this.path + ( queryString
+			location.pathname + ( queryString
 				? '?' + queryString
 				: ''
 			)
