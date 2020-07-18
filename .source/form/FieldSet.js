@@ -7,6 +7,12 @@ export class FieldSet extends Field
 	{
 		super(values, form, parent, key);
 
+		const attrs = this.args.attrs || {};
+
+		attrs.type = attrs.type || 'fieldset';
+
+		this.array = false;
+
 		if(values.array || attrs['data-array'] || attrs['data-multi'])
 		{
 			this.array = true;
@@ -15,13 +21,6 @@ export class FieldSet extends Field
 		this.args.value  = {};
 		this.args.fields = Form.renderFields(values.children, this);
 		this.fields      = this.args.fields;
-
-		const attrs = this.args.attrs || {};
-
-		attrs.type = attrs.type || 'fieldset';
-
-		this.array = false;
-
 
 		this.template    = `
 			<label
