@@ -178,11 +178,13 @@ export class View extends FieldSet
 			skeleton = this.cloneSkeleton(skeleton);
 
 			skeleton = this.correctNames(skeleton, name);
+			skeleton.attrs = skeleton.attrs ?? {};
+
+			skeleton.attrs['data-array'] = true;
 
 			let superSkeleton = {};
 
 			superSkeleton[name] = skeleton;
-			superSkeleton.attrs = {'data-array':true};
 
 			let newField = Form.renderFields(superSkeleton, this)[name];
 
