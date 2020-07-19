@@ -182,6 +182,7 @@ export class View extends FieldSet
 			let superSkeleton = {};
 
 			superSkeleton[name] = skeleton;
+			superSkeleton.attrs = {'data-array':true};
 
 			let newField = Form.renderFields(superSkeleton, this)[name];
 

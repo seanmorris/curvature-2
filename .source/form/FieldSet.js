@@ -15,7 +15,7 @@ export class FieldSet extends Field
 
 		if(values.array || attrs['data-array'] || attrs['data-multi'])
 		{
-			this.array = true;
+			this.array = attrs['data-array'] = true;
 		}
 
 		this.args.value  = {};
