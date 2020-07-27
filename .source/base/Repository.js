@@ -352,6 +352,7 @@ export class Repository
 								{
 									tagCache  = document.createElement('script');
 									tagCache.type = 'text/json';
+									tagCache.setAttribute('data-hack', 'application/ld+json-NOT!');
 									tagCache.setAttribute('data-uri', fullUri);
 									document.head.appendChild(tagCache);
 								}
