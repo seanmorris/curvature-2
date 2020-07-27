@@ -411,6 +411,7 @@ export class View
 		if(this.firstNode.getRootNode() === document)
 		{
 			const detach = this.detach.items();
+
 			for(let i in detach)
 			{
 				detach[i]();
@@ -1553,6 +1554,11 @@ export class View
 	{
 		let prerenderAttr = tag.getAttribute('cv-prerender');
 		let prerendering  = window.prerenderer || navigator.userAgent.match(/prerender/i);
+
+		if(prerendering)
+		{
+			window.prerenderer = window.prerenderer || true;
+		}
 
 		if(prerenderAttr === 'never' && prerendering
 			|| prerenderAttr === 'only' && !prerendering

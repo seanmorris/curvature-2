@@ -342,10 +342,12 @@ export class Repository
 								+ '"]'
 							);
 
-							let prerendering  = window.prerenderer || navigator.userAgent.match(/prerender/i);
+							let prerendering = window.prerenderer || navigator.userAgent.match(/prerender/i);
 
 							if(prerendering)
 							{
+								window.prerenderer = window.prerenderer || true;
+
 								if(!tagCache)
 								{
 									tagCache  = document.createElement('script');

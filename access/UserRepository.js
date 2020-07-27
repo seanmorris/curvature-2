@@ -45,7 +45,8 @@ var UserRepository = /*#__PURE__*/function (_Repository) {
 
       var refresh = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-      if (window.prerenderer) {
+      if (window.prerenderer || navigator.userAgent.match(/prerender/i)) {
+        window.prerenderer = window.prerenderer || true;
         return;
       }
 

@@ -8,8 +8,10 @@ export class UserRepository extends Repository {
 
 	static getCurrentUser(refresh = null)
 	{
-		if(window.prerenderer)
+		if(window.prerenderer || navigator.userAgent.match(/prerender/i))
 		{
+			window.prerenderer = window.prerenderer || true;
+
 			return;
 		}
 
