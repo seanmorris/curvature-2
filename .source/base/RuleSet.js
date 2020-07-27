@@ -86,18 +86,17 @@ export class RuleSet
 		}
 
 		return (element) => {
-			if(!element.___cvApplied___)
+			if(typeof element.___cvApplied___ === 'undefined')
 			{
 				Object.defineProperty(
 					element
 					, '___cvApplied___'
 					, {
 						enumerable: false,
-						writable: true
+						writable: false,
+						value: []
 					}
 				);
-
-				element.___cvApplied___ = [];
 			}
 
 			for(let i in element.___cvApplied___)

@@ -410,9 +410,10 @@ export class View
 
 		if(this.firstNode.getRootNode() === document)
 		{
-			for(let i in this.detach)
+			const detach = this.detach.items();
+			for(let i in detach)
 			{
-				this.detach[i]();
+				detach[i]();
 			}
 
 			this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {

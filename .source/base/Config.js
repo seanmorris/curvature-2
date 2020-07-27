@@ -9,7 +9,36 @@ export class Config
 
 	static set(name, value)
 	{
-		return this.data[name] = value;
+		this.data[name] = value;
+
+		return this;
+	}
+
+	static dump()
+	{
+		return this.data;
+	}
+
+	static init(...configBlobs)
+	{
+		for(const i in configBlobs)
+		{
+			const configBlob = configBlobs[i];
+
+			if(typeof configBlob === 'string')
+			{
+				configBlob = JSON.parse(configBlob);
+			}
+
+			for(const name in configBlob)
+			{
+				const value = configBlob[name];
+
+				return this.data[name] = value;
+			}
+		}
+
+		return this;
 	}
 }
 

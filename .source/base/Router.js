@@ -57,7 +57,10 @@ export class Router {
 	}
 	static go(route, silent)
 	{
-		document.title = Config ? Config.title : 'Curvature 2';
+		if(Config && Config.title !== undefined)
+		{
+			document.title = Config.title;
+		}
 
 		setTimeout(
 			() => {
