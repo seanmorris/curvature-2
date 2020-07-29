@@ -6,26 +6,45 @@ export class HtmlField extends Field {
 
 		this.key = key;
 
+		this.args.tagName = this.args.tagName || 'div';
+
 		this.args.displayValue = this.args.value;
 
-		this.args.fragment = new DocumentFragment;
+		this.args.attrs = this.args.attrs || {};
+
+		this.ignore = this.args.attrs['data-cv-ignore'] || false;
+
+		this.args.contentEditable = this.args.attrs.contenteditable || false;
 
 		this.args.bindTo('value', v => {
-
-			if(this.tags.input)
-			{
-				if(this.tags.input.element === document.activeElement)
-				{
-					return;
-				}
-			}
-			else
+			if(!this.tags.input)
 			{
 				return;
 			}
 
-			const element = this.tags.input.element;
+			if(this.tags.input.element === document.activeElement)
+			{
+				return;
+			}
 
+			this.args.displayValue = v;
+		});
+
+		this.template = `<${this.args.tagName}
+			name            = "${this.getName()}"
+			cv-ref          = "input:curvature/base/Tag"
+			contenteditable = "[[contentEditable]]"
+			cv-expand       = "attrs"
+			cv-bind         = "$displayValue"
+			cv-on           = "input:inputProvided(event);"
+		></${this.args.tagName}>`;
+	}
+
+	postRender()
+	{
+		this.observer = new MutationObserver(mutations => {
+
+			const element = this.tags.input.element;
 
 			const nodes = Array.from(element.childNodes).filter(node => {
 
@@ -33,47 +52,26 @@ export class HtmlField extends Field {
 
 			});
 
-			const value = nodes.map(n => n.outerHTML).join("\n");
+			const lines = nodes.map(n => (n.outerHTML || n.textContent));
 
-			this.args.displayValue = value;
-
+			this.args.value = lines.join('')
+				.replace(/&lt;/i, '<')
+				.replace(/&gt;/i, '>');
 		});
 
-		this.args.attrs = this.args.attrs || {};
-
-		this.ignore = this.args.attrs['data-cv-ignore'] || false;
-		this.args.contentEditable = this.args.attrs.contenteditable || false;
-		this.template = `<div
-			name            = "${this.getName()}"
-			cv-ref          = "input:curvature/base/Tag"
-			contenteditable = "[[contentEditable]]"
-			cv-expand       = "attrs"
-			cv-bind         = "$displayValue"
-			cv-on           = "
-				blur:inputProvided(event);
-				input:inputProvided(event);
-				changed:inputProvided(event);
-			"
-		></div>`;
+		this.observer.observe(
+			this.tags.input.element
+			, {
+				characterData: true
+				, attributes:  true
+				, childList:   true
+				, subtree:     true
+			}
+		);
 	}
 
 	inputProvided(event)
 	{
-		const inputTag = this.tags.input.element;
-
-		if(inputTag !== event.target)
-		{
-			return;
-		}
-
-		if(this.tags.input && this.tags.input.element.matches('[contenteditable]'))
-		{
-			if(this.tags.input.element === document.activeElement)
-			{
-				return;
-			}
-		}
-
 		this.args.value = event.target.innerHTML;
 	}
 
@@ -82,20 +80,8 @@ export class HtmlField extends Field {
 		return false;
 	}
 
-	disable()
-	{
-		this.args.disabled = 'disabled';
-	}
-
 	getName()
 	{
-		let name = this.key;
-
-		if(this.tags.input)
-		{
-			// return this.tags.input.element.getAttribute('name');
-		}
-
-		return name;
+		return this.key;
 	}
 }

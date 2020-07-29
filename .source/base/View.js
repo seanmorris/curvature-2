@@ -2259,6 +2259,11 @@ export class View
 	{
 		node[dontParse] = true;
 	}
+
+	toString()
+	{
+		return this.nodes.map(n => n.outerHTML).join(' ');
+	}
 }
 
 Object.defineProperty(View, 'templates', {
