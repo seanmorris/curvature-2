@@ -1,4 +1,12 @@
-import { Config as ConfigData } from 'Config';
+const ConfigData = {};
+
+try{
+	const AppConfig = require('Config').Config || {};
+
+	Object.assign(ConfigData, AppConfig);
+} catch(error) {
+	console.warn(error);
+}
 
 export class Config
 {

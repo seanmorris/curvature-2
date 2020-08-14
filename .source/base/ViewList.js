@@ -28,21 +28,22 @@ export class ViewList
 
 		this.willReRender = false;
 
-		this.args.___before((t)=>{
-			if(t.___executing___ == 'bindTo')
+		this.args.___before((t,e,s,o)=>{
+			if(e == 'bindTo')
 			{
 				return;
 			}
+
 			this.paused = true;
 		});
 
-		this.args.___after((t) => {
-			if(t.___executing___ == 'bindTo')
+		this.args.___after((t,e,s,o) => {
+			if(e == 'bindTo')
 			{
 				return;
 			}
 
-			this.paused = t.___stack___.length > 1;
+			this.paused = s.length > 1;
 
 			this.reRender();
 		});
@@ -157,12 +158,12 @@ export class ViewList
 			if(!found)
 			{
 				let viewArgs = {};
-				let view = finalViews[k] = new View(viewArgs);
+				let view = finalViews[k] = new View(viewArgs, this.parent);
 
 				finalViews[k].template = this.template instanceof Object
 					? this.template
 					: this.template;
-				finalViews[k].parent   = this.parent;
+				// finalViews[k].parent   = this.parent;
 				finalViews[k].viewList = this;
 
 				finalViews[k].args[ this.keyProperty ] = i;
@@ -332,10 +333,14 @@ export class ViewList
 			this.tag.removeChild(this.tag.firstChild);
 		}
 
-		Bindable.clearBindings(this.args.subArgs);
+		if(this.args.subArgs)
+		{
+			Bindable.clearBindings(this.args.subArgs);
+		}
+
 		Bindable.clearBindings(this.args);
 
-		if(!this.args.value.isBound())
+		if(this.args.value && !this.args.value.isBound())
 		{
 			Bindable.clearBindings(this.args.value);
 		}

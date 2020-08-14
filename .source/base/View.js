@@ -58,14 +58,10 @@ export class View
 		this.lastNode  = null;
 		this.nodes     = null;
 
-		this.mainView  = null;
-
 		this.cleanup   = [];
 
 		this._onRemove = new Bag((i,s,a) => {
-
 			// console.log('View _onRemove', i, s, a);
-
 		});
 
 		this.attach    = new Bag((i,s,a) => {});
@@ -73,7 +69,8 @@ export class View
 
 		this.eventCleanup = [];
 
-		this.parent    = null;
+		this.mainView  = null;
+		this.parent    = mainView;
 		this.viewList  = null;
 		this.viewLists = {};
 
@@ -105,6 +102,8 @@ export class View
 			});
 
 		});
+
+		return Bindable.make(this);
 	}
 
 	static isView()
@@ -295,6 +294,8 @@ export class View
 
 	render(parentNode = null, insertPoint = null)
 	{
+		const ref = Bindable.make(this);
+
 		if(parentNode instanceof View)
 		{
 			parentNode = parentNode.firstNode.parentNode;
@@ -380,7 +381,7 @@ export class View
 
 			if(toRoot)
 			{
-				this.attached(rootNode, parentNode);
+				ref.attached(rootNode, parentNode);
 
 				const attach = this.attach.items();
 
@@ -1324,11 +1325,6 @@ export class View
 
 			let eventName    = a[0].trim();
 
-			if(!eventName)
-			{
-				return;
-			}
-
 			let callbackName = a[1];
 			let eventFlags   = String(a[2] || '');
 			let argList      = [];
@@ -1352,6 +1348,11 @@ export class View
 				}
 			}
 
+			if(!eventName)
+			{
+				eventName = callbackName;
+			}
+
 			let eventMethod;
 			let parent = this;
 
@@ -1367,11 +1368,7 @@ export class View
 					break;
 				}
 
-				if(parent.viewList && parent.viewList.parent)
-				{
-					parent = parent.viewList.parent;
-				}
-				else if(parent.parent)
+				if(parent.parent)
 				{
 					parent = parent.parent;
 				}
@@ -1382,6 +1379,7 @@ export class View
 			}
 
 			let eventListener = ((event) => {
+
 				let argRefs = argList.map((arg) => {
 					let match;
 					if(parseInt(arg) == arg)
@@ -1605,7 +1603,6 @@ export class View
 			})(view));
 
 			view.template = subTemplate;
-			view.parent   = this;
 
 			for(let i in carryProps)
 			{
@@ -1761,7 +1758,7 @@ export class View
 		let view = new View(this.args, bindingView);
 
 		view.template = subTemplate;
-		view.parent   = bindingView;
+		// view.parent   = bindingView;
 
 		// bindingView.syncBind(view);
 
@@ -1872,7 +1869,7 @@ export class View
 			let view = new View({}, bindingView);
 
 			view.template = subTemplate;
-			view.parent   = bindingView;
+			// view.parent   = bindingView;
 
 			bindingView.syncBind(view);
 

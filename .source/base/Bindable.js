@@ -1,21 +1,35 @@
+const Ref        = Symbol('ref');
+const Deck       = Symbol('deck');
+const Binding    = Symbol('binding');
+const BindingAll = Symbol('bindingAll');
+const IsBindable = Symbol('isBindable')
+const Executing  = Symbol('executing');
+const Stack      = Symbol('stack');
+const ObjSymbol  = Symbol('object');
+const Wrapped    = Symbol('wrapped');
+
 export class Bindable
 {
 	static isBindable(object)
 	{
-		if (!object.___binding___)
+		if (!object[Binding])
 		{
 			return false;
 		}
 
-		return object.___binding___ === Bindable;
+		return object[Binding] === Bindable;
 	}
 
 	static makeBindable(object)
 	{
+		return this.make(object);
+	}
 
+	static make(object)
+	{
 		if (!object
 			|| !(object instanceof Object)
-			|| object.___binding___
+			|| object[Binding]
 			|| object instanceof Node
 			|| object instanceof IntersectionObserver
 			|| Object.isSealed(object)
@@ -24,97 +38,78 @@ export class Bindable
 			return object;
 		}
 
-		if(object.___ref___)
+		if(object[Ref])
 		{
-			return object.___ref___;
+			return object[Ref];
 		}
 
-		Object.defineProperty(object, '___ref___', {
+		Object.defineProperty(object, Ref, {
+			configurable: false
+			, enumerable: false
+			, writable:   true
+			, value:      object
+		});
+
+		Object.defineProperty(object, Deck, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      {}
+		});
+
+		Object.defineProperty(object, Binding, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      {}
+		});
+
+		Object.defineProperty(object, BindingAll, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      []
+		});
+
+		Object.defineProperty(object, IsBindable, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      Bindable
+		});
+
+		Object.defineProperty(object, Executing, {
 			enumerable: false,
 			writable: true
 		});
 
-		Object.defineProperty(object, 'bindTo', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, 'isBound', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, '___deck___', {
-			enumerable: false,
-			writable: false,
-			value: {}
-		});
-
-		Object.defineProperty(object, '___binding___', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, '___bindingAll___', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, '___isBindable___', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, '___executing___', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, '___stack___', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, '___stackTime___', {
-			enumerable: false,
-			writable: true
+		Object.defineProperty(object, Stack, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      []
 		});
 
 		Object.defineProperty(object, '___before___', {
-			enumerable: false,
-			writable: true
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      []
 		});
 
 		Object.defineProperty(object, '___after___', {
-			enumerable: false,
-			writable: true
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      []
 		});
 
-		Object.defineProperty(object, '___setCount___', {
-			enumerable: false,
-			writable: true
+		Object.defineProperty(object, Wrapped, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      {}
 		});
-
-		Object.defineProperty(object, '___wrapped___', {
-			enumerable: false,
-			writable: true
-		});
-
-		Object.defineProperty(object, '___object___', {
-			enumerable: false,
-			writable: false,
-			value: object
-		});
-
-		object.___isBindable___ = Bindable;
-		object.___wrapped___    = {};
-		object.___binding___    = {};
-		object.___bindingAll___ = [];
-		object.___stack___      = [];
-		object.___stackTime___  = [];
-		object.___before___     = [];
-		object.___after___      = [];
-		object.___setCount___   = {};
 
 		const bindTo = (property, callback = null, options = {}) => {
 			let bindToAll = false;
@@ -143,7 +138,7 @@ export class Bindable
 
 			if(options.frame)
 			{
-				callback = this.wrapFrameCallback(callback);
+				callback = this.wrapFrameCallback(callback, options.frame);
 			}
 
 			if(options.idle)
@@ -153,27 +148,27 @@ export class Bindable
 
 			if(bindToAll)
 			{
-				let bindIndex = object.___bindingAll___.length;
+				let bindIndex = object[BindingAll].length;
 
-				object.___bindingAll___.push(callback);
+				object[BindingAll].push(callback);
 
 				for (let i in object) {
 					callback(object[i], i, object, false);
 				}
 
 				return () => {
-					object.___bindingAll___[bindIndex] = null;
+					delete object[BindingAll][bindIndex];
 				};
 			}
 
-			if (!object.___binding___[property])
+			if (!object[Binding][property])
 			{
-				object.___binding___[property] = [];
+				object[Binding][property] = [];
 			}
 
-			let bindIndex = object.___binding___[property].length;
+			let bindIndex = object[Binding][property].length;
 
-			object.___binding___[property].push(callback);
+			object[Binding][property].push(callback);
 
 			callback(object[property], property, object, false);
 
@@ -188,15 +183,22 @@ export class Bindable
 
 				cleaned = true;
 
-				if (!object.___binding___[property])
+				if (!object[Binding][property])
 				{
 					return;
 				}
 
-				delete object.___binding___[property][bindIndex];
+				delete object[Binding][property][bindIndex];
 
 			};
 		};
+
+		Object.defineProperty(object, 'bindTo', {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      bindTo
+		});
 
 		const ___before = (callback) => {
 
@@ -240,16 +242,11 @@ export class Bindable
 			};
 		};
 
-		Object.defineProperty(object, 'bindTo', {
-			enumerable: false,
-			writable: false,
-			value: bindTo
-		});
-
 		Object.defineProperty(object, 'bindChain', {
-			enumerable: false,
-			writable: false,
-			value: (path, callback) => {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      (path, callback) => {
 				const parts    = path.split('.');
 				const node     = parts.shift();
 				const subParts = parts.slice(0);
@@ -280,27 +277,29 @@ export class Bindable
 		});
 
 		Object.defineProperty(object, '___before', {
-			enumerable: false,
-			writable: false,
-			value: ___before
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      ___before
 		});
 
 		Object.defineProperty(object, '___after', {
-			enumerable: false,
-			writable: false,
-			value: ___after
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      ___after
 		});
 
 		const isBound = () => {
-			for (let i in object.___bindingAll___) {
-				if (object.___bindingAll___[i]) {
+			for (let i in object[BindingAll]) {
+				if (object[BindingAll][i]) {
 					return true;
 				}
 			}
 
-			for (let i in object.___binding___) {
-				for (let j in object.___binding___[i]) {
-					if (object.___binding___[i][j]) {
+			for (let i in object[Binding]) {
+				for (let j in object[Binding][i]) {
+					if (object[Binding][i][j]) {
 						return true;
 					}
 				}
@@ -309,9 +308,10 @@ export class Bindable
 		};
 
 		Object.defineProperty(object, 'isBound', {
-			enumerable: false,
-			writable: false,
-			value: isBound
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      isBound
 		});
 
 		for (let i in object) {
@@ -324,8 +324,9 @@ export class Bindable
 			}
 		}
 
-		let set = (target, key, value) => {
-			if (object.___deck___[key] === value) {
+		const set = (target, key, value) => {
+			if(object[Deck][key] === value)
+			{
 				return true;
 			}
 
@@ -336,18 +337,23 @@ export class Bindable
 				return true;
 			}
 
-			if (target[key] === value) {
+			if(target[key] === value)
+			{
 				return true;
 			}
 
-			if (value && value instanceof Object && !(value instanceof Node)) {
-				if (value.___isBindable___ !== Bindable) {
+			if(value && value instanceof Object && !(value instanceof Node))
+			{
+				if(value.___isBindable___ !== Bindable)
+				{
 					value = Bindable.makeBindable(value);
 
 					if(this.isBindable(value))
 					{
-						for (let i in value) {
-							if (value[i] && value[i] instanceof Object) {
+						for(let i in value)
+						{
+							if(value[i] && value[i] instanceof Object)
+							{
 								value[i] = Bindable.makeBindable(value[i]);
 							}
 						}
@@ -355,38 +361,46 @@ export class Bindable
 				}
 			}
 
-			object.___deck___[key] = value;
+			object[Deck][key] = value;
 
-			for (let i in object.___bindingAll___) {
-				if(!object.___bindingAll___[i]) {
+			for(let i in object[BindingAll])
+			{
+				if(!object[BindingAll][i])
+				{
 					continue;
 				}
-				object.___bindingAll___[i](value, key, target, false);
+
+				object[BindingAll][i](value, key, target, false);
 			}
 
 			let stop = false;
 
-			if (key in object.___binding___) {
-				for (let i in object.___binding___[key]) {
-					if(!object.___binding___[key]) {
+			if(key in object[Binding])
+			{
+				for(let i in object[Binding][key])
+				{
+					if(!object[Binding][key])
+					{
 						continue;
 					}
-					if(!object.___binding___[key][i]) {
+
+					if(!object[Binding][key][i])
+					{
 						continue;
 					}
-					if (object.___binding___[key][i](value, key, target, false, target[key]) === false) {
+
+					if (object[Binding][key][i](value, key, target, false, target[key]) === false)
+					{
 						stop = true;
 					}
 				}
 			}
 
-			delete object.___deck___[key];
+			delete object[Deck][key];
 
-			if (!stop) {
-				let descriptor = Object.getOwnPropertyDescriptor(
-					target
-					, key
-				);
+			if (!stop)
+			{
+				let descriptor = Object.getOwnPropertyDescriptor(target, key);
 
 				let excluded = (
 					target instanceof File
@@ -401,42 +415,30 @@ export class Bindable
 				}
 			}
 
-			// if (!target.___setCount___[key]) {
-			// 	target.___setCount___[key] = 0;
-			// }
-
-			// target.___setCount___[key]++;
-
-			// const warnOn = 10;
-
-			// if (target.___setCount___[key] > warnOn && value instanceof Object) {
-				// console.log(
-				//     'Warning: Resetting bindable reference "' +
-				//     key +
-				//     '" to object ' +
-				//     target.___setCount___[key] +
-				//     ' times.'
-				// );
-			// }
-
 			return Reflect.set(target, key, value);
 		};
 
-		let del = (target, key) => {
-			if (!(key in target)) {
+		const deleteProperty = (target, key) => {
+			if(!(key in target))
+			{
 				return true;
 			}
 
-			for (let i in object.___bindingAll___) {
-				object.___bindingAll___[i](undefined, key, target, true, target[key]);
+			for(let i in object[BindingAll])
+			{
+				object[BindingAll][i](undefined, key, target, true, target[key]);
 			}
 
-			if (key in object.___binding___) {
-				for (let i in object.___binding___[key]) {
-					if(!object.___binding___[key][i]) {
+			if(key in object[Binding])
+			{
+				for(let i in object[Binding][key])
+				{
+					if(!object[Binding][key][i])
+					{
 						continue;
 					}
-					object.___binding___[key][i](undefined, key, target, true, target[key]);
+
+					object[Binding][key][i](undefined, key, target, true, target[key]);
 				}
 			}
 
@@ -445,89 +447,111 @@ export class Bindable
 			return true;
 		};
 
-		let get = (target, key) => {
-			if (target[key] instanceof Function) {
+		const get = (target, key) => {
+			if(target[key] instanceof Function)
+			{
 
-				if(target.___wrapped___[key])
+				if(target[Wrapped][key])
 				{
-					return target.___wrapped___[key];
+					return target[Wrapped][key];
 				}
 
 				const descriptor = Object.getOwnPropertyDescriptor(object, key);
 
 				if(descriptor && !descriptor.configurable && !descriptor.writable)
 				{
-					target.___wrapped___[key] = target[key];
+					target[Wrapped][key] = target[key];
 
-					return target.___wrapped___[key];
+					return target[Wrapped][key];
 				}
 
-				target.___wrapped___[key] = (...providedArgs) => {
+				target[Wrapped][key] = (...providedArgs) => {
 
-					target.___executing___ = key;
+					target[Executing] = key;
 
-					target.___stack___.unshift(key);
-					// target.___stackTime___.unshift((new Date).getTime());
+					target[Stack].unshift(key);
 
-					// console.log(`Start ${key}()`);
-
-					for (let i in target.___before___) {
-						target.___before___[i](target, key, object);
+					for(let i in target.___before___)
+					{
+						target.___before___[i](target, key, target[Stack], object, providedArgs);
 					}
 
-					let objRef = object instanceof Promise
+					const objRef = object instanceof Promise
 						? object
-						: object.___ref___
+						: object[Ref]
 
-					let ret = target[key].apply(objRef, providedArgs);
+					const ret = target[key].apply(objRef, providedArgs);
 
-					for (let i in target.___after___) {
-						target.___after___[i](target, key, object);
+					for(const i in target.___after___)
+					{
+						target.___after___[i](target, key, target[Stack], object, providedArgs);
 					}
 
-					target.___executing___ = null;
+					target[Executing] = null;
 
-					// let execTime = (new Date).getTime() - target.___stackTime___[0];
-
-					// if (execTime > 150) {
-					//     // console.log(`End ${key}(), took ${execTime} ms`);
-					// }
-
-					target.___stack___.shift();
-					// target.___stackTime___.shift();
+					target[Stack].shift();
 
 					return ret;
 				};
 
-				return target.___wrapped___[key];
+				return target[Wrapped][key];
 			}
 
-			if (target[key] instanceof Object) {
+			if(target[key] instanceof Object)
+			{
 				Bindable.makeBindable(target[key]);
 			}
-
-			// console.log(`Getting ${key}`);
 
 			return target[key];
 		};
 
-		object.___ref___ = new Proxy(object, {
-			deleteProperty: del,
-			get: get,
-			set: set
+		const construct = (target, args) => {
+
+			const key = 'constructor';
+
+			for(let i in target.___before___)
+			{
+				target.___before___[i](target, key, target[Stack], undefined, args);
+			}
+
+			const instance = new target(...args);
+
+			for(let i in target.___after___)
+			{
+				target.___after___[i](target, key, target[Stack], instance, args);
+			}
+
+			return instance;
+		};
+
+		object[Ref] = new Proxy(object, {
+			deleteProperty, construct, get, set
 		});
 
-		return object.___ref___;
+		return object[Ref];
 	}
 
 	static clearBindings(object) {
-		object.___wrapped___    = {};
-		object.___bindingAll___ = [];
-		object.___binding___    = {};
-		object.___before___     = [];
-		object.___after___      = [];
-		object.___ref___        = {};
-		// object.toString         = ()=>'{}';
+		const clearObj  = o => Object.keys(o).map(k => delete o[k]);
+		const maps      = func => (...os) => os.map(func);
+		const clearObjs = maps(clearObj);
+
+		clearObjs(
+			object[Ref]
+			, object[Wrapped]
+			, object[Binding]
+			, object[BindingAll]
+			, object.___after___
+			, object.___before___
+		);
+
+		// object[BindingAll]  = [];
+		// object.___after___  = [];
+		// object.___before___ = [];
+
+		// object[Ref]         = {};
+		// object[Wrapped]     = {};
+		// object[Binding]     = {};
 	}
 
 	static resolve(object, path, owner = false)
@@ -610,7 +634,7 @@ export class Bindable
 		};
 	}
 
-	static wrapFrameCallback(callback)
+	static wrapFrameCallback(callback, frames)
 	{
 		return (v,k,t,d,p) => {
 			requestAnimationFrame(() => callback(v,k,t,d,p));

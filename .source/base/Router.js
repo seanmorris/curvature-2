@@ -1,6 +1,6 @@
-import { View  }   from './View';
-import { Cache }   from './Cache';
-import { Config }   from 'Config';
+import { View  }  from './View';
+import { Cache }  from './Cache';
+import { Config } from './Config';
 
 export class Router {
 	static wait(view, event = 'DOMContentLoaded', node = document)
@@ -57,9 +57,11 @@ export class Router {
 	}
 	static go(route, silent)
 	{
-		if(Config && Config.title !== undefined)
+		const configTitle = Config.get('title');
+
+		if(configTitle)
 		{
-			document.title = Config.title;
+			document.title = configTitle;
 		}
 
 		setTimeout(
@@ -100,6 +102,7 @@ export class Router {
 			, 0
 		);
 	}
+
 	static match(path, view, forceRefresh = false)
 	{
 		if(this.path === path && !forceRefresh)
