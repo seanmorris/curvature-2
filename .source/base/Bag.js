@@ -45,7 +45,7 @@ export class Bag
 
 		if(this.changeCallback)
 		{
-			this.changeCallback(item, this.meta, 1, id);
+			this.changeCallback(item, this.meta, Bag.ITEM_ADDED, id);
 		}
 	}
 
@@ -83,7 +83,7 @@ export class Bag
 
 		if(this.changeCallback)
 		{
-			this.changeCallback(item, this.meta, -1, id);
+			this.changeCallback(item, this.meta, Bag.ITEM_REMOVED, id);
 		}
 
 		return item;
@@ -94,3 +94,17 @@ export class Bag
 		return Array.from(this.content.entries()).map(entry => entry[0]);
 	}
 }
+
+Object.defineProperty(Bag, 'ITEM_ADDED', {
+	configurable: false
+	, enumerable: false
+	, writable:   true
+	, value:      1
+});
+
+Object.defineProperty(Bag, 'ITEM_REMOVED', {
+	configurable: false
+	, enumerable: false
+	, writable:   true
+	, value:      -1
+});
