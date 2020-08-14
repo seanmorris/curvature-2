@@ -1700,6 +1700,9 @@ export class View
 
 			});
 
+			viewList.onRemove(debindA);
+			viewList.onRemove(debindB);
+
 			this.onRemove(debindA);
 			this.onRemove(debindB);
 

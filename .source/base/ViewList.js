@@ -6,6 +6,7 @@ export class ViewList
 {
 	constructor(template, subProperty, list, parent, keyProperty = null)
 	{
+		this.removed      = false;
 		this.args         = Bindable.makeBindable({});
 		this.args.value   = Bindable.makeBindable(list || {});
 		this.args.subArgs = Bindable.makeBindable({});
@@ -344,5 +345,7 @@ export class ViewList
 		{
 			Bindable.clearBindings(this.args.value);
 		}
+
+		this.removed = true;
 	}
 }
