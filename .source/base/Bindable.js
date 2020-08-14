@@ -514,7 +514,7 @@ export class Bindable
 				target.___before___[i](target, key, target[Stack], undefined, args);
 			}
 
-			const instance = new target(...args);
+			const instance = Bindable.make( new target(...args) );
 
 			for(let i in target.___after___)
 			{

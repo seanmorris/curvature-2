@@ -823,8 +823,6 @@ export class View
 					{
 						const unsafeTemplate = v;
 
-						console.log(unsafeTemplate);
-
 						v = new View(this.args, this);
 
 						v.template = unsafeTemplate;
