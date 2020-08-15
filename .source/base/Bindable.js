@@ -29,18 +29,24 @@ export class Bindable
 	{
 		if (!object
 			|| !(object instanceof Object)
-			|| object[Binding]
 			|| object instanceof Node
 			|| object instanceof IntersectionObserver
 			|| Object.isSealed(object)
 			|| !Object.isExtensible(object)
 		) {
+			// console.log('Cannot bind to object', object);
 			return object;
 		}
 
 		if(object[Ref])
 		{
-			return object[Ref];
+			// console.log('Already bound to object', object[Ref]);
+			return object;
+		}
+
+		if(object[Binding])
+		{
+			return object;
 		}
 
 		Object.defineProperty(object, Ref, {
@@ -320,7 +326,7 @@ export class Bindable
 				&& !object[i] instanceof Node
 				&& !object[i] instanceof Promise
 			) {
-				object[i] = Bindable.makeBindable(object[i]);
+				object[i] = Bindable.make(object[i]);
 			}
 		}
 
@@ -448,9 +454,13 @@ export class Bindable
 		};
 
 		const get = (target, key) => {
+			if(key === Ref || key === 'isBound')
+			{
+				return target[key];
+			}
+
 			if(target[key] instanceof Function)
 			{
-
 				if(target[Wrapped][key])
 				{
 					return target[Wrapped][key];
@@ -476,9 +486,9 @@ export class Bindable
 						target.___before___[i](target, key, target[Stack], object, providedArgs);
 					}
 
-					const objRef = object instanceof Promise
+					const objRef = (object instanceof Promise || object instanceof EventTarget)
 						? object
-						: object[Ref]
+						: object[Ref];
 
 					const ret = target[key].apply(objRef, providedArgs);
 
@@ -497,9 +507,9 @@ export class Bindable
 				return target[Wrapped][key];
 			}
 
-			if(target[key] instanceof Object)
+			if(target[key] instanceof Object && !target[key][Ref])
 			{
-				Bindable.makeBindable(target[key]);
+				Bindable.make(target[key]);
 			}
 
 			return target[key];
@@ -537,12 +547,12 @@ export class Bindable
 		const clearObjs = maps(clearObj);
 
 		clearObjs(
-			object[Ref]
-			, object[Wrapped]
+			object[Wrapped]
 			, object[Binding]
 			, object[BindingAll]
 			, object.___after___
 			, object.___before___
+			// , object[Ref]
 		);
 
 		// object[BindingAll]  = [];

@@ -38,7 +38,7 @@ export class View
 		Object.defineProperty(this, 'args', {
 			configurable: false
 			, writable:   false
-			, value:      Bindable.makeBindable(args)
+			, value:      Bindable.make(args)
 		});
 
 		const _this = this;
@@ -1972,11 +1972,29 @@ export class View
 	mapSlotTag(tag)
 	{
 		const templateName = tag.getAttribute('cv-slot');
-		const getTemplate  = this.subTemplates[ templateName ];
+		let getTemplate    = this.subTemplates[ templateName ];
 
 		if(!getTemplate)
 		{
-			return;
+			let parent = this;
+
+			while(parent)
+			{
+				getTemplate = parent.subTemplates[ templateName ];
+
+				if(getTemplate)
+				{
+					break;
+				}
+
+				parent = this.parent;
+			}
+
+			if(!getTemplate)
+			{
+				console.error(`Template ${templateName} not found.`);
+				return;
+			}
 		}
 
 		const template = getTemplate();
