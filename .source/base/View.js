@@ -126,7 +126,11 @@ export class View
 				return;
 			}
 
-			callback(Date.now());
+			if(!this.paused)
+			{
+				callback(Date.now());
+			}
+
 
 			requestAnimationFrame(c);
 		};

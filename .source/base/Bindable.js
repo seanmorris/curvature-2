@@ -454,7 +454,7 @@ export class Bindable
 		};
 
 		const get = (target, key) => {
-			if(key === Ref || key === 'isBound')
+			if(key === Ref || key === 'isBound' || key === 'bindTo')
 			{
 				return target[key];
 			}
