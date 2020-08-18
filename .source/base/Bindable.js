@@ -654,7 +654,9 @@ export class Bindable
 	static wrapIdleCallback(callback)
 	{
 		return (v,k,t,d,p) => {
-			requestIdleCallback(() => callback(v,k,t,d,p));
+			// Compatibility for Safari 08/2020
+			const req = window.requestIdleCallback || requestAnimationFrame;
+			req(() => callback(v,k,t,d,p));
 		};
 	}
 }
