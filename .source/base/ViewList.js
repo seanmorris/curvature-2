@@ -9,7 +9,7 @@ export class ViewList
 		this.removed      = false;
 		this.args         = Bindable.makeBindable({});
 		this.args.value   = Bindable.makeBindable(list || {});
-		this.args.subArgs = Bindable.makeBindable({});
+		this.subArgs = Bindable.makeBindable({});
 		this.views        = [];
 		this.cleanup      = [];
 		this._onRemove    = new Bag();
@@ -176,7 +176,7 @@ export class ViewList
 					this.args.value[index] = v;
 				});
 
-				const downDebind = this.args.subArgs.bindTo((v, k, t, d) => {
+				const downDebind = this.subArgs.bindTo((v, k, t, d) => {
 					viewArgs[k] = v;
 				});
 
@@ -334,9 +334,9 @@ export class ViewList
 			this.tag.removeChild(this.tag.firstChild);
 		}
 
-		if(this.args.subArgs)
+		if(this.subArgs)
 		{
-			Bindable.clearBindings(this.args.subArgs);
+			Bindable.clearBindings(this.subArgs);
 		}
 
 		Bindable.clearBindings(this.args);

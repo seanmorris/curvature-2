@@ -20,6 +20,16 @@ export class Bindable
 		return object[Binding] === Bindable;
 	}
 
+	static onDeck(object, key)
+	{
+		return object[Deck][key] || false;
+	}
+
+	static ref(object)
+	{
+		return object[Ref] || false;
+	}
+
 	static makeBindable(object)
 	{
 		return this.make(object);
@@ -30,6 +40,8 @@ export class Bindable
 		if (!object
 			|| !(object instanceof Object)
 			|| object instanceof Node
+			|| object instanceof Map
+			|| object instanceof Set
 			|| object instanceof IntersectionObserver
 			|| Object.isSealed(object)
 			|| !Object.isExtensible(object)
@@ -50,7 +62,7 @@ export class Bindable
 		}
 
 		Object.defineProperty(object, Ref, {
-			configurable: false
+			configurable: true
 			, enumerable: false
 			, writable:   true
 			, value:      object
@@ -331,7 +343,7 @@ export class Bindable
 		}
 
 		const set = (target, key, value) => {
-			if(object[Deck][key] === value)
+			if(object[Deck][key] !== undefined && object[Deck][key] === value)
 			{
 				return true;
 			}
@@ -486,11 +498,21 @@ export class Bindable
 						target.___before___[i](target, key, target[Stack], object, providedArgs);
 					}
 
-					const objRef = (object instanceof Promise || object instanceof EventTarget)
+					const objRef = (
+						object instanceof Promise
+						|| object instanceof EventTarget
+						|| object instanceof MutationObserver
+						|| object instanceof IntersectionObserver
+						|| object instanceof MutationObserver
+						|| object instanceof PerformanceObserver
+						|| object instanceof ResizeObserver
+						|| object instanceof Map
+						|| object instanceof Set
+					)
 						? object
 						: object[Ref];
 
-					const ret = target[key].apply(objRef, providedArgs);
+					const ret = target[key].apply(objRef || object, providedArgs);
 
 					for(const i in target.___after___)
 					{
@@ -536,6 +558,13 @@ export class Bindable
 
 		object[Ref] = new Proxy(object, {
 			deleteProperty, construct, get, set
+		});
+
+		Object.defineProperty(object, Ref, {
+			configurable: false
+			, enumerable: false
+			, writable:   true
+			, value:      object[Ref]
 		});
 
 		return object[Ref];

@@ -5,8 +5,8 @@ import { Dom      } from './Dom';
 import { Tag      } from './Tag';
 import { Bag      } from './Bag';
 import { RuleSet  } from './RuleSet';
-
-const dontParse = Symbol('dontParse');
+const dontParse  = Symbol('dontParse');
+const expandBind = Symbol('expandBind');
 
 let moveIndex = 0;
 
@@ -24,6 +24,15 @@ export class View
 		}
 
 		return this.__id;
+	}
+
+	static from(template, args = {}, parent = null)
+	{
+		const view = new this(args, parent);
+
+		view.template = template;
+
+		return view;
 	}
 
 	constructor(args = {}, mainView = null)
@@ -91,7 +100,7 @@ export class View
 		this.removed   = false;
 		this.preserve  = false;
 
-		this.interpolateRegex = /(\[\[((?:\$+)?[\w\.\|]+)\]\])/g;
+		this.interpolateRegex = /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g;
 
 		this.rendered = new Promise((accept, reject) => {
 
@@ -359,10 +368,10 @@ export class View
 		if(parentNode)
 		{
 			const rootNode = parentNode.getRootNode();
-			let toRoot     = false;
 			let moveType   = 'internal';
+			let toRoot     = false;
 
-			if(rootNode === document)
+			if(rootNode.isConnected)
 			{
 				toRoot = true;
 				moveType = 'external';
@@ -413,7 +422,7 @@ export class View
 	{
 		const subDoc = new DocumentFragment;
 
-		if(this.firstNode.getRootNode() === document)
+		if(this.firstNode.isConnected)
 		{
 			const detach = this.detach.items();
 
@@ -450,7 +459,7 @@ export class View
 
 			const rootNode = parentNode.getRootNode();
 
-			if(rootNode === document)
+			if(rootNode.isConnected)
 			{
 				this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
 					child.dispatchEvent(new Event('cvDomAttached', {
@@ -555,32 +564,72 @@ export class View
 
 		return newTag;
 		/*/
-		let expandProperty = tag.getAttribute('cv-expand');
-		let expandArg = Bindable.makeBindable(
-			this.args[expandProperty] || {}
+
+		let existing = tag[expandBind];
+
+		if(existing)
+		{
+			existing();
+
+			tag[expandBind] = false;
+		}
+
+		const [proxy, expandProperty] = Bindable.resolve(
+			this.args
+			, tag.getAttribute('cv-expand')
+			, true
 		);
 
 		tag.removeAttribute('cv-expand');
 
-		for(let i in expandArg)
-		{
-			if(i === 'name' || i === 'type')
-			{
-				continue;
-			}
+		console.log(proxy, expandProperty);
 
-			let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
-				tag.setAttribute(i, v);
-			})(tag,i));
+		this.onRemove(tag[expandBind] = proxy[expandProperty].bindTo(
+			(v,k,t,d,p) => {
 
-			this.onRemove(()=>{
-				debind();
-				if(expandArg.isBound())
+				if(d || v === undefined)
 				{
-					Bindable.clearBindings(expandArg);
+					tag.removeAttribute(k, v);
+					return;
 				}
-			});
-		}
+
+				if(v === null)
+				{
+					tag.setAttribute(k, '');
+					return;
+				}
+
+				tag.setAttribute(k, v);
+
+			}
+		));
+
+		// let expandProperty = tag.getAttribute('cv-expand');
+		// let expandArg = Bindable.makeBindable(
+		// 	this.args[expandProperty] || {}
+		// );
+
+		// tag.removeAttribute('cv-expand');
+
+		// for(let i in expandArg)
+		// {
+		// 	if(i === 'name' || i === 'type')
+		// 	{
+		// 		continue;
+		// 	}
+
+		// 	let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
+		// 		tag.setAttribute(i, v);
+		// 	})(tag,i));
+
+		// 	this.onRemove(()=>{
+		// 		debind();
+		// 		if(expandArg.isBound())
+		// 		{
+		// 			Bindable.clearBindings(expandArg);
+		// 		}
+		// 	});
+		// }
 
 		return tag;
 		//*/
@@ -693,7 +742,7 @@ export class View
 
 			for (let i in attrs)
 			{
-				const bindProperty = attrs[i][1];
+				const bindProperty = attrs[i][1] || attrs[i][0];
 
 				const [proxy, property] = Bindable.resolve(
 					bindingView.args
@@ -703,12 +752,17 @@ export class View
 
 				const attrib = attrs[i][0];
 
-				bindingView.onRemove(proxy.bindTo( property , (v) => {
+				bindingView.onRemove(proxy.bindTo( property , (v,k,t,d) => {
 
-					if(v == null)
+					if(d || v === undefined)
+					{
+						tag.removeAttribute(attrib, v);
+						return;
+					}
+
+					if(v === null)
 					{
 						tag.setAttribute(attrib, '');
-
 						return;
 					}
 
@@ -1236,7 +1290,7 @@ export class View
 			else if(type === 'file' && multi)
 			{
 				const files   = Array.from(event.target.files);
-				const current = proxy[property] || proxy.___deck___[property];
+				const current = proxy[property] || Bindable.onDeck(proxy, property);
 
 				if(!current || !files.length)
 				{
@@ -1327,26 +1381,30 @@ export class View
 
 			let eventName    = a[0].trim();
 
-			let callbackName = a[1];
+			let callbackName = a[1] || a[0];
 			let eventFlags   = String(a[2] || '');
 			let argList      = [];
 			let groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
 
-			if(!groups)
-			{
-				throw new Error(
-					'Invalid event method referent: '
-					+ tag.getAttribute('cv-on')
-				);
-			}
+			// if(!groups)
+			// {
+			// 	throw new Error(
+			// 		'Invalid event method referent: '
+			// 		+ tag.getAttribute('cv-on')
+			// 	);
+			// }
 
-			if(groups.length)
+			if(groups)
 			{
 				callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
 
 				if(groups[2])
 				{
 					argList = groups[2].split(',').map(s => s.trim());
+				}
+
+				if(groups.length)
+				{
 				}
 			}
 
@@ -1685,7 +1743,7 @@ export class View
 					return;
 				}
 
-				viewList.args.subArgs[k] = v;
+				viewList.subArgs[k] = v;
 			});
 
 			const debindB = viewList.args.bindTo((v,k,t,d,p)=>{

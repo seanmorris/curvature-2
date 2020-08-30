@@ -303,6 +303,7 @@ export class Form extends View
 				let fieldName = field.args.fields[i].getName();
 
 				if(field.args.fields[i].args.type == 'file'
+					&& field.args.fields[i].tags.input.element.files
 					&& field.args.fields[i].tags.input.element.files.length
 				){
 					if(field.args.fields[i].args.attrs.multiple)

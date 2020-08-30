@@ -38,7 +38,6 @@ export class Wrapper extends View
 		this.args.icon      = '×';
 		this.deleted        = false;
 
-
 		this.args.field.args.bindTo('fieldName', (v)=>{
 			this.args.fieldName = v;
 		});

@@ -60,16 +60,7 @@ export class View extends FieldSet
 						<div
 							class     = "single-record"
 							data-for  = "[[f]]"
-							draggable = "[[draggable]]"
-							cv-on     = "
-								drop:drop(event);
-								dragstart:drag(event);
-								dragend:dragStop(event);
-								dragover:dragOver(event);
-							"
-						>
-							[[field]]
-						</div>
+						>[[field]]</div>
 					</div>
 
 					<div class = "overlay create">
@@ -172,6 +163,7 @@ export class View extends FieldSet
 		{
 			let fieldClass = this.args.fields[-1].constructor;
 
+
 			let skeleton   = Object.assign({}, this.args.fields[-1].skeleton);
 			let name       = Object.values(this.args.fields).length - 1;
 
@@ -195,6 +187,8 @@ export class View extends FieldSet
 			newField.args.value.id    = record[i].id    || '';
 			newField.args.value.class = record[i].class || '';
 			newField.args.value.title = record[i].title || '';
+
+			newField.args.value.key = this.args._fields.length;
 
 			this.args._fields.push(newWrap);
 

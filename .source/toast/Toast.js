@@ -1,5 +1,5 @@
 import { View } from '../base/View';
-
+import { Bindable } from '../base/Bindable';
 import { ToastAlert } from './ToastAlert';
 
 export class Toast extends View {
@@ -27,7 +27,7 @@ export class Toast extends View {
 		// 		, 'flex-direction': 'column-reverse'
 		// 	}
 		// };
-		
+
 		this.args.alerts = [];
 
 		// this.args.alerts.bindTo((v) => { console.log(v) });
@@ -40,7 +40,7 @@ export class Toast extends View {
 		alert.decay(((alert)=>()=>{
 			for(let i in this.args.alerts)
 			{
-				if(this.args.alerts[i].___ref___ === alert.___ref___)
+				if(Bindable.ref(this.args.alerts[i]) === Bindable.ref(alert))
 				{
 					alert.remove();
 					delete this.args.alerts[i];
