@@ -556,15 +556,15 @@ export class Bindable
 			return instance;
 		};
 
-		object[Ref] = new Proxy(object, {
-			deleteProperty, construct, get, set
-		});
-
 		Object.defineProperty(object, Ref, {
 			configurable: false
 			, enumerable: false
 			, writable:   true
 			, value:      object[Ref]
+		});
+
+		object[Ref] = new Proxy(object, {
+			deleteProperty, construct, get, set
 		});
 
 		return object[Ref];

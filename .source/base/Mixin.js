@@ -1,7 +1,128 @@
 import { Bindable } from './Bindable';
 
+const Constructor = Symbol('constructor');
+const MixinList   = Symbol('mixinList');
+
 export class Mixin
 {
+	static with(...mixins)
+	{
+		const constructors = [];
+
+		const newClass = class{ constructor(...args) {
+
+			for(const mixin of mixins)
+			{
+				if(mixin[ Mixin.constructor ])
+				{
+					mixin[ Mixin.constructor ].apply(this);
+				}
+
+				switch(typeof mixin)
+				{
+					// case 'function':
+					// 	this.mixClass(mixin, newClass);
+					// 	break;
+
+					case 'object':
+						Mixin.mixObject(mixin, this);
+						break;
+				}
+			}
+
+		}};
+
+		return newClass;
+	}
+
+	static mixObject(mixin, instance)
+	{
+		for(const func of Object.getOwnPropertyNames(mixin))
+		{
+			if(typeof mixin[func] === 'function')
+			{
+				instance[func] = mixin[func].bind(instance);
+
+				continue;
+			}
+
+			newClass.prototype[func] = mixin[func];
+		}
+
+		for(const func of Object.getOwnPropertySymbols(mixin))
+		{
+			if(typeof mixin[func] === 'function')
+			{
+				instance[func] = mixin[func].bind(instance);
+
+				continue;
+			}
+
+			instance[func] = mixin[func];
+		}
+	}
+
+	static mixClass(cls, newClass)
+	{
+		for(const func of Object.getOwnPropertyNames(cls.prototype))
+		{
+			console.log(func, cls.prototype[func]);
+
+			const prev = newClass.prototype[func] || false;
+			const meth = cls.prototype[func].bind(newClass.prototype);
+
+			console.log(meth);
+
+			newClass.prototype[func] = (...args) => {
+				prev && prev(...args);
+				return meth(...args);
+			};
+		}
+
+		for(const func of Object.getOwnPropertySymbols(cls.prototype))
+		{
+			const prev = newClass.prototype[func] || false;
+			const meth = cls.prototype[func].bind(newClass.prototype);
+
+			newClass.prototype[func] = (...args) => {
+				prev && prev(...args);
+				return meth(...args);
+			};
+		}
+
+		for(const func of Object.getOwnPropertyNames(cls))
+		{
+			if(typeof cls[func] !== 'function')
+			{
+				continue;
+			}
+
+			const prev = newClass[func] || false;
+			const meth = cls[func].bind(newClass);
+
+			newClass[func] = (...args) => {
+				prev && prev(...args);
+				return meth(...args);
+			};
+		}
+
+		for(const func of Object.getOwnPropertySymbols(cls))
+		{
+			if(typeof cls[func] !== 'function')
+			{
+				continue;
+			}
+
+			const prev = newClass[func] || false;
+			const meth = cls[func].bind(newClass);
+
+			newClass[func] = (...args) => {
+				prev && prev(...args);
+				return meth(...args);
+			};
+		}
+	}
+
 	static mix(mixinTo)
 	{
 		const constructors = [];
@@ -147,3 +268,5 @@ export class Mixin
 		return mixable;
 	}
 }
+
+Mixin.constructor = Constructor;
