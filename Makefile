@@ -10,4 +10,4 @@ dependencies:
 	npm install
 
 clean:
-	rm -rf access base form input tag node_modules toast index.js dist/*
+	rm -rf access base form input tag node_modules toast dist/*

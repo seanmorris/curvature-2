@@ -13,7 +13,11 @@ Install with npm:
 ```sh
 $ npm install curvature
 ```
-## Initialization & Basic Views
+
+Or grab the file located at [`dist/curvature.js`](https://raw.githubusercontent.com/seanmorris/curvature-2/master/dist/curvature.js) and load it with a `<script>` tag. Please do not hotlink this file.
+
+
+## Creating Views
 
 Create a view class:
 
@@ -30,7 +34,6 @@ class MyView extends View
     }
 }
 ```
-
 or an anonymous view:
 
 ```javascript
@@ -64,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 ```
-## Template files
+## Separating Templates
 
 Writing HTML into a javascript string can be annoying.
 
@@ -74,15 +77,14 @@ Use the `rawquire` babel macro to import templates directly from html files, and
 $ npm install rawquire
 ```
 
-**MyTemplate.html**:
-
+**my-template.html**:
 ```html
 <p>This is my template!</p>
 ```
 
 **MyView.js**:
-
 ```javascript
+import { rawquire } from 'rawquire/rawquire.macro';
 import { View } from 'curvature/base/View';
 
 class MyView extends View
@@ -91,16 +93,23 @@ class MyView extends View
     {
         super();
 
-        this.template = rawquire('./MyTemplate.html');
+        this.template = rawquire('./my-template.html');
     }
 }
 ```
 
 ## Variable Binding
 
-Use the `cv-bind` attribute, or [[square]] brackets to insert variables from the [[view.args]] property into your templates:
+Use the `cv-bind` attribute, or `[[squarebrackets]]`  to insert variables from the `view.args` property into your templates:
 
+**my-template.html**
+```html
+<p><span cv-bind = "prefix"></span> [[time]]</p>
+```
+
+**MyView.js**
 ```javascript
+import { rawquire } from 'rawquire/rawquire.macro';
 import { View } from 'curvature/base/View';
 
 class MyView extends View
@@ -115,7 +124,7 @@ class MyView extends View
             this.args.time = Date.now();
         });
 
-        this.template = `<p><span cv-bind = "prefix"></span> [[time]]</p>`;
+        this.template = rawquire('my-template.html');
     }
 }
 ```
@@ -124,7 +133,14 @@ class MyView extends View
 
 Use the `cv-on` attribute to listen for events on your view object:
 
+**clickable.html**
+```html
+<button cv-on = "click:click(event)">click me!</button>
+```
+
+**Clickable.js**
 ```javascript
+import { rawquire } from 'rawquire/rawquire.macro';
 import { View } from 'curvature/base/View';
 
 class Clickable extends View
@@ -133,7 +149,7 @@ class Clickable extends View
     {
         super();
 
-        this.template = `<button cv-on = "click:click(event)">click me!</button>`;
+        this.template = rawquire('./clickable.html');
     }
 
     click(event)
