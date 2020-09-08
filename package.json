@@ -14,5 +14,13 @@
 		"raw-brunch": "^1.0.2",
 		"uglify-js-brunch": "^2.10.0"
 	},
-	"dependencies": {}
+	"dependencies": {},
+	"files": [
+		"access/*",
+		"base/*",
+		"form/*",
+		"input/*",
+		"tag/*",
+		"toast/*"
+	]
 }

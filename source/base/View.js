@@ -5,6 +5,7 @@ import { Dom      } from './Dom';
 import { Tag      } from './Tag';
 import { Bag      } from './Bag';
 import { RuleSet  } from './RuleSet';
+
 const dontParse  = Symbol('dontParse');
 const expandBind = Symbol('expandBind');
 
@@ -85,7 +86,7 @@ export class View
 
 		this.withViews = {};
 
-		this.tags      = Bindable.makeBindable({});
+		this.tags      = Bindable.make({});
 
 		this.intervals = [];
 		this.timeouts  = [];
@@ -307,8 +308,6 @@ export class View
 
 	render(parentNode = null, insertPoint = null)
 	{
-		const ref = Bindable.make(this);
-
 		if(parentNode instanceof View)
 		{
 			parentNode = parentNode.firstNode.parentNode;
@@ -394,7 +393,7 @@ export class View
 
 			if(toRoot)
 			{
-				ref.attached(rootNode, parentNode);
+				this.attached(rootNode, parentNode);
 
 				const attach = this.attach.items();
 
@@ -642,7 +641,7 @@ export class View
 			const tag = sourceTag.cloneNode(true);
 
 			let expandProperty = tag.getAttribute('cv-expand');
-			let expandArg = Bindable.makeBindable(
+			let expandArg = Bindable.make(
 				bindingView.args[expandProperty] || {}
 			);
 
@@ -1278,7 +1277,7 @@ export class View
 				return;
 			}
 
-			if (type && type.toLowerCase() === 'checkbox')
+			if(type && type.toLowerCase() === 'checkbox')
 			{
 				if (tag.checked) {
 					proxy[property] = event.target.getAttribute('value');
@@ -1286,6 +1285,10 @@ export class View
 				else {
 					proxy[property] = false;
 				}
+			}
+			else if(event.target.matches('[contentEditable=true]'))
+			{
+				proxy[property] = event.target.innerHTML;
 			}
 			else if(type === 'file' && multi)
 			{

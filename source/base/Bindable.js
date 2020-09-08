@@ -487,7 +487,8 @@ export class Bindable
 					return target[Wrapped][key];
 				}
 
-				target[Wrapped][key] = (...providedArgs) => {
+
+				target[Wrapped][key] = function(...providedArgs){
 
 					target[Executing] = key;
 
@@ -512,7 +513,9 @@ export class Bindable
 						? object
 						: object[Ref];
 
-					const ret = target[key].apply(objRef || object, providedArgs);
+					const ret = new.target
+						? new target[key](...providedArgs)
+						: target[key].apply(objRef || object, providedArgs);
 
 					for(const i in target.___after___)
 					{

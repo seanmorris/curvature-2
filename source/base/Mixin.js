@@ -46,7 +46,7 @@ export class Mixin
 				continue;
 			}
 
-			newClass.prototype[func] = mixin[func];
+			instance[func] = mixin[func];
 		}
 
 		for(const func of Object.getOwnPropertySymbols(mixin))
@@ -66,28 +66,12 @@ export class Mixin
 	{
 		for(const func of Object.getOwnPropertyNames(cls.prototype))
 		{
-			console.log(func, cls.prototype[func]);
-
-			const prev = newClass.prototype[func] || false;
-			const meth = cls.prototype[func].bind(newClass.prototype);
-
-			console.log(meth);
-
-			newClass.prototype[func] = (...args) => {
-				prev && prev(...args);
-				return meth(...args);
-			};
+			newClass.prototype[func] = cls.prototype[func].bind(newClass.prototype);
 		}
 
 		for(const func of Object.getOwnPropertySymbols(cls.prototype))
 		{
-			const prev = newClass.prototype[func] || false;
-			const meth = cls.prototype[func].bind(newClass.prototype);
-
-			newClass.prototype[func] = (...args) => {
-				prev && prev(...args);
-				return meth(...args);
-			};
+			newClass.prototype[func] = cls.prototype[func].bind(newClass.prototype);
 		}
 
 		for(const func of Object.getOwnPropertyNames(cls))

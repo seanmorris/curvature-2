@@ -1,10 +1,10 @@
 .PHONY: build build-prod clean
 
 build:
-	npx babel .source --presets=@babel/preset-env --out-dir .
+	npx babel .source --out-dir .
 
 build-prod:
-	npx babel .source --presets=@babel/preset-env --out-file .dist/curvature.js
+	npx babel .source --out-file .dist/curvature.js
 
 dependencies:
 	npm install
