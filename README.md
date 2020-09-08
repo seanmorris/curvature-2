@@ -62,7 +62,7 @@ import { View } from 'curvature/base/View';
 const view = View.from(`<b>Hello, world!</b>`);
 
 document.addEventListener('DOMContentLoaded', () => {
-	const body = new Tag(document.querySelector('body'));
+	const body = document.querySelector('body');
 	view.render(body.element);
 });
 
