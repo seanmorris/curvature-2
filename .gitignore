@@ -1,3 +1,9 @@
 node_modules/
 package-lock.json
 public/
+access
+base
+form
+input
+tag
+toast

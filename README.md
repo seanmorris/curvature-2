@@ -1,48 +1,21 @@
 # Curvature.js
 
-v.0.0.23
+v.0.0.61
+
+Curvature is a lightweight javascript framework with an emphasis on **straightforwardness**.
+
+This document serves only as an overview. For more in-depth, interactive documentation, see http://curvature.unholysh.it/.
 
 ## Getting started
-
-### Brunch
 
 Install with npm:
 
 ```sh
 $ npm install curvature
 ```
+## Initialization & Basic Views
 
-Access classes like:
-
-```javascript
-import { View } from 'curvature/base/View';
-
-export class View extends View
-{
-    ...
-}
-```
-
-### Vanilla js
-
-Grab curvature.js from the .dist/ directory.
-
-```html
-<script src = "curvature.js">
-```
-
-```javascript
-const curvature = require('curvature');
-
-class MyView extends curvature.base.View
-{
-    ...
-}
-```
-
-### Initialization & Basic Views
-
-Create a basic view:
+Create a view class:
 
 ```javascript
 import { View } from 'curvature/base/View';
@@ -50,7 +23,7 @@ import { View } from 'curvature/base/View';
 class MyView extends View
 {
     constructor()
-    {  
+    {
         super();
 
         this.template = `<b>Hello, world!</b>`;
@@ -58,76 +31,157 @@ class MyView extends View
 }
 ```
 
-Initialize like so:
+or an anonymous view:
 
 ```javascript
-import { MyView } from './RootView';
+import { View } from 'curvature/base/View';
+
+const view = View.from(`<b>Hello, world!</b>`);
+
+```
+
+Render a view directly into an existing tag:
+
+```javascript
+import { View } from 'curvature/base/View';
+
+const view = View.from(`<b>Hello, world!</b>`);
+const div  = document.querySelector('div.hello');
+
+view.render(div);
+```
+
+Render a view to the `<body>` tag as soon as the DOM is ready:
+
+```javascript
+import { View } from 'curvature/base/View';
+
+const view = View.from(`<b>Hello, world!</b>`);
 
 document.addEventListener('DOMContentLoaded', () => {
-	const view = new MyView();
 	const body = new Tag(document.querySelector('body'));
 	view.render(body.element);
 });
 
 ```
+## Template files
 
-### Variable Binding
+Writing HTML into a javascript string can be annoying.
 
-Use [[square]] brackets to interpolate variables from the View.args property into your templates:
-
-```javascript
-import { View } from 'curvature/base/View';
-
-class MyView extends View
-{
-    constructor()
-    {  
-        super();
-        
-        this.onInterval(1, ()=>{
-            this.args.time = Date.now();
-        });
-
-        this.template = `<p>The time is [[time]]</p>`;
-    }
-}
-```
-
-### Template files \[Brunch only\]
+Use the `rawquire` babel macro to import templates directly from html files, and maintin your syntax highlighting.
 
 ```sh
-$ npm install raw-brunch
+$ npm install rawquire
 ```
+
+**MyTemplate.html**:
 
 ```html
 <p>This is my template!</p>
 ```
 
+**MyView.js**:
+
 ```javascript
 import { View } from 'curvature/base/View';
 
 class MyView extends View
 {
     constructor()
-    {  
+    {
         super();
 
-        this.template = require('./MyTemplate.html');
+        this.template = rawquire('./MyTemplate.html');
     }
 }
 ```
 
+## Variable Binding
 
+Use the `cv-bind` attribute, or [[square]] brackets to insert variables from the [[view.args]] property into your templates:
 
+```javascript
+import { View } from 'curvature/base/View';
 
+class MyView extends View
+{
+    constructor()
+    {
+        super();
 
+        this.args.prefix = 'The time is';
 
+        this.onInterval(1, ()=>{
+            this.args.time = Date.now();
+        });
 
+        this.template = `<p><span cv-bind = "prefix"></span> [[time]]</p>`;
+    }
+}
+```
 
+## Event Listeners
 
+Use the `cv-on` attribute to listen for events on your view object:
 
+```javascript
+import { View } from 'curvature/base/View';
 
+class Clickable extends View
+{
+    constructor()
+    {
+        super();
 
+        this.template = `<button cv-on = "click:click(event)">click me!</button>`;
+    }
 
+    click(event)
+    {
+    	alert('button clicked!');
+    }
+}
+```
 
+Or, for anonymous views:
 
+```javascript
+import { View } from 'curvature/base/View';
+
+const view = View.from(`<button cv-on = "click:click(event)">click me!</button>`);
+
+view.click = (event) => {
+	alert('button clicked!');
+};
+
+```
+
+If the event & method names match, you can just use a ":".
+
+```javascript
+import { View } from 'curvature/base/View';
+
+const view = View.from(`<button cv-on = ":click(event)">click me!</button>`);
+
+view.click = (event) => {
+	alert('button clicked!');
+};
+
+```
+
+Multiple listeners may be provided in a ";" separated list:
+
+```javascript
+import { View } from 'curvature/base/View';
+
+const view = View.from(`<button cv-on = ":click(event);:hover(event)">click me!</button>`);
+
+view.click = (event) => {
+	alert('button clicked!');
+};
+
+view.hover = (event) => {
+	console.log('button hovered!');
+};
+
+```
