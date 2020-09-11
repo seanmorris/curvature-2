@@ -487,7 +487,6 @@ export class Bindable
 					return target[Wrapped][key];
 				}
 
-
 				target[Wrapped][key] = function(...providedArgs){
 
 					target[Executing] = key;

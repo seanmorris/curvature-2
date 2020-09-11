@@ -581,7 +581,10 @@ export class View
 
 		tag.removeAttribute('cv-expand');
 
-		console.log(proxy, expandProperty);
+		if(!proxy[expandProperty])
+		{
+			proxy[expandProperty] = {};
+		}
 
 		this.onRemove(tag[expandBind] = proxy[expandProperty].bindTo(
 			(v,k,t,d,p) => {
