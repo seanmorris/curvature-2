@@ -505,7 +505,7 @@ export class Bindable
 						|| object instanceof IntersectionObserver
 						|| object instanceof MutationObserver
 						|| object instanceof PerformanceObserver
-						|| object instanceof ResizeObserver
+						|| (typeof ResizeObserver === 'function' && object instanceof ResizeObserver)
 						|| object instanceof Map
 						|| object instanceof Set
 					)
