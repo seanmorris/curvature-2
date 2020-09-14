@@ -1,6 +1,6 @@
 # Curvature.js
 
-v.0.0.61
+v.0.0.63
 
 Curvature is a lightweight javascript framework with an emphasis on **straightforwardness**.
 
@@ -26,12 +26,12 @@ import { View } from 'curvature/base/View';
 
 class MyView extends View
 {
-    constructor()
-    {
-        super();
+	constructor()
+	{
+		super();
 
-        this.template = `<b>Hello, world!</b>`;
-    }
+		this.template = `<b>Hello, world!</b>`;
+	}
 }
 ```
 or an anonymous view:
@@ -89,12 +89,12 @@ import { View } from 'curvature/base/View';
 
 class MyView extends View
 {
-    constructor()
-    {
-        super();
+	constructor()
+	{
+		super();
 
-        this.template = rawquire('./my-template.html');
-    }
+		this.template = rawquire('./my-template.html');
+	}
 }
 ```
 
@@ -114,18 +114,18 @@ import { View } from 'curvature/base/View';
 
 class MyView extends View
 {
-    constructor()
-    {
-        super();
+	constructor()
+	{
+		super();
 
-        this.args.prefix = 'The time is';
+		this.args.prefix = 'The time is';
 
-        this.onInterval(1, ()=>{
-            this.args.time = Date.now();
-        });
+		this.onInterval(1, ()=>{
+			this.args.time = Date.now();
+		});
 
-        this.template = rawquire('my-template.html');
-    }
+		this.template = rawquire('my-template.html');
+	}
 }
 ```
 
@@ -145,17 +145,17 @@ import { View } from 'curvature/base/View';
 
 class Clickable extends View
 {
-    constructor()
-    {
-        super();
+	constructor()
+	{
+		super();
 
-        this.template = rawquire('./clickable.html');
-    }
+		this.template = rawquire('./clickable.html');
+	}
 
-    click(event)
-    {
-    	alert('button clicked!');
-    }
+	click(event)
+	{
+		alert('button clicked!');
+	}
 }
 ```
 
