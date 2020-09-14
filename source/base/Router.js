@@ -3,17 +3,16 @@ import { Cache }  from './Cache';
 import { Config } from './Config';
 
 export class Router {
+
 	static wait(view, event = 'DOMContentLoaded', node = document)
 	{
 		node.addEventListener(event, () => {
 			this.listen(view);
 		});
 	}
-	static listen(mainView)
-	{
-		let routeHistory      = [location.toString()];
-		let prevHistoryLength = history.length;
 
+	static listen(listener)
+	{
 		let route = location.pathname + location.search;
 
 		if(location.hash)
@@ -21,41 +20,52 @@ export class Router {
 			route += location.hash;
 		}
 
-		Object.assign(Router.query, Router.queryOver({}));
+		Object.assign(this.query, this.queryOver({}));
 
-		window.addEventListener('popstate', (event) => {
+		const listen = (event) => {
+
 			event.preventDefault();
 
-			if(routeHistory.length && prevHistoryLength == history.length)
+			if(event.state && 'routedId' in event.state)
 			{
-				if(location.toString() == routeHistory[routeHistory.length - 2])
+				if(event.state.routedId <= this.routeCount)
 				{
-					routeHistory.pop();
+					this.history.splice(event.state.routedId);
+
+					this.routeCount = event.state.routedId;
 				}
-				else
+				else if(event.state.routedId > this.routeCount)
 				{
-					routeHistory.push(location.toString());
+					this.history.push(event.state.prev);
+
+					this.routeCount = event.state.routedId;
 				}
 			}
 			else
 			{
-				routeHistory.push(location.toString());
-				prevHistoryLength = history.length;
+				if(this.prevPath !== null && this.prevPath !== location.pathname)
+				{
+					this.history.push(this.prevPath);
+				}
 			}
 
-			this.match(location.pathname, mainView);
+			this.match(location.pathname, listener);
 
 			for(const i in this.query)
 			{
 				delete this.query[i];
 			}
 
-			Object.assign(Router.query, Router.queryOver({}));
-		});
+			Object.assign(this.query, this.queryOver({}));
+		};
+
+		window.addEventListener('popstate', listen);
+		window.addEventListener('cvUrlChanged', listen);
 
 		this.go(route);
 	}
-	static go(route, silent)
+
+	static go(path, silent)
 	{
 		const configTitle = Config.get('title');
 
@@ -64,71 +74,82 @@ export class Router {
 			document.title = configTitle;
 		}
 
-		setTimeout(
-			() => {
-				if(silent === 2)
-				{
-					history.replaceState(null, null, route)
-				}
-				else
-				{
-					history.pushState(null, null, route)
-				}
-
-				if(!silent)
-				{
-					if(silent === false)
-					{
-						this.path = null;
-					}
-
-					window.dispatchEvent(new Event('popstate'))
-
-					if(route.substring(0,1) === '#')
-					{
-						window.dispatchEvent(new HashChangeEvent(
-							'hashchange'
-						));
-					}
-				}
-
-				for(const i in this.query)
-				{
-					delete this.query[i];
-				}
-
-				Object.assign(Router.query, Router.queryOver({}));
-			}
-			, 0
-		);
-	}
-
-	static match(path, view, forceRefresh = false)
-	{
-		if(this.path === path && !forceRefresh)
+		if(silent === 2 && location.pathname !== path)
 		{
-			return;
+			history.replaceState(
+				{
+					routedId: this.routeCount
+					, prev:   this.prevPath
+					, url:    location.pathname
+				}
+				, null
+				, path
+			);
+		}
+		else if(location.pathname !== path)
+		{
+			history.pushState(
+				{
+					routedId: ++this.routeCount
+					, prev:   this.prevPath
+					, url:    location.pathname
+				}
+				, null
+				, path
+			);
 		}
 
-		let eventStart = new CustomEvent('cvRouteStart', {
-			cancelable: true
-			, detail:   {result, path, view}
-		});
+		if(!silent)
+		{
+			if(silent === false)
+			{
+				this.path = null;
+			}
 
-		let current = view.args.content;
-		let routes  = view.routes;
-
-		this.path   = path;
-		// this.query  = {};
+			if(path.substring(0,1) === '#')
+			{
+				window.dispatchEvent(new HashChangeEvent('hashchange'));
+			}
+			else
+			{
+				window.dispatchEvent(new CustomEvent('cvUrlChanged'));
+			}
+		}
 
 		for(const i in this.query)
 		{
 			delete this.query[i];
 		}
 
-		let query   = new URLSearchParams(location.search);
+		Object.assign(this.query, this.queryOver({}));
+
+		this.prevPath = path;
+	}
+
+	static match(path, listener, forceRefresh = false)
+	{
+		if(this.path === path && !forceRefresh)
+		{
+			return;
+		}
 
 		this.queryString = location.search;
+		this.path        = path;
+
+		const prev       = this.prevPath;
+		const current    = listener.args.content;
+		const routes     = listener.routes;
+		let query        = new URLSearchParams(location.search);
+
+		const eventStart = new CustomEvent('cvRouteStart', {
+			cancelable: true
+			, detail:   {result, path, prev, listener}
+		});
+
+		for(const i in this.query)
+		{
+			delete this.query[i];
+		}
 
 		for(let pair of query) {
 			this.query[ pair[0] ] = pair[1];
@@ -187,7 +208,7 @@ export class Router {
 				&& !(routes[i] instanceof Promise)
 				&& current.update(args)
 			) {
-				view.args.content = current;
+				listener.args.content = current;
 
 				return true;
 			}
@@ -203,7 +224,6 @@ export class Router {
 			break;
 		}
 
-
 		document.dispatchEvent(eventStart);
 
 		if(selected in routes
@@ -213,27 +233,27 @@ export class Router {
 		){
 			result = new routes[selected](args);
 
-			result.root = ()=>view;
+			result.root = ()=>listener;
 		}
 		else if(routes[selected] instanceof Function)
 		{
 			result = '';
 
-			const _result = routes[selected](args);
+			const r = routes[selected](args);
 
-			if(_result instanceof Promise)
+			if(r instanceof Promise)
 			{
 				result = false;
 
-				_result.then(x=>{
-					this.update(view, path, x);
+				r.then(x=>{
+					this.update(listener, path, x);
 				}).catch(x=>{
-					this.update(view, path, x);
+					this.update(listener, path, x);
 				});
 			}
 			else
 			{
-				result = _result;
+				result = r;
 			}
 		}
 		else if(routes[selected] instanceof Promise)
@@ -241,9 +261,13 @@ export class Router {
 			result = false;
 
 			routes[selected].then(x => {
-				this.update(view, path, x);
+
+				this.update(listener, path, x);
+
 			}).catch(x=>{
-				this.update(view, path, x);
+
+				this.update(listener, path, x);
+
 			});
 		}
 		else if(routes[selected] instanceof Object)
@@ -255,21 +279,7 @@ export class Router {
 			result = routes[selected];
 		}
 
-		this.update(view, path, result);
-
-		// if(view.args.content instanceof View)
-		// {
-		// 	// view.args.content.pause(true);
-		// 	view.args.content.remove();
-		// }
-
-		// if(result !== false)
-		// {
-		// 	if(document.dispatchEvent(event))
-		// 	{
-		// 		view.args.content = result;
-		// 	}
-		// }
+		this.update(listener, path, result);
 
 		if(result instanceof View)
 		{
@@ -283,14 +293,16 @@ export class Router {
 
 	static update(view, path, result)
 	{
+		const prev = this.prevPath;
+
 		let event = new CustomEvent('cvRoute', {
 			cancelable: true
-			, detail:   {result, path, view}
+			, detail:   {result, path, prev, view}
 		});
 
 		let eventEnd = new CustomEvent('cvRouteEnd', {
 			cancelable: true
-			, detail:   {result, path, view}
+			, detail:   {result, path, prev, view}
 		});
 
 		if(result !== false)
@@ -309,16 +321,15 @@ export class Router {
 			document.dispatchEvent(eventEnd);
 		}
 	}
-	static clearCache() {
-		// this.cache = {};
-	}
+
 	static queryOver(args = {})
 	{
 		let params    = new URLSearchParams(location.search);
 		let finalArgs = {};
 		let query     = [];
 
-		for(let pair of params) {
+		for(let pair of params)
+		{
 			query[ pair[0] ] = pair[1];
 		}
 
@@ -372,10 +383,7 @@ export class Router {
 		const queryString = this.queryToString(args, true);
 
 		this.go(
-			location.pathname + ( queryString
-				? '?' + queryString
-				: ''
-			)
+			location.pathname + (queryString ? '?' + queryString : '')
 			, silent
 		);
 	}
@@ -383,6 +391,35 @@ export class Router {
 
 Object.defineProperty(Router, 'query', {
 	configurable: false
-	, writeable: false
-	, value: {}
+	, enumerable: false
+	, writable:   false
+	, value:      {}
+});
+
+Object.defineProperty(Router, 'history', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      []
+});
+
+Object.defineProperty(Router, 'routeCount', {
+	configurable: false
+	, enumerable: false
+	, writable:   true
+	, value:      0
+});
+
+Object.defineProperty(Router, 'prevPath', {
+	configurable: false
+	, enumerable: false
+	, writable:   true
+	, value:      null
+});
+
+Object.defineProperty(Router, 'queryString', {
+	configurable: false
+	, enumerable: false
+	, writable:   true
+	, value:      null
 });
