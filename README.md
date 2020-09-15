@@ -1,6 +1,6 @@
 # Curvature.js
 
-v.0.0.63
+v.0.0.64
 
 Curvature is a lightweight javascript framework with an emphasis on **straightforwardness**.
 
