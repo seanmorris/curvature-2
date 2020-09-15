@@ -1,10 +1,10 @@
-import { Config     } from 'Config';
+import { Config     } from '../base/Config';
 import { Bindable   } from '../base/Bindable';
 import { Repository } from '../base/Repository';
 
 export class UserRepository extends Repository {
 
-	static get uri() { return Config.backend + '/user/'; }
+	static get uri() { return Config.get('backend') + '/user/'; }
 
 	static getCurrentUser(refresh = null)
 	{
@@ -24,7 +24,7 @@ export class UserRepository extends Repository {
 			this.uri + 'current'
 			, false
 			, false
-		).then((response) => {
+		).then(response => {
 			if(response.body && response.body.roles)
 			{
 				for(let i in response.body.roles)
@@ -41,6 +41,10 @@ export class UserRepository extends Repository {
 				this.args.current  = response.body;
 			}
 			return response;
+		}).catch(error => {
+
+			console.error(error);
+
 		});
 	}
 
@@ -78,8 +82,7 @@ Object.defineProperty(UserRepository, 'args', {
 	, value:      Bindable.makeBindable({})
 });
 
-Repository.onResponse( response =>{
-
+Repository.onResponse(response => {
 	if(response
 		&& response.meta
 		&& 'currentUser' in response.meta
@@ -88,5 +91,4 @@ Repository.onResponse( response =>{
 	){
 		UserRepository.args.current = response.meta.currentUser;
 	}
-
 });

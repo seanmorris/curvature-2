@@ -1,48 +1,43 @@
-const ConfigData = {};
+const AppConfig = {};
 
-try{
-	const AppConfig = require('Config').Config || {};
-
-	Object.assign(ConfigData, AppConfig);
-} catch(error) {
-	console.warn(error);
-}
+try { Object.assign(AppConfig, require('Config').Config || {}); }
+catch(error){ console.error(error); }
 
 export class Config
 {
 	static get(name)
 	{
-		return this.data[name]
+		return this.configs[name];
 	}
 
 	static set(name, value)
 	{
-		this.data[name] = value;
+		this.configs[name] = value;
 
 		return this;
 	}
 
 	static dump()
 	{
-		return this.data;
+		return this.configs;
 	}
 
-	static init(...configBlobs)
+	static init(...configs)
 	{
-		for(const i in configBlobs)
+		for(const i in configs)
 		{
-			const configBlob = configBlobs[i];
+			let config = configs[i];
 
-			if(typeof configBlob === 'string')
+			if(typeof config === 'string')
 			{
-				configBlob = JSON.parse(configBlob);
+				config = JSON.parse(config);
 			}
 
-			for(const name in configBlob)
+			for(const name in config)
 			{
-				const value = configBlob[name];
+				const value = config[name];
 
-				return this.data[name] = value;
+				return this.configs[name] = value;
 			}
 		}
 
@@ -50,4 +45,9 @@ export class Config
 	}
 }
 
-Config.data = ConfigData || {};
+Object.defineProperty(Config, 'configs', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      AppConfig
+});

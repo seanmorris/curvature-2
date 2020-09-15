@@ -1,6 +1,7 @@
 import { View  }  from './View';
 import { Cache }  from './Cache';
 import { Config } from './Config';
+import { Routes } from './Routes';
 
 export class Router {
 
@@ -136,24 +137,17 @@ export class Router {
 		this.queryString = location.search;
 		this.path        = path;
 
-		const prev       = this.prevPath;
-		const current    = listener.args.content;
-		const routes     = listener.routes;
-		let query        = new URLSearchParams(location.search);
-
-		const eventStart = new CustomEvent('cvRouteStart', {
-			cancelable: true
-			, detail:   {result, path, prev, listener}
-		});
+		const prev    = this.prevPath;
+		const current = listener.args.content;
+		const routes  = listener.routes || Routes.dump();
+		const query   = new URLSearchParams(location.search);
 
 		for(const i in this.query)
 		{
 			delete this.query[i];
 		}
 
-		for(let pair of query) {
-			this.query[ pair[0] ] = pair[1];
-		}
+		Object.assign(this.query, this.queryOver({}));
 
 		let args = {}, selected = false, result = '';
 
@@ -175,42 +169,41 @@ export class Router {
 
 			L2: for(let j in route)
 			{
-				if(route[j].substr(0, 1) == '%') {
+				if(route[j].substr(0, 1) == '%')
+				{
 					let argName = null;
 					let groups  = /^%(\w+)\??/.exec(route[j]);
-					if(groups && groups[1]) {
+					if(groups && groups[1])
+					{
 						argName = groups[1];
 					}
-					if(!argName) {
+
+					if(!argName)
+					{
 						throw new Error(`${route[j]} is not a valid argument segment in route "${i}"`);
 					}
-					if(!path[j]) {
-						if(route[j].substr(route[j].length - 1, 1) == '?') {
+
+					if(!path[j])
+					{
+						if(route[j].substr(route[j].length - 1, 1) == '?')
+						{
 							args[ argName ] = '';
 						}
-						else {
+						else
+						{
 							continue L1;
 						}
 					}
-					else {
+
+					else
+					{
 						args[ argName ] = path[j];
 					}
 				}
-				else if(route[j] !== '*' && path[j] !== route[j]) {
+				else if(route[j] !== '*' && path[j] !== route[j])
+				{
 					continue L1;
 				}
-			}
-
-			if(!forceRefresh
-				&& current
-				&& (routes[i] instanceof Object)
-				&& (current instanceof routes[i])
-				&& !(routes[i] instanceof Promise)
-				&& current.update(args)
-			) {
-				listener.args.content = current;
-
-				return true;
 			}
 
 			selected = i;
@@ -224,7 +217,34 @@ export class Router {
 			break;
 		}
 
-		document.dispatchEvent(eventStart);
+		if(!forceRefresh
+			&& listener
+			&& current
+			&& (result instanceof Object)
+			&& (current instanceof result)
+			&& !(result instanceof Promise)
+			&& current.update(args)
+		) {
+			listener.args.content = current;
+
+			return true;
+		}
+
+		const eventStart = new CustomEvent('cvRouteStart', {
+			cancelable: true
+			, detail: {
+				path
+				, prev
+				, root: listener
+				, selected
+				, routes
+			}
+		});
+
+		if(!document.dispatchEvent(eventStart))
+		{
+			return;
+		}
 
 		if(selected in routes
 			&& routes[selected] instanceof Object
@@ -233,7 +253,10 @@ export class Router {
 		){
 			result = new routes[selected](args);
 
-			result.root = ()=>listener;
+			if(listener)
+			{
+				result.root = ()=>listener;
+			}
 		}
 		else if(routes[selected] instanceof Function)
 		{
@@ -241,34 +264,7 @@ export class Router {
 
 			const r = routes[selected](args);
 
-			if(r instanceof Promise)
-			{
-				result = false;
-
-				r.then(x=>{
-					this.update(listener, path, x);
-				}).catch(x=>{
-					this.update(listener, path, x);
-				});
-			}
-			else
-			{
-				result = r;
-			}
-		}
-		else if(routes[selected] instanceof Promise)
-		{
-			result = false;
-
-			routes[selected].then(x => {
-
-				this.update(listener, path, x);
-
-			}).catch(x=>{
-
-				this.update(listener, path, x);
-
-			});
+			result = r;
 		}
 		else if(routes[selected] instanceof Object)
 		{
@@ -279,73 +275,112 @@ export class Router {
 			result = routes[selected];
 		}
 
-		this.update(listener, path, result);
-
-		if(result instanceof View)
+		if(!(result instanceof Promise))
 		{
-			result.pause(false);
-
-			result.update(args, forceRefresh);
+			result = Promise.resolve(result);
 		}
 
-		return selected !== false;
+		return result.then(result => this.update(
+			listener
+			, path
+			, result
+			, routes
+			, selected
+			, args
+			, forceRefresh
+		)).catch(error => this.update(
+			listener
+			, path
+			, error
+			, routes
+			, selected
+			, args
+			, forceRefresh
+		));
 	}
 
-	static update(view, path, result)
+	static update(listener, path, result, routes, selected, args, forceRefresh)
 	{
+		if(!listener)
+		{
+			return;
+		}
+
 		const prev = this.prevPath;
 
 		let event = new CustomEvent('cvRoute', {
 			cancelable: true
-			, detail:   {result, path, prev, view}
-		});
-
-		let eventEnd = new CustomEvent('cvRouteEnd', {
-			cancelable: true
-			, detail:   {result, path, prev, view}
+			, detail:   {
+				result
+				, path
+				, prev
+				, view: listener
+				, routes
+				, selected
+			}
 		});
 
 		if(result !== false)
 		{
-			if(view.args.content instanceof View)
+			if(listener.args.content instanceof View)
 			{
-				// view.args.content.pause(true);
-				view.args.content.remove();
+				listener.args.content.pause(true);
+				listener.args.content.remove();
 			}
 
 			if(document.dispatchEvent(event))
 			{
-				view.args.content = result;
+				listener.args.content = result;
 			}
 
-			document.dispatchEvent(eventEnd);
+			if(result instanceof View)
+			{
+				result.pause(false);
+				result.update(args, forceRefresh);
+			}
 		}
+
+		let eventEnd = new CustomEvent('cvRouteEnd', {
+			cancelable: true
+			, detail:   {
+				result
+				, path
+				, prev
+				, view: listener
+				, routes
+				, selected
+			}
+		});
+
+		document.dispatchEvent(eventEnd);
 	}
 
 	static queryOver(args = {})
 	{
 		let params    = new URLSearchParams(location.search);
 		let finalArgs = {};
-		let query     = [];
+		let query     = {};
 
-		for(let pair of params)
+		for(const pair of params)
 		{
 			query[ pair[0] ] = pair[1];
 		}
 
-		for(let i in query)
-		{
-			finalArgs[i] = query[i];
-		}
-
-		for(let i in args)
-		{
-			finalArgs[i] = args[i];
-		}
+		finalArgs = Object.assign(finalArgs, query, args);
 
 		delete finalArgs['api'];
 
 		return finalArgs;
+
+		// for(let i in query)
+		// {
+		// 	finalArgs[i] = query[i];
+		// }
+
+		// for(let i in args)
+		// {
+		// 	finalArgs[i] = args[i];
+		// }
 	}
 
 	static queryToString(args = {}, fresh = false)
