@@ -1390,7 +1390,7 @@ export class View
 			let callbackName = a[1] || a[0];
 			let eventFlags   = String(a[2] || '');
 			let argList      = [];
-			let groups = /(\w+)(?:\(([$\w\s'",]+)\))?/.exec(callbackName);
+			let groups = /(\w+)(?:\(([$\w\s-'",]+)\))?/.exec(callbackName);
 
 			// if(!groups)
 			// {
