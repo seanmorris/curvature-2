@@ -12,7 +12,7 @@ export class Bindable
 {
 	static isBindable(object)
 	{
-		if (!object[Binding])
+		if (!object || !object[Binding])
 		{
 			return false;
 		}
@@ -37,22 +37,34 @@ export class Bindable
 
 	static make(object)
 	{
-		if (!object
-			|| !(object instanceof Object)
-			|| object instanceof Node
-			|| object instanceof Map
-			|| object instanceof Set
-			|| object instanceof IntersectionObserver
+		if(!object || !['function', 'object'].includes(typeof object))
+		{
+			return object;
+		}
+
+		const win = window || {};
+
+		const excludedClasses = [
+
+			win.Node
+			, win.Map
+			, win.Set
+			, win.ResizeObserver
+			, win.MutationObserver
+			, win.PerformanceObserver
+			, win.IntersectionObserver
+
+		].filter(x=>typeof x === 'function');
+
+		if (excludedClasses.filter(x => object instanceof x).length
 			|| Object.isSealed(object)
 			|| !Object.isExtensible(object)
 		) {
-			// console.log('Cannot bind to object', object);
 			return object;
 		}
 
 		if(object[Ref])
 		{
-			// console.log('Already bound to object', object[Ref]);
 			return object;
 		}
 
@@ -192,7 +204,7 @@ export class Bindable
 
 			let cleaned = false;
 
-			return () => {
+			const debinder = () => {
 
 				if(cleaned)
 				{
@@ -209,6 +221,13 @@ export class Bindable
 				delete object[Binding][property][bindIndex];
 
 			};
+
+			if(options.removeWith && options.removeWith instanceof View)
+			{
+				options.removeWith.onRemove(()=>debinder);
+			}
+
+			return debinder;
 		};
 
 		Object.defineProperty(object, 'bindTo', {
@@ -583,22 +602,11 @@ export class Bindable
 			, object[BindingAll]
 			, object.___after___
 			, object.___before___
-			// , object[Ref]
 		);
-
-		// object[BindingAll]  = [];
-		// object.___after___  = [];
-		// object.___before___ = [];
-
-		// object[Ref]         = {};
-		// object[Wrapped]     = {};
-		// object[Binding]     = {};
 	}
 
 	static resolve(object, path, owner = false)
 	{
-		// console.log(path, object);
-
 		let node;
 		let pathParts = path.split('.');
 		let top       = pathParts[0];

@@ -147,6 +147,8 @@ export class View
 
 		requestAnimationFrame(() => c(Date.now()));
 
+		this.frames.push(cancel);
+
 		return cancel;
 	}
 
@@ -1076,7 +1078,7 @@ export class View
 	mapRefTag(tag)
 	{
 		let refAttr = tag.getAttribute('cv-ref');
-		let [refProp, refClassname, refKey] = refAttr.split(':');
+		let [refProp, refClassname = null, refKey = null] = refAttr.split(':');
 
 		if(!refClassname)
 		{
@@ -1380,15 +1382,18 @@ export class View
 
 	mapOnTag(tag)
 	{
-		const referent = String(tag.getAttribute('cv-on'));
+		const referents = String(tag.getAttribute('cv-on'));
 
-		let action = referent.split(';').map(a=> a.split(':')).map((a)=>{
+		referents.split(';').map(a=> a.split(':')).map((a)=>{
+
 			a = a.map(a => a.trim());
+			const argLen = a.length;
 
-			let eventName    = a[0].trim();
+			let eventName    = String(a.shift()).trim();
 
-			let callbackName = a[1] || a[0];
-			let eventFlags   = String(a[2] || '');
+			let callbackName = String(a.shift() || eventName).trim();
+			let eventFlags   = String(a.shift() || '').trim();
+
 			let argList      = [];
 			let groups = /(\w+)(?:\(([$\w\s-'",]+)\))?/.exec(callbackName);
 
@@ -1413,8 +1418,12 @@ export class View
 				{
 				}
 			}
+			else
+			{
+				argList.push('$event');
+			}
 
-			if(!eventName)
+			if(!eventName || argLen === 1)
 			{
 				eventName = callbackName;
 			}
@@ -1470,7 +1479,7 @@ export class View
 					else if(arg in this.args) {
 						return this.args[arg];
 					}
-					else if(match = /^['"](\w+?)["']$/.exec(arg))
+					else if(match = /^['"]([\w-]+?)["']$/.exec(arg))
 					{
 						return match[1];
 					}
@@ -1635,10 +1644,16 @@ export class View
 
 	mapWithTag(tag)
 	{
-		let withAttr = tag.getAttribute('cv-with');
+		let withAttr  = tag.getAttribute('cv-with');
 		let carryAttr = tag.getAttribute('cv-carry');
+		let viewAttr  = tag.getAttribute('cv-view');
 		tag.removeAttribute('cv-with');
 		tag.removeAttribute('cv-carry');
+		tag.removeAttribute('cv-view');
+
+		const viewClass = viewAttr
+			? this.stringToClass(viewAttr)
+			: View;
 
 		let subTemplate = new DocumentFragment;
 
@@ -1662,7 +1677,7 @@ export class View
 				tag.removeChild(tag.firstChild);
 			}
 
-			let view = new View({}, this);
+			let view = new viewClass({}, this);
 
 			this.onRemove(((view)=>()=>{
 				view.remove();
@@ -1686,8 +1701,12 @@ export class View
 
 			for(let i in v)
 			{
-				let debind = v.bindTo(i, (v, k) => {
-					view.args[k] = v;
+				let debind = v.bindTo(i, (vv, kk) => {
+					view.args[kk] = vv;
+				});
+
+				let debindUp = view.args.bindTo(i, (vv, kk) => {
+					v[kk] = vv;
 				});
 
 				this.onRemove(()=>{
@@ -1721,7 +1740,13 @@ export class View
 	mapEachTag(tag)
 	{
 		const eachAttr = tag.getAttribute('cv-each');
+		const viewAttr = tag.getAttribute('cv-view');
 		tag.removeAttribute('cv-each');
+		tag.removeAttribute('cv-view');
+
+		const viewClass = viewAttr
+			? this.stringToClass(viewAttr)
+			: View;
 
 		const subTemplate = new DocumentFragment();
 
@@ -1730,12 +1755,13 @@ export class View
 		const [eachProp, asProp, keyProp] = eachAttr.split(':');
 
 		const debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
+
 			if(this.viewLists[eachProp])
 			{
 				this.viewLists[eachProp].remove();
 			}
 
-			const viewList = new ViewList(subTemplate, asProp, v, this, keyProp);
+			const viewList = new ViewList(subTemplate, asProp, v, this, keyProp, viewClass);
 			const viewListRemover = () => viewList.remove();
 
 			this.onRemove(viewListRemover);
@@ -2079,17 +2105,6 @@ export class View
 		return tag;
 	}
 
-	// compileTag(sourceTag)
-	// {
-	// 	return (bindingView) => {
-
-	// 		const tag = sourceTag.cloneNode(true);
-
-	// 		return tag;
-
-	// 	};
-	// }
-
 	syncBind(subView)
 	{
 		let debindA = this.args.bindTo((v,k,t,d)=>{
@@ -2191,9 +2206,6 @@ export class View
 				this.nodes[i].dispatchEvent(new Event('cvDomDetached'));
 				this.nodes[i].remove();
 			}
-
-			// Bindable.clearBindings(this.args);
-
 		};
 
 		if(now)
@@ -2234,7 +2246,7 @@ export class View
 
 		for(let i in this.timeouts)
 		{
-			clearInterval(this.timeouts[i].timeout);
+			clearTimeout(this.timeouts[i].timeout);
 			delete this.timeouts[i];
 		}
 
@@ -2242,6 +2254,12 @@ export class View
 		{
 			clearInterval(this.intervals[i].timeout);
 			delete this.intervals[i];
+		}
+
+		for(var i in this.frames)
+		{
+			this.frames[i]();
+			delete this.frames[i];
 		}
 
 		this.removed = true;
@@ -2329,14 +2347,14 @@ export class View
 			return View.refClasses.get(refClassname);
 		}
 
-		let refClassSplit           = refClassname.split('/');
-		let refShortClassname       = refClassSplit[ refClassSplit.length - 1 ];
+		let refClassSplit = refClassname.split('/');
+		let refShortClass = refClassSplit[ refClassSplit.length - 1 ];
 
-		let refClass                = require(refClassname);
+		let refClass      = require(refClassname);
 
-		View.refClasses.set(refClassname, refClass[refShortClassname]);
+		View.refClasses.set(refClassname, refClass[refShortClass]);
 
-		return refClass[refShortClassname];
+		return refClass[refShortClass];
 	}
 
 	preventParsing(node)
@@ -2347,6 +2365,13 @@ export class View
 	toString()
 	{
 		return this.nodes.map(n => n.outerHTML).join(' ');
+	}
+
+	listen(node, eventName, callback, options)
+	{
+		node.addEventListener(eventName, callback, options);
+
+		this.onRemove(() => node.removeEventListener(eventName, callback, options));
 	}
 }
 

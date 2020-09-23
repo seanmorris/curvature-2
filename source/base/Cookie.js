@@ -14,11 +14,12 @@ export class Cookie
 
 	static delete(name)
 	{
+		Cookie.jar[name] = undefined;
 		delete Cookie.jar[name];
 	}
 };
 
-Cookie.jar = Cookie.jar || Bindable.makeBindable({});
+Cookie.jar = Cookie.jar || Bindable.make({});
 
 if(window.location.href.substr(0,4) !== 'data')
 {
@@ -45,9 +46,9 @@ if(window.location.href.substr(0,4) !== 'data')
 
 		if(d)
 		{
-			t[k] = null;
+			delete t[k];
 		}
-		
+
 		const cookieString = `${encodeURIComponent(k)}=${t[k]}`;
 		// console.log(cookieString);
 		document.cookie = cookieString;

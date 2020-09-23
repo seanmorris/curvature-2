@@ -4,7 +4,7 @@ import { Bag      } from './Bag';
 
 export class ViewList
 {
-	constructor(template, subProperty, list, parent, keyProperty = null)
+	constructor(template, subProperty, list, parent, keyProperty = null, viewClass = null)
 	{
 		this.removed      = false;
 		this.args         = Bindable.makeBindable({});
@@ -12,6 +12,7 @@ export class ViewList
 		this.subArgs = Bindable.makeBindable({});
 		this.views        = [];
 		this.cleanup      = [];
+		this.viewClass    = viewClass || View;
 		this._onRemove    = new Bag();
 		this.template     = template;
 		this.subProperty  = subProperty;
@@ -159,7 +160,7 @@ export class ViewList
 			if(!found)
 			{
 				let viewArgs = {};
-				let view = finalViews[k] = new View(viewArgs, this.parent);
+				let view = finalViews[k] = new (this.viewClass)(viewArgs, this.parent);
 
 				finalViews[k].template = this.template instanceof Object
 					? this.template

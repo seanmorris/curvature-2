@@ -5,11 +5,13 @@ const MixinList   = Symbol('mixinList');
 
 export class Mixin
 {
-	static with(...mixins)
+	static from(baseClass, ...mixins)
 	{
 		const constructors = [];
 
-		const newClass = class{ constructor(...args) {
+		const newClass = class  extends baseClass { constructor(...args) {
+
+			super(...args);
 
 			for(const mixin of mixins)
 			{
@@ -33,6 +35,11 @@ export class Mixin
 		}};
 
 		return newClass;
+	}
+
+	static with(...mixins)
+	{
+		return this.from(Object, ...mixins);
 	}
 
 	static mixObject(mixin, instance)
