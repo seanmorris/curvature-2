@@ -18,6 +18,7 @@
 	},
 	"dependencies": {},
 	"files": [
+		"dist/curvature.js",
 		"access/*",
 		"base/*",
 		"form/*",

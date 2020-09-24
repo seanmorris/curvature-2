@@ -14,16 +14,16 @@ export class Cookie
 
 	static delete(name)
 	{
-		Cookie.jar[name] = undefined;
 		delete Cookie.jar[name];
 	}
 };
 
 Cookie.jar = Cookie.jar || Bindable.make({});
 
-if(window.location.href.substr(0,4) !== 'data')
+if(document.cookie && window.location.href.substr(0,4) !== 'data')
 {
 	document.cookie.split(';').map(c => {
+
 		let [key, value] = c.split('=');
 
 		try
@@ -38,19 +38,18 @@ if(window.location.href.substr(0,4) !== 'data')
 		key = key.trim();
 
 		Cookie.jar[decodeURIComponent(key)] = value;
-		// console.log(Cookie.jar);
+
 	});
 
 	Cookie.jar.bindTo((v,k,t,d) => {
-		t[k] = v;
 
 		if(d)
 		{
-			delete t[k];
+			document.cookie = `${encodeURIComponent(k)}=;expires=${new Date(0)}`;
 		}
-
-		const cookieString = `${encodeURIComponent(k)}=${t[k]}`;
-		// console.log(cookieString);
-		document.cookie = cookieString;
+		else
+		{
+			document.cookie = `${encodeURIComponent(k)}=${v}`;
+		}
 	});
 }

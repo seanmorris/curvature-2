@@ -1204,21 +1204,26 @@ export class View
 
 			const autoChangedEvent = new CustomEvent('cvAutoChanged', {bubbles: true});
 
-			if(tag.tagName === 'INPUT' || tag.tagName === 'SELECT' || tag.tagName === 'TEXTAREA')
+			if(['INPUT', 'SELECT', 'TEXTAREA'].includes(tag.tagName))
 			{
-				let type = tag.getAttribute('type');
-				if(type && type.toLowerCase() === 'checkbox') {
+				const type = tag.getAttribute('type');
+
+				if(type && type.toLowerCase() === 'checkbox')
+				{
 					tag.checked = !!v;
+
 					tag.dispatchEvent(autoChangedEvent);
 				}
-				else if(type && type.toLowerCase() === 'radio') {
+				else if(type && type.toLowerCase() === 'radio')
+				{
 					tag.checked = (v == tag.value);
+
 					tag.dispatchEvent(autoChangedEvent);
 				}
-				else if(type !== 'file') {
+				else if(type !== 'file')
+				{
 					if(tag.tagName === 'SELECT')
 					{
-						// console.log(k, v, tag.outerHTML, tag.options.length);
 						for(let i in tag.options)
 						{
 							let option = tag.options[i];
@@ -1226,22 +1231,26 @@ export class View
 							if(option.value == v)
 							{
 								tag.selectedIndex = i;
+
 							}
 						}
 					}
+
 					tag.value = v == null ? '' : v;
+
 					tag.dispatchEvent(autoChangedEvent);
+
 				}
 			}
 			else
 			{
-				for(const node of tag.childNodes)
-				{
-					node.remove();
-				}
-
 				if(v instanceof View)
 				{
+					for(const node of tag.childNodes)
+					{
+						node.remove();
+					}
+
 					const onAttach = (parentNode) => {
 						v.attached(parentNode);
 					};
@@ -1254,11 +1263,34 @@ export class View
 				}
 				else if(unsafeHtml)
 				{
-					tag.innerHTML = v;
+					if(tag.innerHTML !== v)
+					{
+						if(tag.innerHTML === v.substring(0, tag.innerHTML.length))
+						{
+							tag.innerHTML += v.substring(tag.innerHTML.length);
+						}
+						else
+						{
+							for(const node of tag.childNodes)
+							{
+								node.remove();
+							}
+
+							tag.innerHTML = v;
+						}
+					}
 				}
 				else
 				{
-					tag.textContent = v;
+					if(tag.textContent !== v)
+					{
+						for(const node of tag.childNodes)
+						{
+							node.remove();
+						}
+
+						tag.textContent = v;
+					}
 				}
 			}
 
@@ -1275,7 +1307,6 @@ export class View
 		const multi = tag.getAttribute('multiple');
 
 		let inputListener = (event) => {
-			// console.log(event, proxy, property, event.target.value);
 
 			if(event.target !== tag)
 			{
@@ -1291,7 +1322,7 @@ export class View
 					proxy[property] = false;
 				}
 			}
-			else if(event.target.matches('[contentEditable=true]'))
+			else if(event.target.matches('[contenteditable=true]'))
 			{
 				proxy[property] = event.target.innerHTML;
 			}
@@ -2371,20 +2402,30 @@ export class View
 	{
 		node.addEventListener(eventName, callback, options);
 
-		this.onRemove(() => node.removeEventListener(eventName, callback, options));
+		let remove = () => {
+			node.removeEventListener(eventName, callback, options);
+		}
+
+		const remover = () => {
+			remove(); remove = () => {};
+		}
+
+		this.onRemove(() => remover());
+
+		return remover;
 	}
 }
 
 Object.defineProperty(View, 'templates', {
-	enumerable: false,
-	writable: false,
-	value: new Map()
+	enumerable: false
+	, writable: false
+	, value:    new Map()
 });
 
 Object.defineProperty(View, 'refClasses', {
-	enumerable: false,
-	writable: false,
-	value: new Map()
+	enumerable: false
+	, writable: false
+	, value:    new Map()
 });
 
 Object.defineProperty(View, 'linkClicked', (event) => {
