@@ -19,6 +19,7 @@
 	"dependencies": {},
 	"files": [
 		"dist/curvature.js",
+		"dist/curvature.min.js",
 		"access/*",
 		"base/*",
 		"form/*",
