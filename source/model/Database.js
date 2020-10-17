@@ -100,9 +100,11 @@ export class Database
 
 			const trans     = this[Connection].transaction([storeName], "readwrite");
 			const store     = trans.objectStore(storeName);
-			record          = Bindable.makeBindable(record);
 			const bank      = this[Bank][storeName];
-			const request   = store.add(Object.assign({}, record));
+
+			record = Bindable.make(record);
+
+			const request = store.add(Object.assign({}, record));
 
 			request.onerror = error => {
 
