@@ -12,8 +12,10 @@ export class Router {
 		});
 	}
 
-	static listen(listener)
+	static listen(listener, routes = false)
 	{
+		this.routes = routes;
+
 		let route = location.pathname + location.search;
 
 		if(location.hash)
@@ -139,7 +141,7 @@ export class Router {
 
 		const prev    = this.prevPath;
 		const current = listener.args.content;
-		const routes  = listener.routes || Routes.dump();
+		const routes  = this.routes || listener.routes || Routes.dump();
 		const query   = new URLSearchParams(location.search);
 
 		for(const i in this.query)

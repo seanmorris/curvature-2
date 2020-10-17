@@ -1,6 +1,8 @@
+![avatar](https://avatars3.githubusercontent.com/u/640101?s=80&v=4)
+
 # Curvature.js
 
-v.0.0.64
+v.0.0.66
 
 Curvature is a lightweight javascript framework with an emphasis on **straightforwardness**.
 

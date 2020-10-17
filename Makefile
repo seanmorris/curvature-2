@@ -4,7 +4,8 @@ build:
 	npx babel source/ --out-dir .
 
 build-prod:
-	npx babel source/ --out-file .dist/curvature.js
+	npx babel source/ --no-comments --out-file dist/curvature.js
+	npx babel source/ --presets=babel-preset-minify --no-comments --out-file dist/curvature.min.js
 
 dependencies:
 	npm install

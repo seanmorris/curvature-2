@@ -40,36 +40,6 @@ export class HtmlField extends Field {
 		></${this.args.tagName}>`;
 	}
 
-	postRender()
-	{
-		this.observer = new MutationObserver(mutations => {
-
-			const element = this.tags.input.element;
-
-			const nodes = Array.from(element.childNodes).filter(node => {
-
-				return node.length > 0 || node.nodeType !== node.TEXT_NODE
-
-			});
-
-			const lines = nodes.map(n => (n.outerHTML || n.textContent));
-
-			this.args.value = lines.join('')
-				.replace(/&lt;/i, '<')
-				.replace(/&gt;/i, '>');
-		});
-
-		this.observer.observe(
-			this.tags.input.element
-			, {
-				characterData: true
-				, attributes:  true
-				, childList:   true
-				, subtree:     true
-			}
-		);
-	}
-
 	inputProvided(event)
 	{
 		this.args.value = event.target.innerHTML;

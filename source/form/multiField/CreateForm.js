@@ -54,6 +54,12 @@ export class CreateForm extends FormWrapper
 		this.args.view.args.loading = false;
 		this.args.view.args.classes = '';
 
+		if(!response.body)
+		{
+			super.onResponse(response);
+			return;
+		}
+
 		if(!this.args.wrapper)
 		{
 			this.args.view.addRecord(response.body);

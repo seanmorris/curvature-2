@@ -1,6 +1,6 @@
 {
 	"name": "curvature",
-	"version": "0.0.64",
+	"version": "0.0.66a",
 	"author": "Sean Morris <curvature@seanmorr.is> (https://seanmorr.is)",
 	"devDependencies": {
 		"@babel/cli": "^7.8.4",
@@ -18,6 +18,8 @@
 	},
 	"dependencies": {},
 	"files": [
+		"dist/curvature.js",
+		"dist/curvature.min.js",
 		"access/*",
 		"base/*",
 		"form/*",

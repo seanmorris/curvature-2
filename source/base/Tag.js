@@ -34,6 +34,7 @@ export class Tag
 
 		// return this.proxy;
 	}
+
 	remove()
 	{
 		Bindable.clearBindings(this);
@@ -59,6 +60,7 @@ export class Tag
 
 		this.element = this.ref = this.parent = null;
 	}
+
 	clear()
 	{
 		if(!this.element)
@@ -74,6 +76,7 @@ export class Tag
 			this.element.removeChild(this.element.firstChild);
 		}
 	}
+
 	pause(paused = true)
 	{
 
