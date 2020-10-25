@@ -527,8 +527,7 @@ export class Bindable
 						|| (typeof ResizeObserver === 'function' && object instanceof ResizeObserver)
 						|| object instanceof Map
 						|| object instanceof Set
-					)
-						? object
+					)	? object
 						: object[Ref];
 
 					const ret = new.target

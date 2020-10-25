@@ -81,4 +81,24 @@ export class Tag
 	{
 
 	}
+
+	style(styles)
+	{
+		if(!this.element)
+		{
+			return;
+		}
+
+		let styleEvent = new CustomEvent('cvStyle', {detail:{styles}});
+
+		if(!this.element.dispatchEvent(styleEvent))
+		{
+			return;
+		}
+
+		for(const property in styles)
+		{
+			this.element.style[property] = styles[property];
+		}
+	}
 }

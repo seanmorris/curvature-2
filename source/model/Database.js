@@ -70,26 +70,27 @@ export class Database
 		});
 	}
 
-	static _version_1(database)
-	{
-		// const eventLog = database.createObjectStore(
-		// 	'event-log', {keyPath: 'id'}
-		// );
+	// static _version_1(database)
+	// {
+	// 	const eventLog = database.createObjectStore(
+	// 		'models-store', {keyPath: 'id'}
+	// 	);
 
-		// eventLog.createIndex('id',      'id',      {unique: false});
-		// eventLog.createIndex('created', 'created', {unique: false});
-	}
+	// 	eventLog.createIndex('id',      'id',      {unique: false});
+	// 	eventLog.createIndex('class',   'class',   {unique: false});
+	// 	// eventLog.createIndex('created', 'created', {unique: false});
+	// }
 
-	select({store, index, range = null, direction = 'next', limit = 0, offset = 0})
+	select({store, index, range = null, direction = 'next', limit = 0, offset = 0, type = false})
 	{
 		const t = this[Connection].transaction(store, "readonly");
 		const s = t.objectStore(store);
 		const i = index ? s.index(index) : s;
 
 		return {
-			each:   this[Fetch](i, direction, range, limit, offset)
-			, one:  this[Fetch](i, direction, range, 1, offset)
-			, then: c=>(this[Fetch](i, direction, range, limit, offset))(e=>e).then(c)
+			each:   this[Fetch](type, i, direction, range, limit, offset)
+			, one:  this[Fetch](type, i, direction, range, 1, offset)
+			, then: c=>(this[Fetch](type, i, direction, range, limit, offset))(e=>e).then(c)
 		};
 	}
 
@@ -98,9 +99,9 @@ export class Database
 		return new Promise((accept, reject) => {
 			this[Bank][storeName] = this[Bank][storeName] || new WeakMap;
 
-			const trans     = this[Connection].transaction([storeName], "readwrite");
-			const store     = trans.objectStore(storeName);
-			const bank      = this[Bank][storeName];
+			const trans = this[Connection].transaction([storeName], "readwrite");
+			const store = trans.objectStore(storeName);
+			const bank  = this[Bank][storeName];
 
 			record = Bindable.make(record);
 
@@ -189,56 +190,62 @@ export class Database
 			const storeName = record[Store];
 			const trans     = this[Connection].transaction([storeName], "readwrite");
 			const store     = trans.objectStore(storeName);
-			const request   = store.delete(record[PrimaryKey].description);
+			const request   = store.delete(Number(record[PrimaryKey].description));
+
 			request.onerror = error => {
-				Database.dispatchEvent(new CustomEvent('writeError', {detail: {
-					database: this[Name]
-					, key:    Database.getPrimaryKey(record)
-					, store:  storeName
-					, type:    'delete'
-					, subType: 'update'
-				}}));
+				const deleteEvent = new CustomEvent('writeError', {detail: {
+					database:   this[Name]
+					, original: event
+					, key:      Database.getPrimaryKey(record)
+					, store:    storeName
+					, type:     'write'
+					, subType:  'delete'
+				}});
+
+				Database.dispatchEvent(deleteEvent);
 
 				reject(error);
 			};
 
 			request.onsuccess = event => {
-				Database.dispatchEvent(new CustomEvent('write', {detail: {
-					database: this[Name]
-					, key:    Database.getPrimaryKey(record)
-					, store:  storeName
-					, type:    'write'
-					, subType: 'delete'
-				}}));
+				const writeEvent = new CustomEvent('write', {detail: {
+					database:   this[Name]
+					, original: event
+					, key:      Database.getPrimaryKey(record)
+					, store:    storeName
+					, type:     'write'
+					, subType:  'delete'
+				}});
+
+				Database.dispatchEvent(writeEvent);
 
 				trans.commit();
-				accept(event);
+
+				accept(writeEvent);
 			};
 		});
 	}
 
-	[Fetch](index, direction, range, limit, offset)
+	[Fetch](type, index, direction, range, limit, offset)
 	{
 		return callback => new Promise((accept, reject) => {
+			let i = 0;
+
 			const request = index.openCursor(range, direction);
-			const results = {};
-			let i         = 0;
 
 			request.addEventListener('success', event => {
+
 				const cursor = event.target.result;
 
-				if(!cursor || (limit && i - offset >= limit))
+				if(!cursor)
 				{
-					return accept(results);
+					return accept({record: null, result: null, index: i});
 				}
 
-				if(offset && offset > i)
+				if(offset > i++)
 				{
-					i++;
 					return cursor.continue();
 				}
-
-				i++;
 
 				const source    = cursor.source;
 				const storeName = source.objectStore
@@ -247,9 +254,11 @@ export class Database
 
 				this[Bank][storeName] = this[Bank][storeName] || new WeakMap;
 
-				const bank   = this[Bank][storeName];
-				const value  = cursor.value;
-				const pk     = cursor.primaryKey;
+				const bank  = this[Bank][storeName];
+				const pk    = cursor.primaryKey;
+				const value = type
+					? type.from(cursor.value)
+					: cursor.value;
 
 				if(bank[pk])
 				{
@@ -270,7 +279,16 @@ export class Database
 					, subType: 'select'
 				}}));
 
-				results[pk] = callback(bank[pk]);
+				const result = callback
+					? callback(bank[pk], i)
+					: bank[pk];
+
+				if(limit && i - offset >= limit)
+				{
+					offset += limit;
+
+					return accept({record: bank[pk], result, index: i});
+				}
 
 				cursor.continue();
 			});

@@ -541,6 +541,10 @@ export class View
 				tag = tag.matches('[cv-with]')
 					&& this.mapWithTag(tag)
 					|| tag;
+
+				tag = tag.matches('[cv-view]')
+					&& this.mapViewTag(tag)
+					|| tag;
 			}
 			else
 			{
@@ -1038,7 +1042,6 @@ export class View
 					const bindProperty = j;
 
 					const matchingSegments = bindProperties[longProperty];
-
 
 					this.onRemove(proxy.bindTo(property, (v, k, t, d) => {
 						if(transformer)
@@ -1688,7 +1691,7 @@ export class View
 
 		let subTemplate = new DocumentFragment;
 
-		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
+		[...tag.childNodes].map(n => subTemplate.appendChild(n));
 
 		let carryProps = [];
 
@@ -1764,6 +1767,33 @@ export class View
 		});
 
 		this.onRemove(debind);
+
+		return tag;
+	}
+
+	mapViewTag(tag)
+	{
+		const viewAttr = tag.getAttribute('cv-view');
+
+		tag.removeAttribute('cv-view');
+
+		let subTemplate = new DocumentFragment;
+
+		[...tag.childNodes].map(n => subTemplate.appendChild(n));
+
+		const viewClass = viewAttr
+			? this.stringToClass(viewAttr)
+			: View;
+
+		let view = new viewClass(this.args, this);
+
+		this.onRemove(((view)=>()=>{
+			view.remove();
+		})(view));
+
+		view.template = subTemplate;
+
+		view.render(tag);
 
 		return tag;
 	}

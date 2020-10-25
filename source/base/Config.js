@@ -1,7 +1,7 @@
 const AppConfig = {};
 
 try { Object.assign(AppConfig, require('Config').Config || {}); }
-catch(error){ console.error(error); }
+catch(error){ console.warn(error); }
 
 export class Config
 {

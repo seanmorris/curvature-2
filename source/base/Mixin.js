@@ -15,9 +15,9 @@ export class Mixin
 
 			for(const mixin of mixins)
 			{
-				if(mixin[ Mixin.constructor ])
+				if(mixin[ Mixin.Constructor ])
 				{
-					mixin[ Mixin.constructor ].apply(this);
+					mixin[ Mixin.Constructor ].apply(this);
 				}
 
 				switch(typeof mixin)
@@ -260,4 +260,4 @@ export class Mixin
 	}
 }
 
-Mixin.constructor = Constructor;
+Mixin.Constructor = Constructor;
