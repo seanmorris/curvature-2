@@ -2,9 +2,12 @@ node_modules/
 package-lock.json
 public/
 access
+animate
 base
 form
 input
+mixin
+model
 strings
 tag
 toast

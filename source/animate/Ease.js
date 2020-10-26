@@ -86,13 +86,18 @@ export class Ease extends Mixin.with(PromiseMixin)
 
 		if(this.initial === false)
 		{
-			return 0;
+			return this.reverse ? 1 : 0;
 		}
 
 		const now = Date.now();
 		const elapsed = now - this.initial;
 
 		const fraction = (elapsed  % this.interval) / this.interval;
+
+		if(this.initial && fraction === 0)
+		{
+			return this.reverse ? 0 : 1;
+		}
 
 		return this.reverse
 			? 1 - fraction
