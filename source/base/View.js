@@ -82,7 +82,7 @@ export class View
 		this.mainView  = null;
 		this.parent    = mainView;
 		this.viewList  = null;
-		this.viewLists = {};
+		this.viewLists = new Map;
 
 		this.withViews = {};
 
@@ -284,14 +284,9 @@ export class View
 			}
 		}
 
-		for(let i in this.viewLists)
+		for(const [tag, viewList] of this.viewLists)
 		{
-			if(!this.viewLists[i])
-			{
-				return;
-			}
-
-			this.viewLists[i].pause(!!paused);
+			viewList.pause(!!paused);
 		}
 
 		for(let i in this.tags)
@@ -1227,22 +1222,25 @@ export class View
 				{
 					if(tag.tagName === 'SELECT')
 					{
-						for(let i in tag.options)
-						{
-							let option = tag.options[i];
-
-							if(option.value == v)
+						const onAttach = (parentNode) => {
+							for(const option of tag.options)
 							{
-								tag.selectedIndex = i;
-
+								if(option.value == v)
+								{
+									tag.selectedIndex = i;
+								}
 							}
-						}
+						};
+
+						this.attach.add(onAttach);
+					}
+					else
+					{
+						tag.value = v == null ? '' : v;
 					}
 
-					tag.value = v == null ? '' : v;
 
 					tag.dispatchEvent(autoChangedEvent);
-
 				}
 			}
 			else
@@ -1296,7 +1294,6 @@ export class View
 					}
 				}
 			}
-
 		});
 
 		if(proxy !== this.args)
@@ -1817,9 +1814,9 @@ export class View
 
 		const debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
 
-			if(this.viewLists[eachProp])
+			if(this.viewLists.has(tag))
 			{
-				this.viewLists[eachProp].remove();
+				this.viewLists.get(tag).remove();
 			}
 
 			const viewList = new ViewList(subTemplate, asProp, v, this, keyProp, viewClass);
@@ -1864,7 +1861,7 @@ export class View
 				tag.removeChild(tag.firstChild);
 			}
 
-			this.viewLists[eachProp] = viewList;
+			this.viewLists.set(tag, viewList);
 
 			viewList.render(tag);
 		});
@@ -2294,16 +2291,12 @@ export class View
 			cleanup && cleanup();
 		}
 
-		for(let i in this.viewLists)
+		for(const [tag, viewList] of this.viewLists)
 		{
-			if(!this.viewLists[i])
-			{
-				continue;
-			}
-			this.viewLists[i].remove();
+			viewList.remove();
 		}
 
-		this.viewLists = [];
+		delete this.viewLists;
 
 		for(let i in this.timeouts)
 		{
