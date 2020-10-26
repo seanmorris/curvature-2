@@ -2296,7 +2296,7 @@ export class View
 			viewList.remove();
 		}
 
-		delete this.viewLists;
+		this.viewLists.clear();
 
 		for(let i in this.timeouts)
 		{
@@ -2317,7 +2317,6 @@ export class View
 		}
 
 		this.removed = true;
-
 	}
 
 	findTag(selector)
