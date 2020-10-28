@@ -1,4 +1,4 @@
-import { Config      } from 'Config';
+import { Config      } from '../../base/Config';
 import { Form        } from '../../form/Form';
 import { FieldSet    } from '../../form/FieldSet';
 import { CreateForm  } from './CreateForm';
@@ -103,9 +103,9 @@ export class View extends FieldSet
 	{
 		let origin = '';
 
-		if(Config && Config.backend)
+		if(Config.get('backend'))
 		{
-			origin = Config.backend;
+			origin = Config.get('backend');
 		}
 
 		if(this.args.attrs['data-create-endpoint'] !== false)

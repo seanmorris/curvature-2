@@ -26,7 +26,7 @@ export class Ease extends Mixin.with(PromiseMixin)
 
 		this.repeat = 'repeat' in options
 			? options.repeat
-			: false;
+			: 1;
 
 		this.reverse = 'reverse' in options
 			? options.reverse

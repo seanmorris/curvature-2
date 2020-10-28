@@ -290,15 +290,18 @@ export class Router {
 			, selected
 			, args
 			, forceRefresh
-		)).catch(error => this.update(
-			listener
-			, path
-			, error
-			, routes
-			, selected
-			, args
-			, forceRefresh
-		));
+		)).catch(error => {
+			console.error(error);
+			this.update(
+				listener
+				, path
+				, error
+				, routes
+				, selected
+				, args
+				, forceRefresh
+			);
+		});
 	}
 
 	static update(listener, path, result, routes, selected, args, forceRefresh)

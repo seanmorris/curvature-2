@@ -1,9 +1,9 @@
-import { Config      } from 'Config';
+import { Config      } from '../../base/Config';
 import { FormWrapper } from './FormWrapper';
 import { HiddenField } from '../../form/HiddenField';
 import { Repository  } from '../../base/Repository';
 
-const backend = Config ? Config.backend : '//';
+const backend = Config.get('backend') || '//';
 
 export class SearchForm extends FormWrapper
 {

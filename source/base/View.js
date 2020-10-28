@@ -344,7 +344,7 @@ export class View
 
 		this.nodes = [];
 
-		if(window['devmode'] === true)
+		if(window.devMode === true)
 		{
 			this.firstNode = document.createComment(`Template ${this._id} Start`);
 			this.lastNode = document.createComment(`Template ${this._id} End`);
@@ -400,6 +400,24 @@ export class View
 				}
 
 				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+
+					if(!child.matches)
+					{
+						return;
+					}
+
+					Dom.mapTags(child, false, (tag, walker)=>{
+
+						if(!tag.matches)
+						{
+							return;
+						}
+
+						tag.dispatchEvent(new Event('cvDomAttached', {
+							bubbles: true, target: child
+						}));
+					});
+
 					child.dispatchEvent(new Event('cvDomAttached', {
 						bubbles: true, target: child
 					}));
@@ -426,6 +444,23 @@ export class View
 			{
 				detach[i]();
 			}
+
+			Dom.mapTags(child, false, (tag, walker)=>{
+
+				if(!child.matches)
+				{
+					return;
+				}
+
+				if(!tag.matches)
+				{
+					return;
+				}
+
+				tag.dispatchEvent(new Event('cvDomAttached', {
+					bubbles: true, target: child
+				}));
+			});
 
 			this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
 				child.dispatchEvent(new Event('cvDomDetached', {
@@ -1078,12 +1113,12 @@ export class View
 		let refAttr = tag.getAttribute('cv-ref');
 		let [refProp, refClassname = null, refKey = null] = refAttr.split(':');
 
-		if(!refClassname)
-		{
-			refClassname = 'curvature/base/Tag';
-		}
+		let refClass = Tag;
 
-		let refClass = this.stringToClass(refClassname);
+		if(refClassname)
+		{
+			refClass = this.stringToClass(refClassname);
+		}
 
 		tag.removeAttribute('cv-ref');
 
@@ -1888,6 +1923,7 @@ export class View
 
 		let ifProperty = sourceTag.getAttribute('cv-if');
 		let inverted   = false;
+		let defined    = false;
 
 		sourceTag.removeAttribute('cv-if');
 
@@ -1895,6 +1931,12 @@ export class View
 		{
 			ifProperty = ifProperty.substr(1);
 			inverted   = true;
+		}
+
+		if(ifProperty.substr(0, 1) === '?')
+		{
+			ifProperty = ifProperty.substr(1);
+			defined    = true;
 		}
 
 		const subTemplate = new DocumentFragment;
@@ -1931,19 +1973,9 @@ export class View
 
 		const propertyDebind = proxy.bindTo(property, (v,k) => {
 
-			if(!hasRendered)
+			if(defined)
 			{
-				let initValue = proxy[property];
-
-				const renderDoc  = (!!initValue ^ !!inverted)
-					? tag
-					: ifDoc;
-
-				view.render(renderDoc);
-
-				hasRendered = true;
-
-				return;
+				v = v !== null && v !== undefined;
 			}
 
 			if(Array.isArray(v))
@@ -1954,6 +1986,19 @@ export class View
 			if(inverted)
 			{
 				v = !v;
+			}
+
+			if(!hasRendered)
+			{
+				const renderDoc  = (!!proxy[property] ^ !!inverted)
+					? tag
+					: ifDoc;
+
+				view.render(renderDoc);
+
+				hasRendered = true;
+
+				return;
 			}
 
 			if(v)
@@ -2344,7 +2389,10 @@ export class View
 
 	findTags(selector)
 	{
-		return this.nodes,map(n=> n.querySelectorAll(selector)).flat();
+		return this.nodes
+			.filter(n=>n.querySelectorAll)
+			.map(n=> n.querySelectorAll(selector))
+			.flat();
 	}
 
 	onRemove(callback)
@@ -2422,6 +2470,31 @@ export class View
 
 	listen(node, eventName, callback, options)
 	{
+		if(typeof node === 'string')
+		{
+			options   = callback;
+			callback  = eventName;
+			eventName = node;
+			node      = this;
+		}
+
+		if(node instanceof View)
+		{
+			return this.listen(node.nodes, eventName, callback, options);
+		}
+
+		if(Array.isArray(node))
+		{
+			const removers = node.map(n => this.listen(n, eventName, callback, options));
+
+			return () => removers.map(r => r());
+		}
+
+		if(node instanceof Tag)
+		{
+			return this.listen(node.element, eventName, callback, options);
+		}
+
 		node.addEventListener(eventName, callback, options);
 
 		let remove = () => {

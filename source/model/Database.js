@@ -1,4 +1,4 @@
-import { Bindable } from 'curvature/base/Bindable';
+import { Bindable } from '../base/Bindable';
 
 const PrimaryKey = Symbol('PrimaryKey');
 const Connection = Symbol('Connection');

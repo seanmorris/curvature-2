@@ -7,6 +7,8 @@ const Executing  = Symbol('executing');
 const Stack      = Symbol('stack');
 const ObjSymbol  = Symbol('object');
 const Wrapped    = Symbol('wrapped');
+const OnGet      = Symbol('onGet');
+const OnAllGet   = Symbol('onAllGet');
 
 export class Bindable
 {
@@ -45,7 +47,6 @@ export class Bindable
 		const win = window || {};
 
 		const excludedClasses = [
-
 			win.Node
 			, win.Map
 			, win.Set
@@ -53,7 +54,6 @@ export class Bindable
 			, win.MutationObserver
 			, win.PerformanceObserver
 			, win.IntersectionObserver
-
 		].filter(x=>typeof x === 'function');
 
 		if (excludedClasses.filter(x => object instanceof x).length
@@ -143,6 +143,13 @@ export class Bindable
 
 		const bindTo = (property, callback = null, options = {}) => {
 			let bindToAll = false;
+
+			if(Array.isArray(property))
+			{
+				const debinders = property.map(p => bindTo(p, callback, options));
+
+				return () => debinders.map(d => d());
+			}
 
 			if(property instanceof Function)
 			{
@@ -490,6 +497,16 @@ export class Bindable
 				return target[key];
 			}
 
+			if(object[OnAllGet])
+			{
+				return object[OnAllGet](key);
+			}
+
+			if(object[OnGet] && !(key in object))
+			{
+				return object[OnGet](key);
+			}
+
 			if(target[key] instanceof Function)
 			{
 				if(target[Wrapped][key])
@@ -636,11 +653,7 @@ export class Bindable
 
 	static wrapDelayCallback(callback, delay)
 	{
-		 return (v,k,t,d) => {
-
-			setTimeout(()=>callback(v,k,t,d,t[k]), delay);
-
-		};
+		return (v,k,t,d) => setTimeout(()=>callback(v,k,t,d,t[k]), delay);
 	}
 
 	static wrapThrottleCallback(callback, throttle)
@@ -698,3 +711,18 @@ export class Bindable
 		};
 	}
 }
+
+Object.defineProperty(Bindable, 'OnGet', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      OnGet
+});
+
+
+Object.defineProperty(Bindable, 'OnAllGet', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      OnAllGet
+});

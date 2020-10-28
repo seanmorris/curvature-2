@@ -1,4 +1,4 @@
-import { Config     } from 'Config';
+import { Config     } from '../../base/Config';
 import { View       } from '../../base/View';
 import { Repository } from '../../base/Repository';
 
@@ -109,7 +109,7 @@ export class Wrapper extends View
 
 	backendPath()
 	{
-		const backend = Config ? Config.backend : '//';
+		const backend = Config.get('backend') || '//';
 
 		return backend + this.args.parent.args.attrs['data-endpoint'];
 	}

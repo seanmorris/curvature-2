@@ -21,9 +21,12 @@
 		"dist/curvature.js",
 		"dist/curvature.min.js",
 		"access/*",
+		"animate/*",
 		"base/*",
 		"form/*",
 		"input/*",
+		"model/*",
+		"strings/*",
 		"tag/*",
 		"toast/*"
 	]

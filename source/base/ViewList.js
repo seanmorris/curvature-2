@@ -9,7 +9,7 @@ export class ViewList
 		this.removed      = false;
 		this.args         = Bindable.makeBindable({});
 		this.args.value   = Bindable.makeBindable(list || {});
-		this.subArgs = Bindable.makeBindable({});
+		this.subArgs      = Bindable.makeBindable({});
 		this.views        = [];
 		this.cleanup      = [];
 		this.viewClass    = viewClass || View;
@@ -30,7 +30,7 @@ export class ViewList
 
 		this.willReRender = false;
 
-		this.args.___before((t,e,s,o)=>{
+		this.args.___before((t,e,s,o,a)=>{
 			if(e == 'bindTo')
 			{
 				return;
@@ -39,7 +39,7 @@ export class ViewList
 			this.paused = true;
 		});
 
-		this.args.___after((t,e,s,o) => {
+		this.args.___after((t,e,s,o,a) => {
 			if(e == 'bindTo')
 			{
 				return;
