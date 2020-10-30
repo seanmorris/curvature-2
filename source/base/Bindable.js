@@ -7,6 +7,7 @@ const Executing  = Symbol('executing');
 const Stack      = Symbol('stack');
 const ObjSymbol  = Symbol('object');
 const Wrapped    = Symbol('wrapped');
+const GetProto   = Symbol('getProto');
 const OnGet      = Symbol('onGet');
 const OnAllGet   = Symbol('onAllGet');
 
@@ -497,6 +498,13 @@ export class Bindable
 				return target[key];
 			}
 
+			const descriptor = Object.getOwnPropertyDescriptor(object, key);
+
+			if(descriptor && !descriptor.configurable && !descriptor.writable)
+			{
+				return target[key];
+			}
+
 			if(object[OnAllGet])
 			{
 				return object[OnAllGet](key);
@@ -511,10 +519,8 @@ export class Bindable
 			{
 				if(target[Wrapped][key])
 				{
-					return target[Wrapped][key];
+					return Bindable.make(target[Wrapped][key]);
 				}
-
-				const descriptor = Object.getOwnPropertyDescriptor(object, key);
 
 				if(descriptor && !descriptor.configurable && !descriptor.writable)
 				{
@@ -593,6 +599,15 @@ export class Bindable
 			return instance;
 		};
 
+		const getPrototypeOf = (target) => {
+			if(GetProto in object)
+			{
+				return object[GetProto];
+			}
+
+			return Reflect.getPrototypeOf(target);
+		}
+
 		Object.defineProperty(object, Ref, {
 			configurable: false
 			, enumerable: false
@@ -601,7 +616,7 @@ export class Bindable
 		});
 
 		object[Ref] = new Proxy(object, {
-			deleteProperty, construct, get, set
+			get, set, construct, getPrototypeOf, deleteProperty
 		});
 
 		return object[Ref];
@@ -719,6 +734,12 @@ Object.defineProperty(Bindable, 'OnGet', {
 	, value:      OnGet
 });
 
+Object.defineProperty(Bindable, 'GetProto', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      GetProto
+});
 
 Object.defineProperty(Bindable, 'OnAllGet', {
 	configurable: false

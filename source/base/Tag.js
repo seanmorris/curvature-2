@@ -39,7 +39,35 @@ export class Tag
 			return this[name];
 		};
 
-		this.proxy = Bindable.makeBindable(this);
+		this.style = ((_this) => Bindable.make(function(styles){
+			if(!_this.node)
+			{
+				return;
+			}
+
+			let styleEvent = new CustomEvent('cvStyle', {detail:{styles}});
+
+			if(!_this.node.dispatchEvent(styleEvent))
+			{
+				return;
+			}
+
+			for(const property in styles)
+			{
+				if(property[0] === '-')
+				{
+					_this.node.style.setProperty(property, styles[property]);
+				}
+
+				_this.node.style[property] = styles[property];
+			}
+		}))(this);
+
+		this.proxy = Bindable.make(this);
+
+		this.proxy.style.bindTo((v,k)=>{
+			this.element.style[k] = v;
+		});
 
 		this.proxy.bindTo((v,k)=>{
 			if(k in element)
@@ -48,34 +76,15 @@ export class Tag
 			}
 
 			return false;
-		})
+		});
 
 		return this.proxy;
-
-		// this.detachListener = (event) => {
-		// 	return;
-
-		// 	if(event.target != this.element)
-		// 	{
-		// 		return;
-		// 	}
-		// 	if(event.path[event.path.length -1] !== window)
-		// 	{
-		// 		return;
-		// 	}
-
-		// 	this.element.removeEventListener('cvDomDetached', this.detachListener);
-
-		// 	this.remove();
-		// };
-
-		// this.element.addEventListener('cvDomDetached', this.detachListener);
-
-		// return this.proxy;
 	}
 
 	remove()
 	{
+		this.node.remove();
+
 		Bindable.clearBindings(this);
 
 		let cleanup;
@@ -87,62 +96,34 @@ export class Tag
 
 		this.clear();
 
-		if(!this.element)
+		if(!this.node)
 		{
 			return;
 		}
 
 		let detachEvent = new Event('cvDomDetached');
 
-		this.element.dispatchEvent(detachEvent);
-		this.element.remove();
-
-		this.element = this.ref = this.parent = null;
+		this.node = this.element = this.ref = this.parent = null;
 	}
 
 	clear()
 	{
-		if(!this.element)
+		if(!this.node)
 		{
 			return;
 		}
 
 		let detachEvent = new Event('cvDomDetached');
 
-		while(this.element.firstChild)
+		while(this.node.firstChild)
 		{
-			this.element.firstChild.dispatchEvent(detachEvent);
-			this.element.removeChild(this.element.firstChild);
+			this.node.firstChild.dispatchEvent(detachEvent);
+			this.node.removeChild(this.node.firstChild);
 		}
 	}
 
 	pause(paused = true)
 	{
 
-	}
-
-	style(styles)
-	{
-		if(!this.element)
-		{
-			return;
-		}
-
-		let styleEvent = new CustomEvent('cvStyle', {detail:{styles}});
-
-		if(!this.element.dispatchEvent(styleEvent))
-		{
-			return;
-		}
-
-		for(const property in styles)
-		{
-			if(property[0] === '-')
-			{
-				this.element.style.setProperty(property, styles[property]);
-			}
-
-			this.element.style[property] = styles[property];
-		}
 	}
 }

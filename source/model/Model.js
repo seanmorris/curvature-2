@@ -3,7 +3,7 @@ import { Bindable } from '../base/Bindable';
 
 export class Model
 {
-	static keyProps(){ return ['class', 'id'] }
+	static keyProps(){ return ['class', 'id', 'rid'] }
 
 	static from(skeleton)
 	{
@@ -19,6 +19,11 @@ export class Model
 
 		instance.consume(skeleton);
 
+		for(const keyProp of keyProps)
+		{
+			instance[keyProp] = instance[keyProp] || null;
+		}
+
 		Cache.store(cacheKey, instance, 0, bucket);
 
 		return instance;
@@ -28,13 +33,15 @@ export class Model
 	{
 		const setProp = (property, value) => {
 
-			if(typeof value === 'object' && value.class && value.id)
+			if(value && typeof value === 'object' && value.__proto__.constructor.keyProps)
 			{
 				console.log(this, value);
 
-				const keyProps     = this.__proto__.constructor.keyProps();
-				const cacheKey     = keyProps.map(prop => skeleton[prop]).join('::');
-				const propCacheKey = keyProps.map(prop => value[prop]).join('::');
+				// const keyProps     = this.__proto__.constructor.keyProps();
+				// const cacheKey     = keyProps.map(prop => skeleton[prop]).join('::');
+				const subKeyProps  = value.__proto__.constructor.keyProps();
+				const propCacheKey = subKeyProps.map(prop => value[prop]).join('::');
+				
 				const bucket       = 'models-by-type-and-publicId';
 				const propCached   = Cache.load(propCacheKey, false, bucket);
 
@@ -54,7 +61,7 @@ export class Model
 			setProp(property, skeleton[property]);
 		}
 
-		// console.log(skeleton, Object.getOwnPropertySymbols(skeleton));
+		console.log(skeleton, Object.getOwnPropertySymbols(skeleton));
 
 		for(const property of Object.getOwnPropertySymbols(skeleton))
 		{

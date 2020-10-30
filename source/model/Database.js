@@ -78,7 +78,6 @@ export class Database
 
 	// 	eventLog.createIndex('id',      'id',      {unique: false});
 	// 	eventLog.createIndex('class',   'class',   {unique: false});
-	// 	// eventLog.createIndex('created', 'created', {unique: false});
 	// }
 
 	select({store, index, range = null, direction = 'next', limit = 0, offset = 0, type = false})
@@ -140,7 +139,7 @@ export class Database
 		});
 	}
 
-	update(record)
+	update(storeName, record)
 	{
 		if(!record[PrimaryKey])
 		{
@@ -148,7 +147,7 @@ export class Database
 		}
 
 		return new Promise((accept, reject) => {
-			const storeName = record[Store];
+			// const storeName = record[Store];
 			const trans     = this[Connection].transaction([storeName], "readwrite");
 			const store     = trans.objectStore(storeName);
 			const request   = store.put(Object.assign({}, record));
@@ -179,7 +178,7 @@ export class Database
 		});
 	}
 
-	delete(record)
+	delete(storeName, record)
 	{
 		if(!record[PrimaryKey])
 		{
@@ -187,7 +186,7 @@ export class Database
 		}
 
 		return new Promise((accept, reject) => {
-			const storeName = record[Store];
+			// const storeName = record[Store];
 			const trans     = this[Connection].transaction([storeName], "readwrite");
 			const store     = trans.objectStore(storeName);
 			const request   = store.delete(Number(record[PrimaryKey].description));
@@ -224,6 +223,11 @@ export class Database
 				accept(writeEvent);
 			};
 		});
+	}
+
+	listStores()
+	{
+		return [...this[Connection].objectStoreNames];
 	}
 
 	[Fetch](type, index, direction, range, limit, offset)

@@ -110,7 +110,6 @@ export class View
 				, writable:   false
 				, value:      accept
 			});
-
 		});
 
 		return Bindable.make(this);
@@ -140,7 +139,6 @@ export class View
 			{
 				callback(Date.now());
 			}
-
 
 			requestAnimationFrame(c);
 		};
@@ -444,29 +442,6 @@ export class View
 			{
 				detach[i]();
 			}
-
-			Dom.mapTags(child, false, (tag, walker)=>{
-
-				if(!child.matches)
-				{
-					return;
-				}
-
-				if(!tag.matches)
-				{
-					return;
-				}
-
-				tag.dispatchEvent(new Event('cvDomAttached', {
-					bubbles: true, target: child
-				}));
-			});
-
-			this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
-				child.dispatchEvent(new Event('cvDomDetached', {
-					bubbles: true, target: child
-				}));
-			});
 		}
 
 		subDoc.append(...this.nodes);
@@ -496,6 +471,12 @@ export class View
 					child.dispatchEvent(new Event('cvDomAttached', {
 						bubbles: true, target: child
 					}));
+
+					Dom.mapTags(child, false, (tag, walker)=>{
+						child.dispatchEvent(new Event('cvDomAttached', {
+							bubbles: true, target: child
+						}));						
+					});
 				});
 
 				const attach = this.attach.items();
@@ -564,12 +545,12 @@ export class View
 					&& this.mapBindTag(tag)
 					|| tag;
 
-				tag = tag.matches('[cv-if]')
-					&& this.mapIfTag(tag)
-					|| tag;
-
 				tag = tag.matches('[cv-with]')
 					&& this.mapWithTag(tag)
+					|| tag;
+
+				tag = tag.matches('[cv-if]')
+					&& this.mapIfTag(tag)
 					|| tag;
 
 				tag = tag.matches('[cv-view]')
@@ -955,18 +936,25 @@ export class View
 							v = transformer(v);
 						}
 
-						if(v instanceof Object && v.__toString instanceof Function)
+						if(v instanceof Node)
 						{
-							v = v.__toString();
-						}
-
-						if(unsafeHtml)
-						{
-							dynamicNode.innerHTML = v;
+							tag.parentNode.insertBefore(v, tag);
 						}
 						else
 						{
-							dynamicNode.nodeValue = v;
+							if(v instanceof Object && v.__toString instanceof Function)
+							{
+								v = v.__toString();
+							}
+
+							if(unsafeHtml)
+							{
+								dynamicNode.innerHTML = v;
+							}
+							else
+							{
+								dynamicNode.nodeValue = v;
+							}
 						}
 
 						dynamicNode[dontParse] = true;
@@ -1973,6 +1961,8 @@ export class View
 
 		const propertyDebind = proxy.bindTo(property, (v,k) => {
 
+			const o = v;
+
 			if(defined)
 			{
 				v = v !== null && v !== undefined;
@@ -1990,15 +1980,9 @@ export class View
 
 			if(!hasRendered)
 			{
-				const renderDoc  = (!!proxy[property] ^ !!inverted)
-					? tag
-					: ifDoc;
-
-				view.render(renderDoc);
+				view.render(ifDoc);
 
 				hasRendered = true;
-
-				return;
 			}
 
 			if(v)
@@ -2275,12 +2259,10 @@ export class View
 
 	postRender(parentNode)
 	{
-
 	}
 
 	attached(parentNode)
 	{
-
 	}
 
 	interpolatable(str)
@@ -2402,17 +2384,14 @@ export class View
 
 	update()
 	{
-
 	}
 
 	beforeUpdate(args)
 	{
-
 	}
 
 	afterUpdate(args)
 	{
-
 	}
 
 	stringTransformer(methods)
@@ -2537,5 +2516,4 @@ Object.defineProperty(View, 'linkClicked', (event) => {
 	}
 
 	Router.go(href);
-
 });
