@@ -98,7 +98,7 @@ export class Database
 		return new Promise((accept, reject) => {
 			this[Bank][storeName] = this[Bank][storeName] || new WeakMap;
 
-			const trans = this[Connection].transaction([storeName], "readwrite");
+			const trans = this[Connection].transaction([storeName], 'readwrite');
 			const store = trans.objectStore(storeName);
 			const bank  = this[Bank][storeName];
 
@@ -148,7 +148,7 @@ export class Database
 
 		return new Promise((accept, reject) => {
 			// const storeName = record[Store];
-			const trans     = this[Connection].transaction([storeName], "readwrite");
+			const trans     = this[Connection].transaction([storeName], 'readwrite');
 			const store     = trans.objectStore(storeName);
 			const request   = store.put(Object.assign({}, record));
 			request.onerror = error => {
@@ -187,7 +187,7 @@ export class Database
 
 		return new Promise((accept, reject) => {
 			// const storeName = record[Store];
-			const trans     = this[Connection].transaction([storeName], "readwrite");
+			const trans     = this[Connection].transaction([storeName], 'readwrite');
 			const store     = trans.objectStore(storeName);
 			const request   = store.delete(Number(record[PrimaryKey].description));
 
@@ -228,6 +228,14 @@ export class Database
 	listStores()
 	{
 		return [...this[Connection].objectStoreNames];
+	}
+
+	listIndexes(storeName)
+	{
+		const trans     = this[Connection].transaction([storeName]);
+		const store     = trans.objectStore(storeName);
+
+		return [...store.indexNames];
 	}
 
 	[Fetch](type, index, direction, range, limit, offset)

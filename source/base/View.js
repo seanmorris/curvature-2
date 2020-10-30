@@ -38,79 +38,56 @@ export class View
 
 	constructor(args = {}, mainView = null)
 	{
-		Object.defineProperty(this, '___VIEW___', {
-			enumerable: false,
-			writable:    true
-		});
+		Object.defineProperty(this, 'args', {value: Bindable.make(args)});
+		Object.defineProperty(this, 'attach',  {value: new Bag((i,s,a) => {})});
+		Object.defineProperty(this, 'detach',  {value: new Bag((i,s,a) => {})});
 
-		this.___VIEW___ = View;
+		Object.defineProperty(this, 'cleanup',   {value: []});
+		Object.defineProperty(this, '_onRemove', {value: new Bag((i,s,a) => {})});
 
-		Object.defineProperty(this, 'args', {
-			configurable: false
-			, writable:   false
-			, value:      Bindable.make(args)
-		});
+		Object.defineProperty(this, 'parent',    {value: mainView});
 
-		const _this = this;
+		Object.defineProperty(this, 'views',     {value: new Map});
+		Object.defineProperty(this, 'viewLists', {value: new Map});
+		Object.defineProperty(this, 'withViews', {value: new Map});
 
-		if(!this.args._id)
+		Object.defineProperty(this, 'tags',      {value: Bindable.make({})});
+
+		Object.defineProperty(this, 'intervals', {value: []});
+		Object.defineProperty(this, 'timeouts',  {value: []});
+		Object.defineProperty(this, 'frames',    {value: []});
+
+		Object.defineProperty(this, 'ruleSet',    {value: new RuleSet});
+		Object.defineProperty(this, 'preRuleSet', {value: new RuleSet});
+
+		Object.defineProperty(this, 'subBindings',  {value: {}});
+		Object.defineProperty(this, 'subTemplates', {value: {}});
+
+		Object.defineProperty(this, 'eventCleanup', {value: []});
+
+		Object.defineProperty(this, 'interpolateRegex', {value: /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g});
+
+		Object.defineProperty(this, 'rendered', {value: new Promise(
+			(accept, reject) => Object.defineProperty(this, 'renderComplete', {value:accept})
+		)});
+
+		if(args._id)
 		{
-			Object.defineProperty(this.args, '_id', {
-				configurable: false
-				, get: function() { return _this._id }
-			});
+			Object.defineProperty(this.args, '_id', {get: () => this._id});
 		}
 
 		this.template  = ``;
 		this.document  = ``;
 
+		this.nodes     = null;
 		this.firstNode = null;
 		this.lastNode  = null;
-		this.nodes     = null;
 
-		this.cleanup   = [];
-
-		this._onRemove = new Bag((i,s,a) => {
-			// console.log('View _onRemove', i, s, a);
-		});
-
-		this.attach    = new Bag((i,s,a) => {});
-		this.detach    = new Bag((i,s,a) => {});
-
-		this.eventCleanup = [];
-
-		this.mainView  = null;
-		this.parent    = mainView;
 		this.viewList  = null;
-		this.viewLists = new Map;
+		this.mainView  = null;
 
-		this.withViews = {};
-
-		this.tags      = Bindable.make({});
-
-		this.intervals = [];
-		this.timeouts  = [];
-		this.frames    = [];
-
-		this.ruleSet     = new RuleSet;
-		this.preRuleSet  = new RuleSet;
-		this.subBindings = {};
-
-		this.subTemplates = {};
-
-		this.removed   = false;
 		this.preserve  = false;
-
-		this.interpolateRegex = /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g;
-
-		this.rendered = new Promise((accept, reject) => {
-
-			Object.defineProperty(this, 'renderComplete', {
-				configurable: false
-				, writable:   false
-				, value:      accept
-			});
-		});
+		this.removed   = false;
 
 		return Bindable.make(this);
 	}
@@ -475,7 +452,7 @@ export class View
 					Dom.mapTags(child, false, (tag, walker)=>{
 						child.dispatchEvent(new Event('cvDomAttached', {
 							bubbles: true, target: child
-						}));						
+						}));
 					});
 				});
 
@@ -1701,6 +1678,7 @@ export class View
 		let withAttr  = tag.getAttribute('cv-with');
 		let carryAttr = tag.getAttribute('cv-carry');
 		let viewAttr  = tag.getAttribute('cv-view');
+
 		tag.removeAttribute('cv-with');
 		tag.removeAttribute('cv-carry');
 		tag.removeAttribute('cv-view');
@@ -1721,9 +1699,9 @@ export class View
 		}
 
 		let debind = this.args.bindTo(withAttr, (v,k,t,d) => {
-			if(this.withViews[k])
+			if(this.withViews.has(tag))
 			{
-				this.withViews[k].remove();
+				this.withViews.delete(tag);
 			}
 
 			while(tag.firstChild)
@@ -1783,10 +1761,13 @@ export class View
 
 			view.render(tag);
 
-			this.withViews[k] = view;
+			this.withViews.set(tag, view);
 		});
 
-		this.onRemove(debind);
+		this.onRemove(()=>{
+			this.withViews.delete(tag);
+			debind();
+		});
 
 		return tag;
 	}
@@ -1801,14 +1782,27 @@ export class View
 
 		[...tag.childNodes].map(n => subTemplate.appendChild(n));
 
-		const viewClass = viewAttr
+		const parts = viewAttr.split(':');
+
+		const viewClass = parts.pop()
 			? this.stringToClass(viewAttr)
 			: View;
 
+		const viewName = parts.shift();
+
 		let view = new viewClass(this.args, this);
+
+		this.views.set(tag, view);
+
+		if(viewName)
+		{
+			this.views.set(viewName, view);
+		}
 
 		this.onRemove(((view)=>()=>{
 			view.remove();
+			this.views.delete(tag);
+			this.views.delete(viewName);
 		})(view));
 
 		view.template = subTemplate;
