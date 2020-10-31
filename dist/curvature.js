@@ -6688,6 +6688,8 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -6750,6 +6752,10 @@ var ViewList = function () {
       }
 
       var kk = k;
+
+      if (_typeof(k) === 'symbol') {
+        return;
+      }
 
       if (isNaN(k)) {
         kk = '_' + k;
@@ -9832,8 +9838,6 @@ var Model = function () {
 
       var setProp = function setProp(property, value) {
         if (value && _typeof(value) === 'object' && value.__proto__.constructor.keyProps) {
-          console.log(_this, value);
-
           var subKeyProps = value.__proto__.constructor.keyProps();
 
           var propCacheKey = subKeyProps.map(function (prop) {
@@ -9856,8 +9860,6 @@ var Model = function () {
         setProp(property, skeleton[property]);
       }
 
-      console.log(skeleton, Object.getOwnPropertySymbols(skeleton));
-
       var _iterator = _createForOfIteratorHelper(Object.getOwnPropertySymbols(skeleton)),
           _step;
 
@@ -9874,7 +9876,7 @@ var Model = function () {
   }], [{
     key: "keyProps",
     value: function keyProps() {
-      return ['class', 'id', 'rid'];
+      return ['class', 'id'];
     }
   }, {
     key: "from",

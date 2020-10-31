@@ -3,7 +3,7 @@ import { Bindable } from '../base/Bindable';
 
 export class Model
 {
-	static keyProps(){ return ['class', 'id', 'rid'] }
+	static keyProps(){ return ['class', 'id'] }
 
 	static from(skeleton)
 	{
@@ -35,13 +35,11 @@ export class Model
 
 			if(value && typeof value === 'object' && value.__proto__.constructor.keyProps)
 			{
-				console.log(this, value);
-
 				// const keyProps     = this.__proto__.constructor.keyProps();
 				// const cacheKey     = keyProps.map(prop => skeleton[prop]).join('::');
 				const subKeyProps  = value.__proto__.constructor.keyProps();
 				const propCacheKey = subKeyProps.map(prop => value[prop]).join('::');
-				
+
 				const bucket       = 'models-by-type-and-publicId';
 				const propCached   = Cache.load(propCacheKey, false, bucket);
 
@@ -60,8 +58,6 @@ export class Model
 		{
 			setProp(property, skeleton[property]);
 		}
-
-		console.log(skeleton, Object.getOwnPropertySymbols(skeleton));
 
 		for(const property of Object.getOwnPropertySymbols(skeleton))
 		{

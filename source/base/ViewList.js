@@ -59,6 +59,11 @@ export class ViewList
 
 			let kk = k;
 
+			if(typeof k === 'symbol')
+			{
+				return;
+			}
+
 			if(isNaN(k))
 			{
 				kk = '_' + k;
