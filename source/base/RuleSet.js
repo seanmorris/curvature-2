@@ -162,7 +162,7 @@ export class RuleSet
 				&& result.prototype
 				&& (result.prototype instanceof View)
 			){
-				result = new result();
+				result = new result({}, view);
 			}
 
 			if(result instanceof View)
@@ -172,8 +172,6 @@ export class RuleSet
 					view.cleanup.push(((r)=>()=>{
 						r.remove();
 					})(result));
-
-					result.parent = view;
 
 					view.cleanup.push(
 						view.args.bindTo((v, k,t)=>{

@@ -1,9 +1,16 @@
 import { Cache } from '../base/Cache';
 import { Bindable } from '../base/Bindable';
 
+const Changed = Symbol('Changed');
+
 export class Model
 {
-	static keyProps(){ return ['class', 'id'] }
+	static keyProps(){ return ['id', 'class'] }
+
+	constructor()
+	{
+		Object.defineProperty(this, Changed, {value: Bindable.make({})});
+	}
 
 	static from(skeleton)
 	{
@@ -17,26 +24,48 @@ export class Model
 			? cached
 			: Bindable.makeBindable(new this);
 
-		instance.consume(skeleton);
-
 		for(const keyProp of keyProps)
 		{
-			instance[keyProp] = instance[keyProp] || null;
+			instance[keyProp] = instance[keyProp] ?? skeleton[keyProp] ?? null;
 		}
 
+		instance.consume(skeleton);
+
 		Cache.store(cacheKey, instance, 0, bucket);
+
+		if(!cached)
+		{
+			let changed = false;
+
+			instance.bindTo((v,k,t) => {
+
+				if(typeof k === 'symbol')
+				{
+					return;
+				}
+
+				if(v === t[k])
+				{
+					return;
+				}
+
+				instance[Changed][k] = changed;
+			});
+
+			changed = true;
+		}
 
 		return instance;
 	}
 
-	consume(skeleton)
+	consume(skeleton, override = false)
 	{
+		const keyProps = this.__proto__.constructor.keyProps();
+
 		const setProp = (property, value) => {
 
 			if(value && typeof value === 'object' && value.__proto__.constructor.keyProps)
 			{
-				// const keyProps     = this.__proto__.constructor.keyProps();
-				// const cacheKey     = keyProps.map(prop => skeleton[prop]).join('::');
 				const subKeyProps  = value.__proto__.constructor.keyProps();
 				const propCacheKey = subKeyProps.map(prop => value[prop]).join('::');
 
@@ -56,13 +85,25 @@ export class Model
 
 		for(const property in skeleton)
 		{
+			if(!override && this[Changed][property])
+			{
+				continue;
+			}
+
+			if(keyProps.includes(property))
+			{
+				continue;
+			}
+
 			setProp(property, skeleton[property]);
 		}
+	}
 
-		for(const property of Object.getOwnPropertySymbols(skeleton))
+	stored()
+	{
+		for(const property in this[Changed])
 		{
-			// this[property] = skeleton[property];
-			// setProp(property, skeleton[property]);
+			this[Changed][property] = false;
 		}
 	}
 }

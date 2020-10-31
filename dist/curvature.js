@@ -2045,7 +2045,7 @@ var Bindable = function () {
       };
 
       var get = function get(target, key) {
-        if (key === Ref || key === 'isBound' || key === 'bindTo') {
+        if (key === Ref || key === 'isBound' || key === 'bindTo' || key === '__proto__') {
           return target[key];
         }
 
@@ -9775,6 +9775,31 @@ var Database = function () {
     value: function getPrimaryKey(record) {
       return record[PrimaryKey] ? record[PrimaryKey].description : null;
     }
+  }, {
+    key: "destroyDatabase",
+    value: function destroyDatabase() {
+      var _this7 = this;
+
+      return new Promise(function (accept, reject) {
+        var request = indexedDB["delete"](dbName);
+
+        request.onerror = function (error) {
+          Database.dispatchEvent(new CustomEvent('destroyError', {
+            detail: {
+              database: dbName,
+              error: error,
+              type: 'destroy'
+            }
+          }));
+          reject(error);
+        };
+
+        request.onsuccess = function (event) {
+          delete _this7[Instances][dbName];
+          accept(dbName);
+        };
+      });
+    }
   }]);
 
   return Database;
@@ -9826,15 +9851,32 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+var Changed = Symbol('Changed');
+
 var Model = function () {
+  _createClass(Model, null, [{
+    key: "keyProps",
+    value: function keyProps() {
+      return ['id', 'class'];
+    }
+  }]);
+
   function Model() {
     _classCallCheck(this, Model);
+
+    Object.defineProperty(this, Changed, {
+      value: _Bindable.Bindable.make({})
+    });
   }
 
   _createClass(Model, [{
     key: "consume",
     value: function consume(skeleton) {
       var _this = this;
+
+      var override = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      var keyProps = this.__proto__.constructor.keyProps();
 
       var setProp = function setProp(property, value) {
         if (value && _typeof(value) === 'object' && value.__proto__.constructor.keyProps) {
@@ -9857,28 +9899,25 @@ var Model = function () {
       };
 
       for (var property in skeleton) {
+        if (!override && this[Changed][property]) {
+          continue;
+        }
+
+        if (keyProps.includes(property)) {
+          continue;
+        }
+
         setProp(property, skeleton[property]);
       }
-
-      var _iterator = _createForOfIteratorHelper(Object.getOwnPropertySymbols(skeleton)),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var _property = _step.value;
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
+    }
+  }, {
+    key: "stored",
+    value: function stored() {
+      for (var property in this[Changed]) {
+        this[Changed][property] = false;
       }
     }
   }], [{
-    key: "keyProps",
-    value: function keyProps() {
-      return ['class', 'id'];
-    }
-  }, {
     key: "from",
     value: function from(skeleton) {
       var keyProps = this.keyProps();
@@ -9890,23 +9929,42 @@ var Model = function () {
       var cached = _Cache.Cache.load(cacheKey, false, bucket);
 
       var instance = cached ? cached : _Bindable.Bindable.makeBindable(new this());
-      instance.consume(skeleton);
 
-      var _iterator2 = _createForOfIteratorHelper(keyProps),
-          _step2;
+      var _iterator = _createForOfIteratorHelper(keyProps),
+          _step;
 
       try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var keyProp = _step2.value;
-          instance[keyProp] = instance[keyProp] || null;
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var _ref, _instance$keyProp;
+
+          var keyProp = _step.value;
+          instance[keyProp] = (_ref = (_instance$keyProp = instance[keyProp]) !== null && _instance$keyProp !== void 0 ? _instance$keyProp : skeleton[keyProp]) !== null && _ref !== void 0 ? _ref : null;
         }
       } catch (err) {
-        _iterator2.e(err);
+        _iterator.e(err);
       } finally {
-        _iterator2.f();
+        _iterator.f();
       }
 
+      instance.consume(skeleton);
+
       _Cache.Cache.store(cacheKey, instance, 0, bucket);
+
+      if (!cached) {
+        var changed = false;
+        instance.bindTo(function (v, k, t) {
+          if (_typeof(k) === 'symbol') {
+            return;
+          }
+
+          if (v === t[k]) {
+            return;
+          }
+
+          instance[Changed][k] = changed;
+        });
+        changed = true;
+      }
 
       return instance;
     }

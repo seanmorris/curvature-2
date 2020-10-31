@@ -313,6 +313,29 @@ export class Database
 			? record[PrimaryKey].description
 			: null;
 	}
+
+	static destroyDatabase()
+	{
+		return new Promise((accept, reject) => {
+			const request = indexedDB.delete(dbName);
+
+			request.onerror = error => {
+				Database.dispatchEvent(new CustomEvent('destroyError', {detail: {
+					database:  dbName
+					, error:   error
+					, type:    'destroy'
+				}}));
+
+				reject(error);
+			};
+
+			request.onsuccess = event => {
+				delete this[Instances][dbName];
+
+				accept(dbName);
+			};
+		});
+	}
 }
 
 Object.defineProperty(Database, Instances, {value: []});

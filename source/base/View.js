@@ -1127,7 +1127,7 @@ export class View
 
 		tag.___tag___ = tagObject;
 
-		this.tags[refProp] = tag;
+		this.tags[refProp] = tagObject;
 
 		while(parent)
 		{
