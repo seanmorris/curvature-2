@@ -1,7 +1,13 @@
-const AppConfig = {};
+let AppConfig = {};
 
-try { Object.assign(AppConfig, require('/Config').Config || {}); }
-catch(error){ window.devMode === true && console.error(error); }
+try
+{
+	AppConfig = require('/Config').Config || {};
+}
+catch (error)
+{
+	window.devMode === true && console.error(error);
+}
 
 export class Config
 {

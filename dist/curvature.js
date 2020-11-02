@@ -1624,8 +1624,10 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Ref = Symbol('ref');
+var Original = Symbol('original');
 var Deck = Symbol('deck');
 var Binding = Symbol('binding');
+var SubBinding = Symbol('subBinding');
 var BindingAll = Symbol('bindingAll');
 var IsBindable = Symbol('isBindable');
 var Executing = Symbol('executing');
@@ -1644,11 +1646,11 @@ var Bindable = function () {
   _createClass(Bindable, null, [{
     key: "isBindable",
     value: function isBindable(object) {
-      if (!object || !object[Binding]) {
+      if (!object || !object[IsBindable]) {
         return false;
       }
 
-      return object[Binding] === Bindable;
+      return object[IsBindable] === Bindable;
     }
   }, {
     key: "onDeck",
@@ -1710,6 +1712,12 @@ var Bindable = function () {
         enumerable: false,
         writable: false,
         value: {}
+      });
+      Object.defineProperty(object, SubBinding, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: new Map()
       });
       Object.defineProperty(object, BindingAll, {
         configurable: false,
@@ -1798,8 +1806,10 @@ var Bindable = function () {
           var _bindIndex = object[BindingAll].length;
           object[BindingAll].push(callback);
 
-          for (var i in object) {
-            callback(object[i], i, object, false);
+          if (!('now' in options) || options.now) {
+            for (var i in object) {
+              callback(object[i], i, object, false);
+            }
           }
 
           return function () {
@@ -1812,11 +1822,62 @@ var Bindable = function () {
         }
 
         var bindIndex = object[Binding][property].length;
+
+        if (options.children) {
+          var original = callback;
+
+          callback = function callback() {
+            for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+              args[_key] = arguments[_key];
+            }
+
+            var v = args[0];
+            var subDebind = object[SubBinding].get(original);
+
+            if (subDebind) {
+              object[SubBinding]["delete"](original);
+              subDebind();
+            }
+
+            if (_typeof(v) !== 'object') {
+              original.apply(void 0, args);
+              return;
+            }
+
+            var vv = Bindable.make(v);
+
+            if (Bindable.isBindable(vv)) {
+              object[SubBinding].set(original, vv.bindTo(function () {
+                for (var _len2 = arguments.length, subArgs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                  subArgs[_key2] = arguments[_key2];
+                }
+
+                return original.apply(void 0, args.concat(subArgs));
+              }, Object.assign({}, options, {
+                children: false
+              })));
+            }
+
+            original.apply(void 0, args);
+          };
+        }
+
         object[Binding][property].push(callback);
-        callback(object[property], property, object, false);
+
+        if (!('now' in options) || options.now) {
+          callback(object[property], property, object, false);
+        }
+
         var cleaned = false;
 
         var debinder = function debinder() {
+          var subDebind = object[SubBinding].get(callback);
+
+          if (subDebind) {
+            object[SubBinding]["delete"](callback);
+            subDebind();
+          }
+
           if (cleaned) {
             return;
           }
@@ -1966,42 +2027,34 @@ var Bindable = function () {
         }
 
         if (value && value instanceof Object && !(value instanceof Node)) {
-          if (value.___isBindable___ !== Bindable) {
+          if (!Bindable.isBindable(value)) {
             value = Bindable.makeBindable(value);
-
-            if (_this.isBindable(value)) {
-              for (var _i2 in value) {
-                if (value[_i2] && value[_i2] instanceof Object) {
-                  value[_i2] = Bindable.makeBindable(value[_i2]);
-                }
-              }
-            }
           }
         }
 
         object[Deck][key] = value;
 
-        for (var _i3 in object[BindingAll]) {
-          if (!object[BindingAll][_i3]) {
+        for (var _i2 in object[BindingAll]) {
+          if (!object[BindingAll][_i2]) {
             continue;
           }
 
-          object[BindingAll][_i3](value, key, target, false);
+          object[BindingAll][_i2](value, key, target, false);
         }
 
         var stop = false;
 
         if (key in object[Binding]) {
-          for (var _i4 in object[Binding][key]) {
+          for (var _i3 in object[Binding][key]) {
             if (!object[Binding][key]) {
               continue;
             }
 
-            if (!object[Binding][key][_i4]) {
+            if (!object[Binding][key][_i3]) {
               continue;
             }
 
-            if (object[Binding][key][_i4](value, key, target, false, target[key]) === false) {
+            if (object[Binding][key][_i3](value, key, target, false, target[key]) === false) {
               stop = true;
             }
           }
@@ -2026,17 +2079,17 @@ var Bindable = function () {
           return true;
         }
 
-        for (var _i5 in object[BindingAll]) {
-          object[BindingAll][_i5](undefined, key, target, true, target[key]);
+        for (var _i4 in object[BindingAll]) {
+          object[BindingAll][_i4](undefined, key, target, true, target[key]);
         }
 
         if (key in object[Binding]) {
-          for (var _i6 in object[Binding][key]) {
-            if (!object[Binding][key][_i6]) {
+          for (var _i5 in object[Binding][key]) {
+            if (!object[Binding][key][_i5]) {
               continue;
             }
 
-            object[Binding][key][_i6](undefined, key, target, true, target[key]);
+            object[Binding][key][_i5](undefined, key, target, true, target[key]);
           }
         }
 
@@ -2077,19 +2130,19 @@ var Bindable = function () {
             target[Executing] = key;
             target[Stack].unshift(key);
 
-            for (var _len = arguments.length, providedArgs = new Array(_len), _key = 0; _key < _len; _key++) {
-              providedArgs[_key] = arguments[_key];
+            for (var _len3 = arguments.length, providedArgs = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+              providedArgs[_key3] = arguments[_key3];
             }
 
-            for (var _i7 in target.___before___) {
-              target.___before___[_i7](target, key, target[Stack], object, providedArgs);
+            for (var _i6 in target.___before___) {
+              target.___before___[_i6](target, key, target[Stack], object, providedArgs);
             }
 
             var objRef = object instanceof Promise || object instanceof EventTarget || object instanceof MutationObserver || object instanceof IntersectionObserver || object instanceof MutationObserver || object instanceof PerformanceObserver || typeof ResizeObserver === 'function' && object instanceof ResizeObserver || object instanceof Map || object instanceof Set ? object : object[Ref];
             var ret = new.target ? _construct(target[key], providedArgs) : target[key].apply(objRef || object, providedArgs);
 
-            for (var _i8 in target.___after___) {
-              target.___after___[_i8](target, key, target[Stack], object, providedArgs);
+            for (var _i7 in target.___after___) {
+              target.___after___[_i7](target, key, target[Stack], object, providedArgs);
             }
 
             target[Executing] = null;
@@ -2110,14 +2163,14 @@ var Bindable = function () {
       var construct = function construct(target, args) {
         var key = 'constructor';
 
-        for (var _i9 in target.___before___) {
-          target.___before___[_i9](target, key, target[Stack], undefined, args);
+        for (var _i8 in target.___before___) {
+          target.___before___[_i8](target, key, target[Stack], undefined, args);
         }
 
         var instance = Bindable.make(_construct(target, _toConsumableArray(args)));
 
-        for (var _i10 in target.___after___) {
-          target.___after___[_i10](target, key, target[Stack], instance, args);
+        for (var _i9 in target.___after___) {
+          target.___after___[_i9](target, key, target[Stack], instance, args);
         }
 
         return instance;
@@ -2136,6 +2189,12 @@ var Bindable = function () {
         enumerable: false,
         writable: true,
         value: object[Ref]
+      });
+      Object.defineProperty(object, Original, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: object
       });
       object[Ref] = new Proxy(object, {
         get: get,
@@ -2157,8 +2216,8 @@ var Bindable = function () {
 
       var maps = function maps(func) {
         return function () {
-          for (var _len2 = arguments.length, os = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            os[_key2] = arguments[_key2];
+          for (var _len4 = arguments.length, os = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+            os[_key4] = arguments[_key4];
           }
 
           return os.map(func);
@@ -2224,14 +2283,18 @@ var Bindable = function () {
     key: "wrapWaitCallback",
     value: function wrapWaitCallback(callback, wait) {
       var waiter = false;
-      return function (v, k, t, d) {
+      return function (v, k, t, d, p) {
+        for (var _len5 = arguments.length, args = new Array(_len5 > 5 ? _len5 - 5 : 0), _key5 = 5; _key5 < _len5; _key5++) {
+          args[_key5 - 5] = arguments[_key5];
+        }
+
         if (waiter) {
           clearTimeout(waiter);
           waiter = false;
         }
 
         waiter = setTimeout(function () {
-          return callback(v, k, t, d, t[k]);
+          return callback.apply(void 0, [v, k, t, d, t[k]].concat(args));
         }, wait);
       };
     }
@@ -2239,8 +2302,12 @@ var Bindable = function () {
     key: "wrapFrameCallback",
     value: function wrapFrameCallback(callback, frames) {
       return function (v, k, t, d, p) {
+        for (var _len6 = arguments.length, args = new Array(_len6 > 5 ? _len6 - 5 : 0), _key6 = 5; _key6 < _len6; _key6++) {
+          args[_key6 - 5] = arguments[_key6];
+        }
+
         requestAnimationFrame(function () {
-          return callback(v, k, t, d, p);
+          return callback.apply(void 0, [v, k, t, d, p].concat(args));
         });
       };
     }
@@ -2248,9 +2315,13 @@ var Bindable = function () {
     key: "wrapIdleCallback",
     value: function wrapIdleCallback(callback) {
       return function (v, k, t, d, p) {
+        for (var _len7 = arguments.length, args = new Array(_len7 > 5 ? _len7 - 5 : 0), _key7 = 5; _key7 < _len7; _key7++) {
+          args[_key7 - 5] = arguments[_key7];
+        }
+
         var req = window.requestIdleCallback || requestAnimationFrame;
         req(function () {
-          return callback(v, k, t, d, p);
+          return callback.apply(void 0, [v, k, t, d, p].concat(args));
         });
       };
     }
@@ -2355,7 +2426,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var AppConfig = {};
 
 try {
-  Object.assign(AppConfig, require('/Config').Config || {});
+  AppConfig = require('/Config').Config || {};
 } catch (error) {
   window.devMode === true && console.error(error);
 }
@@ -3762,11 +3833,13 @@ var Router = function () {
           };
         }
       } else if (routes[selected] instanceof Function) {
-        result = '';
-        var r = routes[selected](args);
-        result = r;
+        result = new Promise(function (accept) {
+          return accept(routes[selected](args));
+        });
       } else if (routes[selected] instanceof Object) {
-        result = new routes[selected](args);
+        result = new Promise(function (accept) {
+          return accept(new routes[selected](args));
+        });
       } else if (typeof routes[selected] == 'string') {
         result = routes[selected];
       }
@@ -3776,11 +3849,11 @@ var Router = function () {
       }
 
       return result.then(function (result) {
-        return _this3.update(listener, path, result, routes, selected, args, forceRefresh);
+        _this3.update(listener, path, result, routes, selected, args, forceRefresh);
       })["catch"](function (error) {
         console.error(error);
 
-        _this3.update(listener, path, error, routes, selected, args, forceRefresh);
+        _this3.update(listener, path, window['devMode'] ? String(error) : 'Error: 500', routes, selected, args, forceRefresh);
       });
     }
   }, {
@@ -4291,6 +4364,19 @@ var Tag = function () {
   }
 
   _createClass(Tag, [{
+    key: "attr",
+    value: function attr(attributes) {
+      for (var attribute in attributes) {
+        if (attributes[attribute] === undefined) {
+          this.node.removeAttribute(attribute);
+        } else if (attributes[attribute] === null) {
+          this.node.setAttribute(attribute, '');
+        } else {
+          this.node.setAttribute(attribute, attributes[attribute]);
+        }
+      }
+    }
+  }, {
     key: "remove",
     value: function remove() {
       this.node.remove();
@@ -4535,21 +4621,14 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 var dontParse = Symbol('dontParse');
 var expandBind = Symbol('expandBind');
+var uuid = Symbol('uuid');
 var moveIndex = 0;
 
 var View = function () {
   _createClass(View, [{
     key: "_id",
     get: function get() {
-      if (!this.__id) {
-        Object.defineProperty(this, '__id', {
-          configurable: false,
-          writable: false,
-          value: this.uuid()
-        });
-      }
-
-      return this.__id;
+      return this[uuid];
     }
   }], [{
     key: "from",
@@ -4573,17 +4652,20 @@ var View = function () {
     Object.defineProperty(this, 'args', {
       value: _Bindable.Bindable.make(args)
     });
+    Object.defineProperty(this, uuid, {
+      value: this.uuid()
+    });
     Object.defineProperty(this, 'attach', {
       value: new _Bag.Bag(function (i, s, a) {})
     });
     Object.defineProperty(this, 'detach', {
       value: new _Bag.Bag(function (i, s, a) {})
     });
-    Object.defineProperty(this, 'cleanup', {
-      value: []
-    });
     Object.defineProperty(this, '_onRemove', {
       value: new _Bag.Bag(function (i, s, a) {})
+    });
+    Object.defineProperty(this, 'cleanup', {
+      value: []
     });
     Object.defineProperty(this, 'parent', {
       value: mainView
@@ -4599,6 +4681,9 @@ var View = function () {
     });
     Object.defineProperty(this, 'tags', {
       value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'nodes', {
+      value: _Bindable.Bindable.make([])
     });
     Object.defineProperty(this, 'intervals', {
       value: []
@@ -4618,7 +4703,7 @@ var View = function () {
     Object.defineProperty(this, 'subBindings', {
       value: {}
     });
-    Object.defineProperty(this, 'subTemplates', {
+    Object.defineProperty(this, 'templates', {
       value: {}
     });
     Object.defineProperty(this, 'eventCleanup', {
@@ -4634,18 +4719,7 @@ var View = function () {
         });
       })
     });
-
-    if (args._id) {
-      Object.defineProperty(this.args, '_id', {
-        get: function get() {
-          return _this._id;
-        }
-      });
-    }
-
     this.template = "";
-    this.document = "";
-    this.nodes = null;
     this.firstNode = null;
     this.lastNode = null;
     this.viewList = null;
@@ -4880,7 +4954,6 @@ var View = function () {
       this.mainView || this.preRuleSet.apply(subDoc, this);
       this.mapTags(subDoc);
       this.mainView || this.ruleSet.apply(subDoc, this);
-      this.nodes = [];
 
       if (window.devMode === true) {
         this.firstNode = document.createComment("Template ".concat(this._id, " Start"));
@@ -5234,7 +5307,7 @@ var View = function () {
 
           tag.parentNode.insertBefore(dynamicNode, tag);
           var debind = proxy.bindTo(property, function (v, k, t) {
-            if (t[k] instanceof View && t[k] !== v) {
+            if (t[k] !== v && (t[k] instanceof View || t[k] instanceof Node || t[k] instanceof _Tag.Tag)) {
               if (!t[k].preserve) {
                 t[k].remove();
               }
@@ -5548,8 +5621,6 @@ var View = function () {
             tag.dispatchEvent(autoChangedEvent);
           }
         } else {
-          tag[dontParse] = true;
-
           if (v instanceof View) {
             var _iterator3 = _createForOfIteratorHelper(tag.childNodes),
                 _step3;
@@ -5577,6 +5648,8 @@ var View = function () {
             });
           } else if (unsafeHtml) {
             if (tag.innerHTML !== v) {
+              v = String(v);
+
               if (tag.innerHTML === v.substring(0, tag.innerHTML.length)) {
                 tag.innerHTML += v.substring(tag.innerHTML.length);
               } else {
@@ -5597,6 +5670,10 @@ var View = function () {
 
                 tag.innerHTML = v;
               }
+
+              _Dom.Dom.mapTags(tag, false, function (t) {
+                return t[dontParse] = true;
+              });
             }
           } else {
             if (tag.textContent !== v) {
@@ -5894,10 +5971,6 @@ var View = function () {
       return function (bindingView) {
         var tag = sourceTag.cloneNode(true);
         tag.setAttribute('href', linkAttr);
-        tag.addEventListener('click', View.linkClicked);
-        bindingView.onRemove(function () {
-          return tag.removeEventListener(View.linkClicked);
-        });
         return tag;
       };
     }
@@ -6304,23 +6377,26 @@ var View = function () {
       var templateName = tag.getAttribute('cv-template');
       tag.removeAttribute('cv-template');
 
-      this.subTemplates[templateName] = function () {
+      this.templates[templateName] = function () {
         return tag.tagName === 'TEMPLATE' ? tag.content.cloneNode(true) : new DocumentFragment(tag.innerHTML);
       };
 
+      this.rendered.then(function () {
+        return tag.remove();
+      });
       return tag;
     }
   }, {
     key: "mapSlotTag",
     value: function mapSlotTag(tag) {
       var templateName = tag.getAttribute('cv-slot');
-      var getTemplate = this.subTemplates[templateName];
+      var getTemplate = this.templates[templateName];
 
       if (!getTemplate) {
         var parent = this;
 
         while (parent) {
-          getTemplate = parent.subTemplates[templateName];
+          getTemplate = parent.templates[templateName];
 
           if (getTemplate) {
             break;
@@ -6504,22 +6580,26 @@ var View = function () {
         }
 
         if (this.nodes[_i18].matches(selector)) {
-          return this.nodes[_i18];
+          return new _Tag.Tag(this.nodes[_i18], this, undefined, undefined, this);
         }
 
         if (result = this.nodes[_i18].querySelector(selector)) {
-          return result;
+          return new _Tag.Tag(result, this, undefined, undefined, this);
         }
       }
     }
   }, {
     key: "findTags",
     value: function findTags(selector) {
+      var _this13 = this;
+
       return this.nodes.filter(function (n) {
         return n.querySelectorAll;
       }).map(function (n) {
-        return n.querySelectorAll(selector);
-      }).flat();
+        return _toConsumableArray(n.querySelectorAll(selector));
+      }).flat().map(function (n) {
+        return new _Tag.Tag(n, _this13, undefined, undefined, _this13);
+      });
     }
   }, {
     key: "onRemove",
@@ -6538,11 +6618,11 @@ var View = function () {
   }, {
     key: "stringTransformer",
     value: function stringTransformer(methods) {
-      var _this13 = this;
+      var _this14 = this;
 
       return function (x) {
         for (var m in methods) {
-          var parent = _this13;
+          var parent = _this14;
           var method = methods[m];
 
           while (parent && !parent[method]) {
@@ -6589,7 +6669,7 @@ var View = function () {
   }, {
     key: "listen",
     value: function listen(node, eventName, callback, options) {
-      var _this14 = this;
+      var _this15 = this;
 
       if (typeof node === 'string') {
         options = callback;
@@ -6604,7 +6684,7 @@ var View = function () {
 
       if (Array.isArray(node)) {
         var removers = node.map(function (n) {
-          return _this14.listen(n, eventName, callback, options);
+          return _this15.listen(n, eventName, callback, options);
         });
         return function () {
           return removers.map(function (r) {
@@ -6646,25 +6726,10 @@ var View = function () {
 
 exports.View = View;
 Object.defineProperty(View, 'templates', {
-  enumerable: false,
-  writable: false,
   value: new Map()
 });
 Object.defineProperty(View, 'refClasses', {
-  enumerable: false,
-  writable: false,
   value: new Map()
-});
-Object.defineProperty(View, 'linkClicked', function (event) {
-  event.preventDefault();
-  var href = event.target.getAttribute('href');
-
-  if (href.substring(0, 4) === 'http' || href.substring(0, 2) === '//') {
-    window.open(href);
-    return;
-  }
-
-  _Router.Router.go(href);
 });
 "use strict";
 

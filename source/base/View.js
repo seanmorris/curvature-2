@@ -847,10 +847,11 @@ export class View
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
 				let debind = proxy.bindTo(property, (v,k,t) => {
-					if(
-						(t[k] instanceof View || t[k] instanceof Node)
-						&& t[k] !== v
-					){
+					if(t[k] !== v && (
+						t[k] instanceof View
+						|| t[k] instanceof Node
+						|| t[k] instanceof Tag
+					)){
 						if(!t[k].preserve)
 						{
 							t[k].remove();
@@ -2331,12 +2332,12 @@ export class View
 
 			if(this.nodes[i].matches(selector))
 			{
-				return this.nodes[i];
+				return new Tag(this.nodes[i], this, undefined,  undefined, this);
 			}
 
 			if(result = this.nodes[i].querySelector(selector))
 			{
-				return result;
+				return new Tag(result, this, undefined,  undefined, this);
 			}
 		}
 	}
@@ -2345,8 +2346,9 @@ export class View
 	{
 		return this.nodes
 			.filter(n=>n.querySelectorAll)
-			.map(n=> n.querySelectorAll(selector))
-			.flat();
+			.map(n=> [...n.querySelectorAll(selector)])
+			.flat()
+			.map(n=> new Tag(n, this, undefined,  undefined, this));
 	}
 
 	onRemove(callback)

@@ -1,6 +1,8 @@
 const Ref        = Symbol('ref');
+const Original   = Symbol('original');
 const Deck       = Symbol('deck');
 const Binding    = Symbol('binding');
+const SubBinding = Symbol('subBinding');
 const BindingAll = Symbol('bindingAll');
 const IsBindable = Symbol('isBindable')
 const Executing  = Symbol('executing');
@@ -15,12 +17,12 @@ export class Bindable
 {
 	static isBindable(object)
 	{
-		if (!object || !object[Binding])
+		if (!object || !object[IsBindable])
 		{
 			return false;
 		}
 
-		return object[Binding] === Bindable;
+		return object[IsBindable] === Bindable;
 	}
 
 	static onDeck(object, key)
@@ -93,6 +95,13 @@ export class Bindable
 			, enumerable: false
 			, writable:   false
 			, value:      {}
+		});
+
+		Object.defineProperty(object, SubBinding, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      new Map
 		});
 
 		Object.defineProperty(object, BindingAll, {
@@ -190,8 +199,12 @@ export class Bindable
 
 				object[BindingAll].push(callback);
 
-				for (let i in object) {
-					callback(object[i], i, object, false);
+				if(!('now' in options) || options.now)
+				{
+					for (let i in object)
+					{
+						callback(object[i], i, object, false);
+					}
 				}
 
 				return () => {
@@ -206,13 +219,62 @@ export class Bindable
 
 			let bindIndex = object[Binding][property].length;
 
+			if(options.children)
+			{
+				const original = callback;
+
+				callback = (...args) => {
+
+					const v = args[0];
+
+					const subDebind = object[SubBinding].get(original);
+
+					if(subDebind)
+					{
+						object[SubBinding].delete(original);
+
+						subDebind();
+					}
+
+					if(typeof v !== 'object')
+					{
+						original(...args);
+						return;
+					}
+
+					const vv = Bindable.make(v);
+
+					if(Bindable.isBindable(vv))
+					{
+						object[SubBinding].set(original, vv.bindTo(
+							(...subArgs) => original(...args, ...subArgs)
+							, Object.assign({}, options, {children: false})
+						));
+					}
+
+					original(...args);
+				}
+			}
+
 			object[Binding][property].push(callback);
 
-			callback(object[property], property, object, false);
+			if(!('now' in options) || options.now)
+			{
+				callback(object[property], property, object, false);
+			}
 
 			let cleaned = false;
 
 			const debinder = () => {
+
+				const subDebind = object[SubBinding].get(callback);
+
+				if(subDebind)
+				{
+					object[SubBinding].delete(callback);
+
+					subDebind();
+				}
 
 				if(cleaned)
 				{
@@ -389,20 +451,17 @@ export class Bindable
 
 			if(value && value instanceof Object && !(value instanceof Node))
 			{
-				if(value.___isBindable___ !== Bindable)
+				if(!Bindable.isBindable(value))
 				{
 					value = Bindable.makeBindable(value);
 
-					if(this.isBindable(value))
-					{
-						for(let i in value)
-						{
-							if(value[i] && value[i] instanceof Object)
-							{
-								value[i] = Bindable.makeBindable(value[i]);
-							}
-						}
-					}
+					// for(let i in value)
+					// {
+					// 	if(value[i] && value[i] instanceof Object && !Bindable.isBindable(value[i]))
+					// 	{
+					// 		value[i] = Bindable.makeBindable(value[i]);
+					// 	}
+					// }
 				}
 			}
 
@@ -615,6 +674,13 @@ export class Bindable
 			, value:      object[Ref]
 		});
 
+		Object.defineProperty(object, Original, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      object
+		});
+
 		object[Ref] = new Proxy(object, {
 			get, set, construct, getPrototypeOf, deleteProperty
 		});
@@ -698,7 +764,7 @@ export class Bindable
 	{
 		let waiter = false;
 
-		return (v,k,t,d) => {
+		return (v,k,t,d,p,...args) => {
 
 			if (waiter)
 			{
@@ -706,23 +772,23 @@ export class Bindable
 				waiter = false;
 			}
 
-			waiter = setTimeout(()=> callback(v,k,t,d,t[k]), wait);
+			waiter = setTimeout(()=> callback(v,k,t,d,t[k],...args), wait);
 		};
 	}
 
 	static wrapFrameCallback(callback, frames)
 	{
-		return (v,k,t,d,p) => {
-			requestAnimationFrame(() => callback(v,k,t,d,p));
+		return (v,k,t,d,p,...args) => {
+			requestAnimationFrame(() => callback(v,k,t,d,p,...args));
 		};
 	}
 
 	static wrapIdleCallback(callback)
 	{
-		return (v,k,t,d,p) => {
+		return (v,k,t,d,p,...args) => {
 			// Compatibility for Safari 08/2020
 			const req = window.requestIdleCallback || requestAnimationFrame;
-			req(() => callback(v,k,t,d,p));
+			req(() => callback(v,k,t,d,p,...args));
 		};
 	}
 }
