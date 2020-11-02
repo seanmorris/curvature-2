@@ -8,6 +8,7 @@ import { RuleSet  } from './RuleSet';
 
 const dontParse  = Symbol('dontParse');
 const expandBind = Symbol('expandBind');
+const uuid       = Symbol('uuid');
 
 let moveIndex = 0;
 
@@ -15,16 +16,7 @@ export class View
 {
 	get _id()
 	{
-		if (!this.__id)
-		{
-			Object.defineProperty(this, '__id', {
-				configurable: false
-				, writable:   false
-				, value:      this.uuid()
-			});
-		}
-
-		return this.__id;
+		return this[uuid];
 	}
 
 	static from(template, args = {}, parent = null)
@@ -38,48 +30,50 @@ export class View
 
 	constructor(args = {}, mainView = null)
 	{
-		Object.defineProperty(this, 'args', {value: Bindable.make(args)});
-		Object.defineProperty(this, 'attach',  {value: new Bag((i,s,a) => {})});
-		Object.defineProperty(this, 'detach',  {value: new Bag((i,s,a) => {})});
+		Object.defineProperty(this, 'args', { value: Bindable.make(args) });
+		Object.defineProperty(this, uuid,   { value: this.uuid() });
 
-		Object.defineProperty(this, 'cleanup',   {value: []});
-		Object.defineProperty(this, '_onRemove', {value: new Bag((i,s,a) => {})});
+		Object.defineProperty(this, 'attach',  { value: new Bag((i,s,a) => {}) });
+		Object.defineProperty(this, 'detach',  { value: new Bag((i,s,a) => {}) });
 
-		Object.defineProperty(this, 'parent',    {value: mainView});
+		Object.defineProperty(this, '_onRemove', { value: new Bag((i,s,a) => {}) });
+		Object.defineProperty(this, 'cleanup',   { value: [] });
 
-		Object.defineProperty(this, 'views',     {value: new Map});
-		Object.defineProperty(this, 'viewLists', {value: new Map});
-		Object.defineProperty(this, 'withViews', {value: new Map});
+		Object.defineProperty(this, 'parent',    { value: mainView });
 
-		Object.defineProperty(this, 'tags',      {value: Bindable.make({})});
+		Object.defineProperty(this, 'views',     { value: new Map });
+		Object.defineProperty(this, 'viewLists', { value: new Map });
+		Object.defineProperty(this, 'withViews', { value: new Map });
 
-		Object.defineProperty(this, 'intervals', {value: []});
-		Object.defineProperty(this, 'timeouts',  {value: []});
-		Object.defineProperty(this, 'frames',    {value: []});
+		Object.defineProperty(this, 'tags',      { value: Bindable.make({}) });
+		Object.defineProperty(this, 'nodes',     { value: Bindable.make([]) });
 
-		Object.defineProperty(this, 'ruleSet',    {value: new RuleSet});
-		Object.defineProperty(this, 'preRuleSet', {value: new RuleSet});
+		Object.defineProperty(this, 'intervals', { value: [] });
+		Object.defineProperty(this, 'timeouts',  { value: [] });
+		Object.defineProperty(this, 'frames',    { value: [] });
 
-		Object.defineProperty(this, 'subBindings',  {value: {}});
-		Object.defineProperty(this, 'subTemplates', {value: {}});
+		Object.defineProperty(this, 'ruleSet',    { value: new RuleSet });
+		Object.defineProperty(this, 'preRuleSet', { value: new RuleSet });
 
-		Object.defineProperty(this, 'eventCleanup', {value: []});
+		Object.defineProperty(this, 'subBindings', { value: {} });
+		Object.defineProperty(this, 'templates',   { value: {} });
 
-		Object.defineProperty(this, 'interpolateRegex', {value: /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g});
+		Object.defineProperty(this, 'eventCleanup', { value: [] });
 
-		Object.defineProperty(this, 'rendered', {value: new Promise(
-			(accept, reject) => Object.defineProperty(this, 'renderComplete', {value:accept})
-		)});
+		Object.defineProperty(this, 'interpolateRegex', {
+			value: /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g
+		});
 
-		if(args._id)
-		{
-			Object.defineProperty(this.args, '_id', {get: () => this._id});
-		}
+		Object.defineProperty(this, 'rendered', {
+			value: new Promise((accept, reject) => Object.defineProperty(
+				this
+				, 'renderComplete'
+				, {value: accept}
+			))
+		});
 
 		this.template  = ``;
-		this.document  = ``;
 
-		this.nodes     = null;
 		this.firstNode = null;
 		this.lastNode  = null;
 
@@ -317,8 +311,6 @@ export class View
 
 		this.mainView || this.ruleSet.apply(subDoc, this);
 
-		this.nodes = [];
-
 		if(window.devMode === true)
 		{
 			this.firstNode = document.createComment(`Template ${this._id} Start`);
@@ -388,14 +380,10 @@ export class View
 							return;
 						}
 
-						tag.dispatchEvent(new Event('cvDomAttached', {
-							bubbles: true, target: child
-						}));
+						tag.dispatchEvent(new Event('cvDomAttached', {target: tag}));
 					});
 
-					child.dispatchEvent(new Event('cvDomAttached', {
-						bubbles: true, target: child
-					}));
+					child.dispatchEvent(new Event('cvDomAttached', {target: child}));
 				});
 			}
 		}
@@ -445,14 +433,10 @@ export class View
 			if(rootNode.isConnected)
 			{
 				this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
-					child.dispatchEvent(new Event('cvDomAttached', {
-						bubbles: true, target: child
-					}));
+					child.dispatchEvent(new Event('cvDomAttached', {target: child}));
 
 					Dom.mapTags(child, false, (tag, walker)=>{
-						child.dispatchEvent(new Event('cvDomAttached', {
-							bubbles: true, target: child
-						}));
+						child.dispatchEvent(new Event('cvDomAttached', {target: tag}));
 					});
 				});
 
@@ -863,8 +847,10 @@ export class View
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
 				let debind = proxy.bindTo(property, (v,k,t) => {
-					if(t[k] instanceof View && t[k] !== v)
-					{
+					if(
+						(t[k] instanceof View || t[k] instanceof Node)
+						&& t[k] !== v
+					){
 						if(!t[k].preserve)
 						{
 							t[k].remove();
@@ -1266,6 +1252,8 @@ export class View
 				{
 					if(tag.innerHTML !== v)
 					{
+						v = String(v);
+
 						if(tag.innerHTML === v.substring(0, tag.innerHTML.length))
 						{
 							tag.innerHTML += v.substring(tag.innerHTML.length);
@@ -1279,6 +1267,8 @@ export class View
 
 							tag.innerHTML = v;
 						}
+
+						Dom.mapTags(tag, false, t => t[dontParse] = true);
 					}
 				}
 				else
@@ -1427,14 +1417,6 @@ export class View
 
 			let argList      = [];
 			let groups = /(\w+)(?:\(([$\w\s-'",]+)\))?/.exec(callbackName);
-
-			// if(!groups)
-			// {
-			// 	throw new Error(
-			// 		'Invalid event method referent: '
-			// 		+ tag.getAttribute('cv-on')
-			// 	);
-			// }
 
 			if(groups)
 			{
@@ -1643,12 +1625,6 @@ export class View
 			const tag = sourceTag.cloneNode(true);
 
 			tag.setAttribute('href', linkAttr);
-
-			tag.addEventListener('click', View.linkClicked);
-
-			bindingView.onRemove(
-				() => tag.removeEventListener(View.linkClicked)
-			);
 
 			return tag;
 		};
@@ -2135,11 +2111,13 @@ export class View
 
 		tag.removeAttribute('cv-template');
 
-		this.subTemplates[ templateName ] = () => {
+		this.templates[ templateName ] = () => {
 			return tag.tagName === 'TEMPLATE'
 				? tag.content.cloneNode(true)
 				: new DocumentFragment(tag.innerHTML);
 		};
+
+		this.rendered.then(()=>tag.remove());
 
 		return tag;
 	}
@@ -2147,7 +2125,7 @@ export class View
 	mapSlotTag(tag)
 	{
 		const templateName = tag.getAttribute('cv-slot');
-		let getTemplate    = this.subTemplates[ templateName ];
+		let getTemplate    = this.templates[ templateName ];
 
 		if(!getTemplate)
 		{
@@ -2155,7 +2133,7 @@ export class View
 
 			while(parent)
 			{
-				getTemplate = parent.subTemplates[ templateName ];
+				getTemplate = parent.templates[ templateName ];
 
 				if(getTemplate)
 				{
@@ -2484,30 +2462,5 @@ export class View
 	}
 }
 
-Object.defineProperty(View, 'templates', {
-	enumerable: false
-	, writable: false
-	, value:    new Map()
-});
-
-Object.defineProperty(View, 'refClasses', {
-	enumerable: false
-	, writable: false
-	, value:    new Map()
-});
-
-Object.defineProperty(View, 'linkClicked', (event) => {
-
-	event.preventDefault();
-
-	const href = event.target.getAttribute('href');
-
-	if(href.substring(0, 4) === 'http'|| href.substring(0, 2) === '//')
-	{
-		window.open(href);
-
-		return;
-	}
-
-	Router.go(href);
-});
+Object.defineProperty(View, 'templates',  {value: new Map()});
+Object.defineProperty(View, 'refClasses', {value: new Map()});

@@ -257,20 +257,16 @@ export class Router {
 
 			if(listener)
 			{
-				result.root = ()=>listener;
+				result.root = () => listener;
 			}
 		}
 		else if(routes[selected] instanceof Function)
 		{
-			result = '';
-
-			const r = routes[selected](args);
-
-			result = r;
+			result = new Promise((accept) => accept( routes[selected](args) ));
 		}
 		else if(routes[selected] instanceof Object)
 		{
-			result = new routes[selected](args);
+			result = new Promise((accept) => accept(new routes[selected](args) ));
 		}
 		else if(typeof routes[selected] == 'string')
 		{
@@ -282,25 +278,32 @@ export class Router {
 			result = Promise.resolve(result);
 		}
 
-		return result.then(result => this.update(
-			listener
-			, path
-			, result
-			, routes
-			, selected
-			, args
-			, forceRefresh
-		)).catch(error => {
-			console.error(error);
+		return result.then(result => {
+
 			this.update(
 				listener
 				, path
-				, error
+				, result
 				, routes
 				, selected
 				, args
 				, forceRefresh
 			);
+
+		}).catch(error => {
+
+			console.error(error);
+
+			this.update(
+				listener
+				, path
+				, window['devMode'] ? String(error) : 'Error: 500'
+				, routes
+				, selected
+				, args
+				, forceRefresh
+			);
+
 		});
 	}
 

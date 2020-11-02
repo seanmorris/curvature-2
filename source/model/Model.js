@@ -1,6 +1,7 @@
 import { Cache } from '../base/Cache';
 import { Bindable } from '../base/Bindable';
 
+const Saved   = Symbol('Saved');
 const Changed = Symbol('Changed');
 
 export class Model
@@ -10,6 +11,10 @@ export class Model
 	constructor()
 	{
 		Object.defineProperty(this, Changed, {value: Bindable.make({})});
+		Object.defineProperty(this, Saved, {
+			writable: true
+			, value:  false
+		});
 	}
 
 	static from(skeleton)
@@ -50,9 +55,10 @@ export class Model
 				}
 
 				instance[Changed][k] = changed;
+				instance[Saved]      = !!(changed ? false : this[Saved]);
 			});
 
-			changed = true;
+			changed     = true;
 		}
 
 		return instance;
@@ -105,5 +111,16 @@ export class Model
 		{
 			this[Changed][property] = false;
 		}
+
+		this[Saved] = true;
+	}
+
+	isSaved()
+	{
+		return this[Saved];
 	}
 }
+
+Object.defineProperty(Model, 'Saved',   {value: Saved});
+Object.defineProperty(Model, 'Changed', {value: Changed});
+

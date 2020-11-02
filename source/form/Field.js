@@ -5,7 +5,7 @@ export class Field extends View {
 	constructor(values, form, parent, key) {
 		let skeleton = Object.assign({}, values);
 
-		super(skeleton);
+		super(skeleton, parent);
 
 		this.args.title = this.args.title ?? key;
 		this.args.value = this.args.value ?? '';
@@ -16,7 +16,7 @@ export class Field extends View {
 		this.args.valueString = '';
 
 		this.form   = form;
-		this.parent = parent;
+		// this.parent = parent;
 		this.key    = key;
 
 		this.ignore = this.args.attrs

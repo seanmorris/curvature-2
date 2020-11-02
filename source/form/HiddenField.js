@@ -25,7 +25,6 @@ export class HiddenField extends Field {
 						cv-ref    = "input:curvature/base/Tag"
 						cv-expand = "attrs"
 				/>
-				<span cv-if = "value">[[[value]]]</span>
 			</label>
 		`;
 	}

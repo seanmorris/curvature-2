@@ -81,6 +81,25 @@ export class Tag
 		return this.proxy;
 	}
 
+	attr(attributes)
+	{
+		for(const attribute in attributes)
+		{
+			if(attributes[attribute] === undefined)
+			{
+				this.node.removeAttribute(attribute);
+			}
+			else if(attributes[attribute] === null)
+			{
+				this.node.setAttribute(attribute, '');
+			}
+			else
+			{
+				this.node.setAttribute(attribute, attributes[attribute]);
+			}
+		}
+	}
+
 	remove()
 	{
 		this.node.remove();

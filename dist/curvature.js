@@ -4165,7 +4165,7 @@ var RuleSet = function () {
         }
 
         if (result && result.prototype && result.prototype instanceof _View.View) {
-          result = new result();
+          result = new result({}, view);
         }
 
         if (result instanceof _View.View) {
@@ -4175,7 +4175,6 @@ var RuleSet = function () {
                 r.remove();
               };
             }(result));
-            result.parent = view;
             view.cleanup.push(view.args.bindTo(function (v, k, t) {
               t[k] = v;
               result.args[k] = v;
@@ -4935,13 +4934,11 @@ var View = function () {
               }
 
               tag.dispatchEvent(new Event('cvDomAttached', {
-                bubbles: true,
-                target: child
+                target: tag
               }));
             });
 
             child.dispatchEvent(new Event('cvDomAttached', {
-              bubbles: true,
               target: child
             }));
           });
@@ -4984,14 +4981,12 @@ var View = function () {
             return n.nodeType === Node.ELEMENT_NODE;
           }).map(function (child) {
             child.dispatchEvent(new Event('cvDomAttached', {
-              bubbles: true,
               target: child
             }));
 
             _Dom.Dom.mapTags(child, false, function (tag, walker) {
               child.dispatchEvent(new Event('cvDomAttached', {
-                bubbles: true,
-                target: child
+                target: tag
               }));
             });
           });
@@ -5448,7 +5443,7 @@ var View = function () {
 
       var tagObject = new refClass(tag, this, refProp, undefined, direct);
       tag.___tag___ = tagObject;
-      this.tags[refProp] = tag;
+      this.tags[refProp] = tagObject;
 
       while (parent) {
         if (!parent.parent) {}
@@ -5553,6 +5548,8 @@ var View = function () {
             tag.dispatchEvent(autoChangedEvent);
           }
         } else {
+          tag[dontParse] = true;
+
           if (v instanceof View) {
             var _iterator3 = _createForOfIteratorHelper(tag.childNodes),
                 _step3;
@@ -7177,7 +7174,7 @@ var Field = function (_View) {
     _classCallCheck(this, Field);
 
     var skeleton = Object.assign({}, values);
-    _this = _super.call(this, skeleton);
+    _this = _super.call(this, skeleton, parent);
     _this.args.title = (_this$args$title = _this.args.title) !== null && _this$args$title !== void 0 ? _this$args$title : key;
     _this.args.value = (_this$args$value = _this.args.value) !== null && _this$args$value !== void 0 ? _this$args$value : '';
     _this.value = (_this$args$value2 = _this.args.value) !== null && _this$args$value2 !== void 0 ? _this$args$value2 : '';
@@ -7185,7 +7182,6 @@ var Field = function (_View) {
     _this.disabled = null;
     _this.args.valueString = '';
     _this.form = form;
-    _this.parent = parent;
     _this.key = key;
     _this.ignore = _this.args.attrs ? _this.args.attrs['data-cv-ignore'] || false : false;
     var extra = '';
@@ -7877,7 +7873,7 @@ var HiddenField = function (_Field) {
     var attrs = _this.args.attrs || {};
     _this.args.type = attrs.type = attrs.type || _this.args.type || 'hidden';
     _this.args.name = attrs.name = attrs.name || _this.args.name || key;
-    _this.template = "\n\t\t\t<label\n\t\t\t\tfor       = \"".concat(_this.getName(), "\"\n\t\t\t\tdata-type = \"").concat(attrs.type, "\"\n\t\t\t\tstyle     = \"display:none\"\n\t\t\t\tcv-ref    = \"label:curvature/base/Tag\">\n\t\t\t\t<input\n\t\t\t\t\t\tname      = \"").concat(_this.getName(), "\"\n\t\t\t\t\t\ttype      = \"hidden\"\n\t\t\t\t\t\tcv-bind   = \"value\"\n\t\t\t\t\t\tcv-ref    = \"input:curvature/base/Tag\"\n\t\t\t\t\t\tcv-expand = \"attrs\"\n\t\t\t\t/>\n\t\t\t\t<span cv-if = \"value\">[[[value]]]</span>\n\t\t\t</label>\n\t\t");
+    _this.template = "\n\t\t\t<label\n\t\t\t\tfor       = \"".concat(_this.getName(), "\"\n\t\t\t\tdata-type = \"").concat(attrs.type, "\"\n\t\t\t\tstyle     = \"display:none\"\n\t\t\t\tcv-ref    = \"label:curvature/base/Tag\">\n\t\t\t\t<input\n\t\t\t\t\t\tname      = \"").concat(_this.getName(), "\"\n\t\t\t\t\t\ttype      = \"hidden\"\n\t\t\t\t\t\tcv-bind   = \"value\"\n\t\t\t\t\t\tcv-ref    = \"input:curvature/base/Tag\"\n\t\t\t\t\t\tcv-expand = \"attrs\"\n\t\t\t\t/>\n\t\t\t</label>\n\t\t");
     return _this;
   }
 
@@ -9851,6 +9847,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+var Saved = Symbol('Saved');
 var Changed = Symbol('Changed');
 
 var Model = function () {
@@ -9866,6 +9863,10 @@ var Model = function () {
 
     Object.defineProperty(this, Changed, {
       value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, Saved, {
+      writable: true,
+      value: false
     });
   }
 
@@ -9916,10 +9917,19 @@ var Model = function () {
       for (var property in this[Changed]) {
         this[Changed][property] = false;
       }
+
+      this[Saved] = true;
+    }
+  }, {
+    key: "isSaved",
+    value: function isSaved() {
+      return this[Saved];
     }
   }], [{
     key: "from",
     value: function from(skeleton) {
+      var _this2 = this;
+
       var keyProps = this.keyProps();
       var cacheKey = keyProps.map(function (prop) {
         return skeleton[prop];
@@ -9962,6 +9972,7 @@ var Model = function () {
           }
 
           instance[Changed][k] = changed;
+          instance[Saved] = !!(changed ? false : _this2[Saved]);
         });
         changed = true;
       }
@@ -9974,6 +9985,12 @@ var Model = function () {
 }();
 
 exports.Model = Model;
+Object.defineProperty(Model, 'Saved', {
+  value: Saved
+});
+Object.defineProperty(Model, 'Changed', {
+  value: Changed
+});
 "use strict";
 "use strict";
 
