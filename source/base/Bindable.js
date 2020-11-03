@@ -454,14 +454,6 @@ export class Bindable
 				if(!Bindable.isBindable(value))
 				{
 					value = Bindable.makeBindable(value);
-
-					// for(let i in value)
-					// {
-					// 	if(value[i] && value[i] instanceof Object && !Bindable.isBindable(value[i]))
-					// 	{
-					// 		value[i] = Bindable.makeBindable(value[i]);
-					// 	}
-					// }
 				}
 			}
 

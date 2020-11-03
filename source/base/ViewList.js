@@ -138,6 +138,15 @@ export class ViewList
 
 		let finalViews = [];
 
+		this.upDebind   && this.upDebind.map(d=>d&&d());
+		this.downDebind && this.downDebind.map(d=>d&&d());
+
+		this.upDebind   = [];
+		this.downDebind = [];
+
+		let minKey = Infinity;
+		let anteMinKey = Infinity;
+
 		for(let i in this.args.value)
 		{
 			let found = false;
@@ -146,6 +155,10 @@ export class ViewList
 			if(isNaN(k))
 			{
 				k = '_' + i;
+			}
+			else
+			{
+				k = Number(k);
 			}
 
 			for(let j in views)
@@ -156,6 +169,11 @@ export class ViewList
 				){
 					found = true;
 					finalViews[k] = views[j];
+					if(!isNaN(k))
+					{
+						minKey = Math.min(minKey, k);
+						k > 0 && (anteMinKey = Math.min(anteMinKey, k));
+					}
 					finalViews[k].args[ this.keyProperty ] = i;
 					delete views[j];
 					break;
@@ -167,34 +185,60 @@ export class ViewList
 				let viewArgs = {};
 				let view = finalViews[k] = new (this.viewClass)(viewArgs, this.parent);
 
+				if(!isNaN(k))
+				{
+					minKey = Math.min(minKey, k);
+					k > 0 && (anteMinKey = Math.min(anteMinKey, k));
+				}
+
 				finalViews[k].template = this.template instanceof Object
 					? this.template
 					: this.template;
-				// finalViews[k].parent   = this.parent;
+
 				finalViews[k].viewList = this;
 
 				finalViews[k].args[ this.keyProperty ] = i;
 				finalViews[k].args[ this.subProperty ] = this.args.value[i];
 
+				this.upDebind[k] = viewArgs.bindTo(this.subProperty, (v,k,t,d)=>{
 
-				const upDebind = viewArgs.bindTo(this.subProperty, (v,k)=>{
 					let index = viewArgs[ this.keyProperty ];
+
+					if(d)
+					{
+						delete this.args.value[index];
+						return;
+					}
+
 					this.args.value[index] = v;
+
 				});
 
-				const downDebind = this.subArgs.bindTo((v, k, t, d) => {
+				this.downDebind[k] = this.subArgs.bindTo((v, k, t, d) => {
+					if(d)
+					{
+						delete viewArgs[k];
+						return;
+					}
 					viewArgs[k] = v;
 				});
 
 				view.onRemove(()=>{
-					upDebind();
-					downDebind();
-					this._onRemove.remove(upDebind);
-					this._onRemove.remove(downDebind);
+					this.upDebind[k]   && this.upDebind[k]();
+					this.downDebind[k] && this.downDebind[k]();
+
+					delete this.downDebind[k]
+					delete this.upDebind[k];
 				});
 
-				this._onRemove.add(upDebind);
-				this._onRemove.add(downDebind);
+				this._onRemove.add(()=>{
+					this.upDebind.filter(x=>x).map(d=>d());
+					this.upDebind.splice(0);
+				});
+				this._onRemove.add(()=>{
+					this.downDebind.filter(x=>x).map(d=>d());
+					this.downDebind.splice(0);
+				});
 
 				viewArgs[this.subProperty] = this.args.value[i];
 			}
@@ -223,30 +267,42 @@ export class ViewList
 		{
 			const renderRecurse = (i = 0) => {
 
-				const ii = (finalViews.length - i) - 1;
+				let ii = (finalViews.length - i) - 1;
 
-				if(!finalViews[ii])
+				const localMin = minKey === 0 && finalViews[1] !== undefined
+					? minKey
+					: anteMinKey;
+
+				while(ii > localMin && finalViews[ii] === undefined)
+				{
+					ii--;
+				}
+
+				if(ii < localMin)
 				{
 					return Promise.resolve();
 				}
 
-				if(finalViews[ii] === this.views[ii])
+				if(finalViews[ii] !== undefined)
 				{
-					if(!finalViews[ii].firstNode)
+					if(finalViews[ii] === this.views[ii])
 					{
-						finalViews[ii].render(this.tag, finalViews[ii+1]);
+						if(!finalViews[ii].firstNode)
+						{
+							finalViews[ii].render(this.tag, finalViews[ii+1]);
 
-						return finalViews[ii].rendered.then(() => renderRecurse( i+1 ));
+							return finalViews[ii].rendered.then(() => renderRecurse( Number(i)+1 ));
+						}
+
+						return renderRecurse( Number(i)+1 );
 					}
 
-					return renderRecurse( i+1 );
+					finalViews[ii].render(this.tag, finalViews[ii+1]);
+
+					this.views.splice(ii, 0, finalViews[ii]);
+
+					return finalViews[ii].rendered.then( () => renderRecurse( Number(i)+1 ) );
 				}
-
-				finalViews[ii].render(this.tag, finalViews[ii+1]);
-
-				this.views.splice(ii, 0, finalViews[ii]);
-
-				return finalViews[ii].rendered.then( () => renderRecurse( i+1 ) );
 			}
 
 			this.rendered = renderRecurse();

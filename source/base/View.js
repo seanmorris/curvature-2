@@ -1827,6 +1827,11 @@ export class View
 					return;
 				}
 
+				if(d)
+				{
+					delete viewList.subArgs[k];
+				}
+
 				viewList.subArgs[k] = v;
 			});
 
@@ -1835,6 +1840,11 @@ export class View
 				if(k === '_id' || k === 'value' || k.substring(0,3) === '___')
 				{
 					return;
+				}
+
+				if(d)
+				{
+					delete this.args[k];
 				}
 
 				if(k in this.args)
@@ -2257,13 +2267,13 @@ export class View
 	{
 		const remover = () => {
 
-			this.firstNode = this.lastNode = undefined;
-
 			for(let i in this.nodes)
 			{
-				this.nodes[i].dispatchEvent(new Event('cvDomDetached'));
-				this.nodes[i].remove();
+				this.nodes[i] && this.nodes[i].dispatchEvent(new Event('cvDomDetached'));
+				this.nodes[i] && this.nodes[i].remove();
 			}
+
+			this.firstNode = this.lastNode = undefined;
 		};
 
 		if(now)

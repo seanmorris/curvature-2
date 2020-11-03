@@ -663,6 +663,7 @@ var Bindable = function () {
             }
 
             var objRef = object instanceof Promise || object instanceof EventTarget || object instanceof MutationObserver || object instanceof IntersectionObserver || object instanceof MutationObserver || object instanceof PerformanceObserver || typeof ResizeObserver === 'function' && object instanceof ResizeObserver || object instanceof Map || object instanceof Set ? object : object[Ref];
+            var wasPaused = this.paused;
             var ret = new.target ? _construct(target[key], providedArgs) : target[key].apply(objRef || object, providedArgs);
 
             for (var _i7 in target.___after___) {
@@ -4697,12 +4698,20 @@ var View = function () {
             return;
           }
 
+          if (d) {
+            delete viewList.subArgs[k];
+          }
+
           viewList.subArgs[k] = v;
         });
 
         var debindB = viewList.args.bindTo(function (v, k, t, d, p) {
           if (k === '_id' || k === 'value' || k.substring(0, 3) === '___') {
             return;
+          }
+
+          if (d) {
+            delete _this10.args[k];
           }
 
           if (k in _this10.args) {
@@ -5017,13 +5026,12 @@ var View = function () {
       var now = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
       var remover = function remover() {
-        _this12.firstNode = _this12.lastNode = undefined;
-
         for (var _i16 in _this12.nodes) {
-          _this12.nodes[_i16].dispatchEvent(new Event('cvDomDetached'));
-
-          _this12.nodes[_i16].remove();
+          _this12.nodes[_i16] && _this12.nodes[_i16].dispatchEvent(new Event('cvDomDetached'));
+          _this12.nodes[_i16] && _this12.nodes[_i16].remove();
         }
+
+        _this12.firstNode = _this12.lastNode = undefined;
       };
 
       if (now) {
@@ -5424,71 +5432,120 @@ var ViewList = function () {
       }
 
       var finalViews = [];
+      this.upDebind && this.upDebind.map(function (d) {
+        return d && d();
+      });
+      this.downDebind && this.downDebind.map(function (d) {
+        return d && d();
+      });
+      this.upDebind = [];
+      this.downDebind = [];
+      var minKey = Infinity;
+      var anteMinKey = Infinity;
 
-      for (var _i in this.args.value) {
+      var _loop2 = function _loop2(_i) {
         var found = false;
         var k = _i;
 
         if (isNaN(k)) {
           k = '_' + _i;
+        } else {
+          k = Number(k);
         }
 
-        for (var j in views) {
-          if (views[j] && this.args.value[_i] !== undefined && this.args.value[_i] === views[j].args[this.subProperty]) {
+        for (var _j in views) {
+          if (views[_j] && _this3.args.value[_i] !== undefined && _this3.args.value[_i] === views[_j].args[_this3.subProperty]) {
             found = true;
-            finalViews[k] = views[j];
-            finalViews[k].args[this.keyProperty] = _i;
-            delete views[j];
+            finalViews[k] = views[_j];
+
+            if (!isNaN(k)) {
+              minKey = Math.min(minKey, k);
+              k > 0 && (anteMinKey = Math.min(anteMinKey, k));
+            }
+
+            finalViews[k].args[_this3.keyProperty] = _i;
+            delete views[_j];
             break;
           }
         }
 
         if (!found) {
-          (function () {
-            var viewArgs = {};
-            var view = finalViews[k] = new _this3.viewClass(viewArgs, _this3.parent);
-            finalViews[k].template = _this3.template instanceof Object ? _this3.template : _this3.template;
-            finalViews[k].viewList = _this3;
-            finalViews[k].args[_this3.keyProperty] = _i;
-            finalViews[k].args[_this3.subProperty] = _this3.args.value[_i];
-            var upDebind = viewArgs.bindTo(_this3.subProperty, function (v, k) {
-              var index = viewArgs[_this3.keyProperty];
-              _this3.args.value[index] = v;
+          var viewArgs = {};
+          var view = finalViews[k] = new _this3.viewClass(viewArgs, _this3.parent);
+
+          if (!isNaN(k)) {
+            minKey = Math.min(minKey, k);
+            k > 0 && (anteMinKey = Math.min(anteMinKey, k));
+          }
+
+          finalViews[k].template = _this3.template instanceof Object ? _this3.template : _this3.template;
+          finalViews[k].viewList = _this3;
+          finalViews[k].args[_this3.keyProperty] = _i;
+          finalViews[k].args[_this3.subProperty] = _this3.args.value[_i];
+          _this3.upDebind[k] = viewArgs.bindTo(_this3.subProperty, function (v, k, t, d) {
+            var index = viewArgs[_this3.keyProperty];
+
+            if (d) {
+              delete _this3.args.value[index];
+              return;
+            }
+
+            _this3.args.value[index] = v;
+          });
+          _this3.downDebind[k] = _this3.subArgs.bindTo(function (v, k, t, d) {
+            if (d) {
+              delete viewArgs[k];
+              return;
+            }
+
+            viewArgs[k] = v;
+          });
+          view.onRemove(function () {
+            _this3.upDebind[k] && _this3.upDebind[k]();
+            _this3.downDebind[k] && _this3.downDebind[k]();
+            delete _this3.downDebind[k];
+            delete _this3.upDebind[k];
+          });
+
+          _this3._onRemove.add(function () {
+            _this3.upDebind.filter(function (x) {
+              return x;
+            }).map(function (d) {
+              return d();
             });
 
-            var downDebind = _this3.subArgs.bindTo(function (v, k, t, d) {
-              viewArgs[k] = v;
+            _this3.upDebind.splice(0);
+          });
+
+          _this3._onRemove.add(function () {
+            _this3.downDebind.filter(function (x) {
+              return x;
+            }).map(function (d) {
+              return d();
             });
 
-            view.onRemove(function () {
-              upDebind();
-              downDebind();
+            _this3.downDebind.splice(0);
+          });
 
-              _this3._onRemove.remove(upDebind);
-
-              _this3._onRemove.remove(downDebind);
-            });
-
-            _this3._onRemove.add(upDebind);
-
-            _this3._onRemove.add(downDebind);
-
-            viewArgs[_this3.subProperty] = _this3.args.value[_i];
-          })();
+          viewArgs[_this3.subProperty] = _this3.args.value[_i];
         }
+      };
+
+      for (var _i in this.args.value) {
+        _loop2(_i);
       }
 
       for (var _i2 in views) {
-        var _found = false;
+        var found = false;
 
-        for (var _j in finalViews) {
-          if (views[_i2] === finalViews[_j]) {
-            _found = true;
+        for (var j in finalViews) {
+          if (views[_i2] === finalViews[j]) {
+            found = true;
             break;
           }
         }
 
-        if (!_found) {
+        if (!found) {
           views[_i2].remove();
         }
       }
@@ -5497,29 +5554,36 @@ var ViewList = function () {
         var renderRecurse = function renderRecurse() {
           var i = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
           var ii = finalViews.length - i - 1;
+          var localMin = minKey === 0 && finalViews[1] !== undefined ? minKey : anteMinKey;
 
-          if (!finalViews[ii]) {
+          while (ii > localMin && finalViews[ii] === undefined) {
+            ii--;
+          }
+
+          if (ii < localMin) {
             return Promise.resolve();
           }
 
-          if (finalViews[ii] === _this3.views[ii]) {
-            if (!finalViews[ii].firstNode) {
-              finalViews[ii].render(_this3.tag, finalViews[ii + 1]);
-              return finalViews[ii].rendered.then(function () {
-                return renderRecurse(i + 1);
-              });
+          if (finalViews[ii] !== undefined) {
+            if (finalViews[ii] === _this3.views[ii]) {
+              if (!finalViews[ii].firstNode) {
+                finalViews[ii].render(_this3.tag, finalViews[ii + 1]);
+                return finalViews[ii].rendered.then(function () {
+                  return renderRecurse(Number(i) + 1);
+                });
+              }
+
+              return renderRecurse(Number(i) + 1);
             }
 
-            return renderRecurse(i + 1);
+            finalViews[ii].render(_this3.tag, finalViews[ii + 1]);
+
+            _this3.views.splice(ii, 0, finalViews[ii]);
+
+            return finalViews[ii].rendered.then(function () {
+              return renderRecurse(Number(i) + 1);
+            });
           }
-
-          finalViews[ii].render(_this3.tag, finalViews[ii + 1]);
-
-          _this3.views.splice(ii, 0, finalViews[ii]);
-
-          return finalViews[ii].rendered.then(function () {
-            return renderRecurse(i + 1);
-          });
         };
 
         this.rendered = renderRecurse();
@@ -5527,7 +5591,7 @@ var ViewList = function () {
         var renders = [];
         var leftovers = Object.assign({}, finalViews);
 
-        var _loop2 = function _loop2(_i3) {
+        var _loop3 = function _loop3(_i3) {
           delete leftovers[_i3];
 
           if (finalViews[_i3].firstNode && finalViews[_i3] === _this3.views[_i3]) {
@@ -5542,7 +5606,7 @@ var ViewList = function () {
         };
 
         for (var _i3 in finalViews) {
-          var _ret = _loop2(_i3);
+          var _ret = _loop3(_i3);
 
           if (_ret === "continue") continue;
         }
