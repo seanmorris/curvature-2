@@ -4,7 +4,7 @@ const Deck       = Symbol('deck');
 const Binding    = Symbol('binding');
 const SubBinding = Symbol('subBinding');
 const BindingAll = Symbol('bindingAll');
-const IsBindable = Symbol('isBindable')
+const IsBindable = Symbol('isBindable');
 const Executing  = Symbol('executing');
 const Stack      = Symbol('stack');
 const ObjSymbol  = Symbol('object');
@@ -15,6 +15,8 @@ const OnAllGet   = Symbol('onAllGet');
 
 export class Bindable
 {
+	static throttles = new WeakMap;
+
 	static isBindable(object)
 	{
 		if (!object || !object[IsBindable])
@@ -731,22 +733,22 @@ export class Bindable
 
 	static wrapThrottleCallback(callback, throttle)
 	{
-		return ((callback) => {
+		this.throttles.set(callback, false);
 
-			let throttle = false;
+		return ((callback) => {
 
 			return (v,k,t,d) => {
 
-				if (throttle)
+				if(this.throttles.get(callback, true))
 				{
 					return;
 				}
 
 				callback(v,k,t,d,t[k]);
 
-				throttle = true;
+				this.throttles.set(callback, true);
 
-				setTimeout(()=> {throttle = false}, throttle);
+				setTimeout(()=> {this.throttles.set(callback, false)}, throttle);
 
 			}
 		})(callback);

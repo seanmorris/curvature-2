@@ -265,13 +265,15 @@ export class ViewList
 
 		if(Array.isArray(this.args.value))
 		{
+			const localMin = minKey === 0 && (finalViews[1] !== undefined && finalViews.length > 1)
+				? minKey
+				: anteMinKey;
+
+			console.log(localMin);
+
 			const renderRecurse = (i = 0) => {
 
 				let ii = (finalViews.length - i) - 1;
-
-				const localMin = minKey === 0 && finalViews[1] !== undefined
-					? minKey
-					: anteMinKey;
 
 				while(ii > localMin && finalViews[ii] === undefined)
 				{
@@ -283,26 +285,23 @@ export class ViewList
 					return Promise.resolve();
 				}
 
-				if(finalViews[ii] !== undefined)
+				if(finalViews[ii] === this.views[ii])
 				{
-					if(finalViews[ii] === this.views[ii])
+					if(!finalViews[ii].firstNode)
 					{
-						if(!finalViews[ii].firstNode)
-						{
-							finalViews[ii].render(this.tag, finalViews[ii+1]);
+						finalViews[ii].render(this.tag, finalViews[ii+1]);
 
-							return finalViews[ii].rendered.then(() => renderRecurse( Number(i)+1 ));
-						}
-
-						return renderRecurse( Number(i)+1 );
+						return finalViews[ii].rendered.then(() => renderRecurse( Number(i)+1 ));
 					}
 
-					finalViews[ii].render(this.tag, finalViews[ii+1]);
-
-					this.views.splice(ii, 0, finalViews[ii]);
-
-					return finalViews[ii].rendered.then( () => renderRecurse( Number(i)+1 ) );
+					return renderRecurse( Number(i)+1 );
 				}
+
+				finalViews[ii].render(this.tag, finalViews[ii+1]);
+
+				this.views.splice(ii, 0, finalViews[ii]);
+
+				return finalViews[ii].rendered.then( () => renderRecurse( Number(i)+1 ) );
 			}
 
 			this.rendered = renderRecurse();
