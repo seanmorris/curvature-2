@@ -269,8 +269,6 @@ export class ViewList
 				? minKey
 				: anteMinKey;
 
-			console.log(localMin);
-
 			const renderRecurse = (i = 0) => {
 
 				let ii = (finalViews.length - i) - 1;

@@ -5,6 +5,10 @@ import { Dom      } from './Dom';
 import { Tag      } from './Tag';
 import { Bag      } from './Bag';
 import { RuleSet  } from './RuleSet';
+import { Mixin    } from './Mixin';
+
+import { PromiseMixin      } from '../mixin/PromiseMixin';
+import { EventTargetMixin  } from '../mixin/EventTargetMixin';
 
 const dontParse  = Symbol('dontParse');
 const expandBind = Symbol('expandBind');
@@ -12,7 +16,7 @@ const uuid       = Symbol('uuid');
 
 let moveIndex = 0;
 
-export class View
+export class View extends Mixin.with(PromiseMixin, EventTargetMixin)
 {
 	get _id()
 	{
@@ -30,6 +34,8 @@ export class View
 
 	constructor(args = {}, mainView = null)
 	{
+		super();
+
 		Object.defineProperty(this, 'args', { value: Bindable.make(args) });
 		Object.defineProperty(this, uuid,   { value: this.uuid() });
 
@@ -289,6 +295,8 @@ export class View
 			return this.reRender(parentNode, insertPoint);
 		}
 
+		this.dispatchEvent(new CustomEvent('render'));
+
 		const templateParsed = (this.template instanceof DocumentFragment)
 			? this.template.cloneNode(true)
 			: View.templates.has(this.template);
@@ -328,6 +336,15 @@ export class View
 			, this.lastNode
 		);
 
+		this.postRender(parentNode);
+
+		this.dispatchEvent(new CustomEvent('rendered'));
+
+		if(!this.dispatchAttach())
+		{
+			return;
+		}
+
 		if(parentNode)
 		{
 			const rootNode = parentNode.getRootNode();
@@ -358,45 +375,76 @@ export class View
 			if(toRoot)
 			{
 				this.attached(rootNode, parentNode);
-
-				const attach = this.attach.items();
-
-				for(let i in attach)
-				{
-					attach[i](rootNode, parentNode);
-				}
-
-				this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
-
-					if(!child.matches)
-					{
-						return;
+				this.dispatchAttached(rootNode, parentNode);
+			}
+			else
+			{
+				parentNode.addEventListener(
+					'cvDomAttached'
+					, () => {
+						this.attached(rootNode, parentNode);
+						this.dispatchAttached(rootNode, parentNode);
 					}
-
-					Dom.mapTags(child, false, (tag, walker)=>{
-
-						if(!tag.matches)
-						{
-							return;
-						}
-
-						tag.dispatchEvent(new Event('cvDomAttached', {target: tag}));
-					});
-
-					child.dispatchEvent(new Event('cvDomAttached', {target: child}));
-				});
+					, {once: true}
+				);
 			}
 		}
 
 		this.renderComplete(this.nodes);
 
-		this.postRender(parentNode);
-
 		return this.nodes;
+	}
+
+	dispatchAttach()
+	{
+		return this.dispatchEvent(new CustomEvent('attach', {
+			cancelable: true, target: this
+		}));
+	}
+
+	dispatchAttached(rootNode, parentNode)
+	{
+		this.dispatchEvent(new CustomEvent('attached', {target: this}));
+
+		const attach = this.attach.items();
+
+		for(let i in attach)
+		{
+			attach[i](rootNode, parentNode);
+		}
+
+		this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+
+			if(!child.matches)
+			{
+				return;
+			}
+
+			Dom.mapTags(child, false, (tag, walker)=>{
+
+				if(!tag.matches)
+				{
+					return;
+				}
+
+				tag.dispatchEvent(new Event('cvDomAttached', {target: tag}));
+			});
+
+			child.dispatchEvent(new Event('cvDomAttached', {target: child}));
+		});
 	}
 
 	reRender(parentNode, insertPoint)
 	{
+		const willReRender = this.dispatchEvent(new CustomEvent('reRender'), {
+			cancelable:true, target:this
+		});
+
+		if(!willReRender)
+		{
+			return;
+		}
+
 		const subDoc = new DocumentFragment;
 
 		if(this.firstNode.isConnected)
@@ -410,8 +458,6 @@ export class View
 		}
 
 		subDoc.append(...this.nodes);
-		// subDoc.appendChild(this.firstNode);
-		// subDoc.appendChild(this.lastNode);
 
 		if(parentNode)
 		{
@@ -430,22 +476,14 @@ export class View
 
 			const rootNode = parentNode.getRootNode();
 
+			this.dispatchEvent(new CustomEvent('reRendered'), {
+				cancelable:true, target:this
+			});
+
 			if(rootNode.isConnected)
 			{
-				this.nodes.filter(n => n.nodeType === Node.ELEMENT_NODE).map(child => {
-					child.dispatchEvent(new Event('cvDomAttached', {target: child}));
-
-					Dom.mapTags(child, false, (tag, walker)=>{
-						child.dispatchEvent(new Event('cvDomAttached', {target: tag}));
-					});
-				});
-
-				const attach = this.attach.items();
-
-				for(let i in attach)
-				{
-					attach[i](rootNode, parentNode);
-				}
+				this.attached(rootNode, parentNode);
+				this.dispatchAttached(rootNode, parentNode);
 			}
 
 		}
@@ -847,11 +885,8 @@ export class View
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
 				let debind = proxy.bindTo(property, (v,k,t) => {
-					if(t[k] !== v && (
-						t[k] instanceof View
-						|| t[k] instanceof Node
-						|| t[k] instanceof Tag
-					)){
+					if(t[k] !== v && (t[k] instanceof View || t[k] instanceof Node || t[k] instanceof Tag))
+					{
 						if(!t[k].preserve)
 						{
 							t[k].remove();
@@ -869,10 +904,19 @@ export class View
 						v.template = unsafeTemplate;
 					}
 
+					if(transformer)
+					{
+						v = transformer(v);
+					}
+
 					if(v instanceof View)
 					{
 						const onAttach = (parentNode) => {
-							v.attached(parentNode);
+							if(v.dispatchAttach())
+							{
+								v.attached(parentNode);
+								v.dispatchAttached();
+							}
 						};
 
 						this.attach.add(onAttach);
@@ -893,45 +937,39 @@ export class View
 							this._onRemove.remove(cleanup);
 						});
 					}
+					else if(v instanceof Node)
+					{
+						tag.parentNode.insertBefore(v, dynamicNode);
+
+						this.onRemove(() => v.remove());
+					}
+					else if(v instanceof Tag)
+					{
+						tag.parentNode.insertBefore(v.node, dynamicNode);
+
+						this.onRemove(() => v.remove());
+					}
 					else
 					{
-						if(transformer)
+						if(v instanceof Object && v.__toString instanceof Function)
 						{
-							v = transformer(v);
+							v = v.__toString();
 						}
 
-						if(v instanceof Node)
+						if(unsafeHtml)
 						{
-							tag.parentNode.insertBefore(v, tag);
+							dynamicNode.innerHTML = v;
 						}
 						else
 						{
-							if(v instanceof Object && v.__toString instanceof Function)
-							{
-								v = v.__toString();
-							}
-
-							if(unsafeHtml)
-							{
-								dynamicNode.innerHTML = v;
-							}
-							else
-							{
-								dynamicNode.nodeValue = v;
-							}
+							dynamicNode.nodeValue = v;
 						}
-
-						dynamicNode[dontParse] = true;
 					}
+
+					dynamicNode[dontParse] = true;
 				});
 
-				this.onRemove(()=>{
-					debind();
-					if(!proxy.isBound())
-					{
-						Bindable.clearBindings(proxy);
-					}
-				});
+				this.onRemove(debind);
 			}
 
 			let staticSuffix = original.substring(header);
@@ -952,11 +990,8 @@ export class View
 			{
 				if(!this.interpolatable(tag.attributes[i].value))
 				{
-					// console.log('!!', tag.attributes[i].value);
 					continue;
 				}
-
-				// console.log(tag.attributes[i].value);
 
 				let header    = 0;
 				let match;
@@ -1182,7 +1217,7 @@ export class View
 
 		let debind = proxy.bindTo(property, (v,k,t,d,p) => {
 
-			if(p instanceof View && p !== v)
+			if((p instanceof View || p instanceof Node || p instanceof Tag) && p !== v)
 			{
 				p.remove();
 			}
@@ -1220,6 +1255,10 @@ export class View
 						};
 
 						this.attach.add(onAttach);
+
+						v.onRemove(() => {
+							this.attach.remove(onAttach);
+						});
 					}
 					else
 					{
@@ -1240,7 +1279,11 @@ export class View
 					}
 
 					const onAttach = (parentNode) => {
-						v.attached(parentNode);
+						if(v.dispatchAttach())
+						{
+							v.attached(parentNode);
+							v.dispatchAttached();
+						}
 					};
 
 					this.attach.add(onAttach);
@@ -1248,6 +1291,14 @@ export class View
 					v.render(tag);
 
 					v.onRemove(()=>this.attach.remove(onAttach));
+				}
+				else if(v instanceof Node)
+				{
+					tag.insert(v);
+				}
+				else if(v instanceof Tag)
+				{
+					tag.append(v.node);
 				}
 				else if(unsafeHtml)
 				{
@@ -1298,7 +1349,6 @@ export class View
 		const multi = tag.getAttribute('multiple');
 
 		let inputListener = (event) => {
-
 			if(event.target !== tag)
 			{
 				return;

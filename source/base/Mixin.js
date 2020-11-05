@@ -9,30 +9,30 @@ export class Mixin
 	{
 		const constructors = [];
 
-		const newClass = class  extends baseClass { constructor(...args) {
+		const newClass = class  extends baseClass {
+			constructor(...args) {
+				super(...args);
 
-			super(...args);
-
-			for(const mixin of mixins)
-			{
-				if(mixin[ Mixin.Constructor ])
+				for(const mixin of mixins)
 				{
-					mixin[ Mixin.Constructor ].apply(this);
-				}
+					if(mixin[ Mixin.Constructor ])
+					{
+						mixin[ Mixin.Constructor ].apply(this);
+					}
 
-				switch(typeof mixin)
-				{
-					// case 'function':
-					// 	this.mixClass(mixin, newClass);
-					// 	break;
+					switch(typeof mixin)
+					{
+						// case 'function':
+						// 	this.mixClass(mixin, newClass);
+						// 	break;
 
-					case 'object':
-						Mixin.mixObject(mixin, this);
-						break;
+						case 'object':
+							Mixin.mixObject(mixin, this);
+							break;
+					}
 				}
 			}
-
-		}};
+		};
 
 		return newClass;
 	}

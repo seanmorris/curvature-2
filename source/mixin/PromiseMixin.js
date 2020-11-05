@@ -1,35 +1,30 @@
-import { Mixin }    from '../base/Mixin';
-import { Bindable } from '../base/Bindable';
+import { Mixin } from '../base/Mixin';
 
-const PromiseSymbol = Symbol('Promise');
-const Accept        = Symbol('Accept');
-const Reject        = Symbol('Reject');
+const _Promise = Symbol('Promise');
+const Accept   = Symbol('Accept');
+const Reject   = Symbol('Reject');
 
 export const PromiseMixin = {
-	Promise:  PromiseSymbol
-	, Accept: Accept
-	, Reject: Reject
-
-	, [Mixin.Constructor]()
+	[Mixin.Constructor]()
 	{
-		this[PromiseSymbol] = new Promise((accept, reject)=>{
+		this[_Promise] = new Promise((accept, reject)=>{
 			this[Accept] = accept;
 			this[Reject] = reject;
 		});
 	}
 
-	, then(callback)
+	, then(...args)
 	{
-		return this[PromiseSymbol].then(callback);
+		return this[_Promise].then(...args);
 	}
 
-	, catch(callback)
+	, catch(...args)
 	{
-		return this[PromiseSymbol].catch(callback);
+		return this[_Promise].catch(...args);
 	}
 
-	, finally(callback)
+	, finally(...args)
 	{
-		return this[PromiseSymbol].finally(callback);
+		return this[_Promise].finally(...args);
 	}
 }

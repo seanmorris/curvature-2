@@ -248,52 +248,50 @@ export class Router {
 			return;
 		}
 
-		if(selected in routes
-			&& routes[selected] instanceof Object
-			&& routes[selected].isView
-			&& routes[selected].isView()
-		){
-			result = new routes[selected](args);
-
-			if(listener)
+		try
+		{
+			if(routes[selected] instanceof Object)
 			{
-				result.root = () => listener;
+				result = new routes[selected](args);
+			}
+			else if(routes[selected] instanceof Function)
+			{
+				result = routes[selected](args);
+			}
+			else if(typeof routes[selected] == 'string')
+			{
+				result = routes[selected];
+			}
+
+			if(result instanceof Promise)
+			{
+				return result.then(realResult => {
+					this.update(
+						listener
+						, path
+						, realResult
+						, routes
+						, selected
+						, args
+						, forceRefresh
+					);
+				});
+			}
+			else
+			{
+				return this.update(
+					listener
+					, path
+					, result
+					, routes
+					, selected
+					, args
+					, forceRefresh
+				);
 			}
 		}
-		else if(routes[selected] instanceof Function)
+		catch(error)
 		{
-			result = new Promise((accept) => accept( routes[selected](args) ));
-		}
-		else if(routes[selected] instanceof Object)
-		{
-			result = new Promise((accept) => accept(new routes[selected](args) ));
-		}
-		else if(typeof routes[selected] == 'string')
-		{
-			result = routes[selected];
-		}
-
-		if(!(result instanceof Promise))
-		{
-			result = Promise.resolve(result);
-		}
-
-		return result.then(result => {
-
-			this.update(
-				listener
-				, path
-				, result
-				, routes
-				, selected
-				, args
-				, forceRefresh
-			);
-
-		}).catch(error => {
-
-			console.error(error);
-
 			this.update(
 				listener
 				, path
@@ -304,7 +302,8 @@ export class Router {
 				, forceRefresh
 			);
 
-		});
+			throw error;
+		}
 	}
 
 	static update(listener, path, result, routes, selected, args, forceRefresh)
