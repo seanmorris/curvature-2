@@ -265,7 +265,9 @@ export class ViewList
 
 		if(Array.isArray(this.args.value))
 		{
-			const localMin = minKey === 0 && (finalViews[1] !== undefined && finalViews.length > 1)
+			const localMin = (minKey === 0)
+				 && (finalViews[1] !== undefined && finalViews.length > 1)
+				 || (anteMinKey === Infinity)
 				? minKey
 				: anteMinKey;
 

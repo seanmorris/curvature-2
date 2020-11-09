@@ -28,3 +28,6 @@ export const PromiseMixin = {
 		return this[_Promise].finally(...args);
 	}
 }
+
+Object.defineProperty(PromiseMixin, 'Reject', {value: Reject});
+Object.defineProperty(PromiseMixin, 'Accept', {value: Accept});

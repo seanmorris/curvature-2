@@ -16,13 +16,6 @@ export class Router {
 	{
 		this.routes = routes;
 
-		let route = location.pathname + location.search;
-
-		if(location.hash)
-		{
-			route += location.hash;
-		}
-
 		Object.assign(this.query, this.queryOver({}));
 
 		const listen = (event) => {
@@ -52,7 +45,15 @@ export class Router {
 				}
 			}
 
-			this.match(location.pathname, listener);
+
+			if(location.origin !== 'null')
+			{
+				this.match(location.pathname, listener);
+			}
+			else
+			{
+				this.match(this.nextPath, listener);
+			}
 
 			for(const i in this.query)
 			{
@@ -65,7 +66,16 @@ export class Router {
 		window.addEventListener('popstate', listen);
 		window.addEventListener('cvUrlChanged', listen);
 
-		this.go(route);
+		let route = location.origin !== 'null'
+			? location.pathname + location.search
+			: false;
+
+		if(location.origin && location.hash)
+		{
+			route += location.hash;
+		}
+
+		this.go(route !== false ? route : '/');
 	}
 
 	static go(path, silent)
@@ -77,7 +87,11 @@ export class Router {
 			document.title = configTitle;
 		}
 
-		if(silent === 2 && location.pathname !== path)
+		if(location.origin === 'null')
+		{
+			this.nextPath = path;
+		}
+		else if(silent === 2 && location.pathname !== path)
 		{
 			history.replaceState(
 				{
@@ -143,6 +157,8 @@ export class Router {
 		const current = listener.args.content;
 		const routes  = this.routes || listener.routes || Routes.dump();
 		const query   = new URLSearchParams(location.search);
+
+		console.log(path, routes);
 
 		for(const i in this.query)
 		{
@@ -250,15 +266,18 @@ export class Router {
 
 		try
 		{
-			if(routes[selected] instanceof Object)
+			if(typeof routes[selected] === 'function')
 			{
-				result = new routes[selected](args);
+				if(routes[selected].prototype instanceof View)
+				{
+					result = new routes[selected](args);
+				}
+				else
+				{
+					result = routes[selected](args);
+				}
 			}
-			else if(routes[selected] instanceof Function)
-			{
-				result = routes[selected](args);
-			}
-			else if(typeof routes[selected] == 'string')
+			else
 			{
 				result = routes[selected];
 			}
@@ -275,6 +294,31 @@ export class Router {
 						, args
 						, forceRefresh
 					);
+				}).catch(error => {
+
+					document.dispatchEvent(new CustomEvent('cvRouteError', {
+						detail: {
+							error
+							, path
+							, prev
+							, view: listener
+							, routes
+							, selected
+						}
+					}));
+
+					this.update(
+						listener
+						, path
+						, window['devMode'] ? String(error) : 'Error: 500'
+						, routes
+						, selected
+						, args
+						, forceRefresh
+					);
+
+					throw error;
+
 				});
 			}
 			else
@@ -292,6 +336,17 @@ export class Router {
 		}
 		catch(error)
 		{
+			document.dispatchEvent(new CustomEvent('cvRouteError', {
+				detail: {
+					error
+					, path
+					, prev
+					, view: listener
+					, routes
+					, selected
+				}
+			}));
+
 			this.update(
 				listener
 				, path

@@ -474,18 +474,18 @@ export class View extends Mixin.with(PromiseMixin, EventTargetMixin)
 
 			parentNode.insertBefore(subDoc, this.lastNode);
 
-			const rootNode = parentNode.getRootNode();
 
 			this.dispatchEvent(new CustomEvent('reRendered'), {
 				cancelable:true, target:this
 			});
+
+			const rootNode = parentNode.getRootNode();
 
 			if(rootNode.isConnected)
 			{
 				this.attached(rootNode, parentNode);
 				this.dispatchAttached(rootNode, parentNode);
 			}
-
 		}
 
 		return this.nodes;
@@ -1255,10 +1255,6 @@ export class View extends Mixin.with(PromiseMixin, EventTargetMixin)
 						};
 
 						this.attach.add(onAttach);
-
-						v.onRemove(() => {
-							this.attach.remove(onAttach);
-						});
 					}
 					else
 					{

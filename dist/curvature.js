@@ -3653,12 +3653,6 @@ var Router = function () {
 
       var routes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       this.routes = routes;
-      var route = location.pathname + location.search;
-
-      if (location.hash) {
-        route += location.hash;
-      }
-
       Object.assign(this.query, this.queryOver({}));
 
       var listen = function listen(event) {
@@ -3680,7 +3674,11 @@ var Router = function () {
           }
         }
 
-        _this2.match(location.pathname, listener);
+        if (location.origin !== 'null') {
+          _this2.match(location.pathname, listener);
+        } else {
+          _this2.match(_this2.nextPath, listener);
+        }
 
         for (var i in _this2.query) {
           delete _this2.query[i];
@@ -3691,7 +3689,13 @@ var Router = function () {
 
       window.addEventListener('popstate', listen);
       window.addEventListener('cvUrlChanged', listen);
-      this.go(route);
+      var route = location.origin !== 'null' ? location.pathname + location.search : false;
+
+      if (location.origin && location.hash) {
+        route += location.hash;
+      }
+
+      this.go(route !== false ? route : '/');
     }
   }, {
     key: "go",
@@ -3702,7 +3706,9 @@ var Router = function () {
         document.title = configTitle;
       }
 
-      if (silent === 2 && location.pathname !== path) {
+      if (location.origin === 'null') {
+        this.nextPath = path;
+      } else if (silent === 2 && location.pathname !== path) {
         history.replaceState({
           routedId: this.routeCount,
           prev: this.prevPath,
@@ -3754,6 +3760,7 @@ var Router = function () {
       var routes = this.routes || listener.routes || _Routes.Routes.dump();
 
       var query = new URLSearchParams(location.search);
+      console.log(path, routes);
 
       for (var i in this.query) {
         delete this.query[i];
@@ -3833,39 +3840,53 @@ var Router = function () {
         return;
       }
 
-      if (selected in routes && routes[selected] instanceof Object && routes[selected].isView && routes[selected].isView()) {
-        result = new routes[selected](args);
-
-        if (listener) {
-          result.root = function () {
-            return listener;
-          };
+      try {
+        if (typeof routes[selected] === 'function') {
+          if (routes[selected].prototype instanceof _View.View) {
+            result = new routes[selected](args);
+          } else {
+            result = routes[selected](args);
+          }
+        } else {
+          result = routes[selected];
         }
-      } else if (routes[selected] instanceof Function) {
-        result = new Promise(function (accept) {
-          return accept(routes[selected](args));
-        });
-      } else if (routes[selected] instanceof Object) {
-        result = new Promise(function (accept) {
-          return accept(new routes[selected](args));
-        });
-      } else if (typeof routes[selected] == 'string') {
-        result = routes[selected];
+
+        if (result instanceof Promise) {
+          return result.then(function (realResult) {
+            _this3.update(listener, path, realResult, routes, selected, args, forceRefresh);
+          })["catch"](function (error) {
+            document.dispatchEvent(new CustomEvent('cvRouteError', {
+              detail: {
+                error: error,
+                path: path,
+                prev: prev,
+                view: listener,
+                routes: routes,
+                selected: selected
+              }
+            }));
+
+            _this3.update(listener, path, window['devMode'] ? String(error) : 'Error: 500', routes, selected, args, forceRefresh);
+
+            throw error;
+          });
+        } else {
+          return this.update(listener, path, result, routes, selected, args, forceRefresh);
+        }
+      } catch (error) {
+        document.dispatchEvent(new CustomEvent('cvRouteError', {
+          detail: {
+            error: error,
+            path: path,
+            prev: prev,
+            view: listener,
+            routes: routes,
+            selected: selected
+          }
+        }));
+        this.update(listener, path, window['devMode'] ? String(error) : 'Error: 500', routes, selected, args, forceRefresh);
+        throw error;
       }
-
-      if (!(result instanceof Promise)) {
-        result = Promise.resolve(result);
-      }
-
-      return result.then(function (result) {
-        console.log(result);
-
-        _this3.update(listener, path, result, routes, selected, args, forceRefresh);
-      })["catch"](function (error) {
-        console.error(error);
-
-        _this3.update(listener, path, window['devMode'] ? String(error) : 'Error: 500', routes, selected, args, forceRefresh);
-      });
     }
   }, {
     key: "update",
@@ -4983,6 +5004,7 @@ var View = function (_Mixin$with) {
         return this.reRender(parentNode, insertPoint);
       }
 
+      this.dispatchEvent(new CustomEvent('render'));
       var templateParsed = this.template instanceof DocumentFragment ? this.template.cloneNode(true) : View.templates.has(this.template);
       var subDoc = templateParsed ? this.template instanceof DocumentFragment ? templateParsed : View.templates.get(this.template).cloneNode(true) : document.createRange().createContextualFragment(this.template);
 
@@ -5003,6 +5025,13 @@ var View = function (_Mixin$with) {
       }
 
       (_this$nodes = this.nodes).push.apply(_this$nodes, [this.firstNode].concat(_toConsumableArray(Array.from(subDoc.childNodes)), [this.lastNode]));
+
+      this.postRender(parentNode);
+      this.dispatchEvent(new CustomEvent('rendered'));
+
+      if (!this.dispatchAttach()) {
+        return;
+      }
 
       if (parentNode) {
         var rootNode = parentNode.getRootNode();
@@ -5027,12 +5056,12 @@ var View = function (_Mixin$with) {
 
         if (toRoot) {
           this.attached(rootNode, parentNode);
-          this.dispatchAttach(rootNode, parentNode);
+          this.dispatchAttached(rootNode, parentNode);
         } else {
           parentNode.addEventListener('cvDomAttached', function () {
             _this4.attached(rootNode, parentNode);
 
-            _this4.dispatchAttach(rootNode, parentNode);
+            _this4.dispatchAttached(rootNode, parentNode);
           }, {
             once: true
           });
@@ -5040,12 +5069,22 @@ var View = function (_Mixin$with) {
       }
 
       this.renderComplete(this.nodes);
-      this.postRender(parentNode);
       return this.nodes;
     }
   }, {
     key: "dispatchAttach",
-    value: function dispatchAttach(rootNode, parentNode) {
+    value: function dispatchAttach() {
+      return this.dispatchEvent(new CustomEvent('attach', {
+        cancelable: true,
+        target: this
+      }));
+    }
+  }, {
+    key: "dispatchAttached",
+    value: function dispatchAttached(rootNode, parentNode) {
+      this.dispatchEvent(new CustomEvent('attached', {
+        target: this
+      }));
       var attach = this.attach.items();
 
       for (var _i6 in attach) {
@@ -5077,6 +5116,15 @@ var View = function (_Mixin$with) {
   }, {
     key: "reRender",
     value: function reRender(parentNode, insertPoint) {
+      var willReRender = this.dispatchEvent(new CustomEvent('reRender'), {
+        cancelable: true,
+        target: this
+      });
+
+      if (!willReRender) {
+        return;
+      }
+
       var subDoc = new DocumentFragment();
 
       if (this.firstNode.isConnected) {
@@ -5099,27 +5147,15 @@ var View = function (_Mixin$with) {
         }
 
         parentNode.insertBefore(subDoc, this.lastNode);
+        this.dispatchEvent(new CustomEvent('reRendered'), {
+          cancelable: true,
+          target: this
+        });
         var rootNode = parentNode.getRootNode();
 
         if (rootNode.isConnected) {
-          this.nodes.filter(function (n) {
-            return n.nodeType === Node.ELEMENT_NODE;
-          }).map(function (child) {
-            child.dispatchEvent(new Event('cvDomAttached', {
-              target: child
-            }));
-
-            _Dom.Dom.mapTags(child, false, function (tag, walker) {
-              child.dispatchEvent(new Event('cvDomAttached', {
-                target: tag
-              }));
-            });
-          });
-          var attach = this.attach.items();
-
-          for (var _i8 in attach) {
-            attach[_i8](rootNode, parentNode);
-          }
+          this.attached(rootNode, parentNode);
+          this.dispatchAttached(rootNode, parentNode);
         }
       }
 
@@ -5206,16 +5242,16 @@ var View = function (_Mixin$with) {
 
         tag.removeAttribute('cv-expand');
 
-        var _loop = function _loop(_i9) {
-          if (_i9 === 'name' || _i9 === 'type') {
+        var _loop = function _loop(_i8) {
+          if (_i8 === 'name' || _i8 === 'type') {
             return "continue";
           }
 
-          var debind = expandArg.bindTo(_i9, function (tag, i) {
+          var debind = expandArg.bindTo(_i8, function (tag, i) {
             return function (v) {
               tag.setAttribute(i, v);
             };
-          }(tag, _i9));
+          }(tag, _i8));
           bindingView.onRemove(function () {
             debind();
 
@@ -5225,8 +5261,8 @@ var View = function (_Mixin$with) {
           });
         };
 
-        for (var _i9 in expandArg) {
-          var _ret = _loop(_i9);
+        for (var _i8 in expandArg) {
+          var _ret = _loop(_i8);
 
           if (_ret === "continue") continue;
         }
@@ -5254,15 +5290,15 @@ var View = function (_Mixin$with) {
       return function (bindingView) {
         var tag = sourceTag.cloneNode(true);
 
-        var _loop2 = function _loop2(_i10) {
-          var bindProperty = attrs[_i10][1] || attrs[_i10][0];
+        var _loop2 = function _loop2(_i9) {
+          var bindProperty = attrs[_i9][1] || attrs[_i9][0];
 
           var _Bindable$resolve3 = _Bindable.Bindable.resolve(bindingView.args, bindProperty, true),
               _Bindable$resolve4 = _slicedToArray(_Bindable$resolve3, 2),
               proxy = _Bindable$resolve4[0],
               property = _Bindable$resolve4[1];
 
-          var attrib = attrs[_i10][0];
+          var attrib = attrs[_i9][0];
           bindingView.onRemove(proxy.bindTo(property, function (v, k, t, d) {
             if (d || v === undefined) {
               tag.removeAttribute(attrib, v);
@@ -5278,8 +5314,8 @@ var View = function (_Mixin$with) {
           }));
         };
 
-        for (var _i10 in attrs) {
-          _loop2(_i10);
+        for (var _i9 in attrs) {
+          _loop2(_i9);
         }
 
         return tag;
@@ -5373,7 +5409,20 @@ var View = function (_Mixin$with) {
               v.template = unsafeTemplate;
             }
 
+            if (transformer) {
+              v = transformer(v);
+            }
+
             if (v instanceof View) {
+              var onAttach = function onAttach(parentNode) {
+                if (v.dispatchAttach()) {
+                  v.attached(parentNode);
+                  v.dispatchAttached();
+                }
+              };
+
+              _this6.attach.add(onAttach);
+
               v.render(tag.parentNode, dynamicNode);
 
               var cleanup = function cleanup() {
@@ -5389,36 +5438,34 @@ var View = function (_Mixin$with) {
 
                 _this6._onRemove.remove(cleanup);
               });
+            } else if (v instanceof Node) {
+              tag.parentNode.insertBefore(v, dynamicNode);
+
+              _this6.onRemove(function () {
+                return v.remove();
+              });
+            } else if (v instanceof _Tag.Tag) {
+              tag.parentNode.insertBefore(v.node, dynamicNode);
+
+              _this6.onRemove(function () {
+                return v.remove();
+              });
             } else {
-              if (transformer) {
-                v = transformer(v);
+              if (v instanceof Object && v.__toString instanceof Function) {
+                v = v.__toString();
               }
 
-              if (v instanceof Node) {
-                tag.parentNode.insertBefore(v, tag);
+              if (unsafeHtml) {
+                dynamicNode.innerHTML = v;
               } else {
-                if (v instanceof Object && v.__toString instanceof Function) {
-                  v = v.__toString();
-                }
-
-                if (unsafeHtml) {
-                  dynamicNode.innerHTML = v;
-                } else {
-                  dynamicNode.nodeValue = v;
-                }
+                dynamicNode.nodeValue = v;
               }
-
-              dynamicNode[dontParse] = true;
             }
+
+            dynamicNode[dontParse] = true;
           });
 
-          _this6.onRemove(function () {
-            debind();
-
-            if (!proxy.isBound()) {
-              _Bindable.Bindable.clearBindings(proxy);
-            }
-          });
+          _this6.onRemove(debind);
         };
 
         while (match = regex.exec(original)) {
@@ -5435,15 +5482,15 @@ var View = function (_Mixin$with) {
       }
 
       if (tag.nodeType === Node.ELEMENT_NODE) {
-        var _loop4 = function _loop4(_i11) {
-          if (!_this6.interpolatable(tag.attributes[_i11].value)) {
+        var _loop4 = function _loop4(_i10) {
+          if (!_this6.interpolatable(tag.attributes[_i10].value)) {
             return "continue";
           }
 
           var header = 0;
           var match = void 0;
-          var original = tag.attributes[_i11].value;
-          var attribute = tag.attributes[_i11];
+          var original = tag.attributes[_i10].value;
+          var attribute = tag.attributes[_i10];
           var bindProperties = {};
           var segments = [];
 
@@ -5491,9 +5538,9 @@ var View = function (_Mixin$with) {
                 v = transformer(v);
               }
 
-              for (var _i12 in bindProperties) {
+              for (var _i11 in bindProperties) {
                 for (var _j in bindProperties[longProperty]) {
-                  segments[bindProperties[longProperty][_j]] = t[_i12];
+                  segments[bindProperties[longProperty][_j]] = t[_i11];
 
                   if (k === property) {
                     segments[bindProperties[longProperty][_j]] = v;
@@ -5516,8 +5563,8 @@ var View = function (_Mixin$with) {
           }
         };
 
-        for (var _i11 = 0; _i11 < tag.attributes.length; _i11++) {
-          var _ret3 = _loop4(_i11);
+        for (var _i10 = 0; _i10 < tag.attributes.length; _i10++) {
+          var _ret3 = _loop4(_i10);
 
           if (_ret3 === "continue") continue;
         }
@@ -5621,7 +5668,7 @@ var View = function (_Mixin$with) {
       }
 
       var debind = proxy.bindTo(property, function (v, k, t, d, p) {
-        if (p instanceof View && p !== v) {
+        if ((p instanceof View || p instanceof Node || p instanceof _Tag.Tag) && p !== v) {
           p.remove();
         }
 
@@ -5640,7 +5687,7 @@ var View = function (_Mixin$with) {
             tag.dispatchEvent(autoChangedEvent);
           } else if (_type !== 'file') {
             if (tag.tagName === 'SELECT') {
-              var _onAttach = function _onAttach(parentNode) {
+              var onAttach = function onAttach(parentNode) {
                 var _iterator2 = _createForOfIteratorHelper(tag.options),
                     _step2;
 
@@ -5659,7 +5706,7 @@ var View = function (_Mixin$with) {
                 }
               };
 
-              _this7.attach.add(_onAttach);
+              _this7.attach.add(onAttach);
             } else {
               tag.value = v == null ? '' : v;
             }
@@ -5682,10 +5729,23 @@ var View = function (_Mixin$with) {
               _iterator3.f();
             }
 
+            var _onAttach = function _onAttach(parentNode) {
+              if (v.dispatchAttach()) {
+                v.attached(parentNode);
+                v.dispatchAttached();
+              }
+            };
+
+            _this7.attach.add(_onAttach);
+
             v.render(tag);
             v.onRemove(function () {
-              return _this7.attach.remove(onAttach);
+              return _this7.attach.remove(_onAttach);
             });
+          } else if (v instanceof Node) {
+            tag.insert(v);
+          } else if (v instanceof _Tag.Tag) {
+            tag.append(v.node);
           } else if (unsafeHtml) {
             if (tag.innerHTML !== v) {
               v = String(v);
@@ -5767,24 +5827,24 @@ var View = function (_Mixin$with) {
           if (!current || !files.length) {
             proxy[property] = files;
           } else {
-            var _loop6 = function _loop6(_i13) {
-              if (files[_i13] !== current[_i13]) {
-                files[_i13].toJSON = function () {
+            var _loop6 = function _loop6(_i12) {
+              if (files[_i12] !== current[_i12]) {
+                files[_i12].toJSON = function () {
                   return {
-                    name: file[_i13].name,
-                    size: file[_i13].size,
-                    type: file[_i13].type,
-                    date: file[_i13].lastModified
+                    name: file[_i12].name,
+                    size: file[_i12].size,
+                    type: file[_i12].type,
+                    date: file[_i12].lastModified
                   };
                 };
 
-                current[_i13] = files[_i13];
+                current[_i12] = files[_i12];
                 return "break";
               }
             };
 
-            for (var _i13 in files) {
-              var _ret4 = _loop6(_i13);
+            for (var _i12 in files) {
+              var _ret4 = _loop6(_i12);
 
               if (_ret4 === "break") break;
             }
@@ -6075,8 +6135,8 @@ var View = function (_Mixin$with) {
 
         view.template = subTemplate;
 
-        var _loop7 = function _loop7(_i14) {
-          var debind = _this9.args.bindTo(carryProps[_i14], function (v, k) {
+        var _loop7 = function _loop7(_i13) {
+          var debind = _this9.args.bindTo(carryProps[_i13], function (v, k) {
             view.args[k] = v;
           });
 
@@ -6088,15 +6148,15 @@ var View = function (_Mixin$with) {
           });
         };
 
-        for (var _i14 in carryProps) {
-          _loop7(_i14);
+        for (var _i13 in carryProps) {
+          _loop7(_i13);
         }
 
-        var _loop8 = function _loop8(_i15) {
-          var debind = v.bindTo(_i15, function (vv, kk) {
+        var _loop8 = function _loop8(_i14) {
+          var debind = v.bindTo(_i14, function (vv, kk) {
             view.args[kk] = vv;
           });
-          var debindUp = view.args.bindTo(_i15, function (vv, kk) {
+          var debindUp = view.args.bindTo(_i14, function (vv, kk) {
             v[kk] = vv;
           });
 
@@ -6119,8 +6179,8 @@ var View = function (_Mixin$with) {
           });
         };
 
-        for (var _i15 in v) {
-          _loop8(_i15);
+        for (var _i14 in v) {
+          _loop8(_i14);
         }
 
         view.render(tag);
@@ -6541,9 +6601,9 @@ var View = function (_Mixin$with) {
       var now = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
       var remover = function remover() {
-        for (var _i16 in _this13.nodes) {
-          _this13.nodes[_i16] && _this13.nodes[_i16].dispatchEvent(new Event('cvDomDetached'));
-          _this13.nodes[_i16] && _this13.nodes[_i16].remove();
+        for (var _i15 in _this13.nodes) {
+          _this13.nodes[_i15] && _this13.nodes[_i15].dispatchEvent(new Event('cvDomDetached'));
+          _this13.nodes[_i15] && _this13.nodes[_i15].remove();
         }
 
         _this13.firstNode = _this13.lastNode = undefined;
@@ -6599,9 +6659,9 @@ var View = function (_Mixin$with) {
 
       this.viewLists.clear();
 
-      for (var _i17 in this.timeouts) {
-        clearTimeout(this.timeouts[_i17].timeout);
-        delete this.timeouts[_i17];
+      for (var _i16 in this.timeouts) {
+        clearTimeout(this.timeouts[_i16].timeout);
+        delete this.timeouts[_i16];
       }
 
       for (var i in this.intervals) {
@@ -6619,18 +6679,18 @@ var View = function (_Mixin$with) {
   }, {
     key: "findTag",
     value: function findTag(selector) {
-      for (var _i18 in this.nodes) {
+      for (var _i17 in this.nodes) {
         var result = void 0;
 
-        if (!this.nodes[_i18].querySelector) {
+        if (!this.nodes[_i17].querySelector) {
           continue;
         }
 
-        if (this.nodes[_i18].matches(selector)) {
-          return new _Tag.Tag(this.nodes[_i18], this, undefined, undefined, this);
+        if (this.nodes[_i17].matches(selector)) {
+          return new _Tag.Tag(this.nodes[_i17], this, undefined, undefined, this);
         }
 
-        if (result = this.nodes[_i18].querySelector(selector)) {
+        if (result = this.nodes[_i17].querySelector(selector)) {
           return new _Tag.Tag(result, this, undefined, undefined, this);
         }
       }
@@ -6769,7 +6829,7 @@ var View = function (_Mixin$with) {
   }]);
 
   return View;
-}(_Mixin.Mixin["with"](_PromiseMixin.PromiseMixin));
+}(_Mixin.Mixin["with"](_PromiseMixin.PromiseMixin, _EventTargetMixin.EventTargetMixin));
 
 exports.View = View;
 Object.defineProperty(View, 'templates', {
@@ -7066,8 +7126,7 @@ var ViewList = function () {
       }
 
       if (Array.isArray(this.args.value)) {
-        var localMin = minKey === 0 && finalViews[1] !== undefined && finalViews.length > 1 ? minKey : anteMinKey;
-        console.log(localMin);
+        var localMin = minKey === 0 && finalViews[1] !== undefined && finalViews.length > 1 || anteMinKey === Infinity ? minKey : anteMinKey;
 
         var renderRecurse = function renderRecurse() {
           var i = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
@@ -9589,7 +9648,7 @@ var EventTargetMixin = (_EventTargetMixin = {}, _defineProperty(_EventTargetMixi
 
   var defaultHandler = "on".concat(event.type[0].toUpperCase() + event.type.slice(1));
 
-  if (typeof this[defaultHandler] !== 'function') {
+  if (typeof this[defaultHandler] === 'function') {
     this[defaultHandler](event);
   }
 
@@ -9642,6 +9701,12 @@ var PromiseMixin = (_PromiseMixin = {}, _defineProperty(_PromiseMixin, _Mixin.Mi
   return (_this$_Promise3 = this[_Promise])["finally"].apply(_this$_Promise3, arguments);
 }), _PromiseMixin);
 exports.PromiseMixin = PromiseMixin;
+Object.defineProperty(PromiseMixin, 'Reject', {
+  value: Reject
+});
+Object.defineProperty(PromiseMixin, 'Accept', {
+  value: Accept
+});
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

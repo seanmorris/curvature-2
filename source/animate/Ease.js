@@ -11,7 +11,7 @@ export class Ease extends Mixin.with(PromiseMixin)
 		this.interval = interval;
 		this.terminal = false;
 		this.initial  = false;
-		this.timeout  = false; 
+		this.timeout  = false;
 		this.final    = false;
 		this.canceled = false;
 		this.done     = false;
@@ -56,7 +56,7 @@ export class Ease extends Mixin.with(PromiseMixin)
 					}
 					, this.interval * this.repeat
 				);
-			}			
+			}
 		});
 	}
 
