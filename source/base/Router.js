@@ -45,7 +45,6 @@ export class Router {
 				}
 			}
 
-
 			if(location.origin !== 'null')
 			{
 				this.match(location.pathname, listener);
@@ -235,19 +234,6 @@ export class Router {
 			break;
 		}
 
-		if(!forceRefresh
-			&& listener
-			&& current
-			&& (result instanceof Object)
-			&& (current instanceof result)
-			&& !(result instanceof Promise)
-			&& current.update(args)
-		) {
-			listener.args.content = current;
-
-			return true;
-		}
-
 		const eventStart = new CustomEvent('cvRouteStart', {
 			cancelable: true
 			, detail: {
@@ -263,6 +249,22 @@ export class Router {
 		{
 			return;
 		}
+
+		console.log(routes[selected]);
+
+		// if(!forceRefresh
+		// 	&& listener
+		// 	&& current
+		// 	&& (result instanceof Object)
+		// 	&& (current instanceof result)
+		// 	&& !(result instanceof Promise)
+		// 	&& current.update(args)
+		// ) {
+		// 	listener.args.content = current;
+
+		// 	return true;
+		// }
+
 
 		try
 		{
@@ -285,6 +287,7 @@ export class Router {
 			if(result instanceof Promise)
 			{
 				return result.then(realResult => {
+					console.log(realResult);
 					this.update(
 						listener
 						, path

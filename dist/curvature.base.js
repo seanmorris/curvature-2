@@ -2344,11 +2344,6 @@ var Router = function () {
         break;
       }
 
-      if (!forceRefresh && listener && current && result instanceof Object && current instanceof result && !(result instanceof Promise) && current.update(args)) {
-        listener.args.content = current;
-        return true;
-      }
-
       var eventStart = new CustomEvent('cvRouteStart', {
         cancelable: true,
         detail: {
@@ -2364,6 +2359,8 @@ var Router = function () {
         return;
       }
 
+      console.log(routes[selected]);
+
       try {
         if (typeof routes[selected] === 'function') {
           if (routes[selected].prototype instanceof _View.View) {
@@ -2377,6 +2374,8 @@ var Router = function () {
 
         if (result instanceof Promise) {
           return result.then(function (realResult) {
+            console.log(realResult);
+
             _this3.update(listener, path, realResult, routes, selected, args, forceRefresh);
           })["catch"](function (error) {
             document.dispatchEvent(new CustomEvent('cvRouteError', {
@@ -5353,7 +5352,7 @@ var View = function (_Mixin$with) {
   }]);
 
   return View;
-}(_Mixin.Mixin["with"](_PromiseMixin.PromiseMixin, _EventTargetMixin.EventTargetMixin));
+}(_Mixin.Mixin["with"](_EventTargetMixin.EventTargetMixin));
 
 exports.View = View;
 Object.defineProperty(View, 'templates', {

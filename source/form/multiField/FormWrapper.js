@@ -60,12 +60,7 @@ export class FormWrapper extends View
 	{
 		this.args.form = form;
 
-		this.args.form.onSubmit((form, event)=>{
-			if(this.onSubmit(form, event) === false)
-			{
-				return;
-			}
-
+		this.args.form.addEventListener('submit', (event)=>{
 			if(event)
 			{
 				event.preventDefault();
@@ -225,21 +220,21 @@ export class FormWrapper extends View
 		}
 	}
 
-	onSubmit(form, event)
-	{
-		for(let i in this._onSubmit)
-		{
-			this._onSubmit[i](this, event);
-		}
-	}
+	// onSubmit(form, event)
+	// {
+	// 	for(let i in this._onSubmit)
+	// 	{
+	// 		this._onSubmit[i](this, event);
+	// 	}
+	// }
 
-	postRender()
-	{
-		for(let i in this._onRender)
-		{
-			this._onRender[i](this.args.form);
-		}
-	}
+	// postRender()
+	// {
+	// 	for(let i in this._onRender)
+	// 	{
+	// 		this._onRender[i](this.args.form);
+	// 	}
+	// }
 
 	customFields()
 	{

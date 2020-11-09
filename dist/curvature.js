@@ -3820,11 +3820,6 @@ var Router = function () {
         break;
       }
 
-      if (!forceRefresh && listener && current && result instanceof Object && current instanceof result && !(result instanceof Promise) && current.update(args)) {
-        listener.args.content = current;
-        return true;
-      }
-
       var eventStart = new CustomEvent('cvRouteStart', {
         cancelable: true,
         detail: {
@@ -3840,6 +3835,8 @@ var Router = function () {
         return;
       }
 
+      console.log(routes[selected]);
+
       try {
         if (typeof routes[selected] === 'function') {
           if (routes[selected].prototype instanceof _View.View) {
@@ -3853,6 +3850,8 @@ var Router = function () {
 
         if (result instanceof Promise) {
           return result.then(function (realResult) {
+            console.log(realResult);
+
             _this3.update(listener, path, realResult, routes, selected, args, forceRefresh);
           })["catch"](function (error) {
             document.dispatchEvent(new CustomEvent('cvRouteError', {
@@ -6829,7 +6828,7 @@ var View = function (_Mixin$with) {
   }]);
 
   return View;
-}(_Mixin.Mixin["with"](_PromiseMixin.PromiseMixin, _EventTargetMixin.EventTargetMixin));
+}(_Mixin.Mixin["with"](_EventTargetMixin.EventTargetMixin));
 
 exports.View = View;
 Object.defineProperty(View, 'templates', {
@@ -7760,8 +7759,6 @@ var Form = function (_View) {
       _this2.args._classes = v.join(' ');
     });
 
-    _this2._onSubmit = [];
-    _this2._onRender = [];
     _this2.action = '';
     _this2.template = "\n\t\t\t<form\n\t\t\t\tclass     = \"[[_classes]]\"\n\t\t\t\tmethod    = \"[[method]]\"\n\t\t\t\tenctype   = \"multipart/form-data\"\n\t\t\t\tcv-on     = \"submit:submit(event)\"\n\t\t\t\tcv-ref    = \"formTag:curvature/base/Tag\"\n\t\t\t\tcv-each   = \"fields:field\"\n\t\t\t\tcv-expand = \"attrs\"\n\t\t\t>\n\t\t\t\t[[field]]\n\t\t\t</form>\n\t\t";
     _this2.args.fields = Form.renderFields(skeleton, _assertThisInitialized(_this2), customFields);
@@ -7781,38 +7778,22 @@ var Form = function (_View) {
   }
 
   _createClass(Form, [{
-    key: "submitHandler",
-    value: function submitHandler(event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }, {
     key: "submit",
     value: function submit(event) {
       this.args.valueString = JSON.stringify(this.args.value, null, 4);
 
-      for (var i in this._onSubmit) {
-        this._onSubmit[i](this, event);
+      if (!this.dispatchEvent(new CustomEvent('submit', {
+        details: {
+          view: this
+        }
+      }))) {
+        event.preventDefault();
+        event.stopPropagation();
       }
     }
   }, {
     key: "buttonClick",
     value: function buttonClick(event) {}
-  }, {
-    key: "onSubmit",
-    value: function onSubmit(callback) {
-      this._onSubmit.push(callback);
-    }
-  }, {
-    key: "onRender",
-    value: function onRender(callback) {
-      if (this.nodes) {
-        callback(this);
-        return;
-      }
-
-      this._onRender.push(callback);
-    }
   }, {
     key: "formData",
     value: function formData() {
@@ -7892,13 +7873,6 @@ var Form = function (_View) {
     key: "hasChildren",
     value: function hasChildren() {
       return !!Object.keys(this.args.fields).length;
-    }
-  }, {
-    key: "postRender",
-    value: function postRender() {
-      for (var i in this._onRender) {
-        this._onRender[i](this);
-      }
     }
   }], [{
     key: "renderFields",
@@ -8098,7 +8072,7 @@ var HiddenField = function (_Field) {
     values.type = 'hidden';
     _this = _super.call(this, values, form, parent, key);
     var attrs = _this.args.attrs || {};
-    _this.args.type = attrs.type = attrs.type || _this.args.type || 'hidden';
+    _this.args.type = attrs.type = 'hidden';
     _this.args.name = attrs.name = attrs.name || _this.args.name || key;
     _this.template = "\n\t\t\t<label\n\t\t\t\tfor       = \"".concat(_this.getName(), "\"\n\t\t\t\tdata-type = \"").concat(attrs.type, "\"\n\t\t\t\tstyle     = \"display:none\"\n\t\t\t\tcv-ref    = \"label:curvature/base/Tag\">\n\t\t\t\t<input\n\t\t\t\t\t\tname      = \"").concat(_this.getName(), "\"\n\t\t\t\t\t\ttype      = \"hidden\"\n\t\t\t\t\t\tcv-bind   = \"value\"\n\t\t\t\t\t\tcv-ref    = \"input:curvature/base/Tag\"\n\t\t\t\t\t\tcv-expand = \"attrs\"\n\t\t\t\t/>\n\t\t\t</label>\n\t\t");
     return _this;
@@ -8624,11 +8598,7 @@ var FormWrapper = function (_View) {
       var _this2 = this;
 
       this.args.form = form;
-      this.args.form.onSubmit(function (form, event) {
-        if (_this2.onSubmit(form, event) === false) {
-          return;
-        }
-
+      this.args.form.addEventListener('submit', function (event) {
         if (event) {
           event.preventDefault();
           event.stopPropagation();
@@ -8760,20 +8730,6 @@ var FormWrapper = function (_View) {
     value: function onLoad(form, model) {
       for (var i in this._onLoad) {
         this._onLoad[i](this, form, model);
-      }
-    }
-  }, {
-    key: "onSubmit",
-    value: function onSubmit(form, event) {
-      for (var i in this._onSubmit) {
-        this._onSubmit[i](this, event);
-      }
-    }
-  }, {
-    key: "postRender",
-    value: function postRender() {
-      for (var i in this._onRender) {
-        this._onRender[i](this.args.form);
       }
     }
   }, {
@@ -9032,10 +8988,14 @@ var View = function (_FieldSet) {
     _this.dropping = false;
 
     for (var i in _this.args.fields) {
-      _this.args._fields[i] = _this.wrapSubfield(_this.args.fields[i]);
+      _this.args._fields[Number(i) + 1] = _this.wrapSubfield(_this.args.fields[i]);
     }
 
     _this.args.fields[-1].disable();
+
+    _this.args._fields[0].addEventListener('attach', function (event) {
+      return event.preventDefault();
+    });
 
     _this.args.creating = '';
     _this.args.fieldType = '';
@@ -9125,6 +9085,7 @@ var View = function (_FieldSet) {
         newField.args.value["class"] = record[i]["class"] || '';
         newField.args.value.title = record[i].title || '';
         newField.args.value.key = this.args._fields.length;
+        console.log(this.args._fields);
 
         this.args._fields.push(newWrap);
 

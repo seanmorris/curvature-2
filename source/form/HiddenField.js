@@ -9,7 +9,8 @@ export class HiddenField extends Field {
 
 		const attrs = this.args.attrs || {};
 
-		this.args.type = attrs.type = attrs.type || this.args.type || 'hidden';
+		this.args.type = attrs.type = 'hidden';
+		// this.args.type = attrs.type = attrs.type || this.args.type || 'hidden';
 		this.args.name = attrs.name = attrs.name || this.args.name || key;
 
 		this.template = `

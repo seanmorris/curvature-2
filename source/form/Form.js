@@ -38,8 +38,8 @@ export class Form extends View
 			this.args._classes = v.join(' ');
 		});
 
-		this._onSubmit   = [];
-		this._onRender   = [];
+		// this._onSubmit   = [];
+		// this._onRender   = [];
 		this.action      = '';
 		this.template    = `
 			<form
@@ -77,12 +77,6 @@ export class Form extends View
 		return _this;
 	}
 
-	submitHandler(event)
-	{
-		event.preventDefault();
-		event.stopPropagation();
-	}
-
 	submit(event)
 	{
 		this.args.valueString = JSON.stringify(
@@ -91,10 +85,16 @@ export class Form extends View
 			, 4
 		);
 
-		for(let i in this._onSubmit)
+		if(!this.dispatchEvent(new CustomEvent('submit', {details:{view:this}} )))
 		{
-			this._onSubmit[i](this, event);
+			event.preventDefault();
+			event.stopPropagation();
 		}
+
+		// for(let i in this._onSubmit)
+		// {
+		// 	this._onSubmit[i](this, event);
+		// }
 	}
 
 	buttonClick(event)
@@ -102,21 +102,21 @@ export class Form extends View
 		// console.log(event);
 	}
 
-	onSubmit(callback)
-	{
-		this._onSubmit.push(callback);
-	}
+	// onSubmit(callback)
+	// {
+	// 	this._onSubmit.push(callback);
+	// }
 
-	onRender(callback)
-	{
-		if(this.nodes)
-		{
-			callback(this);
-			return;
-		}
+	// onRender(callback)
+	// {
+	// 	if(this.nodes)
+	// 	{
+	// 		callback(this);
+	// 		return;
+	// 	}
 
-		this._onRender.push(callback);
-	}
+	// 	this._onRender.push(callback);
+	// }
 
 	static renderFields(skeleton, parent = null, customFields = {})
 	{
@@ -419,11 +419,11 @@ export class Form extends View
 		return !!Object.keys(this.args.fields).length;
 	}
 
-	postRender()
-	{
-		for(let i in this._onRender)
-		{
-			this._onRender[i](this);
-		}
-	}
+	// postRender()
+	// {
+	// 	for(let i in this._onRender)
+	// 	{
+	// 		this._onRender[i](this);
+	// 	}
+	// }
 }

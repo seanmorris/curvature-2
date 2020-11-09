@@ -20,10 +20,12 @@ export class View extends FieldSet
 
 		for(let i in this.args.fields)
 		{
-			this.args._fields[i] = this.wrapSubfield(this.args.fields[i]);
+			this.args._fields[Number(i)+1] = this.wrapSubfield(this.args.fields[i]);
 		}
 
 		this.args.fields[-1].disable();
+
+		this.args._fields[0].addEventListener('attach', event => event.preventDefault());
 
 		this.args.creating  = '';
 		this.args.fieldType = '';
@@ -189,6 +191,8 @@ export class View extends FieldSet
 			newField.args.value.title = record[i].title || '';
 
 			newField.args.value.key = this.args._fields.length;
+
+			console.log(this.args._fields);
 
 			this.args._fields.push(newWrap);
 

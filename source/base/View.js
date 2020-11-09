@@ -16,7 +16,7 @@ const uuid       = Symbol('uuid');
 
 let moveIndex = 0;
 
-export class View extends Mixin.with(PromiseMixin, EventTargetMixin)
+export class View extends Mixin.with(EventTargetMixin)
 {
 	get _id()
 	{
