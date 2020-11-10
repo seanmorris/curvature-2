@@ -1,7 +1,9 @@
 {
 	"name": "curvature",
-	"version": "0.0.66-b",
+	"version": "0.0.66-e",
 	"author": "Sean Morris <curvature@seanmorr.is> (https://seanmorr.is)",
+	"license": "Apache-2.0",
+	"repository": "https://github.com/seanmorris/curvature-2",
 	"devDependencies": {
 		"@babel/cli": "^7.12.1",
 		"@babel/core": "^7.12.3",
@@ -22,9 +24,12 @@
 		"dist/curvature.min.js",
 		"access/*",
 		"animate/*",
+		"animate/ease/*",
 		"base/*",
+		"form/multifield/*",
 		"form/*",
 		"input/*",
+		"mixin/*",
 		"model/*",
 		"strings/*",
 		"tag/*",
