@@ -3630,6 +3630,9 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+var NotFoundError = Symbol('NotFound');
+var InternalError = Symbol('Internal');
+
 var Router = function () {
   function Router() {
     _classCallCheck(this, Router);
@@ -3760,7 +3763,6 @@ var Router = function () {
       var routes = this.routes || listener.routes || _Routes.Routes.dump();
 
       var query = new URLSearchParams(location.search);
-      console.log(path, routes);
 
       for (var i in this.query) {
         delete this.query[i];
@@ -3835,17 +3837,36 @@ var Router = function () {
         return;
       }
 
-      console.log(routes[selected]);
+      if (!forceRefresh && listener && current && result instanceof Object && current instanceof result && !(result instanceof Promise) && current.update(args)) {
+        listener.args.content = current;
+        return true;
+      }
 
       try {
-        if (typeof routes[selected] === 'function') {
-          if (routes[selected].prototype instanceof _View.View) {
-            result = new routes[selected](args);
+        if (!(selected in routes)) {
+          routes[selected] = routes[NotFoundError];
+        }
+
+        var processRoute = function processRoute(selected) {
+          var result = false;
+
+          if (typeof routes[selected] === 'function') {
+            if (routes[selected].prototype instanceof _View.View) {
+              result = new routes[selected](args);
+            } else {
+              result = routes[selected](args);
+            }
           } else {
-            result = routes[selected](args);
+            result = routes[selected];
           }
-        } else {
-          result = routes[selected];
+
+          return result;
+        };
+
+        result = processRoute(selected);
+
+        if (result === false) {
+          result = processRoute(NotFoundError);
         }
 
         if (result instanceof Promise) {
@@ -4032,6 +4053,18 @@ Object.defineProperty(Router, 'queryString', {
   enumerable: false,
   writable: true,
   value: null
+});
+Object.defineProperty(Router, 'InternalError', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: InternalError
+});
+Object.defineProperty(Router, 'NotFoundError', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: NotFoundError
 });
 "use strict";
 
@@ -9497,19 +9530,47 @@ var Keyboard = function () {
     _classCallCheck(this, Keyboard);
 
     this.maxDecay = 120;
-    this.listening = true;
-    this.focusElement = false;
-    this.whichs = _Bindable.Bindable.makeBindable({});
-    this.codes = _Bindable.Bindable.makeBindable({});
-    this.keys = _Bindable.Bindable.makeBindable({});
-    this.pressedWhich = {};
-    this.pressedCode = {};
-    this.pressedKey = {};
-    this.releasedWhich = {};
-    this.releasedCode = {};
-    this.releasedKey = {};
-    this.keyRefs = {};
+    this.comboTime = 500;
+    this.listening = false;
+    this.focusElement = document.body;
+    Object.defineProperty(this, 'combo', {
+      value: _Bindable.Bindable.make([])
+    });
+    Object.defineProperty(this, 'whichs', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'codes', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'keys', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'pressedWhich', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'pressedCode', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'pressedKey', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'releasedWhich', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'releasedCode', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'releasedKey', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'keyRefs', {
+      value: _Bindable.Bindable.make({})
+    });
     document.addEventListener('keyup', function (event) {
+      if (!_this.listening) {
+        return;
+      }
+
       if (_this.focusElement && document.activeElement !== _this.focusElement) {
         return;
       }
@@ -9523,6 +9584,10 @@ var Keyboard = function () {
       _this.keys[event.key] = -1;
     });
     document.addEventListener('keydown', function (event) {
+      if (!_this.listening) {
+        return;
+      }
+
       if (_this.focusElement && document.activeElement !== _this.focusElement) {
         return;
       }
@@ -9533,6 +9598,12 @@ var Keyboard = function () {
         return;
       }
 
+      _this.combo.push(event.code);
+
+      clearTimeout(_this.comboTimer);
+      _this.comboTimer = setTimeout(function () {
+        return _this.combo.splice(0);
+      }, _this.comboTime);
       _this.pressedWhich[event.which] = Date.now();
       _this.pressedCode[event.code] = Date.now();
       _this.pressedKey[event.key] = Date.now();

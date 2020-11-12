@@ -2154,6 +2154,9 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+var NotFoundError = Symbol('NotFound');
+var InternalError = Symbol('Internal');
+
 var Router = function () {
   function Router() {
     _classCallCheck(this, Router);
@@ -2284,7 +2287,6 @@ var Router = function () {
       var routes = this.routes || listener.routes || _Routes.Routes.dump();
 
       var query = new URLSearchParams(location.search);
-      console.log(path, routes);
 
       for (var i in this.query) {
         delete this.query[i];
@@ -2359,17 +2361,36 @@ var Router = function () {
         return;
       }
 
-      console.log(routes[selected]);
+      if (!forceRefresh && listener && current && result instanceof Object && current instanceof result && !(result instanceof Promise) && current.update(args)) {
+        listener.args.content = current;
+        return true;
+      }
 
       try {
-        if (typeof routes[selected] === 'function') {
-          if (routes[selected].prototype instanceof _View.View) {
-            result = new routes[selected](args);
+        if (!(selected in routes)) {
+          routes[selected] = routes[NotFoundError];
+        }
+
+        var processRoute = function processRoute(selected) {
+          var result = false;
+
+          if (typeof routes[selected] === 'function') {
+            if (routes[selected].prototype instanceof _View.View) {
+              result = new routes[selected](args);
+            } else {
+              result = routes[selected](args);
+            }
           } else {
-            result = routes[selected](args);
+            result = routes[selected];
           }
-        } else {
-          result = routes[selected];
+
+          return result;
+        };
+
+        result = processRoute(selected);
+
+        if (result === false) {
+          result = processRoute(NotFoundError);
         }
 
         if (result instanceof Promise) {
@@ -2556,6 +2577,18 @@ Object.defineProperty(Router, 'queryString', {
   enumerable: false,
   writable: true,
   value: null
+});
+Object.defineProperty(Router, 'InternalError', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: InternalError
+});
+Object.defineProperty(Router, 'NotFoundError', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: NotFoundError
 });
 "use strict";
 

@@ -9,27 +9,33 @@ export class Keyboard
 
 	constructor()
 	{
-		this.maxDecay = 120;
+		this.maxDecay     = 120;
+		this.comboTime    = 500;
+		this.listening    = false;
+		this.focusElement = document.body;
 
-		this.listening = true;
+		Object.defineProperty(this, 'combo',  {value: Bindable.make([])});
 
-		this.focusElement = false;// document.body;
+		Object.defineProperty(this, 'whichs', {value: Bindable.make({})});
+		Object.defineProperty(this, 'codes',  {value: Bindable.make({})});
+		Object.defineProperty(this, 'keys',   {value: Bindable.make({})});
 
-		this.whichs = Bindable.makeBindable({});
-		this.codes  = Bindable.makeBindable({});
-		this.keys   = Bindable.makeBindable({});
+		Object.defineProperty(this, 'pressedWhich', {value: Bindable.make({})});
+		Object.defineProperty(this, 'pressedCode',  {value: Bindable.make({})});
+		Object.defineProperty(this, 'pressedKey',   {value: Bindable.make({})});
 
-		this.pressedWhich = {};
-		this.pressedCode  = {};
-		this.pressedKey   = {};
+		Object.defineProperty(this, 'releasedWhich', {value: Bindable.make({})});
+		Object.defineProperty(this, 'releasedCode',  {value: Bindable.make({})});
+		Object.defineProperty(this, 'releasedKey',   {value: Bindable.make({})});
 
-		this.releasedWhich = {};
-		this.releasedCode  = {};
-		this.releasedKey   = {};
-
-		this.keyRefs = {};
+		Object.defineProperty(this, 'keyRefs', {value: Bindable.make({})});
 
 		document.addEventListener('keyup', (event) => {
+
+			if(!this.listening)
+			{
+				return;
+			}
 
 			if(this.focusElement && document.activeElement !== this.focusElement)
 			{
@@ -49,6 +55,11 @@ export class Keyboard
 
 		document.addEventListener('keydown', (event) => {
 
+			if(!this.listening)
+			{
+				return;
+			}
+
 			if(this.focusElement && document.activeElement !== this.focusElement)
 			{
 				return;
@@ -60,6 +71,12 @@ export class Keyboard
 			{
 				return;
 			}
+
+			this.combo.push(event.code);
+
+			clearTimeout(this.comboTimer);
+
+			this.comboTimer = setTimeout(()=> this.combo.splice(0), this.comboTime);
 
 			this.pressedWhich[ event.which ] = Date.now();
 			this.pressedCode[ event.code ]   = Date.now();
@@ -112,6 +129,7 @@ export class Keyboard
 		};
 
 		window.addEventListener('blur', windowBlur);
+
 		window.addEventListener('visibilitychange', () =>{
 
 			if(document.visibilityState === 'visible')

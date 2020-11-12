@@ -3,6 +3,9 @@ import { Cache }  from './Cache';
 import { Config } from './Config';
 import { Routes } from './Routes';
 
+const NotFoundError = Symbol('NotFound');
+const InternalError = Symbol('Internal');
+
 export class Router {
 
 	static wait(view, event = 'DOMContentLoaded', node = document)
@@ -157,8 +160,6 @@ export class Router {
 		const routes  = this.routes || listener.routes || Routes.dump();
 		const query   = new URLSearchParams(location.search);
 
-		console.log(path, routes);
-
 		for(const i in this.query)
 		{
 			delete this.query[i];
@@ -250,38 +251,54 @@ export class Router {
 			return;
 		}
 
-		console.log(routes[selected]);
+		if(!forceRefresh
+			&& listener
+			&& current
+			&& (result instanceof Object)
+			&& (current instanceof result)
+			&& !(result instanceof Promise)
+			&& current.update(args)
+		) {
+			listener.args.content = current;
 
-		// if(!forceRefresh
-		// 	&& listener
-		// 	&& current
-		// 	&& (result instanceof Object)
-		// 	&& (current instanceof result)
-		// 	&& !(result instanceof Promise)
-		// 	&& current.update(args)
-		// ) {
-		// 	listener.args.content = current;
-
-		// 	return true;
-		// }
-
+			return true;
+		}
 
 		try
 		{
-			if(typeof routes[selected] === 'function')
+			if(!(selected in routes))
 			{
-				if(routes[selected].prototype instanceof View)
+				routes[selected] = routes[NotFoundError];
+			}
+
+			const processRoute = (selected) => {
+
+				let result = false;
+
+				if(typeof routes[selected] === 'function')
 				{
-					result = new routes[selected](args);
+					if(routes[selected].prototype instanceof View)
+					{
+						result = new routes[selected](args);
+					}
+					else
+					{
+						result = routes[selected](args);
+					}
 				}
 				else
 				{
-					result = routes[selected](args);
+					result = routes[selected];
 				}
-			}
-			else
+
+				return result;
+			};
+
+			result = processRoute(selected);
+
+			if(result === false)
 			{
-				result = routes[selected];
+				result = processRoute(NotFoundError);
 			}
 
 			if(result instanceof Promise)
@@ -522,4 +539,18 @@ Object.defineProperty(Router, 'queryString', {
 	, enumerable: false
 	, writable:   true
 	, value:      null
+});
+
+Object.defineProperty(Router, 'InternalError', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      InternalError
+});
+
+Object.defineProperty(Router, 'NotFoundError', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      NotFoundError
 });
