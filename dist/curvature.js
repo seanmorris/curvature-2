@@ -9487,7 +9487,7 @@ var Keyboard = function () {
   _createClass(Keyboard, null, [{
     key: "get",
     value: function get() {
-      return this.instance = this.instance || new this();
+      return this.instance = this.instance || _Bindable.Bindable.make(new this());
     }
   }]);
 
@@ -9498,32 +9498,149 @@ var Keyboard = function () {
 
     this.maxDecay = 120;
     this.listening = true;
-    this.keys = _Bindable.Bindable.makeBindable({});
+    this.focusElement = false;
+    this.whichs = _Bindable.Bindable.makeBindable({});
     this.codes = _Bindable.Bindable.makeBindable({});
+    this.keys = _Bindable.Bindable.makeBindable({});
+    this.pressedWhich = {};
+    this.pressedCode = {};
+    this.pressedKey = {};
+    this.releasedWhich = {};
+    this.releasedCode = {};
+    this.releasedKey = {};
+    this.keyRefs = {};
     document.addEventListener('keyup', function (event) {
-      _this.keys[event.key] = -1;
+      if (_this.focusElement && document.activeElement !== _this.focusElement) {
+        return;
+      }
+
+      event.preventDefault();
+      _this.releasedWhich[event.which] = Date.now();
+      _this.releasedCode[event.code] = Date.now();
+      _this.releasedKey[event.key] = Date.now();
+      _this.whichs[event.which] = -1;
       _this.codes[event.code] = -1;
+      _this.keys[event.key] = -1;
     });
     document.addEventListener('keydown', function (event) {
+      if (_this.focusElement && document.activeElement !== _this.focusElement) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (event.repeat) {
+        return;
+      }
+
+      _this.pressedWhich[event.which] = Date.now();
+      _this.pressedCode[event.code] = Date.now();
+      _this.pressedKey[event.key] = Date.now();
+
       if (_this.keys[event.key] > 0) {
         return;
       }
 
-      _this.keys[event.key] = 1;
+      _this.whichs[event.which] = 1;
       _this.codes[event.code] = 1;
+      _this.keys[event.key] = 1;
     });
-    window.addEventListener('blur', function (event) {
+
+    var windowBlur = function windowBlur(event) {
       for (var i in _this.keys) {
+        if (_this.keys[i] < 0) {
+          continue;
+        }
+
+        _this.releasedKey[i] = Date.now();
         _this.keys[i] = -1;
       }
 
       for (var _i in _this.codes) {
+        if (_this.codes[_i] < 0) {
+          continue;
+        }
+
+        _this.releasedCode[_i] = Date.now();
         _this.codes[_i] = -1;
       }
+
+      for (var _i2 in _this.whichs) {
+        if (_this.whichs[_i2] < 0) {
+          continue;
+        }
+
+        _this.releasedWhich[_i2] = Date.now();
+        _this.whichs[_i2] = -1;
+      }
+    };
+
+    window.addEventListener('blur', windowBlur);
+    window.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') {
+        return;
+      }
+
+      windowBlur();
     });
   }
 
   _createClass(Keyboard, [{
+    key: "getKeyRef",
+    value: function getKeyRef(keyCode) {
+      var keyRef = this.keyRefs[keyCode] = this.keyRefs[keyCode] || _Bindable.Bindable.make({});
+
+      return keyRef;
+    }
+  }, {
+    key: "getKeyTime",
+    value: function getKeyTime(key) {
+      var released = this.releasedKey[key];
+      var pressed = this.pressedKey[key];
+
+      if (!pressed) {
+        return 0;
+      }
+
+      if (!released || released < pressed) {
+        return Date.now() - pressed;
+      }
+
+      return (Date.now() - released) * -1;
+    }
+  }, {
+    key: "getCodeTime",
+    value: function getCodeTime(code) {
+      var released = this.releasedCode[code];
+      var pressed = this.pressedCode[code];
+
+      if (!pressed) {
+        return 0;
+      }
+
+      if (!released || released < pressed) {
+        return Date.now() - pressed;
+      }
+
+      return (Date.now() - released) * -1;
+    }
+  }, {
+    key: "getWhichTime",
+    value: function getWhichTime(code) {
+      var released = this.releasedWhich[code];
+      var pressed = this.pressedWhich[code];
+
+      if (!pressed) {
+        return 0;
+      }
+
+      if (!released || released < pressed) {
+        return Date.now() - pressed;
+      }
+
+      return (Date.now() - released) * -1;
+    }
+  }, {
     key: "getKey",
     value: function getKey(key) {
       if (!this.keys[key]) {
@@ -9547,24 +9664,47 @@ var Keyboard = function () {
       for (var i in this.keys) {
         if (this.keys[i] > 0) {
           this.keys[i]++;
-        } else {
+        } else if (this.keys[i] > -this.maxDecay) {
           this.keys[i]--;
-
-          if (this.keys[i] < -this.maxDecay) {
-            delete this.keys[i];
-          }
+        } else {
+          delete this.keys[i];
         }
       }
 
       for (var i in this.codes) {
-        if (this.codes[i] > 0) {
-          this.codes[i]++;
-        } else {
-          this.codes[i]--;
+        var released = this.releasedCode[i];
+        var pressed = this.pressedCode[i];
+        var keyRef = this.getKeyRef(i);
 
-          if (this.codes[i] < -this.maxDecay) {
-            delete this.keys[i];
+        if (this.codes[i] > 0) {
+          keyRef.frames = this.codes[i]++;
+          keyRef.time = pressed ? Date.now() - pressed : 0;
+          keyRef.down = true;
+
+          if (!released || released < pressed) {
+            return;
           }
+
+          return (Date.now() - released) * -1;
+        } else if (this.codes[i] > -this.maxDecay) {
+          keyRef.frames = this.codes[i]--;
+          keyRef.time = released - Date.now();
+          keyRef.down = false;
+        } else {
+          keyRef.frames = 0;
+          keyRef.time = 0;
+          keyRef.down = false;
+          delete this.codes[i];
+        }
+      }
+
+      for (var i in this.whichs) {
+        if (this.whichs[i] > 0) {
+          this.whichs[i]++;
+        } else if (this.whichs[i] > -this.maxDecay) {
+          this.whichs[i]--;
+        } else {
+          delete this.whichs[i];
         }
       }
     }
