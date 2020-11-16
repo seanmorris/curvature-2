@@ -156,7 +156,7 @@ export class ViewList
 			{
 				k = '_' + i;
 			}
-			else
+			else if(String(k).length)
 			{
 				k = Number(k);
 			}

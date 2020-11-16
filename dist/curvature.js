@@ -7056,7 +7056,7 @@ var ViewList = function () {
 
         if (isNaN(k)) {
           k = '_' + _i;
-        } else {
+        } else if (String(k).length) {
           k = Number(k);
         }
 
@@ -8336,6 +8336,7 @@ var SelectField = function (_Field) {
       }, {
         frame: 1
       });
+      console.log(this.args.options);
     }
   }, {
     key: "selectOptionByValue",

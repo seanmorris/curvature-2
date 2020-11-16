@@ -27,13 +27,13 @@ export class SelectField extends Field {
 					<p class = "cv-error">[[error]]</p>
 				</span>
 			</label>
-		`;		
+		`;
 	}
 
 	postRender()
 	{
 		this.args.bindTo('value', v => this.selectOptionByValue(v));
-		
+
 		this.args.options.bindTo(
 			v => this.selectOptionByValue(this.args.value)
 			, {frame: 1}
