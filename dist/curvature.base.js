@@ -2796,6 +2796,12 @@ var RuleSet = function () {
           }
         }
 
+        if (parentView) {
+          parentView.onRemove(function () {
+            return element.___cvApplied___.splice(0);
+          });
+        }
+
         var tag = new _Tag.Tag(element, parentView, null, undefined, direct);
         var parent = tag.element.parentNode;
         var sibling = tag.element.nextSibling;
@@ -2896,16 +2902,16 @@ var Tag = function () {
         return _this2[name];
       }
 
-      if (typeof _this2.element[name] === 'function') {
+      if (_this2.node && typeof _this2.node[name] === 'function') {
         return function () {
-          var _this2$element;
+          var _this2$node;
 
-          return (_this2$element = _this2.element)[name].apply(_this2$element, arguments);
+          return (_this2$node = _this2.node)[name].apply(_this2$node, arguments);
         };
       }
 
-      if (name in _this2.element) {
-        return _this2.element[name];
+      if (_this2.node && name in _this2.node) {
+        return _this2.node[name];
       }
 
       return _this2[name];
@@ -2967,7 +2973,9 @@ var Tag = function () {
   }, {
     key: "remove",
     value: function remove() {
-      this.node.remove();
+      if (this.node) {
+        this.node.remove();
+      }
 
       _Bindable.Bindable.clearBindings(this);
 
@@ -2984,7 +2992,8 @@ var Tag = function () {
       }
 
       var detachEvent = new Event('cvDomDetached');
-      this.node = this.element = this.ref = this.parent = null;
+      this.node.dispatchEvent(detachEvent);
+      this.node = this.element = this.ref = this.parent = undefined;
     }
   }, {
     key: "clear",
@@ -3004,6 +3013,29 @@ var Tag = function () {
     key: "pause",
     value: function pause() {
       var paused = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    }
+  }, {
+    key: "listen",
+    value: function listen(eventName, callback, options) {
+      var node = this.node;
+      node.addEventListener(eventName, callback, options);
+
+      var remove = function remove() {
+        node.removeEventListener(eventName, callback, options);
+      };
+
+      var remover = function remover() {
+        remove();
+
+        remove = function remove() {
+          return console.warn('Already removed!');
+        };
+      };
+
+      this.parent.onRemove(function () {
+        return remover();
+      });
+      return remover;
     }
   }]);
 
@@ -4439,9 +4471,6 @@ var View = function (_Mixin$with) {
           tag.removeEventListener('change', inputListener);
           tag.removeEventListener('value-changed', inputListener);
         }
-
-        tag = undefined;
-        eventListener = undefined;
       });
       tag.removeAttribute('cv-bind');
       return tag;
@@ -4868,6 +4897,8 @@ var View = function (_Mixin$with) {
   }, {
     key: "mapIfTag",
     value: function mapIfTag(tag) {
+      var _this12 = this;
+
       var sourceTag = tag;
       var ifProperty = sourceTag.getAttribute('cv-if');
       var inverted = false;
@@ -4951,6 +4982,13 @@ var View = function (_Mixin$with) {
       };
 
       bindingView.onRemove(viewDebind);
+      this.onRemove(function () {
+        view.remove();
+
+        if (bindingView !== _this12) {
+          bindingView.remove();
+        }
+      });
       return tag;
     }
   }, {
@@ -5086,7 +5124,7 @@ var View = function (_Mixin$with) {
   }, {
     key: "syncBind",
     value: function syncBind(subView) {
-      var _this12 = this;
+      var _this13 = this;
 
       var debindA = this.args.bindTo(function (v, k, t, d) {
         if (k === '_id') {
@@ -5117,16 +5155,16 @@ var View = function (_Mixin$with) {
           p.remove();
         }
 
-        if (k in _this12.args) {
-          _this12.args[k] = v;
+        if (k in _this13.args) {
+          _this13.args[k] = v;
         }
       });
       this.onRemove(debindA);
       this.onRemove(debindB);
       subView.onRemove(function () {
-        _this12._onRemove.remove(debindA);
+        _this13._onRemove.remove(debindA);
 
-        _this12._onRemove.remove(debindB);
+        _this13._onRemove.remove(debindB);
       });
     }
   }, {
@@ -5150,17 +5188,33 @@ var View = function (_Mixin$with) {
   }, {
     key: "remove",
     value: function remove() {
-      var _this13 = this;
+      var _this14 = this;
 
       var now = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
       var remover = function remover() {
-        for (var _i15 in _this13.nodes) {
-          _this13.nodes[_i15] && _this13.nodes[_i15].dispatchEvent(new Event('cvDomDetached'));
-          _this13.nodes[_i15] && _this13.nodes[_i15].remove();
+        for (var _i15 in _this14.tags) {
+          if (Array.isArray(_this14.tags[_i15])) {
+            _this14.tags[_i15] && _this14.tags[_i15].map(function (t) {
+              return t.remove();
+            });
+
+            _this14.tags[_i15].splice(0);
+          } else {
+            _this14.tags[_i15] && _this14.tags[_i15].remove();
+            _this14.tags[_i15] = undefined;
+          }
         }
 
-        _this13.firstNode = _this13.lastNode = undefined;
+        for (var _i16 in _this14.nodes) {
+          _this14.nodes[_i16] && _this14.nodes[_i16].dispatchEvent(new Event('cvDomDetached'));
+          _this14.nodes[_i16] && _this14.nodes[_i16].remove();
+          _this14.nodes[_i16] = undefined;
+        }
+
+        _this14.nodes.splice(0);
+
+        _this14.firstNode = _this14.lastNode = undefined;
       };
 
       if (now) {
@@ -5213,9 +5267,9 @@ var View = function (_Mixin$with) {
 
       this.viewLists.clear();
 
-      for (var _i16 in this.timeouts) {
-        clearTimeout(this.timeouts[_i16].timeout);
-        delete this.timeouts[_i16];
+      for (var _i17 in this.timeouts) {
+        clearTimeout(this.timeouts[_i17].timeout);
+        delete this.timeouts[_i17];
       }
 
       for (var i in this.intervals) {
@@ -5233,18 +5287,18 @@ var View = function (_Mixin$with) {
   }, {
     key: "findTag",
     value: function findTag(selector) {
-      for (var _i17 in this.nodes) {
+      for (var _i18 in this.nodes) {
         var result = void 0;
 
-        if (!this.nodes[_i17].querySelector) {
+        if (!this.nodes[_i18].querySelector) {
           continue;
         }
 
-        if (this.nodes[_i17].matches(selector)) {
-          return new _Tag.Tag(this.nodes[_i17], this, undefined, undefined, this);
+        if (this.nodes[_i18].matches(selector)) {
+          return new _Tag.Tag(this.nodes[_i18], this, undefined, undefined, this);
         }
 
-        if (result = this.nodes[_i17].querySelector(selector)) {
+        if (result = this.nodes[_i18].querySelector(selector)) {
           return new _Tag.Tag(result, this, undefined, undefined, this);
         }
       }
@@ -5252,14 +5306,14 @@ var View = function (_Mixin$with) {
   }, {
     key: "findTags",
     value: function findTags(selector) {
-      var _this14 = this;
+      var _this15 = this;
 
       return this.nodes.filter(function (n) {
         return n.querySelectorAll;
       }).map(function (n) {
         return _toConsumableArray(n.querySelectorAll(selector));
       }).flat().map(function (n) {
-        return new _Tag.Tag(n, _this14, undefined, undefined, _this14);
+        return new _Tag.Tag(n, _this15, undefined, undefined, _this15);
       });
     }
   }, {
@@ -5279,11 +5333,11 @@ var View = function (_Mixin$with) {
   }, {
     key: "stringTransformer",
     value: function stringTransformer(methods) {
-      var _this15 = this;
+      var _this16 = this;
 
       return function (x) {
         for (var m in methods) {
-          var parent = _this15;
+          var parent = _this16;
           var method = methods[m];
 
           while (parent && !parent[method]) {
@@ -5330,7 +5384,7 @@ var View = function (_Mixin$with) {
   }, {
     key: "listen",
     value: function listen(node, eventName, callback, options) {
-      var _this16 = this;
+      var _this17 = this;
 
       if (typeof node === 'string') {
         options = callback;
@@ -5345,7 +5399,7 @@ var View = function (_Mixin$with) {
 
       if (Array.isArray(node)) {
         var removers = node.map(function (n) {
-          return _this16.listen(n, eventName, callback, options);
+          return _this17.listen(n, eventName, callback, options);
         });
         return function () {
           return removers.map(function (r) {
