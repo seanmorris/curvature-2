@@ -11,10 +11,8 @@ export class Model
 	constructor()
 	{
 		Object.defineProperty(this, Changed, {value: Bindable.make({})});
-		Object.defineProperty(this, Saved, {
-			writable: true
-			, value:  false
-		});
+
+		Object.defineProperty(this, Saved, {writable: true, value:  false});
 	}
 
 	static from(skeleton)

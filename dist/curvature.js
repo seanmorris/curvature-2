@@ -10015,7 +10015,7 @@ var Database = function () {
       var _this2 = this;
 
       return new Promise(function (accept, reject) {
-        _this2[Bank][storeName] = _this2[Bank][storeName] || new WeakMap();
+        _this2[Bank][storeName] = _this2[Bank][storeName] || {};
 
         var trans = _this2[Connection].transaction([storeName], 'readwrite');
 
@@ -10041,7 +10041,9 @@ var Database = function () {
           var pk = event.target.result;
           bank[pk] = record;
           record[PrimaryKey] = Symbol["for"](pk);
-          record[Store] = storeName;
+
+          _this2.checkHighWaterMark(storeName, record);
+
           Database.dispatchEvent(new CustomEvent('write', {
             detail: {
               database: _this2[Name],
@@ -10085,6 +10087,8 @@ var Database = function () {
         };
 
         request.onsuccess = function (event) {
+          _this3.checkHighWaterMark(storeName, record);
+
           Database.dispatchEvent(new CustomEvent('write', {
             detail: {
               database: _this3[Name],
@@ -10184,16 +10188,16 @@ var Database = function () {
 
             var source = cursor.source;
             var storeName = source.objectStore ? source.objectStore.name : index.name;
-            _this5[Bank][storeName] = _this5[Bank][storeName] || new WeakMap();
+            _this5[Bank][storeName] = _this5[Bank][storeName] || {};
             var bank = _this5[Bank][storeName];
             var pk = cursor.primaryKey;
             var value = type ? type.from(cursor.value) : cursor.value;
+            console.log(pk);
 
             if (bank[pk]) {
               Object.assign(bank[pk], value);
             } else {
               value[PrimaryKey] = Symbol["for"](pk);
-              value[Store] = storeName;
               bank[pk] = _Bindable.Bindable.makeBindable(value);
             }
 
@@ -10222,6 +10226,23 @@ var Database = function () {
         });
       };
     }
+  }, {
+    key: "createObjectStore",
+    value: function createObjectStore(name, options) {
+      var eventLog = this[Connection].createObjectStore(name, options);
+      return eventLog;
+    }
+  }, {
+    key: "deleteObjectStore",
+    value: function deleteObjectStore(name) {
+      return this[Connection].deleteObjectStore(name);
+    }
+  }, {
+    key: "checkHighWaterMark",
+    value: function checkHighWaterMark(storeName, record) {}
+  }, {
+    key: "setHighWaterMark",
+    value: function setHighWaterMark() {}
   }], [{
     key: "open",
     value: function open(dbName) {
@@ -10241,7 +10262,7 @@ var Database = function () {
             detail: {
               database: _this6[Name],
               error: error,
-              store: storeName,
+              store: undefined,
               type: 'read',
               subType: 'select'
             }
@@ -10261,12 +10282,12 @@ var Database = function () {
           connection.addEventListener('error', function (error) {
             console.error(error);
           });
+          var instance = new _this6(connection);
 
-          for (var v = event.oldVersion + 1; v <= version; v++) {
-            _this6['_version_' + v](connection);
+          for (var v = event.oldVersion + 1; v <= version; v += 1) {
+            instance['_version_' + v](connection);
           }
 
-          var instance = new _this6(connection);
           instance[Name] = dbName;
           _this6[Instances][dbName] = instance;
           accept(instance);
@@ -10506,11 +10527,51 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Store = void 0;
 
+var _Model2 = require("curvature/model/Model");
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Store = function Store() {
-  _classCallCheck(this, Store);
-};
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var Store = function (_Model) {
+  _inherits(Store, _Model);
+
+  var _super = _createSuper(Store);
+
+  function Store() {
+    var _this;
+
+    _classCallCheck(this, Store);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _super.call.apply(_super, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this), "class", 'MetaStore');
+
+    return _this;
+  }
+
+  return Store;
+}(_Model2.Model);
 
 exports.Store = Store;
 "use strict";
