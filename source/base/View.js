@@ -1427,7 +1427,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			tag.addEventListener('value-changed', inputListener);
 		}
 
-		this.onRemove( ((tag, eventListener) => ()=>{
+		this.onRemove(()=>{
 			if(type === 'file' || type === 'radio')
 			{
 				tag.removeEventListener('change', inputListener);
@@ -1438,10 +1438,7 @@ export class View extends Mixin.with(EventTargetMixin)
 				tag.removeEventListener('change',        inputListener);
 				tag.removeEventListener('value-changed', inputListener);
 			}
-
-			tag           = undefined;
-			eventListener = undefined;
-		})(tag, inputListener));
+		});
 
 		tag.removeAttribute('cv-bind');
 
@@ -2045,6 +2042,15 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		bindingView.onRemove(viewDebind);
 
+		this.onRemove(()=>{
+			view.remove();
+
+			if(bindingView !== this)
+			{
+				bindingView.remove();
+			}
+		});
+
 		return tag;
 
 		//*/
@@ -2313,11 +2319,32 @@ export class View extends Mixin.with(EventTargetMixin)
 	{
 		const remover = () => {
 
+			for(let i in this.tags)
+			{
+				if(Array.isArray(this.tags[i]))
+				{
+					this.tags[i] && this.tags[i].map(t=>t.remove());
+
+					this.tags[i].splice(0);
+				}
+				else
+				{
+					this.tags[i] && this.tags[i].remove();
+
+					this.tags[i] = undefined;
+				}
+
+			}
+
 			for(let i in this.nodes)
 			{
 				this.nodes[i] && this.nodes[i].dispatchEvent(new Event('cvDomDetached'));
 				this.nodes[i] && this.nodes[i].remove();
+
+				this.nodes[i] = undefined;
 			}
+
+			this.nodes.splice(0);
 
 			this.firstNode = this.lastNode = undefined;
 		};

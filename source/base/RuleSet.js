@@ -119,8 +119,12 @@ export class RuleSet
 				}
 			}
 
-			const tag     = new Tag(element, parentView, null, undefined, direct);
+			if(parentView)
+			{
+				parentView.onRemove(()=>element.___cvApplied___.splice(0));
+			}
 
+			const tag     = new Tag(element, parentView, null, undefined, direct);
 			const parent  = tag.element.parentNode;
 			const sibling = tag.element.nextSibling;
 

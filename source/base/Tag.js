@@ -21,19 +21,20 @@ export class Tag
 		this.cleanup = [];
 
 		this[Bindable.OnAllGet] = (name) => {
+
 			if(typeof this[name] === 'function')
 			{
 				return this[name];
 			}
 
-			if(typeof this.element[name] === 'function')
+			if(this.node && (typeof this.node[name] === 'function'))
 			{
-				return (...args) => this.element[name](...args);
+				return (...args) => this.node[name](...args);
 			}
 
-			if(name in this.element)
+			if(this.node && (name in this.node))
 			{
-				return this.element[name];
+				return this.node[name];
 			}
 
 			return this[name];
@@ -102,7 +103,10 @@ export class Tag
 
 	remove()
 	{
-		this.node.remove();
+		if(this.node)
+		{
+			this.node.remove();
+		}
 
 		Bindable.clearBindings(this);
 
@@ -122,7 +126,9 @@ export class Tag
 
 		let detachEvent = new Event('cvDomDetached');
 
-		this.node = this.element = this.ref = this.parent = null;
+		this.node.dispatchEvent(detachEvent);
+
+		this.node = this.element = this.ref = this.parent = undefined;
 	}
 
 	clear()
@@ -144,5 +150,26 @@ export class Tag
 	pause(paused = true)
 	{
 
+	}
+
+	listen(eventName, callback, options)
+	{
+		const node = this.node;
+
+		node.addEventListener(eventName, callback, options);
+
+		let remove = () => {
+			node.removeEventListener(eventName, callback, options);
+		}
+
+		const remover = () => {
+			remove();
+
+			remove = () => console.warn('Already removed!');
+		}
+
+		this.parent.onRemove(() => remover());
+
+		return remover;
 	}
 }

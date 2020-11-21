@@ -4431,20 +4431,18 @@ var View = function (_Mixin$with) {
         tag.addEventListener('value-changed', inputListener);
       }
 
-      this.onRemove(function (tag, eventListener) {
-        return function () {
-          if (type === 'file' || type === 'radio') {
-            tag.removeEventListener('change', inputListener);
-          } else {
-            tag.removeEventListener('input', inputListener);
-            tag.removeEventListener('change', inputListener);
-            tag.removeEventListener('value-changed', inputListener);
-          }
+      this.onRemove(function () {
+        if (type === 'file' || type === 'radio') {
+          tag.removeEventListener('change', inputListener);
+        } else {
+          tag.removeEventListener('input', inputListener);
+          tag.removeEventListener('change', inputListener);
+          tag.removeEventListener('value-changed', inputListener);
+        }
 
-          tag = undefined;
-          eventListener = undefined;
-        };
-      }(tag, inputListener));
+        tag = undefined;
+        eventListener = undefined;
+      });
       tag.removeAttribute('cv-bind');
       return tag;
     }
