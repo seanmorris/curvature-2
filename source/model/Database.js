@@ -3,6 +3,15 @@ import { Mixin    } from '../base/Mixin';
 
 import { EventTargetMixin } from '../mixin/EventTargetMixin';
 
+const BeforeWrite  = Symbol('BeforeWrite');
+const AfterWrite   = Symbol('AfterWrite');
+const BeforeInsert = Symbol('BeforeInsert');
+const AfterInsert  = Symbol('AfterInsert');
+const BeforeUpdate = Symbol('BeforeUpdate');
+const AfterUpdate  = Symbol('AfterUpdate');
+const BeforeRead   = Symbol('BeforeRead');
+const AfterRead    = Symbol('AfterRead');
+
 const PrimaryKey = Symbol('PrimaryKey');
 const Connection = Symbol('Connection');
 const Instances  = Symbol('Instances');
@@ -99,17 +108,32 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 			record = Bindable.make(record);
 
+			const detail = {
+				database:  this[Name]
+				, record:  record
+				, store:   storeName
+				, type:    'write'
+				, subType: 'insert'
+				, origin:  origin
+			};
+
+			const beforeWriteResult = record[Database.BeforeWrite]
+				? record[Database.BeforeWrite](detail)
+				: null;
+
+			const beforeInsertResult = record[Database.BeforeInsert]
+				? record[Database.BeforeInsert](detail)
+				: null;
+
 			const request = store.add(Object.assign({}, record));
 
+			if(beforeWriteResult === false || beforeInsertResult === false)
+			{
+				return;
+			}
+
 			request.onerror = error => {
-				this.dispatchEvent(new CustomEvent('writeError', {detail: {
-					database:  this[Name]
-					, record:  record
-					, store:   storeName
-					, type:    'write'
-					, subType: 'insert'
-					, origin:  origin
-				}}));
+				this.dispatchEvent(new CustomEvent('writeError', {detail}));
 
 				reject(error);
 			};
@@ -118,35 +142,44 @@ export class Database extends Mixin.with(EventTargetMixin)
 				const pk = event.target.result;
 				bank[pk] = record;
 
-				record[PrimaryKey] = Symbol.for(pk);
+				const cancelable = true;
 
-				if(!this[Metadata][storeName])
+				detail.key = Database.getPrimaryKey(record);
+
+				const eventResult = this.dispatchEvent(new CustomEvent('write', {
+					cancelable, detail
+				}));
+
+				if(eventResult)
 				{
-					this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
-				}
+					record[PrimaryKey] = Symbol.for(pk);
 
-				if(this[Metadata][storeName])
-				{
-					const metadata    = this[Metadata][storeName];
-					const currentMark = this.checkHighWaterMark(storeName, record);
-					const recordMark  = record[metadata.highWater];
-
-					if(currentMark < recordMark)
+					if(!this[Metadata][storeName])
 					{
-						this.setHighWaterMark(storeName, record, origin, 'insert');
+						this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
 					}
+
+					if(this[Metadata][storeName])
+					{
+						const metadata    = this[Metadata][storeName];
+						const currentMark = this.checkHighWaterMark(storeName, record);
+						const recordMark  = record[metadata.highWater];
+
+						if(currentMark < recordMark)
+						{
+							this.setHighWaterMark(storeName, record, origin, 'insert');
+						}
+					}
+
+					trans.commit();
+
+					record[Database.AfterInsert] && record[Database.AfterInsert](detail);
+					record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
 				}
-
-				this.dispatchEvent(new CustomEvent('write', {detail: {
-					database: this[Name]
-					, key:    Database.getPrimaryKey(record)
-					, store:  storeName
-					, type:    'write'
-					, subType: 'insert'
-					, origin:  origin
-				}}));
-
-				trans.commit();
+				else
+				{
+					trans.abort();
+				}
 
 				accept(record);
 			};
@@ -163,48 +196,76 @@ export class Database extends Mixin.with(EventTargetMixin)
 		return new Promise((accept, reject) => {
 			const trans     = this[Connection].transaction([storeName], 'readwrite');
 			const store     = trans.objectStore(storeName);
-			const request   = store.put(Object.assign({}, record));
+
+			const detail = {
+				database:  this[Name]
+				, key:     Database.getPrimaryKey(record)
+				, record:  record
+				, store:   storeName
+				, type:    'write'
+				, subType: 'update'
+				, origin:  origin
+			};
+
+			record[Database.AfterInsert] && record[Database.AfterInsert](detail);
+			record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
+
+			const beforeWriteResult = record[Database.BeforeWrite]
+				? record[Database.BeforeWrite](detail)
+				: null;
+
+			const beforeUpdateResult = record[Database.BeforeUpdate]
+				? record[Database.BeforeUpdate](detail)
+				: null;
+
+			if(beforeWriteResult === false || beforeUpdateResult === false)
+			{
+				return;
+			}
+
+			console.log(record);
+
+			const request = store.put(Object.assign({}, record));
+
 			request.onerror = error => {
-				this.dispatchEvent(new CustomEvent('writeError', {detail: {
-					database:  this[Name]
-					, key:    Database.getPrimaryKey(record)
-					, store:   storeName
-					, type:    'write'
-					, subType: 'update'
-					, origin:  origin
-				}}));
+				this.dispatchEvent(new CustomEvent('writeError', {detail}));
 
 				reject(error);
 			};
 
 			request.onsuccess = event => {
-				if(!this[Metadata][storeName])
-				{
-					this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
-				}
 
-				if(this[Metadata][storeName])
-				{
-					const metadata    = this[Metadata][storeName];
-					const currentMark = this.checkHighWaterMark(storeName, record);
-					const recordMark  = record[metadata.highWater];
+				const cancelable = true;
 
-					if(currentMark < recordMark)
+				const eventResult = this.dispatchEvent(new CustomEvent('write', {
+					cancelable, detail
+				}));
+
+				if(eventResult)
+				{
+					if(!this[Metadata][storeName])
 					{
-						this.setHighWaterMark(storeName, record, origin, 'update');
+						this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
 					}
+
+					if(this[Metadata][storeName])
+					{
+						const metadata    = this[Metadata][storeName];
+						const currentMark = this.checkHighWaterMark(storeName, record);
+						const recordMark  = record[metadata.highWater];
+
+						if(currentMark < recordMark)
+						{
+							this.setHighWaterMark(storeName, record, origin, 'update');
+						}
+					}
+
+					trans.commit();
 				}
-
-				this.dispatchEvent(new CustomEvent('write', {detail: {
-					database: this[Name]
-					, key:    Database.getPrimaryKey(record)
-					, store:  storeName
-					, type:    'write'
-					, subType: 'update'
-					, origin:  origin
-				}}));
-
-				trans.commit();
+				else
+				{
+					trans.abort();
+				}
 
 				accept(event);
 			};
@@ -446,6 +507,18 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 Object.defineProperty(Database, Instances, {value: []});
 Object.defineProperty(Database, Target,    {value: new EventTarget});
+
+Object.defineProperty(Database, 'BeforeWrite', {value: BeforeWrite});
+Object.defineProperty(Database, 'AfterWrite',  {value: AfterWrite});
+
+Object.defineProperty(Database, 'BeforeInsert', {value: BeforeInsert});
+Object.defineProperty(Database, 'AfterInsert',  {value: AfterInsert});
+
+Object.defineProperty(Database, 'BeforeUpdate', {value: BeforeUpdate});
+Object.defineProperty(Database, 'AfterUpdate',  {value: AfterUpdate});
+
+Object.defineProperty(Database, 'BeforeRead', {value: BeforeRead});
+Object.defineProperty(Database, 'AfterRead',  {value: AfterRead});
 
 for(const method in Database[Target])
 {

@@ -13,6 +13,8 @@ export class Model
 		Object.defineProperty(this, Changed, {value: Bindable.make({})});
 
 		Object.defineProperty(this, Saved, {writable: true, value:  false});
+
+		return Bindable.makeBindable(this);
 	}
 
 	static from(skeleton)

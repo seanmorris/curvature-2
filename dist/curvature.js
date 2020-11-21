@@ -9940,6 +9940,12 @@ exports.Database = void 0;
 
 var _Bindable = require("../base/Bindable");
 
+var _Mixin = require("../base/Mixin");
+
+var _EventTargetMixin = require("../mixin/EventTargetMixin");
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -9958,31 +9964,65 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 var PrimaryKey = Symbol('PrimaryKey');
 var Connection = Symbol('Connection');
 var Instances = Symbol('Instances');
+var HighWater = Symbol('HighWater');
+var Metadata = Symbol('Metadata');
+var Timers = Symbol('Timers');
 var Target = Symbol('Target');
 var Store = Symbol('Store');
 var Fetch = Symbol('Each');
 var Name = Symbol('Name');
 var Bank = Symbol('Bank');
 
-var Database = function () {
+var Database = function (_Mixin$with) {
+  _inherits(Database, _Mixin$with);
+
+  var _super = _createSuper(Database);
+
   function Database(connection) {
+    var _this;
+
     _classCallCheck(this, Database);
 
-    Object.defineProperty(this, Connection, {
+    _this = _super.call(this);
+    Object.defineProperty(_assertThisInitialized(_this), Connection, {
       value: connection
     });
-    Object.defineProperty(this, Bank, {
+    Object.defineProperty(_assertThisInitialized(_this), Name, {
+      value: connection.name
+    });
+    Object.defineProperty(_assertThisInitialized(_this), Timers, {
       value: {}
     });
+    Object.defineProperty(_assertThisInitialized(_this), Metadata, {
+      value: {}
+    });
+    Object.defineProperty(_assertThisInitialized(_this), Bank, {
+      value: {}
+    });
+    return _this;
   }
 
   _createClass(Database, [{
     key: "select",
     value: function select(_ref) {
-      var _this = this;
+      var _this2 = this;
 
       var store = _ref.store,
           index = _ref.index,
@@ -9995,15 +10035,17 @@ var Database = function () {
           _ref$offset = _ref.offset,
           offset = _ref$offset === void 0 ? 0 : _ref$offset,
           _ref$type = _ref.type,
-          type = _ref$type === void 0 ? false : _ref$type;
+          type = _ref$type === void 0 ? false : _ref$type,
+          _ref$origin = _ref.origin,
+          origin = _ref$origin === void 0 ? undefined : _ref$origin;
       var t = this[Connection].transaction(store, "readonly");
       var s = t.objectStore(store);
       var i = index ? s.index(index) : s;
       return {
-        each: this[Fetch](type, i, direction, range, limit, offset),
-        one: this[Fetch](type, i, direction, range, 1, offset),
+        each: this[Fetch](type, i, direction, range, limit, offset, origin),
+        one: this[Fetch](type, i, direction, range, 1, offset, origin),
         then: function then(c) {
-          return _this[Fetch](type, i, direction, range, limit, offset)(function (e) {
+          return _this2[Fetch](type, i, direction, range, limit, offset, origin)(function (e) {
             return e;
           }).then(c);
         }
@@ -10012,48 +10054,73 @@ var Database = function () {
   }, {
     key: "insert",
     value: function insert(storeName, record) {
-      var _this2 = this;
+      var _this3 = this;
 
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
       return new Promise(function (accept, reject) {
-        _this2[Bank][storeName] = _this2[Bank][storeName] || {};
+        _this3[Bank][storeName] = _this3[Bank][storeName] || {};
 
-        var trans = _this2[Connection].transaction([storeName], 'readwrite');
+        var trans = _this3[Connection].transaction([storeName], 'readwrite');
 
         var store = trans.objectStore(storeName);
-        var bank = _this2[Bank][storeName];
+        var bank = _this3[Bank][storeName];
         record = _Bindable.Bindable.make(record);
         var request = store.add(Object.assign({}, record));
 
         request.onerror = function (error) {
-          Database.dispatchEvent(new CustomEvent('writeError', {
+          _this3.dispatchEvent(new CustomEvent('writeError', {
             detail: {
-              database: _this2[Name],
+              database: _this3[Name],
               record: record,
               store: storeName,
               type: 'write',
-              subType: 'insert'
+              subType: 'insert',
+              origin: origin
             }
           }));
+
           reject(error);
         };
 
         request.onsuccess = function (event) {
           var pk = event.target.result;
           bank[pk] = record;
-          record[PrimaryKey] = Symbol["for"](pk);
 
-          _this2.checkHighWaterMark(storeName, record);
-
-          Database.dispatchEvent(new CustomEvent('write', {
+          var eventResult = _this3.dispatchEvent(new CustomEvent('write', {
             detail: {
-              database: _this2[Name],
+              database: _this3[Name],
               key: Database.getPrimaryKey(record),
               store: storeName,
               type: 'write',
-              subType: 'insert'
+              subType: 'insert',
+              origin: origin
             }
           }));
-          trans.commit();
+
+          if (eventResult) {
+            record[PrimaryKey] = Symbol["for"](pk);
+
+            if (!_this3[Metadata][storeName]) {
+              _this3[Metadata][storeName] = _this3.getStoreMeta(storeName, 'store', {});
+            }
+
+            if (_this3[Metadata][storeName]) {
+              var metadata = _this3[Metadata][storeName];
+
+              var currentMark = _this3.checkHighWaterMark(storeName, record);
+
+              var recordMark = record[metadata.highWater];
+
+              if (currentMark < recordMark) {
+                _this3.setHighWaterMark(storeName, record, origin, 'insert');
+              }
+            }
+
+            trans.commit();
+          } else {
+            trans.abort();
+          }
+
           accept(record);
         };
       });
@@ -10061,52 +10128,9 @@ var Database = function () {
   }, {
     key: "update",
     value: function update(storeName, record) {
-      var _this3 = this;
-
-      if (!record[PrimaryKey]) {
-        throw Error('Value provided is not a DB record!');
-      }
-
-      return new Promise(function (accept, reject) {
-        var trans = _this3[Connection].transaction([storeName], 'readwrite');
-
-        var store = trans.objectStore(storeName);
-        var request = store.put(Object.assign({}, record));
-
-        request.onerror = function (error) {
-          Database.dispatchEvent(new CustomEvent('writeError', {
-            detail: {
-              database: _this3[Name],
-              key: Database.getPrimaryKey(record),
-              store: storeName,
-              type: 'write',
-              subType: 'update'
-            }
-          }));
-          reject(error);
-        };
-
-        request.onsuccess = function (event) {
-          _this3.checkHighWaterMark(storeName, record);
-
-          Database.dispatchEvent(new CustomEvent('write', {
-            detail: {
-              database: _this3[Name],
-              key: Database.getPrimaryKey(record),
-              store: storeName,
-              type: 'write',
-              subType: 'update'
-            }
-          }));
-          trans.commit();
-          accept(event);
-        };
-      });
-    }
-  }, {
-    key: "delete",
-    value: function _delete(storeName, record) {
       var _this4 = this;
+
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
 
       if (!record[PrimaryKey]) {
         throw Error('Value provided is not a DB record!');
@@ -10116,35 +10140,111 @@ var Database = function () {
         var trans = _this4[Connection].transaction([storeName], 'readwrite');
 
         var store = trans.objectStore(storeName);
+        var request = store.put(Object.assign({}, record));
+
+        request.onerror = function (error) {
+          _this4.dispatchEvent(new CustomEvent('writeError', {
+            detail: {
+              database: _this4[Name],
+              key: Database.getPrimaryKey(record),
+              record: record,
+              store: storeName,
+              type: 'write',
+              subType: 'update',
+              origin: origin
+            }
+          }));
+
+          reject(error);
+        };
+
+        request.onsuccess = function (event) {
+          var eventResult = _this4.dispatchEvent(new CustomEvent('write', {
+            detail: {
+              database: _this4[Name],
+              record: record,
+              key: Database.getPrimaryKey(record),
+              store: storeName,
+              type: 'write',
+              subType: 'update',
+              origin: origin
+            }
+          }));
+
+          if (eventResult) {
+            if (!_this4[Metadata][storeName]) {
+              _this4[Metadata][storeName] = _this4.getStoreMeta(storeName, 'store', {});
+            }
+
+            if (_this4[Metadata][storeName]) {
+              var metadata = _this4[Metadata][storeName];
+
+              var currentMark = _this4.checkHighWaterMark(storeName, record);
+
+              var recordMark = record[metadata.highWater];
+
+              if (currentMark < recordMark) {
+                _this4.setHighWaterMark(storeName, record, origin, 'update');
+              }
+            }
+          } else {
+            trans.commit();
+          }
+
+          accept(event);
+        };
+      });
+    }
+  }, {
+    key: "delete",
+    value: function _delete(storeName, record) {
+      var _this5 = this;
+
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+
+      if (!record[PrimaryKey]) {
+        throw Error('Value provided is not a DB record!');
+      }
+
+      return new Promise(function (accept, reject) {
+        var trans = _this5[Connection].transaction([storeName], 'readwrite');
+
+        var store = trans.objectStore(storeName);
         var request = store["delete"](Number(record[PrimaryKey].description));
 
         request.onerror = function (error) {
           var deleteEvent = new CustomEvent('writeError', {
             detail: {
-              database: _this4[Name],
+              database: _this5[Name],
               original: event,
               key: Database.getPrimaryKey(record),
               store: storeName,
               type: 'write',
-              subType: 'delete'
+              subType: 'delete',
+              origin: origin
             }
           });
-          Database.dispatchEvent(deleteEvent);
+
+          _this5.dispatchEvent(deleteEvent);
+
           reject(error);
         };
 
         request.onsuccess = function (event) {
           var writeEvent = new CustomEvent('write', {
             detail: {
-              database: _this4[Name],
+              database: _this5[Name],
               original: event,
               key: Database.getPrimaryKey(record),
               store: storeName,
               type: 'write',
-              subType: 'delete'
+              subType: 'delete',
+              origin: origin
             }
           });
-          Database.dispatchEvent(writeEvent);
+
+          _this5.dispatchEvent(writeEvent);
+
           trans.commit();
           accept(writeEvent);
         };
@@ -10164,8 +10264,8 @@ var Database = function () {
     }
   }, {
     key: Fetch,
-    value: function value(type, index, direction, range, limit, offset) {
-      var _this5 = this;
+    value: function value(type, index, direction, range, limit, offset, origin) {
+      var _this6 = this;
 
       return function (callback) {
         return new Promise(function (accept, reject) {
@@ -10188,11 +10288,10 @@ var Database = function () {
 
             var source = cursor.source;
             var storeName = source.objectStore ? source.objectStore.name : index.name;
-            _this5[Bank][storeName] = _this5[Bank][storeName] || {};
-            var bank = _this5[Bank][storeName];
+            _this6[Bank][storeName] = _this6[Bank][storeName] || {};
+            var bank = _this6[Bank][storeName];
             var pk = cursor.primaryKey;
             var value = type ? type.from(cursor.value) : cursor.value;
-            console.log(pk);
 
             if (bank[pk]) {
               Object.assign(bank[pk], value);
@@ -10201,15 +10300,17 @@ var Database = function () {
               bank[pk] = _Bindable.Bindable.makeBindable(value);
             }
 
-            Database.dispatchEvent(new CustomEvent('read', {
+            _this6.dispatchEvent(new CustomEvent('read', {
               detail: {
-                database: _this5[Name],
+                database: _this6[Name],
                 record: value,
                 store: storeName,
                 type: 'read',
-                subType: 'select'
+                subType: 'select',
+                origin: origin
               }
             }));
+
             var result = callback ? callback(bank[pk], i) : bank[pk];
 
             if (limit && i - offset >= limit) {
@@ -10227,26 +10328,61 @@ var Database = function () {
       };
     }
   }, {
+    key: "setStoreMeta",
+    value: function setStoreMeta(storeName, key, value) {
+      localStorage.setItem("::::cvdb::".concat(storeName, "::").concat(key), JSON.stringify(value));
+    }
+  }, {
+    key: "getStoreMeta",
+    value: function getStoreMeta(storeName, key, notFound) {
+      var source = localStorage.getItem("::::cvdb::".concat(storeName, "::").concat(key));
+      return source ? JSON.parse(source) : notFound;
+    }
+  }, {
     key: "createObjectStore",
-    value: function createObjectStore(name, options) {
-      var eventLog = this[Connection].createObjectStore(name, options);
+    value: function createObjectStore(storeName, options) {
+      var eventLog = this[Connection].createObjectStore(storeName, options);
+      this.setStoreMeta(storeName, 'store', options);
       return eventLog;
     }
   }, {
     key: "deleteObjectStore",
-    value: function deleteObjectStore(name) {
-      return this[Connection].deleteObjectStore(name);
+    value: function deleteObjectStore(storeName) {
+      return this[Connection].deleteObjectStore(storeName);
     }
   }, {
     key: "checkHighWaterMark",
-    value: function checkHighWaterMark(storeName, record) {}
+    value: function checkHighWaterMark(storeName, record) {
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+      var currentMark = this.getStoreMeta(storeName, 'highWater', 0);
+      return currentMark;
+    }
   }, {
     key: "setHighWaterMark",
-    value: function setHighWaterMark() {}
+    value: function setHighWaterMark(storeName, record) {
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+      var subType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : undefined;
+      var metadata = this[Metadata][storeName];
+      var recordMark = record[metadata.highWater];
+      var currentMark = this.getStoreMeta(storeName, 'highWater', 0);
+      this.setStoreMeta(storeName, 'highWater', recordMark);
+      this.dispatchEvent(new CustomEvent('highWaterMoved', {
+        detail: {
+          database: this[Name],
+          record: record,
+          store: storeName,
+          type: 'highWaterMoved',
+          subType: subType,
+          origin: origin,
+          oldValue: currentMark,
+          value: recordMark
+        }
+      }));
+    }
   }], [{
     key: "open",
     value: function open(dbName) {
-      var _this6 = this;
+      var _this7 = this;
 
       var version = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
@@ -10260,7 +10396,7 @@ var Database = function () {
         request.onerror = function (error) {
           Database.dispatchEvent(new CustomEvent('readError', {
             detail: {
-              database: _this6[Name],
+              database: _this7[Name],
               error: error,
               store: undefined,
               type: 'read',
@@ -10271,26 +10407,23 @@ var Database = function () {
         };
 
         request.onsuccess = function (event) {
-          var instance = new _this6(event.target.result);
-          instance[Name] = dbName;
-          _this6[Instances][dbName] = instance;
+          var instance = new _this7(event.target.result);
+          _this7[Instances][dbName] = instance;
           accept(instance);
         };
 
         request.onupgradeneeded = function (event) {
           var connection = event.target.result;
           connection.addEventListener('error', function (error) {
-            console.error(error);
+            return console.error(error);
           });
-          var instance = new _this6(connection);
+          var instance = new _this7(connection);
 
           for (var v = event.oldVersion + 1; v <= version; v += 1) {
             instance['_version_' + v](connection);
           }
 
-          instance[Name] = dbName;
-          _this6[Instances][dbName] = instance;
-          accept(instance);
+          _this7[Instances][dbName] = instance;
         };
       });
     }
@@ -10302,7 +10435,7 @@ var Database = function () {
   }, {
     key: "destroyDatabase",
     value: function destroyDatabase() {
-      var _this7 = this;
+      var _this8 = this;
 
       return new Promise(function (accept, reject) {
         var request = indexedDB["delete"](dbName);
@@ -10319,7 +10452,7 @@ var Database = function () {
         };
 
         request.onsuccess = function (event) {
-          delete _this7[Instances][dbName];
+          delete _this8[Instances][dbName];
           accept(dbName);
         };
       });
@@ -10327,7 +10460,7 @@ var Database = function () {
   }]);
 
   return Database;
-}();
+}(_Mixin.Mixin["with"](_EventTargetMixin.EventTargetMixin));
 
 exports.Database = Database;
 Object.defineProperty(Database, Instances, {
