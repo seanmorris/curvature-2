@@ -14,7 +14,7 @@ export class Model
 
 		Object.defineProperty(this, Saved, {writable: true, value:  false});
 
-		return Bindable.makeBindable(this);
+		// return Bindable.makeBindable(this);
 	}
 
 	static from(skeleton)
@@ -58,7 +58,7 @@ export class Model
 				instance[Saved]      = !!(changed ? false : this[Saved]);
 			});
 
-			changed     = true;
+			changed = true;
 		}
 
 		return instance;
@@ -103,6 +103,11 @@ export class Model
 
 			setProp(property, skeleton[property]);
 		}
+	}
+
+	changed()
+	{
+		this[Saved] = false;
 	}
 
 	stored()

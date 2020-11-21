@@ -9978,6 +9978,14 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
+var BeforeWrite = Symbol('BeforeWrite');
+var AfterWrite = Symbol('AfterWrite');
+var BeforeInsert = Symbol('BeforeInsert');
+var AfterInsert = Symbol('AfterInsert');
+var BeforeUpdate = Symbol('BeforeUpdate');
+var AfterUpdate = Symbol('AfterUpdate');
+var BeforeRead = Symbol('BeforeRead');
+var AfterRead = Symbol('AfterRead');
 var PrimaryKey = Symbol('PrimaryKey');
 var Connection = Symbol('Connection');
 var Instances = Symbol('Instances');
@@ -10065,18 +10073,25 @@ var Database = function (_Mixin$with) {
         var store = trans.objectStore(storeName);
         var bank = _this3[Bank][storeName];
         record = _Bindable.Bindable.make(record);
+        var detail = {
+          database: _this3[Name],
+          record: record,
+          store: storeName,
+          type: 'write',
+          subType: 'insert',
+          origin: origin
+        };
+        var beforeWriteResult = record[Database.BeforeWrite] ? record[Database.BeforeWrite](detail) : null;
+        var beforeInsertResult = record[Database.BeforeInsert] ? record[Database.BeforeInsert](detail) : null;
         var request = store.add(Object.assign({}, record));
+
+        if (beforeWriteResult === false || beforeInsertResult === false) {
+          return;
+        }
 
         request.onerror = function (error) {
           _this3.dispatchEvent(new CustomEvent('writeError', {
-            detail: {
-              database: _this3[Name],
-              record: record,
-              store: storeName,
-              type: 'write',
-              subType: 'insert',
-              origin: origin
-            }
+            detail: detail
           }));
 
           reject(error);
@@ -10085,16 +10100,12 @@ var Database = function (_Mixin$with) {
         request.onsuccess = function (event) {
           var pk = event.target.result;
           bank[pk] = record;
+          var cancelable = true;
+          detail.key = Database.getPrimaryKey(record);
 
           var eventResult = _this3.dispatchEvent(new CustomEvent('write', {
-            detail: {
-              database: _this3[Name],
-              key: Database.getPrimaryKey(record),
-              store: storeName,
-              type: 'write',
-              subType: 'insert',
-              origin: origin
-            }
+            cancelable: cancelable,
+            detail: detail
           }));
 
           if (eventResult) {
@@ -10117,6 +10128,8 @@ var Database = function (_Mixin$with) {
             }
 
             trans.commit();
+            record[Database.AfterInsert] && record[Database.AfterInsert](detail);
+            record[Database.AfterWrite] && record[Database.AfterWrite](detail);
           } else {
             trans.abort();
           }
@@ -10140,35 +10153,40 @@ var Database = function (_Mixin$with) {
         var trans = _this4[Connection].transaction([storeName], 'readwrite');
 
         var store = trans.objectStore(storeName);
+        var detail = {
+          database: _this4[Name],
+          key: Database.getPrimaryKey(record),
+          record: record,
+          store: storeName,
+          type: 'write',
+          subType: 'update',
+          origin: origin
+        };
+        record[Database.AfterInsert] && record[Database.AfterInsert](detail);
+        record[Database.AfterWrite] && record[Database.AfterWrite](detail);
+        var beforeWriteResult = record[Database.BeforeWrite] ? record[Database.BeforeWrite](detail) : null;
+        var beforeUpdateResult = record[Database.BeforeUpdate] ? record[Database.BeforeUpdate](detail) : null;
+
+        if (beforeWriteResult === false || beforeUpdateResult === false) {
+          return;
+        }
+
         var request = store.put(Object.assign({}, record));
 
         request.onerror = function (error) {
           _this4.dispatchEvent(new CustomEvent('writeError', {
-            detail: {
-              database: _this4[Name],
-              key: Database.getPrimaryKey(record),
-              record: record,
-              store: storeName,
-              type: 'write',
-              subType: 'update',
-              origin: origin
-            }
+            detail: detail
           }));
 
           reject(error);
         };
 
         request.onsuccess = function (event) {
+          var cancelable = true;
+
           var eventResult = _this4.dispatchEvent(new CustomEvent('write', {
-            detail: {
-              database: _this4[Name],
-              record: record,
-              key: Database.getPrimaryKey(record),
-              store: storeName,
-              type: 'write',
-              subType: 'update',
-              origin: origin
-            }
+            cancelable: cancelable,
+            detail: detail
           }));
 
           if (eventResult) {
@@ -10187,8 +10205,10 @@ var Database = function (_Mixin$with) {
                 _this4.setHighWaterMark(storeName, record, origin, 'update');
               }
             }
-          } else {
+
             trans.commit();
+          } else {
+            trans.abort();
           }
 
           accept(event);
@@ -10210,19 +10230,29 @@ var Database = function (_Mixin$with) {
         var trans = _this5[Connection].transaction([storeName], 'readwrite');
 
         var store = trans.objectStore(storeName);
+        var detail = {
+          database: _this5[Name],
+          original: event,
+          record: record,
+          key: Database.getPrimaryKey(record),
+          store: storeName,
+          type: 'write',
+          subType: 'delete',
+          origin: origin
+        };
+        var beforeDeleteResult = record[Database.beforeDelete] ? record[Database.beforeDelete](detail) : null;
+
+        if (beforeDeleteResult === false) {
+          return;
+        }
+
         var request = store["delete"](Number(record[PrimaryKey].description));
+        record[PrimaryKey] = undefined;
+        record[Database.AfterDelete] && record[Database.AfterDelete](detail);
 
         request.onerror = function (error) {
           var deleteEvent = new CustomEvent('writeError', {
-            detail: {
-              database: _this5[Name],
-              original: event,
-              key: Database.getPrimaryKey(record),
-              store: storeName,
-              type: 'write',
-              subType: 'delete',
-              origin: origin
-            }
+            detail: detail
           });
 
           _this5.dispatchEvent(deleteEvent);
@@ -10232,15 +10262,7 @@ var Database = function (_Mixin$with) {
 
         request.onsuccess = function (event) {
           var writeEvent = new CustomEvent('write', {
-            detail: {
-              database: _this5[Name],
-              original: event,
-              key: Database.getPrimaryKey(record),
-              store: storeName,
-              type: 'write',
-              subType: 'delete',
-              origin: origin
-            }
+            detail: detail
           });
 
           _this5.dispatchEvent(writeEvent);
@@ -10282,44 +10304,57 @@ var Database = function (_Mixin$with) {
               });
             }
 
-            if (offset > i++) {
-              return cursor["continue"]();
-            }
-
-            var source = cursor.source;
-            var storeName = source.objectStore ? source.objectStore.name : index.name;
             _this6[Bank][storeName] = _this6[Bank][storeName] || {};
             var bank = _this6[Bank][storeName];
             var pk = cursor.primaryKey;
             var value = type ? type.from(cursor.value) : cursor.value;
 
+            var bindableValue = _Bindable.Bindable.makeBindable(value);
+
+            var detail = {
+              database: _this6[Name],
+              key: Database.getPrimaryKey(bindableValue),
+              record: value,
+              store: index.name,
+              type: 'read',
+              subType: 'select',
+              origin: origin
+            };
+            var beforeReadResult = value[Database.BeforeRead] ? value[Database.BeforeRead](detail) : null;
+
+            if (offset > i++ || beforeReadResult === false) {
+              return cursor["continue"]();
+            }
+
             if (bank[pk]) {
               Object.assign(bank[pk], value);
             } else {
               value[PrimaryKey] = Symbol["for"](pk);
-              bank[pk] = _Bindable.Bindable.makeBindable(value);
+              bank[pk] = value;
             }
 
-            _this6.dispatchEvent(new CustomEvent('read', {
-              detail: {
-                database: _this6[Name],
-                record: value,
-                store: storeName,
-                type: 'read',
-                subType: 'select',
-                origin: origin
-              }
+            var source = cursor.source;
+            var storeName = source.objectStore ? source.objectStore.name : index.name;
+            bank[pk][Database.AfterRead] && bank[pk][Database.AfterRead](detail);
+            detail.record = value;
+            var cancelable = true;
+
+            var eventResult = _this6.dispatchEvent(new CustomEvent('read', {
+              detail: detail,
+              cancelable: cancelable
             }));
 
-            var result = callback ? callback(bank[pk], i) : bank[pk];
+            if (eventResult) {
+              var result = callback ? callback(bank[pk], i) : bank[pk];
 
-            if (limit && i - offset >= limit) {
-              offset += limit;
-              return accept({
-                record: bank[pk],
-                result: result,
-                index: i
-              });
+              if (limit && i - offset >= limit) {
+                offset += limit;
+                return accept({
+                  record: bank[pk],
+                  result: result,
+                  index: i
+                });
+              }
             }
 
             cursor["continue"]();
@@ -10469,6 +10504,30 @@ Object.defineProperty(Database, Instances, {
 Object.defineProperty(Database, Target, {
   value: new EventTarget()
 });
+Object.defineProperty(Database, 'BeforeWrite', {
+  value: BeforeWrite
+});
+Object.defineProperty(Database, 'AfterWrite', {
+  value: AfterWrite
+});
+Object.defineProperty(Database, 'BeforeInsert', {
+  value: BeforeInsert
+});
+Object.defineProperty(Database, 'AfterInsert', {
+  value: AfterInsert
+});
+Object.defineProperty(Database, 'BeforeUpdate', {
+  value: BeforeUpdate
+});
+Object.defineProperty(Database, 'AfterUpdate', {
+  value: AfterUpdate
+});
+Object.defineProperty(Database, 'BeforeRead', {
+  value: BeforeRead
+});
+Object.defineProperty(Database, 'AfterRead', {
+  value: AfterRead
+});
 
 var _loop = function _loop(method) {
   Object.defineProperty(Database, method, {
@@ -10571,6 +10630,11 @@ var Model = function () {
 
         setProp(property, skeleton[property]);
       }
+    }
+  }, {
+    key: "changed",
+    value: function changed() {
+      this[Saved] = false;
     }
   }, {
     key: "stored",

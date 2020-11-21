@@ -12,17 +12,17 @@ const AfterUpdate  = Symbol('AfterUpdate');
 const BeforeRead   = Symbol('BeforeRead');
 const AfterRead    = Symbol('AfterRead');
 
-const PrimaryKey = Symbol('PrimaryKey');
-const Connection = Symbol('Connection');
-const Instances  = Symbol('Instances');
-const HighWater  = Symbol('HighWater');
-const Metadata   = Symbol('Metadata');
-const Timers     = Symbol('Timers');
-const Target     = Symbol('Target');
-const Store      = Symbol('Store');
-const Fetch      = Symbol('Each');
-const Name       = Symbol('Name');
-const Bank       = Symbol('Bank');
+const PrimaryKey   = Symbol('PrimaryKey');
+const Connection   = Symbol('Connection');
+const Instances    = Symbol('Instances');
+const HighWater    = Symbol('HighWater');
+const Metadata     = Symbol('Metadata');
+const Timers       = Symbol('Timers');
+const Target       = Symbol('Target');
+const Store        = Symbol('Store');
+const Fetch        = Symbol('Each');
+const Name         = Symbol('Name');
+const Bank         = Symbol('Bank');
 
 export class Database extends Mixin.with(EventTargetMixin)
 {
@@ -223,8 +223,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 				return;
 			}
 
-			console.log(record);
-
 			const request = store.put(Object.assign({}, record));
 
 			request.onerror = error => {
@@ -282,18 +280,34 @@ export class Database extends Mixin.with(EventTargetMixin)
 		return new Promise((accept, reject) => {
 			const trans     = this[Connection].transaction([storeName], 'readwrite');
 			const store     = trans.objectStore(storeName);
-			const request   = store.delete(Number(record[PrimaryKey].description));
+			const detail    = {
+				database:   this[Name]
+				, original: event
+				, record:   record
+				, key:      Database.getPrimaryKey(record)
+				, store:    storeName
+				, type:     'write'
+				, subType:  'delete'
+				, origin:   origin
+			};
+
+			const beforeDeleteResult = record[Database.beforeDelete]
+				? record[Database.beforeDelete](detail)
+				: null;
+
+			if(beforeDeleteResult === false)
+			{
+				return;
+			}
+
+			const request = store.delete(Number(record[PrimaryKey].description));
+
+			record[PrimaryKey] = undefined;
+
+			record[Database.AfterDelete] && record[Database.AfterDelete](detail);
 
 			request.onerror = error => {
-				const deleteEvent = new CustomEvent('writeError', {detail: {
-					database:   this[Name]
-					, original: event
-					, key:      Database.getPrimaryKey(record)
-					, store:    storeName
-					, type:     'write'
-					, subType:  'delete'
-					, origin:   origin
-				}});
+				const deleteEvent = new CustomEvent('writeError', {detail});
 
 				this.dispatchEvent(deleteEvent);
 
@@ -301,15 +315,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 			};
 
 			request.onsuccess = event => {
-				const writeEvent = new CustomEvent('write', {detail: {
-					database:   this[Name]
-					, original: event
-					, key:      Database.getPrimaryKey(record)
-					, store:    storeName
-					, type:     'write'
-					, subType:  'delete'
-					, origin:   origin
-				}});
+				const writeEvent = new CustomEvent('write', {detail});
 
 				this.dispatchEvent(writeEvent);
 
@@ -336,28 +342,18 @@ export class Database extends Mixin.with(EventTargetMixin)
 	[Fetch](type, index, direction, range, limit, offset, origin)
 	{
 		return callback => new Promise((accept, reject) => {
+
 			let i = 0;
 
 			const request = index.openCursor(range, direction);
 
 			request.addEventListener('success', event => {
-
 				const cursor = event.target.result;
 
 				if(!cursor)
 				{
 					return accept({record: null, result: null, index: i});
 				}
-
-				if(offset > i++)
-				{
-					return cursor.continue();
-				}
-
-				const source    = cursor.source;
-				const storeName = source.objectStore
-					? source.objectStore.name
-					: index.name;
 
 				this[Bank][storeName] = this[Bank][storeName] || {};
 
@@ -367,6 +363,27 @@ export class Database extends Mixin.with(EventTargetMixin)
 					? type.from(cursor.value)
 					: cursor.value;
 
+				const bindableValue = Bindable.makeBindable(value);
+
+				const detail = {
+					database:  this[Name]
+					, key:     Database.getPrimaryKey(bindableValue)
+					, record:  value
+					, store:   index.name
+					, type:    'read'
+					, subType: 'select'
+					, origin:  origin
+				};
+
+				const beforeReadResult = value[Database.BeforeRead]
+					? value[Database.BeforeRead](detail)
+					: null;
+
+				if(offset > i++ || beforeReadResult === false)
+				{
+					return cursor.continue();
+				}
+
 				if(bank[pk])
 				{
 					Object.assign(bank[pk], value);
@@ -374,27 +391,34 @@ export class Database extends Mixin.with(EventTargetMixin)
 				else
 				{
 					value[PrimaryKey] = Symbol.for(pk);
-					bank[pk] = Bindable.makeBindable(value);
+					bank[pk] = value;
 				}
 
-				this.dispatchEvent(new CustomEvent('read', {detail: {
-					database:  this[Name]
-					, record:  value
-					, store:   storeName
-					, type:    'read'
-					, subType: 'select'
-					, origin:   origin
-				}}));
+				const source    = cursor.source;
+				const storeName = source.objectStore
+					? source.objectStore.name
+					: index.name;
 
-				const result = callback
-					? callback(bank[pk], i)
-					: bank[pk];
+				bank[pk][Database.AfterRead] && bank[pk][Database.AfterRead](detail);
 
-				if(limit && i - offset >= limit)
+				detail.record = value;
+
+				const cancelable = true;
+
+				const eventResult = this.dispatchEvent(new CustomEvent('read', {detail, cancelable}));
+
+				if(eventResult)
 				{
-					offset += limit;
+					const result = callback
+						? callback(bank[pk], i)
+						: bank[pk];
 
-					return accept({record: bank[pk], result, index: i});
+					if(limit && i - offset >= limit)
+					{
+						offset += limit;
+
+						return accept({record: bank[pk], result, index: i});
+					}
 				}
 
 				cursor.continue();
@@ -460,28 +484,9 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 	checkHighWaterMark(storeName, record, origin = undefined)
 	{
-		// if(!this[Metadata][storeName])
-		// {
-		// 	this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
-		// }
-
-		// if(!this[Metadata][storeName])
-		// {
-		// 	return;
-		// }
-
 		const currentMark = this.getStoreMeta(storeName, 'highWater', 0);
 
 		return currentMark;
-
-		// const metadata    = this[Metadata][storeName];
-		// const currentMark = this.getStoreMeta(storeName, 'highWater', 0);
-		// const recordMark  = record[metadata.highWater];
-
-		// if(currentMark < recordMark)
-		// {
-		// 	this.setHighWaterMark(storeName, record, origin);
-		// }
 	}
 
 	setHighWaterMark(storeName, record, origin = undefined, subType = undefined)

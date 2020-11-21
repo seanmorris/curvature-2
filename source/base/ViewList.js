@@ -77,7 +77,6 @@ export class ViewList
 				}
 
 				delete this.views[kk];
-				// this.views.splice(k,1);
 
 				for(let i in this.views)
 				{
@@ -211,7 +210,6 @@ export class ViewList
 					}
 
 					this.args.value[index] = v;
-
 				});
 
 				this.downDebind[k] = this.subArgs.bindTo((v, k, t, d) => {
