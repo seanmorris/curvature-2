@@ -48,7 +48,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 			const request = indexedDB.open(dbName, version);
 
 			request.onerror = error => {
-				Database.dispatchEvent(new CustomEvent('readError', {detail: {
+				Database.dispatchEvent(new CustomEvent('error', {detail: {
 					database:  this[Name]
 					, error:   error
 					, store:   undefined
@@ -125,7 +125,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				? record[Database.BeforeInsert](detail)
 				: null;
 
-			const request = store.add(Object.assign({}, record));
+			const request = store.add(Object.assign({}, JSON.parse(JSON.stringify(record))));
 
 			if(beforeWriteResult === false || beforeInsertResult === false)
 			{
@@ -171,7 +171,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 						}
 					}
 
-					trans.commit();
+					trans.commit && trans.commit();
 
 					record[Database.AfterInsert] && record[Database.AfterInsert](detail);
 					record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
@@ -223,7 +223,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				return;
 			}
 
-			const request = store.put(Object.assign({}, record));
+			const request = store.put(Object.assign({}, JSON.parse(JSON.stringify(record))));
 
 			request.onerror = error => {
 				this.dispatchEvent(new CustomEvent('writeError', {detail}));
@@ -258,7 +258,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 						}
 					}
 
-					trans.commit();
+					trans.commit && trans.commit();
 				}
 				else
 				{
@@ -319,7 +319,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				this.dispatchEvent(writeEvent);
 
-				trans.commit();
+				trans.commit && trans.commit();
 
 				accept(writeEvent);
 			};
@@ -439,7 +439,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 			const request = indexedDB.delete(dbName);
 
 			request.onerror = error => {
-				Database.dispatchEvent(new CustomEvent('destroyError', {detail: {
+				Database.dispatchEvent(new CustomEvent('error', {detail: {
 					database:  dbName
 					, error:   error
 					, type:    'destroy'
@@ -511,7 +511,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 }
 
 Object.defineProperty(Database, Instances, {value: []});
-Object.defineProperty(Database, Target,    {value: new EventTarget});
+Object.defineProperty(Database, Target,    {value: document.createDocumentFragment()});
 
 Object.defineProperty(Database, 'BeforeWrite', {value: BeforeWrite});
 Object.defineProperty(Database, 'AfterWrite',  {value: AfterWrite});
@@ -525,7 +525,7 @@ Object.defineProperty(Database, 'AfterUpdate',  {value: AfterUpdate});
 Object.defineProperty(Database, 'BeforeRead', {value: BeforeRead});
 Object.defineProperty(Database, 'AfterRead',  {value: AfterRead});
 
-for(const method in Database[Target])
+for(const method in ['addEventListener', 'removeEventListener', 'dispatchEvent'])
 {
 	Object.defineProperty(Database, method, {
 		value: (...args) => Database[Target][method](...args)

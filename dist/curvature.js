@@ -10083,7 +10083,7 @@ var Database = function (_Mixin$with) {
         };
         var beforeWriteResult = record[Database.BeforeWrite] ? record[Database.BeforeWrite](detail) : null;
         var beforeInsertResult = record[Database.BeforeInsert] ? record[Database.BeforeInsert](detail) : null;
-        var request = store.add(Object.assign({}, record));
+        var request = store.add(Object.assign({}, JSON.parse(JSON.stringify(record))));
 
         if (beforeWriteResult === false || beforeInsertResult === false) {
           return;
@@ -10127,7 +10127,7 @@ var Database = function (_Mixin$with) {
               }
             }
 
-            trans.commit();
+            trans.commit && trans.commit();
             record[Database.AfterInsert] && record[Database.AfterInsert](detail);
             record[Database.AfterWrite] && record[Database.AfterWrite](detail);
           } else {
@@ -10171,7 +10171,7 @@ var Database = function (_Mixin$with) {
           return;
         }
 
-        var request = store.put(Object.assign({}, record));
+        var request = store.put(Object.assign({}, JSON.parse(JSON.stringify(record))));
 
         request.onerror = function (error) {
           _this4.dispatchEvent(new CustomEvent('writeError', {
@@ -10206,7 +10206,7 @@ var Database = function (_Mixin$with) {
               }
             }
 
-            trans.commit();
+            trans.commit && trans.commit();
           } else {
             trans.abort();
           }
@@ -10267,7 +10267,7 @@ var Database = function (_Mixin$with) {
 
           _this5.dispatchEvent(writeEvent);
 
-          trans.commit();
+          trans.commit && trans.commit();
           accept(writeEvent);
         };
       });
@@ -10429,7 +10429,7 @@ var Database = function (_Mixin$with) {
         var request = indexedDB.open(dbName, version);
 
         request.onerror = function (error) {
-          Database.dispatchEvent(new CustomEvent('readError', {
+          Database.dispatchEvent(new CustomEvent('error', {
             detail: {
               database: _this7[Name],
               error: error,
@@ -10476,7 +10476,7 @@ var Database = function (_Mixin$with) {
         var request = indexedDB["delete"](dbName);
 
         request.onerror = function (error) {
-          Database.dispatchEvent(new CustomEvent('destroyError', {
+          Database.dispatchEvent(new CustomEvent('error', {
             detail: {
               database: dbName,
               error: error,
@@ -10502,7 +10502,7 @@ Object.defineProperty(Database, Instances, {
   value: []
 });
 Object.defineProperty(Database, Target, {
-  value: new EventTarget()
+  value: document.createDocumentFragment()
 });
 Object.defineProperty(Database, 'BeforeWrite', {
   value: BeforeWrite
@@ -10539,7 +10539,7 @@ var _loop = function _loop(method) {
   });
 };
 
-for (var method in Database[Target]) {
+for (var method in ['addEventListener', 'removeEventListener', 'dispatchEvent']) {
   _loop(method);
 }
 "use strict";
