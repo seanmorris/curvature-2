@@ -1994,6 +1994,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			if(Array.isArray(v))
 			{
+				console.log(v.length);
 				v = !!v.length;
 			}
 
@@ -2017,8 +2018,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			{
 				view.nodes.map(n=>ifDoc.appendChild(n));
 			}
-
-		});
+		}, {wait: 0, children: Array.isArray(proxy[property])});
 
 		// const propertyDebind = this.args.bindChain(property, onUpdate);
 

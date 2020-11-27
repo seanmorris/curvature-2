@@ -4944,6 +4944,7 @@ var View = function (_Mixin$with) {
         }
 
         if (Array.isArray(v)) {
+          console.log(v.length);
           v = !!v.length;
         }
 
@@ -4963,6 +4964,9 @@ var View = function (_Mixin$with) {
             return ifDoc.appendChild(n);
           });
         }
+      }, {
+        wait: 0,
+        children: Array.isArray(proxy[property])
       });
       bindingView.onRemove(propertyDebind);
 
