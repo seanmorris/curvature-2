@@ -3871,8 +3871,6 @@ var Router = function () {
 
         if (result instanceof Promise) {
           return result.then(function (realResult) {
-            console.log(realResult);
-
             _this3.update(listener, path, realResult, routes, selected, args, forceRefresh);
           })["catch"](function (error) {
             document.dispatchEvent(new CustomEvent('cvRouteError', {
@@ -6420,7 +6418,6 @@ var View = function (_Mixin$with) {
         }
 
         if (Array.isArray(v)) {
-          console.log(v.length);
           v = !!v.length;
         }
 
@@ -10236,7 +10233,6 @@ var Database = function (_Mixin$with) {
         var store = trans.objectStore(storeName);
         var detail = {
           database: _this5[Name],
-          original: event,
           record: record,
           key: Database.getPrimaryKey(record),
           store: storeName,
@@ -10255,6 +10251,7 @@ var Database = function (_Mixin$with) {
         record[Database.AfterDelete] && record[Database.AfterDelete](detail);
 
         request.onerror = function (error) {
+          detail.original = error;
           var deleteEvent = new CustomEvent('writeError', {
             detail: detail
           });
@@ -10265,11 +10262,54 @@ var Database = function (_Mixin$with) {
         };
 
         request.onsuccess = function (event) {
+          detail.original = event;
           var writeEvent = new CustomEvent('write', {
             detail: detail
           });
 
           _this5.dispatchEvent(writeEvent);
+
+          trans.commit && trans.commit();
+          accept(writeEvent);
+        };
+      });
+    }
+  }, {
+    key: "clear",
+    value: function clear(storeName) {
+      var _this6 = this;
+
+      return new Promise(function (accept, reject) {
+        var trans = _this6[Connection].transaction([storeName], 'readwrite');
+
+        var store = trans.objectStore(storeName);
+        var request = store.clear();
+        var detail = {
+          database: _this6[Name],
+          store: storeName,
+          type: 'write',
+          subType: 'clear',
+          origin: origin
+        };
+
+        request.onerror = function (error) {
+          detail.original = error;
+          var deleteEvent = new CustomEvent('writeError', {
+            detail: detail
+          });
+
+          _this6.dispatchEvent(deleteEvent);
+
+          reject(error);
+        };
+
+        request.onsuccess = function (event) {
+          detail.original = event;
+          var writeEvent = new CustomEvent('write', {
+            detail: detail
+          });
+
+          _this6.dispatchEvent(writeEvent);
 
           trans.commit && trans.commit();
           accept(writeEvent);
@@ -10291,7 +10331,7 @@ var Database = function (_Mixin$with) {
   }, {
     key: Fetch,
     value: function value(type, index, direction, range, limit, offset, origin) {
-      var _this6 = this;
+      var _this7 = this;
 
       return function (callback) {
         return new Promise(function (accept, reject) {
@@ -10308,15 +10348,15 @@ var Database = function (_Mixin$with) {
               });
             }
 
-            _this6[Bank][storeName] = _this6[Bank][storeName] || {};
-            var bank = _this6[Bank][storeName];
+            _this7[Bank][storeName] = _this7[Bank][storeName] || {};
+            var bank = _this7[Bank][storeName];
             var pk = cursor.primaryKey;
             var value = type ? type.from(cursor.value) : cursor.value;
 
             var bindableValue = _Bindable.Bindable.makeBindable(value);
 
             var detail = {
-              database: _this6[Name],
+              database: _this7[Name],
               key: Database.getPrimaryKey(bindableValue),
               record: value,
               store: index.name,
@@ -10343,7 +10383,7 @@ var Database = function (_Mixin$with) {
             detail.record = value;
             var cancelable = true;
 
-            var eventResult = _this6.dispatchEvent(new CustomEvent('read', {
+            var eventResult = _this7.dispatchEvent(new CustomEvent('read', {
               detail: detail,
               cancelable: cancelable
             }));
@@ -10423,7 +10463,7 @@ var Database = function (_Mixin$with) {
   }], [{
     key: "open",
     value: function open(dbName) {
-      var _this7 = this;
+      var _this8 = this;
 
       var version = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
@@ -10437,7 +10477,7 @@ var Database = function (_Mixin$with) {
         request.onerror = function (error) {
           Database.dispatchEvent(new CustomEvent('error', {
             detail: {
-              database: _this7[Name],
+              database: _this8[Name],
               error: error,
               store: undefined,
               type: 'read',
@@ -10448,8 +10488,8 @@ var Database = function (_Mixin$with) {
         };
 
         request.onsuccess = function (event) {
-          var instance = new _this7(event.target.result);
-          _this7[Instances][dbName] = instance;
+          var instance = new _this8(event.target.result);
+          _this8[Instances][dbName] = instance;
           accept(instance);
         };
 
@@ -10458,13 +10498,13 @@ var Database = function (_Mixin$with) {
           connection.addEventListener('error', function (error) {
             return console.error(error);
           });
-          var instance = new _this7(connection);
+          var instance = new _this8(connection);
 
           for (var v = event.oldVersion + 1; v <= version; v += 1) {
             instance['_version_' + v](connection);
           }
 
-          _this7[Instances][dbName] = instance;
+          _this8[Instances][dbName] = instance;
         };
       });
     }
@@ -10476,7 +10516,7 @@ var Database = function (_Mixin$with) {
   }, {
     key: "destroyDatabase",
     value: function destroyDatabase() {
-      var _this8 = this;
+      var _this9 = this;
 
       return new Promise(function (accept, reject) {
         var request = indexedDB["delete"](dbName);
@@ -10493,7 +10533,7 @@ var Database = function (_Mixin$with) {
         };
 
         request.onsuccess = function (event) {
-          delete _this8[Instances][dbName];
+          delete _this9[Instances][dbName];
           accept(dbName);
         };
       });

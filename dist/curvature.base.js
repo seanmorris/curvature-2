@@ -2395,8 +2395,6 @@ var Router = function () {
 
         if (result instanceof Promise) {
           return result.then(function (realResult) {
-            console.log(realResult);
-
             _this3.update(listener, path, realResult, routes, selected, args, forceRefresh);
           })["catch"](function (error) {
             document.dispatchEvent(new CustomEvent('cvRouteError', {
@@ -4944,7 +4942,6 @@ var View = function (_Mixin$with) {
         }
 
         if (Array.isArray(v)) {
-          console.log(v.length);
           v = !!v.length;
         }
 

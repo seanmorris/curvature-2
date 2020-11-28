@@ -282,7 +282,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 			const store     = trans.objectStore(storeName);
 			const detail    = {
 				database:   this[Name]
-				, original: event
 				, record:   record
 				, key:      Database.getPrimaryKey(record)
 				, store:    storeName
@@ -307,6 +306,9 @@ export class Database extends Mixin.with(EventTargetMixin)
 			record[Database.AfterDelete] && record[Database.AfterDelete](detail);
 
 			request.onerror = error => {
+
+				detail.original = error;
+
 				const deleteEvent = new CustomEvent('writeError', {detail});
 
 				this.dispatchEvent(deleteEvent);
@@ -315,6 +317,49 @@ export class Database extends Mixin.with(EventTargetMixin)
 			};
 
 			request.onsuccess = event => {
+
+				detail.original = event;
+
+				const writeEvent = new CustomEvent('write', {detail});
+
+				this.dispatchEvent(writeEvent);
+
+				trans.commit && trans.commit();
+
+				accept(writeEvent);
+			};
+		});
+	}
+
+	clear(storeName)
+	{
+		return new Promise((accept, reject) => {
+			const trans   = this[Connection].transaction([storeName], 'readwrite');
+			const store   = trans.objectStore(storeName);
+			const request = store.clear();
+			const detail  = {
+				database:   this[Name]
+				, store:    storeName
+				, type:     'write'
+				, subType:  'clear'
+				, origin:   origin
+			};
+
+			request.onerror = error => {
+
+				detail.original = error;
+
+				const deleteEvent = new CustomEvent('writeError', {detail});
+
+				this.dispatchEvent(deleteEvent);
+
+				reject(error);
+			};
+
+			request.onsuccess = event => {
+
+				detail.original = event;
+
 				const writeEvent = new CustomEvent('write', {detail});
 
 				this.dispatchEvent(writeEvent);

@@ -1994,7 +1994,6 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			if(Array.isArray(v))
 			{
-				console.log(v.length);
 				v = !!v.length;
 			}
 

@@ -304,7 +304,7 @@ export class Router {
 			if(result instanceof Promise)
 			{
 				return result.then(realResult => {
-					console.log(realResult);
+
 					this.update(
 						listener
 						, path
@@ -314,6 +314,7 @@ export class Router {
 						, args
 						, forceRefresh
 					);
+
 				}).catch(error => {
 
 					document.dispatchEvent(new CustomEvent('cvRouteError', {
