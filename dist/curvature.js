@@ -10349,12 +10349,14 @@ var Database = function (_Mixin$with) {
             }));
 
             if (eventResult) {
-              var result = callback ? callback(bank[pk], i) : bank[pk];
+              var record = type ? type.from(bank[pk]) : bank[pk];
+              record[PrimaryKey] = Symbol["for"](pk);
+              var result = callback ? callback(record, i) : record;
 
               if (limit && i - offset >= limit) {
                 offset += limit;
                 return accept({
-                  record: bank[pk],
+                  record: record,
                   result: result,
                   index: i
                 });

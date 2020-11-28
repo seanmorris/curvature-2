@@ -409,15 +409,19 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				if(eventResult)
 				{
+					const record = type ? type.from(bank[pk]) : bank[pk];
+
+					record[PrimaryKey] = Symbol.for(pk);
+
 					const result = callback
-						? callback(bank[pk], i)
-						: bank[pk];
+						? callback(record, i)
+						: record;
 
 					if(limit && i - offset >= limit)
 					{
 						offset += limit;
 
-						return accept({record: bank[pk], result, index: i});
+						return accept({record, result, index: i});
 					}
 				}
 
