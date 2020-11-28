@@ -6,7 +6,7 @@ v.0.0.66
 
 Curvature is a lightweight javascript framework with an emphasis on **straightforwardness**.
 
-This document serves only as an overview. For more in-depth, interactive documentation, see http://curvature.unholysh.it/.
+This document serves only as an overview. For more in-depth, interactive documentation, see http://curvature.seanmorr.is/.
 
 ## Getting started
 
@@ -174,12 +174,12 @@ view.click = (event) => {
 
 ```
 
-If the event & method names match, you can just use a ":".
+If the event & method names match, you can just specify it once.
 
 ```javascript
 import { View } from 'curvature/base/View';
 
-const view = View.from(`<button cv-on = ":click(event)">click me!</button>`);
+const view = View.from(`<button cv-on = "click(event)">click me!</button>`);
 
 view.click = (event) => {
 	alert('button clicked!');
@@ -192,7 +192,7 @@ Multiple listeners may be provided in a ";" separated list:
 ```javascript
 import { View } from 'curvature/base/View';
 
-const view = View.from(`<button cv-on = ":click(event);:hover(event)">click me!</button>`);
+const view = View.from(`<button cv-on = "click(event);hover(event)">click me!</button>`);
 
 view.click = (event) => {
 	alert('button clicked!');
