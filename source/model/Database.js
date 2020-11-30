@@ -97,7 +97,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 		};
 	}
 
-	insert(storeName, record, origin = undefined)
+	insert(storeName, record, origin = {})
 	{
 		return new Promise((accept, reject) => {
 			this[Bank][storeName] = this[Bank][storeName] || {};
@@ -161,13 +161,19 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 					if(this[Metadata][storeName])
 					{
-						const metadata    = this[Metadata][storeName];
-						const currentMark = this.checkHighWaterMark(storeName, record);
-						const recordMark  = record[metadata.highWater];
+						const currentHighMark = this.checkHighWaterMark(storeName, record);
+						const currentLowMark  = this.checkLowWaterMark(storeName, record);
+						const metadata        = this[Metadata][storeName];
+						const recordMark      = record[metadata.highWater];
 
-						if(currentMark < recordMark)
+						if(origin.setHighWater && currentHighMark < recordMark)
 						{
 							this.setHighWaterMark(storeName, record, origin, 'insert');
+						}
+
+						if(origin.setLowWater && currentLowMark > recordMark)
+						{
+							this.setLowWaterMark(storeName, record, origin, 'insert');
 						}
 					}
 
@@ -186,7 +192,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 		});
 	}
 
-	update(storeName, record, origin = undefined)
+	update(storeName, record, origin = {})
 	{
 		if(!record[PrimaryKey])
 		{
@@ -248,13 +254,20 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 					if(this[Metadata][storeName])
 					{
-						const metadata    = this[Metadata][storeName];
-						const currentMark = this.checkHighWaterMark(storeName, record);
-						const recordMark  = record[metadata.highWater];
+						const currentHighMark = this.checkHighWaterMark(storeName, record);
+						const currentLowMark  = this.checkLowWaterMark(storeName, record);
+						const metadata        = this[Metadata][storeName];
+						const recordMark      = record[metadata.highWater];
 
-						if(currentMark < recordMark)
+						if(origin.setHighWater && currentHighMark < recordMark)
 						{
-							this.setHighWaterMark(storeName, record, origin, 'update');
+							this.setHighWaterMark(storeName, record, origin, 'insert');
+						}
+
+						if(origin.setLowWater && currentLowMark > recordMark)
+						{
+
+							this.setLowWaterMark(storeName, record, origin, 'insert');
 						}
 					}
 
@@ -510,11 +523,18 @@ export class Database extends Mixin.with(EventTargetMixin)
 		localStorage.setItem(`::::cvdb::${storeName}::${key}`, JSON.stringify(value));
 	}
 
-	getStoreMeta(storeName, key, notFound)
+	getStoreMeta(storeName, key, notFound = null)
 	{
 		const source = localStorage.getItem(`::::cvdb::${storeName}::${key}`);
 
-		return source ? JSON.parse(source) : notFound;
+		const value = source !== null ? JSON.parse(source) : notFound;
+
+		if(value === null)
+		{
+			return notFound;
+		}
+
+		return value;
 	}
 
 	createObjectStore(storeName, options)
@@ -551,6 +571,33 @@ export class Database extends Mixin.with(EventTargetMixin)
 			, record:   record
 			, store:    storeName
 			, type:     'highWaterMoved'
+			, subType:  subType
+			, origin:   origin
+			, oldValue: currentMark
+			, value:    recordMark
+		}}));
+	}
+
+	checkLowWaterMark(storeName, record, origin = undefined)
+	{
+		const currentMark = this.getStoreMeta(storeName, 'lowWater', Infinity);
+
+		return currentMark;
+	}
+
+	setLowWaterMark(storeName, record, origin = undefined, subType = undefined)
+	{
+		const metadata    = this[Metadata][storeName];
+		const recordMark  = record[metadata.highWater];
+		const currentMark = this.getStoreMeta(storeName, 'lowWater', null);
+
+		this.setStoreMeta(storeName, 'lowWater', recordMark);
+
+		this.dispatchEvent(new CustomEvent('lowWaterMoved', {detail: {
+			database:   this[Name]
+			, record:   record
+			, store:    storeName
+			, type:     'lowWaterMoved'
 			, subType:  subType
 			, origin:   origin
 			, oldValue: currentMark

@@ -10065,7 +10065,7 @@ var Database = function (_Mixin$with) {
     value: function insert(storeName, record) {
       var _this3 = this;
 
-      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       return new Promise(function (accept, reject) {
         _this3[Bank][storeName] = _this3[Bank][storeName] || {};
 
@@ -10117,14 +10117,19 @@ var Database = function (_Mixin$with) {
             }
 
             if (_this3[Metadata][storeName]) {
+              var currentHighMark = _this3.checkHighWaterMark(storeName, record);
+
+              var currentLowMark = _this3.checkLowWaterMark(storeName, record);
+
               var metadata = _this3[Metadata][storeName];
-
-              var currentMark = _this3.checkHighWaterMark(storeName, record);
-
               var recordMark = record[metadata.highWater];
 
-              if (currentMark < recordMark) {
+              if (origin.setHighWater && currentHighMark < recordMark) {
                 _this3.setHighWaterMark(storeName, record, origin, 'insert');
+              }
+
+              if (origin.setLowWater && currentLowMark > recordMark) {
+                _this3.setLowWaterMark(storeName, record, origin, 'insert');
               }
             }
 
@@ -10144,7 +10149,7 @@ var Database = function (_Mixin$with) {
     value: function update(storeName, record) {
       var _this4 = this;
 
-      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
       if (!record[PrimaryKey]) {
         throw Error('Value provided is not a DB record!');
@@ -10196,14 +10201,19 @@ var Database = function (_Mixin$with) {
             }
 
             if (_this4[Metadata][storeName]) {
+              var currentHighMark = _this4.checkHighWaterMark(storeName, record);
+
+              var currentLowMark = _this4.checkLowWaterMark(storeName, record);
+
               var metadata = _this4[Metadata][storeName];
-
-              var currentMark = _this4.checkHighWaterMark(storeName, record);
-
               var recordMark = record[metadata.highWater];
 
-              if (currentMark < recordMark) {
-                _this4.setHighWaterMark(storeName, record, origin, 'update');
+              if (origin.setHighWater && currentHighMark < recordMark) {
+                _this4.setHighWaterMark(storeName, record, origin, 'insert');
+              }
+
+              if (origin.setLowWater && currentLowMark > recordMark) {
+                _this4.setLowWaterMark(storeName, record, origin, 'insert');
               }
             }
 
@@ -10415,9 +10425,16 @@ var Database = function (_Mixin$with) {
     }
   }, {
     key: "getStoreMeta",
-    value: function getStoreMeta(storeName, key, notFound) {
+    value: function getStoreMeta(storeName, key) {
+      var notFound = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
       var source = localStorage.getItem("::::cvdb::".concat(storeName, "::").concat(key));
-      return source ? JSON.parse(source) : notFound;
+      var value = source !== null ? JSON.parse(source) : notFound;
+
+      if (value === null) {
+        return notFound;
+      }
+
+      return value;
     }
   }, {
     key: "createObjectStore",
@@ -10453,6 +10470,35 @@ var Database = function (_Mixin$with) {
           record: record,
           store: storeName,
           type: 'highWaterMoved',
+          subType: subType,
+          origin: origin,
+          oldValue: currentMark,
+          value: recordMark
+        }
+      }));
+    }
+  }, {
+    key: "checkLowWaterMark",
+    value: function checkLowWaterMark(storeName, record) {
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+      var currentMark = this.getStoreMeta(storeName, 'lowWater', Infinity);
+      return currentMark;
+    }
+  }, {
+    key: "setLowWaterMark",
+    value: function setLowWaterMark(storeName, record) {
+      var origin = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+      var subType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : undefined;
+      var metadata = this[Metadata][storeName];
+      var recordMark = record[metadata.highWater];
+      var currentMark = this.getStoreMeta(storeName, 'lowWater', null);
+      this.setStoreMeta(storeName, 'lowWater', recordMark);
+      this.dispatchEvent(new CustomEvent('lowWaterMoved', {
+        detail: {
+          database: this[Name],
+          record: record,
+          store: storeName,
+          type: 'lowWaterMoved',
           subType: subType,
           origin: origin,
           oldValue: currentMark,
