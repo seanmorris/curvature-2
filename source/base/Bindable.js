@@ -5,13 +5,32 @@ const Binding    = Symbol('binding');
 const SubBinding = Symbol('subBinding');
 const BindingAll = Symbol('bindingAll');
 const IsBindable = Symbol('isBindable');
+const Wrapping   = Symbol('wrapping');
 const Executing  = Symbol('executing');
 const Stack      = Symbol('stack');
 const ObjSymbol  = Symbol('object');
 const Wrapped    = Symbol('wrapped');
+const Unwrapped  = Symbol('unwrapped');
 const GetProto   = Symbol('getProto');
 const OnGet      = Symbol('onGet');
 const OnAllGet   = Symbol('onAllGet');
+const BindChain  = Symbol('bindChain');
+
+const TypedArray  = Object.getPrototypeOf(Int8Array);
+
+const win = window || {};
+
+const excludedClasses = [
+	win.Node
+	, win.File
+	, win.Map
+	, win.Set
+	, win.ArrayBuffer
+	, win.ResizeObserver
+	, win.MutationObserver
+	, win.PerformanceObserver
+	, win.IntersectionObserver
+].filter(x=>typeof x === 'function');
 
 export class Bindable
 {
@@ -42,24 +61,79 @@ export class Bindable
 		return this.make(object);
 	}
 
+	static shuck(original, seen)
+	{
+		seen = seen || new Map;
+
+		const clone = {};
+
+		if(original instanceof TypedArray || original instanceof ArrayBuffer)
+		{
+			const clone = original.slice(0);
+			seen.set(original, clone);
+			return clone;
+		}
+
+		const properties = Object.getOwnPropertyNames(original);
+
+		for(const i in properties)
+		{
+			const ii = properties[i];
+
+			if(ii.substring(0, 3) === '___')
+			{
+				continue;
+			}
+
+			const alreadyCloned = seen.get(original[ii]);
+
+			if(alreadyCloned)
+			{
+				clone[ii] = alreadyCloned;
+				continue;
+			}
+
+			if(original[ii] === original)
+			{
+				seen.set(original[ii], clone);
+				clone[ii] = clone;
+				continue;
+			}
+
+			if(original[ii] && typeof original[ii] === 'object')
+			{
+				let originalProp = original[ii];
+
+				if(Bindable.isBindable(original[ii]))
+				{
+					originalProp = original[ii][Original];
+				}
+
+				clone[ii] = this.shuck(originalProp, seen);
+			}
+			else
+			{
+				clone[ii] = original[ii];
+			}
+
+			seen.set(original[ii], clone[ii]);
+		}
+
+		if(Bindable.isBindable(original))
+		{
+			delete clone.bindTo;
+			delete clone.isBound;
+		}
+
+		return clone;
+	}
+
 	static make(object)
 	{
 		if(!object || !['function', 'object'].includes(typeof object))
 		{
 			return object;
 		}
-
-		const win = window || {};
-
-		const excludedClasses = [
-			win.Node
-			, win.Map
-			, win.Set
-			, win.ResizeObserver
-			, win.MutationObserver
-			, win.PerformanceObserver
-			, win.IntersectionObserver
-		].filter(x=>typeof x === 'function');
 
 		if (excludedClasses.filter(x => object instanceof x).length
 			|| Object.isSealed(object)
@@ -82,6 +156,13 @@ export class Bindable
 			configurable: true
 			, enumerable: false
 			, writable:   true
+			, value:      object
+		});
+
+		Object.defineProperty(object, Original, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
 			, value:      object
 		});
 
@@ -125,6 +206,11 @@ export class Bindable
 			writable: true
 		});
 
+		Object.defineProperty(object, Wrapping, {
+			enumerable: false,
+			writable: true
+		});
+
 		Object.defineProperty(object, Stack, {
 			configurable: false
 			, enumerable: false
@@ -147,6 +233,13 @@ export class Bindable
 		});
 
 		Object.defineProperty(object, Wrapped, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      {}
+		});
+
+		Object.defineProperty(object, Unwrapped, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
@@ -351,7 +444,7 @@ export class Bindable
 			};
 		};
 
-		Object.defineProperty(object, 'bindChain', {
+		Object.defineProperty(object, BindChain, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
@@ -376,7 +469,7 @@ export class Bindable
 						v = t[k] = this.makeBindable({});
 					}
 
-					debind = debind.concat(v.bindChain(rest, callback));
+					debind = debind.concat(v[BindChain](rest, callback));
 				}));
 
 				// console.log(debind);
@@ -423,17 +516,26 @@ export class Bindable
 			, value:      isBound
 		});
 
-		for (let i in object) {
-			if (object[i]
-				&& object[i] instanceof Object
-				&& !object[i] instanceof Node
-				&& !object[i] instanceof Promise
-			) {
-				object[i] = Bindable.make(object[i]);
+		for(let i in object)
+		{
+			if(object[i] && object[i] instanceof Object && !object[i] instanceof Promise)
+			{
+				if(!excludedClasses.filter(excludeClass => object[i] instanceof excludeClass).length
+					&& Object.isExtensible(object[i])
+					&& !Object.isSealed(object[i])
+				){
+					object[i] = Bindable.make(object[i]);
+				}
 			}
 		}
 
 		const set = (target, key, value) => {
+
+			if(key === Original)
+			{
+				return true;
+			}
+
 			if(object[Deck][key] !== undefined && object[Deck][key] === value)
 			{
 				return true;
@@ -451,10 +553,12 @@ export class Bindable
 				return true;
 			}
 
-			if(value && value instanceof Object && !(value instanceof Node))
+			if(value && value instanceof Object)
 			{
-				if(!Bindable.isBindable(value))
-				{
+				if (!excludedClasses.filter(x => object instanceof x).length
+					&& Object.isExtensible(object)
+					&& !Object.isSealed(object)
+				) {
 					value = Bindable.makeBindable(value);
 				}
 			}
@@ -545,8 +649,27 @@ export class Bindable
 			return true;
 		};
 
+		const construct = (target, args) => {
+
+			const key = 'constructor';
+
+			for(let i in target.___before___)
+			{
+				target.___before___[i](target, key, target[Stack], undefined, args);
+			}
+
+			const instance = Bindable.make(new target[Original](...args));
+
+			for(let i in target.___after___)
+			{
+				target.___after___[i](target, key, target[Stack], instance, args);
+			}
+
+			return instance;
+		};
+
 		const get = (target, key) => {
-			if(key === Ref || key === 'isBound' || key === 'bindTo' || key === '__proto__')
+			if(key === Ref || key === Original || key === 'apply' ||  key === 'isBound' || key === 'bindTo' || key === '__proto__')
 			{
 				return target[key];
 			}
@@ -568,21 +691,43 @@ export class Bindable
 				return object[OnGet](key);
 			}
 
-			if(target[key] instanceof Function)
+			if(target[Wrapped][key])
 			{
-				if(target[Wrapped][key])
-				{
-					return Bindable.make(target[Wrapped][key]);
-				}
+				return target[Wrapped][key];
+			}
 
-				if(descriptor && !descriptor.configurable && !descriptor.writable)
-				{
-					target[Wrapped][key] = target[key];
+			if(descriptor && !descriptor.configurable && !descriptor.writable)
+			{
+				target[Wrapped][key] = target[key];
 
-					return target[Wrapped][key];
-				}
+				return target[Wrapped][key];
+			}
 
-				target[Wrapped][key] = function(...providedArgs){
+			if(typeof target[key] === 'function')
+			{
+				Object.defineProperty(target[Unwrapped], key, {
+					configurable: false
+					, enumerable: false
+					, writable:   false
+					, value:      target[key]
+				});
+
+				target[Wrapped][key] = Bindable.make(function(...providedArgs){
+
+					const objRef = (
+						object instanceof Promise
+						|| object instanceof Map
+						|| object instanceof Set
+						|| (typeof Date === 'function'                 && object instanceof Date)
+						|| (typeof TypedArray === 'function'           && object instanceof TypedArray)
+						|| (typeof ArrayBuffer === 'function'          && object instanceof ArrayBuffer)
+						|| (typeof EventTarget === 'function'          && object instanceof EventTarget)
+						|| (typeof ResizeObserver === 'function'       && object instanceof ResizeObserver)
+						|| (typeof MutationObserver === 'function'     && object instanceof MutationObserver)
+						|| (typeof PerformanceObserver === 'function'  && object instanceof PerformanceObserver)
+						|| (typeof IntersectionObserver === 'function' && object instanceof IntersectionObserver)
+					)	? object
+						: object[Ref];
 
 					target[Executing] = key;
 
@@ -593,22 +738,26 @@ export class Bindable
 						target.___before___[i](target, key, target[Stack], object, providedArgs);
 					}
 
-					const objRef = (
-						object instanceof Promise
-						|| object instanceof EventTarget
-						|| object instanceof MutationObserver
-						|| object instanceof IntersectionObserver
-						|| object instanceof MutationObserver
-						|| object instanceof PerformanceObserver
-						|| (typeof ResizeObserver === 'function' && object instanceof ResizeObserver)
-						|| object instanceof Map
-						|| object instanceof Set
-					)	? object
-						: object[Ref];
+					let ret;
 
-					const ret = new.target
-						? new target[key](...providedArgs)
-						: target[key].apply(objRef || object, providedArgs);
+					if(new.target)
+					{
+						ret = new target[Unwrapped][key](...providedArgs);
+					}
+					else
+					{
+						const prototype = Object.getPrototypeOf(target);
+						const isMethod  = prototype[key] === target[key];
+
+						if(isMethod)
+						{
+							ret = target[key].apply(objRef || object, providedArgs);
+						}
+						else
+						{
+							ret = target[key](...providedArgs);
+						}
+					}
 
 					for(const i in target.___after___)
 					{
@@ -620,36 +769,12 @@ export class Bindable
 					target[Stack].shift();
 
 					return ret;
-				};
+				});
 
 				return target[Wrapped][key];
 			}
 
-			if(target[key] instanceof Object && !target[key][Ref])
-			{
-				Bindable.make(target[key]);
-			}
-
 			return target[key];
-		};
-
-		const construct = (target, args) => {
-
-			const key = 'constructor';
-
-			for(let i in target.___before___)
-			{
-				target.___before___[i](target, key, target[Stack], undefined, args);
-			}
-
-			const instance = Bindable.make( new target(...args) );
-
-			for(let i in target.___after___)
-			{
-				target.___after___[i](target, key, target[Stack], instance, args);
-			}
-
-			return instance;
 		};
 
 		const getPrototypeOf = (target) => {
@@ -664,19 +789,10 @@ export class Bindable
 		Object.defineProperty(object, Ref, {
 			configurable: false
 			, enumerable: false
-			, writable:   true
-			, value:      object[Ref]
-		});
-
-		Object.defineProperty(object, Original, {
-			configurable: false
-			, enumerable: false
 			, writable:   false
-			, value:      object
-		});
-
-		object[Ref] = new Proxy(object, {
-			get, set, construct, getPrototypeOf, deleteProperty
+			, value:      new Proxy(object, {
+				get, set, construct, getPrototypeOf, deleteProperty
+			})
 		});
 
 		return object[Ref];
@@ -728,7 +844,7 @@ export class Bindable
 
 	static wrapDelayCallback(callback, delay)
 	{
-		return (v,k,t,d) => setTimeout(()=>callback(v,k,t,d,t[k]), delay);
+		return (...args) => setTimeout(()=>callback(...args), delay);
 	}
 
 	static wrapThrottleCallback(callback, throttle)
@@ -737,14 +853,14 @@ export class Bindable
 
 		return ((callback) => {
 
-			return (v,k,t,d) => {
+			return (...args) => {
 
 				if(this.throttles.get(callback, true))
 				{
 					return;
 				}
 
-				callback(v,k,t,d,t[k]);
+				callback(...args);
 
 				this.throttles.set(callback, true);
 
@@ -758,7 +874,7 @@ export class Bindable
 	{
 		let waiter = false;
 
-		return (v,k,t,d,p,...args) => {
+		return (...args) => {
 
 			if (waiter)
 			{
@@ -766,23 +882,23 @@ export class Bindable
 				waiter = false;
 			}
 
-			waiter = setTimeout(()=> callback(v,k,t,d,t[k],...args), wait);
+			waiter = setTimeout(()=> callback(...args), wait);
 		};
 	}
 
 	static wrapFrameCallback(callback, frames)
 	{
-		return (v,k,t,d,p,...args) => {
-			requestAnimationFrame(() => callback(v,k,t,d,p,...args));
+		return (...args) => {
+			requestAnimationFrame(() => callback(...args));
 		};
 	}
 
 	static wrapIdleCallback(callback)
 	{
-		return (v,k,t,d,p,...args) => {
+		return (...args) => {
 			// Compatibility for Safari 08/2020
 			const req = window.requestIdleCallback || requestAnimationFrame;
-			req(() => callback(v,k,t,d,p,...args));
+			req(() => callback(...args));
 		};
 	}
 }

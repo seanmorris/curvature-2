@@ -43,7 +43,7 @@ export class FormWrapper extends View
 					|| !resp.meta.form
 					|| !(resp.meta.form instanceof Object)
 				){
-					console.log('Cannot render form with ', resp);
+					console.warn('Cannot render form with ', resp);
 					// Router.go('/');
 					return;
 				}

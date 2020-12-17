@@ -110,7 +110,7 @@ export class View extends FieldSet
 			origin = Config.get('backend');
 		}
 
-		if(this.args.attrs['data-create-endpoint'] !== false)
+		if(this.args.attrs['data-create-endpoint'] !== false && this.args.attrs['data-create-endpoint'] !== undefined)
 		{
 			this.args.createForm = new CreateForm(
 				Object.assign({}, args)
@@ -131,12 +131,14 @@ export class View extends FieldSet
 			this.args.createFormReady = true;
 		}
 
-		console.log(this.args.createFormReady);
+		if(this.args.attrs['data-endpoint'])
+		{
+			this.args.searchForm = new SearchForm(
+				Object.assign({}, args)
+				, origin + this.args.attrs['data-endpoint']
+			);
+		}
 
-		this.args.searchForm = new SearchForm(
-			Object.assign({}, args)
-			, origin + this.args.attrs['data-endpoint']
-		);
 	}
 
 	wrapSubfield(field)

@@ -91,6 +91,7 @@ export class ViewList
 			}
 			else if(!this.views[kk] && !this.willReRender)
 			{
+				cancelAnimationFrame(this.willReRender);
 				this.willReRender = requestAnimationFrame(()=>{
 					this.reRender();
 				});
@@ -160,7 +161,7 @@ export class ViewList
 				k = Number(k);
 			}
 
-			for(let j in views)
+			for(let j = views.length - 1; j >= 0; j--)
 			{
 				if(views[j]
 					&& this.args.value[i] !== undefined
@@ -168,13 +169,17 @@ export class ViewList
 				){
 					found = true;
 					finalViews[k] = views[j];
+
 					if(!isNaN(k))
 					{
 						minKey = Math.min(minKey, k);
 						k > 0 && (anteMinKey = Math.min(anteMinKey, k));
 					}
+
 					finalViews[k].args[ this.keyProperty ] = i;
+
 					delete views[j];
+
 					break;
 				}
 			}

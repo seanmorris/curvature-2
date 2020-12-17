@@ -121,6 +121,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Bindable = void 0;
 
+function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -132,12 +138,6 @@ function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.it
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -156,13 +156,21 @@ var Binding = Symbol('binding');
 var SubBinding = Symbol('subBinding');
 var BindingAll = Symbol('bindingAll');
 var IsBindable = Symbol('isBindable');
+var Wrapping = Symbol('wrapping');
 var Executing = Symbol('executing');
 var Stack = Symbol('stack');
 var ObjSymbol = Symbol('object');
 var Wrapped = Symbol('wrapped');
+var Unwrapped = Symbol('unwrapped');
 var GetProto = Symbol('getProto');
 var OnGet = Symbol('onGet');
 var OnAllGet = Symbol('onAllGet');
+var BindChain = Symbol('bindChain');
+var TypedArray = Object.getPrototypeOf(Int8Array);
+var win = window || {};
+var excludedClasses = [win.Node, win.File, win.Map, win.Set, win.ArrayBuffer, win.ResizeObserver, win.MutationObserver, win.PerformanceObserver, win.IntersectionObserver].filter(function (x) {
+  return typeof x === 'function';
+});
 
 var Bindable = function () {
   function Bindable() {
@@ -194,6 +202,63 @@ var Bindable = function () {
       return this.make(object);
     }
   }, {
+    key: "shuck",
+    value: function shuck(original, seen) {
+      seen = seen || new Map();
+      var clone = {};
+
+      if (original instanceof TypedArray || original instanceof ArrayBuffer) {
+        var _clone = original.slice(0);
+
+        seen.set(original, _clone);
+        return _clone;
+      }
+
+      var properties = Object.getOwnPropertyNames(original);
+
+      for (var i in properties) {
+        var ii = properties[i];
+
+        if (ii.substring(0, 3) === '___') {
+          continue;
+        }
+
+        var alreadyCloned = seen.get(original[ii]);
+
+        if (alreadyCloned) {
+          clone[ii] = alreadyCloned;
+          continue;
+        }
+
+        if (original[ii] === original) {
+          seen.set(original[ii], clone);
+          clone[ii] = clone;
+          continue;
+        }
+
+        if (original[ii] && _typeof(original[ii]) === 'object') {
+          var originalProp = original[ii];
+
+          if (Bindable.isBindable(original[ii])) {
+            originalProp = original[ii][Original];
+          }
+
+          clone[ii] = this.shuck(originalProp, seen);
+        } else {
+          clone[ii] = original[ii];
+        }
+
+        seen.set(original[ii], clone[ii]);
+      }
+
+      if (Bindable.isBindable(original)) {
+        delete clone.bindTo;
+        delete clone.isBound;
+      }
+
+      return clone;
+    }
+  }, {
     key: "make",
     value: function make(object) {
       var _this = this;
@@ -201,11 +266,6 @@ var Bindable = function () {
       if (!object || !['function', 'object'].includes(_typeof(object))) {
         return object;
       }
-
-      var win = window || {};
-      var excludedClasses = [win.Node, win.Map, win.Set, win.ResizeObserver, win.MutationObserver, win.PerformanceObserver, win.IntersectionObserver].filter(function (x) {
-        return typeof x === 'function';
-      });
 
       if (excludedClasses.filter(function (x) {
         return object instanceof x;
@@ -225,6 +285,12 @@ var Bindable = function () {
         configurable: true,
         enumerable: false,
         writable: true,
+        value: object
+      });
+      Object.defineProperty(object, Original, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
         value: object
       });
       Object.defineProperty(object, Deck, {
@@ -261,6 +327,10 @@ var Bindable = function () {
         enumerable: false,
         writable: true
       });
+      Object.defineProperty(object, Wrapping, {
+        enumerable: false,
+        writable: true
+      });
       Object.defineProperty(object, Stack, {
         configurable: false,
         enumerable: false,
@@ -280,6 +350,12 @@ var Bindable = function () {
         value: []
       });
       Object.defineProperty(object, Wrapped, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: {}
+      });
+      Object.defineProperty(object, Unwrapped, {
         configurable: false,
         enumerable: false,
         writable: false,
@@ -465,7 +541,7 @@ var Bindable = function () {
         };
       };
 
-      Object.defineProperty(object, 'bindChain', {
+      Object.defineProperty(object, BindChain, {
         configurable: false,
         enumerable: false,
         writable: false,
@@ -486,7 +562,7 @@ var Bindable = function () {
               v = t[k] = _this.makeBindable({});
             }
 
-            debind = debind.concat(v.bindChain(rest, callback));
+            debind = debind.concat(v[BindChain](rest, callback));
           }));
           return function () {
             return debind.map(function (x) {
@@ -533,13 +609,25 @@ var Bindable = function () {
         value: isBound
       });
 
-      for (var i in object) {
-        if (object[i] && object[i] instanceof Object && !object[i] instanceof Node && !object[i] instanceof Promise) {
-          object[i] = Bindable.make(object[i]);
+      var _loop = function _loop(i) {
+        if (object[i] && object[i] instanceof Object && !object[i] instanceof Promise) {
+          if (!excludedClasses.filter(function (excludeClass) {
+            return object[i] instanceof excludeClass;
+          }).length && Object.isExtensible(object[i]) && !Object.isSealed(object[i])) {
+            object[i] = Bindable.make(object[i]);
+          }
         }
+      };
+
+      for (var i in object) {
+        _loop(i);
       }
 
       var set = function set(target, key, value) {
+        if (key === Original) {
+          return true;
+        }
+
         if (object[Deck][key] !== undefined && object[Deck][key] === value) {
           return true;
         }
@@ -552,8 +640,10 @@ var Bindable = function () {
           return true;
         }
 
-        if (value && value instanceof Object && !(value instanceof Node)) {
-          if (!Bindable.isBindable(value)) {
+        if (value && value instanceof Object) {
+          if (!excludedClasses.filter(function (x) {
+            return object instanceof x;
+          }).length && Object.isExtensible(object) && !Object.isSealed(object)) {
             value = Bindable.makeBindable(value);
           }
         }
@@ -623,8 +713,24 @@ var Bindable = function () {
         return true;
       };
 
+      var construct = function construct(target, args) {
+        var key = 'constructor';
+
+        for (var _i6 in target.___before___) {
+          target.___before___[_i6](target, key, target[Stack], undefined, args);
+        }
+
+        var instance = Bindable.make(_construct(target[Original], _toConsumableArray(args)));
+
+        for (var _i7 in target.___after___) {
+          target.___after___[_i7](target, key, target[Stack], instance, args);
+        }
+
+        return instance;
+      };
+
       var get = function get(target, key) {
-        if (key === Ref || key === 'isBound' || key === 'bindTo' || key === '__proto__') {
+        if (key === Ref || key === Original || key === 'apply' || key === 'isBound' || key === 'bindTo' || key === '__proto__') {
           return target[key];
         }
 
@@ -642,17 +748,24 @@ var Bindable = function () {
           return object[OnGet](key);
         }
 
-        if (target[key] instanceof Function) {
-          if (target[Wrapped][key]) {
-            return Bindable.make(target[Wrapped][key]);
-          }
+        if (target[Wrapped][key]) {
+          return target[Wrapped][key];
+        }
 
-          if (descriptor && !descriptor.configurable && !descriptor.writable) {
-            target[Wrapped][key] = target[key];
-            return target[Wrapped][key];
-          }
+        if (descriptor && !descriptor.configurable && !descriptor.writable) {
+          target[Wrapped][key] = target[key];
+          return target[Wrapped][key];
+        }
 
-          target[Wrapped][key] = function () {
+        if (typeof target[key] === 'function') {
+          Object.defineProperty(target[Unwrapped], key, {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: target[key]
+          });
+          target[Wrapped][key] = Bindable.make(function () {
+            var objRef = object instanceof Promise || object instanceof Map || object instanceof Set || typeof Date === 'function' && object instanceof Date || typeof TypedArray === 'function' && object instanceof TypedArray || typeof ArrayBuffer === 'function' && object instanceof ArrayBuffer || typeof EventTarget === 'function' && object instanceof EventTarget || typeof ResizeObserver === 'function' && object instanceof ResizeObserver || typeof MutationObserver === 'function' && object instanceof MutationObserver || typeof PerformanceObserver === 'function' && object instanceof PerformanceObserver || typeof IntersectionObserver === 'function' && object instanceof IntersectionObserver ? object : object[Ref];
             target[Executing] = key;
             target[Stack].unshift(key);
 
@@ -660,46 +773,37 @@ var Bindable = function () {
               providedArgs[_key3] = arguments[_key3];
             }
 
-            for (var _i6 in target.___before___) {
-              target.___before___[_i6](target, key, target[Stack], object, providedArgs);
+            for (var _i8 in target.___before___) {
+              target.___before___[_i8](target, key, target[Stack], object, providedArgs);
             }
 
-            var objRef = object instanceof Promise || object instanceof EventTarget || object instanceof MutationObserver || object instanceof IntersectionObserver || object instanceof MutationObserver || object instanceof PerformanceObserver || typeof ResizeObserver === 'function' && object instanceof ResizeObserver || object instanceof Map || object instanceof Set ? object : object[Ref];
-            var ret = new.target ? _construct(target[key], providedArgs) : target[key].apply(objRef || object, providedArgs);
+            var ret;
 
-            for (var _i7 in target.___after___) {
-              target.___after___[_i7](target, key, target[Stack], object, providedArgs);
+            if (new.target) {
+              ret = _construct(target[Unwrapped][key], providedArgs);
+            } else {
+              var prototype = Object.getPrototypeOf(target);
+              var isMethod = prototype[key] === target[key];
+
+              if (isMethod) {
+                ret = target[key].apply(objRef || object, providedArgs);
+              } else {
+                ret = target[key].apply(target, providedArgs);
+              }
+            }
+
+            for (var _i9 in target.___after___) {
+              target.___after___[_i9](target, key, target[Stack], object, providedArgs);
             }
 
             target[Executing] = null;
             target[Stack].shift();
             return ret;
-          };
-
+          });
           return target[Wrapped][key];
         }
 
-        if (target[key] instanceof Object && !target[key][Ref]) {
-          Bindable.make(target[key]);
-        }
-
         return target[key];
-      };
-
-      var construct = function construct(target, args) {
-        var key = 'constructor';
-
-        for (var _i8 in target.___before___) {
-          target.___before___[_i8](target, key, target[Stack], undefined, args);
-        }
-
-        var instance = Bindable.make(_construct(target, _toConsumableArray(args)));
-
-        for (var _i9 in target.___after___) {
-          target.___after___[_i9](target, key, target[Stack], instance, args);
-        }
-
-        return instance;
       };
 
       var getPrototypeOf = function getPrototypeOf(target) {
@@ -713,21 +817,14 @@ var Bindable = function () {
       Object.defineProperty(object, Ref, {
         configurable: false,
         enumerable: false,
-        writable: true,
-        value: object[Ref]
-      });
-      Object.defineProperty(object, Original, {
-        configurable: false,
-        enumerable: false,
         writable: false,
-        value: object
-      });
-      object[Ref] = new Proxy(object, {
-        get: get,
-        set: set,
-        construct: construct,
-        getPrototypeOf: getPrototypeOf,
-        deleteProperty: deleteProperty
+        value: new Proxy(object, {
+          get: get,
+          set: set,
+          construct: construct,
+          getPrototypeOf: getPrototypeOf,
+          deleteProperty: deleteProperty
+        })
       });
       return object[Ref];
     }
@@ -781,9 +878,13 @@ var Bindable = function () {
   }, {
     key: "wrapDelayCallback",
     value: function wrapDelayCallback(callback, delay) {
-      return function (v, k, t, d) {
+      return function () {
+        for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+          args[_key5] = arguments[_key5];
+        }
+
         return setTimeout(function () {
-          return callback(v, k, t, d, t[k]);
+          return callback.apply(void 0, args);
         }, delay);
       };
     }
@@ -794,12 +895,12 @@ var Bindable = function () {
 
       this.throttles.set(callback, false);
       return function (callback) {
-        return function (v, k, t, d) {
+        return function () {
           if (_this2.throttles.get(callback, true)) {
             return;
           }
 
-          callback(v, k, t, d, t[k]);
+          callback.apply(void 0, arguments);
 
           _this2.throttles.set(callback, true);
 
@@ -813,9 +914,9 @@ var Bindable = function () {
     key: "wrapWaitCallback",
     value: function wrapWaitCallback(callback, wait) {
       var waiter = false;
-      return function (v, k, t, d, p) {
-        for (var _len5 = arguments.length, args = new Array(_len5 > 5 ? _len5 - 5 : 0), _key5 = 5; _key5 < _len5; _key5++) {
-          args[_key5 - 5] = arguments[_key5];
+      return function () {
+        for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+          args[_key6] = arguments[_key6];
         }
 
         if (waiter) {
@@ -824,34 +925,34 @@ var Bindable = function () {
         }
 
         waiter = setTimeout(function () {
-          return callback.apply(void 0, [v, k, t, d, t[k]].concat(args));
+          return callback.apply(void 0, args);
         }, wait);
       };
     }
   }, {
     key: "wrapFrameCallback",
     value: function wrapFrameCallback(callback, frames) {
-      return function (v, k, t, d, p) {
-        for (var _len6 = arguments.length, args = new Array(_len6 > 5 ? _len6 - 5 : 0), _key6 = 5; _key6 < _len6; _key6++) {
-          args[_key6 - 5] = arguments[_key6];
+      return function () {
+        for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+          args[_key7] = arguments[_key7];
         }
 
         requestAnimationFrame(function () {
-          return callback.apply(void 0, [v, k, t, d, p].concat(args));
+          return callback.apply(void 0, args);
         });
       };
     }
   }, {
     key: "wrapIdleCallback",
     value: function wrapIdleCallback(callback) {
-      return function (v, k, t, d, p) {
-        for (var _len7 = arguments.length, args = new Array(_len7 > 5 ? _len7 - 5 : 0), _key7 = 5; _key7 < _len7; _key7++) {
-          args[_key7 - 5] = arguments[_key7];
+      return function () {
+        for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+          args[_key8] = arguments[_key8];
         }
 
         var req = window.requestIdleCallback || requestAnimationFrame;
         req(function () {
-          return callback.apply(void 0, [v, k, t, d, p].concat(args));
+          return callback.apply(void 0, args);
         });
       };
     }
@@ -3504,39 +3605,39 @@ var View = function (_Mixin$with) {
       this.paused = paused;
 
       if (this.paused) {
-        for (var _i in this.timeouts) {
-          if (this.timeouts[_i].fired) {
-            delete this.timeouts[_i];
+        for (var i in this.timeouts) {
+          if (this.timeouts[i].fired) {
+            delete this.timeouts[i];
             continue;
           }
 
-          clearTimeout(this.timeouts[_i].timeout);
+          clearTimeout(this.timeouts[i].timeout);
         }
 
-        for (var _i2 in this.intervals) {
-          clearInterval(this.intervals[_i2].timeout);
+        for (var _i in this.intervals) {
+          clearInterval(this.intervals[_i].timeout);
         }
       } else {
-        for (var _i3 in this.timeouts) {
-          if (!this.timeouts[_i3].timeout.paused) {
+        for (var _i2 in this.timeouts) {
+          if (!this.timeouts[_i2].timeout.paused) {
             continue;
           }
 
-          if (this.timeouts[_i3].fired) {
-            delete this.timeouts[_i3];
+          if (this.timeouts[_i2].fired) {
+            delete this.timeouts[_i2];
             continue;
           }
 
-          this.timeouts[_i3].timeout = setTimeout(this.timeouts[_i3].callback, this.timeouts[_i3].time);
+          this.timeouts[_i2].timeout = setTimeout(this.timeouts[_i2].callback, this.timeouts[_i2].time);
         }
 
-        for (var _i4 in this.intervals) {
-          if (!this.intervals[_i4].timeout.paused) {
+        for (var _i3 in this.intervals) {
+          if (!this.intervals[_i3].timeout.paused) {
             continue;
           }
 
-          this.intervals[_i4].timeout.paused = false;
-          this.intervals[_i4].timeout = setInterval(this.intervals[_i4].callback, this.intervals[_i4].time);
+          this.intervals[_i3].timeout.paused = false;
+          this.intervals[_i3].timeout = setInterval(this.intervals[_i3].callback, this.intervals[_i3].time);
         }
       }
 
@@ -3557,16 +3658,16 @@ var View = function (_Mixin$with) {
         _iterator.f();
       }
 
-      for (var _i5 in this.tags) {
-        if (Array.isArray(this.tags[_i5])) {
-          for (var j in this.tags[_i5]) {
-            this.tags[_i5][j].pause(!!paused);
+      for (var _i4 in this.tags) {
+        if (Array.isArray(this.tags[_i4])) {
+          for (var j in this.tags[_i4]) {
+            this.tags[_i4][j].pause(!!paused);
           }
 
           continue;
         }
 
-        this.tags[_i5].pause(!!paused);
+        this.tags[_i4].pause(!!paused);
       }
     }
   }, {
@@ -3673,8 +3774,8 @@ var View = function (_Mixin$with) {
       }));
       var attach = this.attach.items();
 
-      for (var _i6 in attach) {
-        attach[_i6](rootNode, parentNode);
+      for (var i in attach) {
+        attach[i](rootNode, parentNode);
       }
 
       this.nodes.filter(function (n) {
@@ -3716,8 +3817,8 @@ var View = function (_Mixin$with) {
       if (this.firstNode.isConnected) {
         var detach = this.detach.items();
 
-        for (var _i7 in detach) {
-          detach[_i7]();
+        for (var i in detach) {
+          detach[i]();
         }
       }
 
@@ -3828,16 +3929,16 @@ var View = function (_Mixin$with) {
 
         tag.removeAttribute('cv-expand');
 
-        var _loop = function _loop(_i8) {
-          if (_i8 === 'name' || _i8 === 'type') {
+        var _loop = function _loop(i) {
+          if (i === 'name' || i === 'type') {
             return "continue";
           }
 
-          var debind = expandArg.bindTo(_i8, function (tag, i) {
+          var debind = expandArg.bindTo(i, function (tag, i) {
             return function (v) {
               tag.setAttribute(i, v);
             };
-          }(tag, _i8));
+          }(tag, i));
           bindingView.onRemove(function () {
             debind();
 
@@ -3847,8 +3948,8 @@ var View = function (_Mixin$with) {
           });
         };
 
-        for (var _i8 in expandArg) {
-          var _ret = _loop(_i8);
+        for (var i in expandArg) {
+          var _ret = _loop(i);
 
           if (_ret === "continue") continue;
         }
@@ -3876,15 +3977,15 @@ var View = function (_Mixin$with) {
       return function (bindingView) {
         var tag = sourceTag.cloneNode(true);
 
-        var _loop2 = function _loop2(_i9) {
-          var bindProperty = attrs[_i9][1] || attrs[_i9][0];
+        var _loop2 = function _loop2(i) {
+          var bindProperty = attrs[i][1] || attrs[i][0];
 
           var _Bindable$resolve3 = _Bindable.Bindable.resolve(bindingView.args, bindProperty, true),
               _Bindable$resolve4 = _slicedToArray(_Bindable$resolve3, 2),
               proxy = _Bindable$resolve4[0],
               property = _Bindable$resolve4[1];
 
-          var attrib = attrs[_i9][0];
+          var attrib = attrs[i][0];
           bindingView.onRemove(proxy.bindTo(property, function (v, k, t, d) {
             if (d || v === undefined) {
               tag.removeAttribute(attrib, v);
@@ -3900,8 +4001,8 @@ var View = function (_Mixin$with) {
           }));
         };
 
-        for (var _i9 in attrs) {
-          _loop2(_i9);
+        for (var i in attrs) {
+          _loop2(i);
         }
 
         return tag;
@@ -4068,15 +4169,15 @@ var View = function (_Mixin$with) {
       }
 
       if (tag.nodeType === Node.ELEMENT_NODE) {
-        var _loop4 = function _loop4(_i10) {
-          if (!_this6.interpolatable(tag.attributes[_i10].value)) {
+        var _loop4 = function _loop4(i) {
+          if (!_this6.interpolatable(tag.attributes[i].value)) {
             return "continue";
           }
 
           var header = 0;
           var match = void 0;
-          var original = tag.attributes[_i10].value;
-          var attribute = tag.attributes[_i10];
+          var original = tag.attributes[i].value;
+          var attribute = tag.attributes[i];
           var bindProperties = {};
           var segments = [];
 
@@ -4124,9 +4225,9 @@ var View = function (_Mixin$with) {
                 v = transformer(v);
               }
 
-              for (var _i11 in bindProperties) {
+              for (var _i5 in bindProperties) {
                 for (var _j in bindProperties[longProperty]) {
-                  segments[bindProperties[longProperty][_j]] = t[_i11];
+                  segments[bindProperties[longProperty][_j]] = t[_i5];
 
                   if (k === property) {
                     segments[bindProperties[longProperty][_j]] = v;
@@ -4149,8 +4250,8 @@ var View = function (_Mixin$with) {
           }
         };
 
-        for (var _i10 = 0; _i10 < tag.attributes.length; _i10++) {
-          var _ret3 = _loop4(_i10);
+        for (var i = 0; i < tag.attributes.length; i++) {
+          var _ret3 = _loop4(i);
 
           if (_ret3 === "continue") continue;
         }
@@ -4273,26 +4374,19 @@ var View = function (_Mixin$with) {
             tag.dispatchEvent(autoChangedEvent);
           } else if (_type !== 'file') {
             if (tag.tagName === 'SELECT') {
-              var onAttach = function onAttach(parentNode) {
-                var _iterator2 = _createForOfIteratorHelper(tag.options),
-                    _step2;
+              var selectOption = function selectOption() {
+                for (var i = 0; i < tag.options.length; i++) {
+                  var option = tag.options[i];
 
-                try {
-                  for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-                    var option = _step2.value;
-
-                    if (option.value == v) {
-                      tag.selectedIndex = i;
-                    }
+                  if (option.value == v) {
+                    tag.selectedIndex = i;
                   }
-                } catch (err) {
-                  _iterator2.e(err);
-                } finally {
-                  _iterator2.f();
                 }
               };
 
-              _this7.attach.add(onAttach);
+              selectOption();
+
+              _this7.attach.add(selectOption);
             } else {
               tag.value = v == null ? '' : v;
             }
@@ -4301,32 +4395,32 @@ var View = function (_Mixin$with) {
           }
         } else {
           if (v instanceof View) {
-            var _iterator3 = _createForOfIteratorHelper(tag.childNodes),
-                _step3;
+            var _iterator2 = _createForOfIteratorHelper(tag.childNodes),
+                _step2;
 
             try {
-              for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-                var node = _step3.value;
+              for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                var node = _step2.value;
                 node.remove();
               }
             } catch (err) {
-              _iterator3.e(err);
+              _iterator2.e(err);
             } finally {
-              _iterator3.f();
+              _iterator2.f();
             }
 
-            var _onAttach = function _onAttach(parentNode) {
+            var onAttach = function onAttach(parentNode) {
               if (v.dispatchAttach()) {
                 v.attached(parentNode);
                 v.dispatchAttached();
               }
             };
 
-            _this7.attach.add(_onAttach);
+            _this7.attach.add(onAttach);
 
             v.render(tag);
             v.onRemove(function () {
-              return _this7.attach.remove(_onAttach);
+              return _this7.attach.remove(onAttach);
             });
           } else if (v instanceof Node) {
             tag.insert(v);
@@ -4339,19 +4433,19 @@ var View = function (_Mixin$with) {
               if (tag.innerHTML === v.substring(0, tag.innerHTML.length)) {
                 tag.innerHTML += v.substring(tag.innerHTML.length);
               } else {
-                var _iterator4 = _createForOfIteratorHelper(tag.childNodes),
-                    _step4;
+                var _iterator3 = _createForOfIteratorHelper(tag.childNodes),
+                    _step3;
 
                 try {
-                  for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-                    var _node = _step4.value;
+                  for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+                    var _node = _step3.value;
 
                     _node.remove();
                   }
                 } catch (err) {
-                  _iterator4.e(err);
+                  _iterator3.e(err);
                 } finally {
-                  _iterator4.f();
+                  _iterator3.f();
                 }
 
                 tag.innerHTML = v;
@@ -4363,19 +4457,19 @@ var View = function (_Mixin$with) {
             }
           } else {
             if (tag.textContent !== v) {
-              var _iterator5 = _createForOfIteratorHelper(tag.childNodes),
-                  _step5;
+              var _iterator4 = _createForOfIteratorHelper(tag.childNodes),
+                  _step4;
 
               try {
-                for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-                  var _node2 = _step5.value;
+                for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+                  var _node2 = _step4.value;
 
                   _node2.remove();
                 }
               } catch (err) {
-                _iterator5.e(err);
+                _iterator4.e(err);
               } finally {
-                _iterator5.f();
+                _iterator4.f();
               }
 
               tag.textContent = v;
@@ -4413,24 +4507,24 @@ var View = function (_Mixin$with) {
           if (!current || !files.length) {
             proxy[property] = files;
           } else {
-            var _loop6 = function _loop6(_i12) {
-              if (files[_i12] !== current[_i12]) {
-                files[_i12].toJSON = function () {
+            var _loop6 = function _loop6(i) {
+              if (files[i] !== current[i]) {
+                files[i].toJSON = function () {
                   return {
-                    name: file[_i12].name,
-                    size: file[_i12].size,
-                    type: file[_i12].type,
-                    date: file[_i12].lastModified
+                    name: file[i].name,
+                    size: file[i].size,
+                    type: file[i].type,
+                    date: file[i].lastModified
                   };
                 };
 
-                current[_i12] = files[_i12];
+                current[i] = files[i];
                 return "break";
               }
             };
 
-            for (var _i12 in files) {
-              var _ret4 = _loop6(_i12);
+            for (var i in files) {
+              var _ret4 = _loop6(i);
 
               if (_ret4 === "break") break;
             }
@@ -4716,8 +4810,8 @@ var View = function (_Mixin$with) {
 
         view.template = subTemplate;
 
-        var _loop7 = function _loop7(_i13) {
-          var debind = _this9.args.bindTo(carryProps[_i13], function (v, k) {
+        var _loop7 = function _loop7(i) {
+          var debind = _this9.args.bindTo(carryProps[i], function (v, k) {
             view.args[k] = v;
           });
 
@@ -4729,15 +4823,15 @@ var View = function (_Mixin$with) {
           });
         };
 
-        for (var _i13 in carryProps) {
-          _loop7(_i13);
+        for (var i in carryProps) {
+          _loop7(i);
         }
 
-        var _loop8 = function _loop8(_i14) {
-          var debind = v.bindTo(_i14, function (vv, kk) {
+        var _loop8 = function _loop8(_i6) {
+          var debind = v.bindTo(_i6, function (vv, kk) {
             view.args[kk] = vv;
           });
-          var debindUp = view.args.bindTo(_i14, function (vv, kk) {
+          var debindUp = view.args.bindTo(_i6, function (vv, kk) {
             v[kk] = vv;
           });
 
@@ -4760,8 +4854,8 @@ var View = function (_Mixin$with) {
           });
         };
 
-        for (var _i14 in v) {
-          _loop8(_i14);
+        for (var _i6 in v) {
+          _loop8(_i6);
         }
 
         view.render(tag);
@@ -4898,10 +4992,13 @@ var View = function (_Mixin$with) {
       var _this12 = this;
 
       var sourceTag = tag;
+      var viewProperty = tag.getAttribute('cv-view');
       var ifProperty = sourceTag.getAttribute('cv-if');
       var inverted = false;
       var defined = false;
+      sourceTag.removeAttribute('cv-view');
       sourceTag.removeAttribute('cv-if');
+      var viewClass = viewProperty ? this.stringToClass(viewProperty) : View;
 
       if (ifProperty.substr(0, 1) === '!') {
         ifProperty = ifProperty.substr(1);
@@ -4919,21 +5016,15 @@ var View = function (_Mixin$with) {
       });
       var bindingView = this;
       var ifDoc = new DocumentFragment();
-      var view = new View(this.args, bindingView);
+      var view = new viewClass(this.args, bindingView);
+      this.onRemove(view.tags.bindTo(function (v, k) {
+        console.log(k);
+        _this12.tags[k] = v;
+      }));
       view.template = subTemplate;
       var proxy = bindingView.args;
       var property = ifProperty;
-
-      if (ifProperty.match(/\./)) {
-        var _Bindable$resolve11 = _Bindable.Bindable.resolve(bindingView.args, ifProperty, true);
-
-        var _Bindable$resolve12 = _slicedToArray(_Bindable$resolve11, 2);
-
-        proxy = _Bindable$resolve12[0];
-        property = _Bindable$resolve12[1];
-      }
-
-      var hasRendered = false;
+      view.render(ifDoc);
       var propertyDebind = proxy.bindTo(property, function (v, k) {
         var o = v;
 
@@ -4947,11 +5038,6 @@ var View = function (_Mixin$with) {
 
         if (inverted) {
           v = !v;
-        }
-
-        if (!hasRendered) {
-          view.render(ifDoc);
-          hasRendered = true;
         }
 
         if (v) {
@@ -5018,12 +5104,12 @@ var View = function (_Mixin$with) {
         var property = ifProperty;
 
         if (ifProperty.match(/\./)) {
-          var _Bindable$resolve13 = _Bindable.Bindable.resolve(bindingView.args, ifProperty, true);
+          var _Bindable$resolve11 = _Bindable.Bindable.resolve(bindingView.args, ifProperty, true);
 
-          var _Bindable$resolve14 = _slicedToArray(_Bindable$resolve13, 2);
+          var _Bindable$resolve12 = _slicedToArray(_Bindable$resolve11, 2);
 
-          proxy = _Bindable$resolve14[0];
-          property = _Bindable$resolve14[1];
+          proxy = _Bindable$resolve12[0];
+          property = _Bindable$resolve12[1];
         }
 
         var hasRendered = false;
@@ -5194,23 +5280,23 @@ var View = function (_Mixin$with) {
       var now = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
       var remover = function remover() {
-        for (var _i15 in _this14.tags) {
-          if (Array.isArray(_this14.tags[_i15])) {
-            _this14.tags[_i15] && _this14.tags[_i15].map(function (t) {
+        for (var _i7 in _this14.tags) {
+          if (Array.isArray(_this14.tags[_i7])) {
+            _this14.tags[_i7] && _this14.tags[_i7].map(function (t) {
               return t.remove();
             });
 
-            _this14.tags[_i15].splice(0);
+            _this14.tags[_i7].splice(0);
           } else {
-            _this14.tags[_i15] && _this14.tags[_i15].remove();
-            _this14.tags[_i15] = undefined;
+            _this14.tags[_i7] && _this14.tags[_i7].remove();
+            _this14.tags[_i7] = undefined;
           }
         }
 
-        for (var _i16 in _this14.nodes) {
-          _this14.nodes[_i16] && _this14.nodes[_i16].dispatchEvent(new Event('cvDomDetached'));
-          _this14.nodes[_i16] && _this14.nodes[_i16].remove();
-          _this14.nodes[_i16] = undefined;
+        for (var _i8 in _this14.nodes) {
+          _this14.nodes[_i8] && _this14.nodes[_i8].dispatchEvent(new Event('cvDomDetached'));
+          _this14.nodes[_i8] && _this14.nodes[_i8].remove();
+          _this14.nodes[_i8] = undefined;
         }
 
         _this14.nodes.splice(0);
@@ -5226,21 +5312,21 @@ var View = function (_Mixin$with) {
 
       var callbacks = this._onRemove.items();
 
-      var _iterator6 = _createForOfIteratorHelper(callbacks),
-          _step6;
+      var _iterator5 = _createForOfIteratorHelper(callbacks),
+          _step5;
 
       try {
-        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-          var callback = _step6.value;
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var callback = _step5.value;
 
           this._onRemove.remove(callback);
 
           callback();
         }
       } catch (err) {
-        _iterator6.e(err);
+        _iterator5.e(err);
       } finally {
-        _iterator6.f();
+        _iterator5.f();
       }
 
       var cleanup;
@@ -5249,28 +5335,28 @@ var View = function (_Mixin$with) {
         cleanup && cleanup();
       }
 
-      var _iterator7 = _createForOfIteratorHelper(this.viewLists),
-          _step7;
+      var _iterator6 = _createForOfIteratorHelper(this.viewLists),
+          _step6;
 
       try {
-        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var _step7$value = _slicedToArray(_step7.value, 2),
-              tag = _step7$value[0],
-              viewList = _step7$value[1];
+        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+          var _step6$value = _slicedToArray(_step6.value, 2),
+              tag = _step6$value[0],
+              viewList = _step6$value[1];
 
           viewList.remove();
         }
       } catch (err) {
-        _iterator7.e(err);
+        _iterator6.e(err);
       } finally {
-        _iterator7.f();
+        _iterator6.f();
       }
 
       this.viewLists.clear();
 
-      for (var _i17 in this.timeouts) {
-        clearTimeout(this.timeouts[_i17].timeout);
-        delete this.timeouts[_i17];
+      for (var _i9 in this.timeouts) {
+        clearTimeout(this.timeouts[_i9].timeout);
+        delete this.timeouts[_i9];
       }
 
       for (var i in this.intervals) {
@@ -5288,18 +5374,18 @@ var View = function (_Mixin$with) {
   }, {
     key: "findTag",
     value: function findTag(selector) {
-      for (var _i18 in this.nodes) {
+      for (var i in this.nodes) {
         var result = void 0;
 
-        if (!this.nodes[_i18].querySelector) {
+        if (!this.nodes[i].querySelector) {
           continue;
         }
 
-        if (this.nodes[_i18].matches(selector)) {
-          return new _Tag.Tag(this.nodes[_i18], this, undefined, undefined, this);
+        if (this.nodes[i].matches(selector)) {
+          return new _Tag.Tag(this.nodes[i], this, undefined, undefined, this);
         }
 
-        if (result = this.nodes[_i18].querySelector(selector)) {
+        if (result = this.nodes[i].querySelector(selector)) {
           return new _Tag.Tag(result, this, undefined, undefined, this);
         }
       }
@@ -5555,6 +5641,7 @@ var ViewList = function () {
           _this.views[i].args[_this.keyProperty] = i;
         }
       } else if (!_this.views[kk] && !_this.willReRender) {
+        cancelAnimationFrame(_this.willReRender);
         _this.willReRender = requestAnimationFrame(function () {
           _this.reRender();
         });
@@ -5637,7 +5724,7 @@ var ViewList = function () {
           k = Number(k);
         }
 
-        for (var _j in views) {
+        for (var _j = views.length - 1; _j >= 0; _j--) {
           if (views[_j] && _this3.args.value[_i] !== undefined && _this3.args.value[_i] === views[_j].args[_this3.subProperty]) {
             found = true;
             finalViews[k] = views[_j];

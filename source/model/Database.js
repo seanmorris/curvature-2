@@ -125,7 +125,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				? record[Database.BeforeInsert](detail)
 				: null;
 
-			const request = store.add(Object.assign({}, JSON.parse(JSON.stringify(record))));
+			const request = store.add(Object.assign({}, Bindable.shuck(record)));
 
 			if(beforeWriteResult === false || beforeInsertResult === false)
 			{
@@ -229,7 +229,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				return;
 			}
 
-			const request = store.put(Object.assign({}, JSON.parse(JSON.stringify(record))));
+			const request = store.put(Object.assign({}, Bindable.shuck(record)));
 
 			request.onerror = error => {
 				this.dispatchEvent(new CustomEvent('writeError', {detail}));

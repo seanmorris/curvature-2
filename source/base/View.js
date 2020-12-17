@@ -1244,9 +1244,11 @@ export class View extends Mixin.with(EventTargetMixin)
 				{
 					if(tag.tagName === 'SELECT')
 					{
-						const onAttach = (parentNode) => {
-							for(const option of tag.options)
+						const selectOption = () => {
+							for(let i = 0; i < tag.options.length; i++)
 							{
+								const option = tag.options[i];
+
 								if(option.value == v)
 								{
 									tag.selectedIndex = i;
@@ -1254,7 +1256,9 @@ export class View extends Mixin.with(EventTargetMixin)
 							}
 						};
 
-						this.attach.add(onAttach);
+						selectOption();
+
+						this.attach.add(selectOption);
 					}
 					else
 					{
@@ -1920,24 +1924,18 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	mapIfTag(tag)
 	{
-		/*/
-		const tagCompiler = this.compileIfTag(tag);
+		const sourceTag  = tag;
+		let viewProperty = tag.getAttribute('cv-view');
+		let ifProperty   = sourceTag.getAttribute('cv-if');
+		let inverted     = false;
+		let defined      = false;
 
-		const newTag = tagCompiler(this);
-
-		tag.replaceWith(newTag);
-
-		return newTag;
-
-		/*/
-
-		const sourceTag = tag;
-
-		let ifProperty = sourceTag.getAttribute('cv-if');
-		let inverted   = false;
-		let defined    = false;
-
+		sourceTag.removeAttribute('cv-view');
 		sourceTag.removeAttribute('cv-if');
+
+		const viewClass = viewProperty
+			? this.stringToClass(viewProperty)
+			: View;
 
 		if(ifProperty.substr(0, 1) === '!')
 		{
@@ -1962,12 +1960,14 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const ifDoc = new DocumentFragment;
 
-		let view = new View(this.args, bindingView);
+		let view = new viewClass(this.args, bindingView);
+
+		this.onRemove(view.tags.bindTo((v,k)=>{
+			console.log(k);
+			this.tags[k]=v
+		}));
 
 		view.template = subTemplate;
-		// view.parent   = bindingView;
-
-		// bindingView.syncBind(view);
 
 		let proxy    = bindingView.args;
 		let property = ifProperty;
@@ -1981,7 +1981,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			);
 		}
 
-		let hasRendered = false;
+		view.render(ifDoc);
 
 		const propertyDebind = proxy.bindTo(property, (v,k) => {
 
@@ -2000,13 +2000,6 @@ export class View extends Mixin.with(EventTargetMixin)
 			if(inverted)
 			{
 				v = !v;
-			}
-
-			if(!hasRendered)
-			{
-				view.render(ifDoc);
-
-				hasRendered = true;
 			}
 
 			if(v)
