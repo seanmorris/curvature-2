@@ -6,7 +6,7 @@ const Changed = Symbol('Changed');
 
 export class Model
 {
-	static keyProps(){ return ['id', 'class'] }
+	static get keyProps(){ return ['id', 'class'] };
 
 	constructor()
 	{
@@ -14,20 +14,18 @@ export class Model
 
 		Object.defineProperty(this, Saved, {writable: true, value:  false});
 
-		// return Bindable.makeBindable(this);
+		return Bindable.makeBindable(this);
 	}
 
 	static from(skeleton)
 	{
-		const keyProps = this.keyProps();
+		const keyProps = this.keyProps;
 		const cacheKey = keyProps.map(prop => skeleton[prop]).join('::');
 
 		const bucket   = 'models-by-type-and-publicId';
 		const cached   = Cache.load(cacheKey, false, bucket);
 
-		const instance = cached
-			? cached
-			: Bindable.makeBindable(new this);
+		const instance = cached ? cached : new this;
 
 		for(const keyProp of keyProps)
 		{
@@ -66,13 +64,13 @@ export class Model
 
 	consume(skeleton, override = false)
 	{
-		const keyProps = this.__proto__.constructor.keyProps();
+		const keyProps = Model.keyProps;
 
 		const setProp = (property, value) => {
 
-			if(value && typeof value === 'object' && value.__proto__.constructor.keyProps)
+			if(value && typeof value === 'object' && value.constructor.keyProps)
 			{
-				const subKeyProps  = value.__proto__.constructor.keyProps();
+				const subKeyProps  = value.constructor.keyProps;
 				const propCacheKey = subKeyProps.map(prop => value[prop]).join('::');
 
 				const bucket       = 'models-by-type-and-publicId';

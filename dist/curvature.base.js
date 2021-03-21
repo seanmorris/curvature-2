@@ -14,11 +14,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var toId = function toId(_int) {
-  return Number(_int).toString(36);
+  return Number(_int);
 };
 
 var fromId = function fromId(id) {
-  return parseInt(id, 36);
+  return parseInt(id);
 };
 
 var Bag = function () {
@@ -29,13 +29,18 @@ var Bag = function () {
 
     this.meta = Symbol('meta');
     this.content = new Map();
-    this.list = _Bindable.Bindable.makeBindable({});
+    this.list = _Bindable.Bindable.makeBindable([]);
     this.current = 0;
     this.type = undefined;
     this.changeCallback = changeCallback;
   }
 
   _createClass(Bag, [{
+    key: "has",
+    value: function has(item) {
+      return this.content.has(item);
+    }
+  }, {
     key: "add",
     value: function add(item) {
       if (item === undefined || !(item instanceof Object)) {
@@ -157,6 +162,7 @@ var SubBinding = Symbol('subBinding');
 var BindingAll = Symbol('bindingAll');
 var IsBindable = Symbol('isBindable');
 var Wrapping = Symbol('wrapping');
+var Names = Symbol('Names');
 var Executing = Symbol('executing');
 var Stack = Symbol('stack');
 var ObjSymbol = Symbol('object');
@@ -166,9 +172,11 @@ var GetProto = Symbol('getProto');
 var OnGet = Symbol('onGet');
 var OnAllGet = Symbol('onAllGet');
 var BindChain = Symbol('bindChain');
+var Descriptors = Symbol('Descriptors');
 var TypedArray = Object.getPrototypeOf(Int8Array);
+var emptyObject = {};
 var win = window || {};
-var excludedClasses = [win.Node, win.File, win.Map, win.Set, win.ArrayBuffer, win.ResizeObserver, win.MutationObserver, win.PerformanceObserver, win.IntersectionObserver].filter(function (x) {
+var excludedClasses = [win.Node, win.File, win.Map, win.Set, win.WeakMap, win.WeakSet, win.ArrayBuffer, win.ResizeObserver, win.MutationObserver, win.PerformanceObserver, win.IntersectionObserver].filter(function (x) {
   return typeof x === 'function';
 });
 
@@ -194,7 +202,7 @@ var Bindable = function () {
   }, {
     key: "ref",
     value: function ref(object) {
-      return object[Ref] || false;
+      return object[Ref] || object || false;
     }
   }, {
     key: "makeBindable",
@@ -214,7 +222,7 @@ var Bindable = function () {
         return _clone;
       }
 
-      var properties = Object.getOwnPropertyNames(original);
+      var properties = Object.keys(original);
 
       for (var i in properties) {
         var ii = properties[i];
@@ -274,7 +282,7 @@ var Bindable = function () {
       }
 
       if (object[Ref]) {
-        return object;
+        return object[Ref];
       }
 
       if (object[Binding]) {
@@ -285,7 +293,7 @@ var Bindable = function () {
         configurable: true,
         enumerable: false,
         writable: true,
-        value: object
+        value: false
       });
       Object.defineProperty(object, Original, {
         configurable: false,
@@ -360,6 +368,12 @@ var Bindable = function () {
         enumerable: false,
         writable: false,
         value: {}
+      });
+      Object.defineProperty(object, Descriptors, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: new Map()
       });
 
       var bindTo = function bindTo(property) {
@@ -687,7 +701,16 @@ var Bindable = function () {
           }
         }
 
-        return Reflect.set(target, key, value);
+        var result = Reflect.set(target, key, value);
+
+        if (Array.isArray(target) && object[Binding]['length']) {
+          for (var _i4 in object[Binding]['length']) {
+            var callback = object[Binding]['length'][_i4];
+            callback(target.length, 'length', target, false, target.length);
+          }
+        }
+
+        return result;
       };
 
       var deleteProperty = function deleteProperty(target, key) {
@@ -695,17 +718,17 @@ var Bindable = function () {
           return true;
         }
 
-        for (var _i4 in object[BindingAll]) {
-          object[BindingAll][_i4](undefined, key, target, true, target[key]);
+        for (var _i5 in object[BindingAll]) {
+          object[BindingAll][_i5](undefined, key, target, true, target[key]);
         }
 
         if (key in object[Binding]) {
-          for (var _i5 in object[Binding][key]) {
-            if (!object[Binding][key][_i5]) {
+          for (var _i6 in object[Binding][key]) {
+            if (!object[Binding][key][_i6]) {
               continue;
             }
 
-            object[Binding][key][_i5](undefined, key, target, true, target[key]);
+            object[Binding][key][_i6](undefined, key, target, true, target[key]);
           }
         }
 
@@ -716,94 +739,122 @@ var Bindable = function () {
       var construct = function construct(target, args) {
         var key = 'constructor';
 
-        for (var _i6 in target.___before___) {
-          target.___before___[_i6](target, key, target[Stack], undefined, args);
+        for (var _i7 in target.___before___) {
+          target.___before___[_i7](target, key, object[Stack], undefined, args);
         }
 
         var instance = Bindable.make(_construct(target[Original], _toConsumableArray(args)));
 
-        for (var _i7 in target.___after___) {
-          target.___after___[_i7](target, key, target[Stack], instance, args);
+        for (var _i8 in target.___after___) {
+          target.___after___[_i8](target, key, object[Stack], instance, args);
         }
 
         return instance;
       };
 
+      var descriptors = object[Descriptors];
+      var wrapped = object[Wrapped];
+      var stack = object[Stack];
+
       var get = function get(target, key) {
-        if (key === Ref || key === Original || key === 'apply' || key === 'isBound' || key === 'bindTo' || key === '__proto__') {
-          return target[key];
+        if (key === Ref || key === Original || key === 'apply' || key === 'isBound' || key === 'bindTo' || key === '__proto__' || key === 'constructor') {
+          return object[key];
         }
 
-        var descriptor = Object.getOwnPropertyDescriptor(object, key);
+        if (key in wrapped) {
+          if (key in emptyObject && window.startDump === true) {
+            console.log(key);
+          }
+
+          return wrapped[key];
+        }
+
+        var descriptor;
+
+        if (descriptors.has(key)) {
+          descriptor = descriptors.get(key);
+        } else {
+          descriptor = Object.getOwnPropertyDescriptor(object, key);
+          descriptors.set(key, descriptor);
+        }
 
         if (descriptor && !descriptor.configurable && !descriptor.writable) {
-          return target[key];
+          return object[key];
         }
 
-        if (object[OnAllGet]) {
+        if (OnAllGet in object) {
           return object[OnAllGet](key);
         }
 
-        if (object[OnGet] && !(key in object)) {
+        if (OnGet in object && !(key in object)) {
           return object[OnGet](key);
         }
 
-        if (target[Wrapped][key]) {
-          return target[Wrapped][key];
-        }
-
         if (descriptor && !descriptor.configurable && !descriptor.writable) {
-          target[Wrapped][key] = target[key];
-          return target[Wrapped][key];
+          wrapped[key] = object[key];
+          return wrapped[key];
         }
 
-        if (typeof target[key] === 'function') {
-          Object.defineProperty(target[Unwrapped], key, {
+        if (typeof object[key] === 'function') {
+          Object.defineProperty(object[Unwrapped], key, {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: target[key]
+            value: object[key]
           });
-          target[Wrapped][key] = Bindable.make(function () {
-            var objRef = object instanceof Promise || object instanceof Map || object instanceof Set || typeof Date === 'function' && object instanceof Date || typeof TypedArray === 'function' && object instanceof TypedArray || typeof ArrayBuffer === 'function' && object instanceof ArrayBuffer || typeof EventTarget === 'function' && object instanceof EventTarget || typeof ResizeObserver === 'function' && object instanceof ResizeObserver || typeof MutationObserver === 'function' && object instanceof MutationObserver || typeof PerformanceObserver === 'function' && object instanceof PerformanceObserver || typeof IntersectionObserver === 'function' && object instanceof IntersectionObserver ? object : object[Ref];
-            target[Executing] = key;
-            target[Stack].unshift(key);
+
+          var wrappedMethod = function wrappedMethod() {
+            var SetIterator = Set.prototype[Symbol.iterator];
+            var MapIterator = Map.prototype[Symbol.iterator];
+            var objRef = typeof Promise === 'function' && object instanceof Promise || typeof Map === 'function' && object instanceof Map || typeof Set === 'function' && object instanceof Set || typeof MapIterator === 'function' && object.prototype === MapIterator || typeof SetIterator === 'function' && object.prototype === SetIterator || typeof SetIterator === 'function' && object.prototype === SetIterator || typeof WeakMap === 'function' && object instanceof WeakMap || typeof WeakSet === 'function' && object instanceof WeakSet || typeof Date === 'function' && object instanceof Date || typeof TypedArray === 'function' && object instanceof TypedArray || typeof ArrayBuffer === 'function' && object instanceof ArrayBuffer || typeof EventTarget === 'function' && object instanceof EventTarget || typeof ResizeObserver === 'function' && object instanceof ResizeObserver || typeof MutationObserver === 'function' && object instanceof MutationObserver || typeof PerformanceObserver === 'function' && object instanceof PerformanceObserver || typeof IntersectionObserver === 'function' && object instanceof IntersectionObserver || typeof object[Symbol.iterator] === 'function' && key === 'next' ? object : object[Ref];
+            object[Executing] = key;
+            stack.unshift(key);
 
             for (var _len3 = arguments.length, providedArgs = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
               providedArgs[_key3] = arguments[_key3];
             }
 
-            for (var _i8 in target.___before___) {
-              target.___before___[_i8](target, key, target[Stack], object, providedArgs);
+            for (var _i9 in object.___before___) {
+              object.___before___[_i9](object, key, stack, object, providedArgs);
             }
 
             var ret;
 
             if (new.target) {
-              ret = _construct(target[Unwrapped][key], providedArgs);
+              ret = _construct(object[Unwrapped][key], providedArgs);
             } else {
-              var prototype = Object.getPrototypeOf(target);
-              var isMethod = prototype[key] === target[key];
+              var prototype = Object.getPrototypeOf(object);
+              var isMethod = prototype[key] === object[key];
 
               if (isMethod) {
-                ret = target[key].apply(objRef || object, providedArgs);
+                ret = object[key].apply(objRef || object, providedArgs);
               } else {
-                ret = target[key].apply(target, providedArgs);
+                ret = object[key].apply(object, providedArgs);
               }
             }
 
-            for (var _i9 in target.___after___) {
-              target.___after___[_i9](target, key, target[Stack], object, providedArgs);
+            for (var _i10 in object.___after___) {
+              object.___after___[_i10](object, key, stack, object, providedArgs);
             }
 
-            target[Executing] = null;
-            target[Stack].shift();
+            object[Executing] = null;
+            stack.shift();
             return ret;
-          });
-          return target[Wrapped][key];
+          };
+
+          wrappedMethod[Names] = wrappedMethod[Names] || new WeakMap();
+          wrappedMethod[Names].set(object, key);
+
+          wrappedMethod[OnAllGet] = function (key) {
+            var selfName = wrappedMethod[Names].get(object);
+            return object[selfName][key];
+          };
+
+          wrapped[key] = Bindable.make(wrappedMethod);
+          return wrapped[key];
         }
 
-        return target[key];
+        return object[key];
       };
 
       var getPrototypeOf = function getPrototypeOf(target) {
@@ -894,39 +945,43 @@ var Bindable = function () {
       var _this2 = this;
 
       this.throttles.set(callback, false);
-      return function (callback) {
-        return function () {
-          if (_this2.throttles.get(callback, true)) {
-            return;
-          }
+      return function () {
+        if (_this2.throttles.get(callback, true)) {
+          return;
+        }
 
-          callback.apply(void 0, arguments);
+        callback.apply(void 0, arguments);
 
-          _this2.throttles.set(callback, true);
+        _this2.throttles.set(callback, true);
 
-          setTimeout(function () {
-            _this2.throttles.set(callback, false);
-          }, throttle);
-        };
-      }(callback);
+        setTimeout(function () {
+          _this2.throttles.set(callback, false);
+        }, throttle);
+      };
     }
   }, {
     key: "wrapWaitCallback",
     value: function wrapWaitCallback(callback, wait) {
-      var waiter = false;
+      var _this3 = this;
+
       return function () {
         for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
           args[_key6] = arguments[_key6];
         }
 
-        if (waiter) {
+        var waiter;
+
+        if (waiter = _this3.waiters.get(callback)) {
+          _this3.waiters["delete"](callback);
+
           clearTimeout(waiter);
-          waiter = false;
         }
 
         waiter = setTimeout(function () {
           return callback.apply(void 0, args);
         }, wait);
+
+        _this3.waiters.set(callback, waiter);
       };
     }
   }, {
@@ -962,6 +1017,8 @@ var Bindable = function () {
 }();
 
 exports.Bindable = Bindable;
+
+_defineProperty(Bindable, "waiters", new WeakMap());
 
 _defineProperty(Bindable, "throttles", new WeakMap());
 
@@ -1420,7 +1477,7 @@ var Mixin = function () {
             args[_key2] = arguments[_key2];
           }
 
-          _this = _super.call.apply(_super, [this].concat(args));
+          var instance = _this = _super.call.apply(_super, [this].concat(args));
 
           var _iterator = _createForOfIteratorHelper(mixins),
               _step;
@@ -1445,7 +1502,7 @@ var Mixin = function () {
             _iterator.f();
           }
 
-          return _this;
+          return _possibleConstructorReturn(_this, instance);
         }
 
         return newClass;
@@ -1454,10 +1511,34 @@ var Mixin = function () {
       return newClass;
     }
   }, {
+    key: "to",
+    value: function to(base) {
+      var descriptors = {};
+
+      for (var _len3 = arguments.length, mixins = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        mixins[_key3 - 1] = arguments[_key3];
+      }
+
+      mixins.map(function (mixin) {
+        switch (_typeof(mixin)) {
+          case 'object':
+            Object.assign(descriptors, Object.getOwnPropertyDescriptors(mixin));
+            break;
+
+          case 'function':
+            Object.assign(descriptors, Object.getOwnPropertyDescriptors(mixin.prototype));
+            break;
+        }
+
+        delete descriptors.constructor;
+        Object.defineProperties(base.prototype, descriptors);
+      });
+    }
+  }, {
     key: "with",
     value: function _with() {
-      for (var _len3 = arguments.length, mixins = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        mixins[_key3] = arguments[_key3];
+      for (var _len4 = arguments.length, mixins = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        mixins[_key4] = arguments[_key4];
       }
 
       return this.from.apply(this, [Object].concat(mixins));
@@ -1743,8 +1824,8 @@ var Mixin = function () {
 
       var _loop4 = function _loop4(_methodName) {
         mixinTo.prototype[_methodName] = function () {
-          for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            args[_key4] = arguments[_key4];
+          for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+            args[_key5] = arguments[_key5];
           }
 
           return allInstance[_methodName].apply(this, args);
@@ -2280,7 +2361,7 @@ var Router = function () {
       var _this2 = this;
 
       var routes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      this.routes = routes;
+      this.routes = routes || listener.routes;
       Object.assign(this.query, this.queryOver({}));
 
       var listen = function listen(event) {
@@ -2967,6 +3048,83 @@ exports.RuleSet = RuleSet;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.SetMap = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var SetMap = function () {
+  function SetMap() {
+    _classCallCheck(this, SetMap);
+
+    _defineProperty(this, "_set", new Set());
+
+    _defineProperty(this, "_map", new Map());
+  }
+
+  _createClass(SetMap, [{
+    key: "has",
+    value: function has(key) {
+      return this._map.has(key);
+    }
+  }, {
+    key: "get",
+    value: function get(key) {
+      return this._map.get(key);
+    }
+  }, {
+    key: "add",
+    value: function add(key, value) {
+      var set = this._map.get(key);
+
+      if (!set) {
+        this._map.set(key, set = new Set());
+      }
+
+      this._set.add(value);
+
+      return set.add(value);
+    }
+  }, {
+    key: "remove",
+    value: function remove(key, value) {
+      var set = this._map.get(key);
+
+      if (!set) {
+        return;
+      }
+
+      var res = set.remove(value);
+
+      if (!set.size) {
+        this._map["delete"](key);
+      }
+
+      this._set.remove(value);
+
+      return res;
+    }
+  }, {
+    key: "values",
+    value: function values() {
+      return this._set.values();
+    }
+  }]);
+
+  return SetMap;
+}();
+
+exports.SetMap = SetMap;
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.Tag = void 0;
 
 var _Bindable = require("./Bindable");
@@ -3019,16 +3177,6 @@ var Tag = function () {
     this.style = function (_this) {
       return _Bindable.Bindable.make(function (styles) {
         if (!_this.node) {
-          return;
-        }
-
-        var styleEvent = new CustomEvent('cvStyle', {
-          detail: {
-            styles: styles
-          }
-        });
-
-        if (!_this.node.dispatchEvent(styleEvent)) {
           return;
         }
 
@@ -3364,6 +3512,7 @@ var dontParse = Symbol('dontParse');
 var expandBind = Symbol('expandBind');
 var uuid = Symbol('uuid');
 var moveIndex = 0;
+var AttributeBuffer = Symbol('AttributeBuffer');
 
 var View = function (_Mixin$with) {
   _inherits(View, _Mixin$with);
@@ -3394,17 +3543,17 @@ var View = function (_Mixin$with) {
 
     _classCallCheck(this, View);
 
-    _this = _super.call(this);
+    _this = _super.call(this, args, mainView);
     Object.defineProperty(_assertThisInitialized(_this), 'args', {
       value: _Bindable.Bindable.make(args)
     });
     Object.defineProperty(_assertThisInitialized(_this), uuid, {
       value: _this.uuid()
     });
-    Object.defineProperty(_assertThisInitialized(_this), 'attach', {
+    Object.defineProperty(_assertThisInitialized(_this), 'nodesAttached', {
       value: new _Bag.Bag(function (i, s, a) {})
     });
-    Object.defineProperty(_assertThisInitialized(_this), 'detach', {
+    Object.defineProperty(_assertThisInitialized(_this), 'nodesDetached', {
       value: new _Bag.Bag(function (i, s, a) {})
     });
     Object.defineProperty(_assertThisInitialized(_this), '_onRemove', {
@@ -3431,10 +3580,10 @@ var View = function (_Mixin$with) {
     Object.defineProperty(_assertThisInitialized(_this), 'nodes', {
       value: _Bindable.Bindable.make([])
     });
-    Object.defineProperty(_assertThisInitialized(_this), 'intervals', {
-      value: []
-    });
     Object.defineProperty(_assertThisInitialized(_this), 'timeouts', {
+      value: new Map()
+    });
+    Object.defineProperty(_assertThisInitialized(_this), 'intervals', {
       value: []
     });
     Object.defineProperty(_assertThisInitialized(_this), 'frames', {
@@ -3454,6 +3603,9 @@ var View = function (_Mixin$with) {
     });
     Object.defineProperty(_assertThisInitialized(_this), 'eventCleanup', {
       value: []
+    });
+    Object.defineProperty(_assertThisInitialized(_this), 'unpauseCallbacks', {
+      value: new Map()
     });
     Object.defineProperty(_assertThisInitialized(_this), 'interpolateRegex', {
       value: /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g
@@ -3523,22 +3675,26 @@ var View = function (_Mixin$with) {
     value: function onTimeout(time, callback) {
       var _this3 = this;
 
-      var wrappedCallback = function wrappedCallback() {
-        _this3.timeouts[index].fired = true;
-        _this3.timeouts[index].callback = null;
-        callback();
-      };
-
-      var timeout = setTimeout(wrappedCallback, time);
-      var index = this.timeouts.length;
-      this.timeouts.push({
-        timeout: timeout,
-        callback: wrappedCallback,
+      var timeoutInfo = {
+        timeout: null,
+        callback: null,
         time: time,
         fired: false,
         created: new Date().getTime(),
         paused: false
-      });
+      };
+
+      var wrappedCallback = function wrappedCallback() {
+        callback();
+        timeoutInfo.fired = true;
+
+        _this3.timeouts["delete"](timeoutInfo.timeout);
+      };
+
+      var timeout = setTimeout(wrappedCallback, time);
+      timeoutInfo.callback = wrappedCallback;
+      timeoutInfo.timeout = timeout;
+      this.timeouts.set(timeoutInfo.timeout, timeoutInfo);
       return timeout;
     }
   }, {
@@ -3554,11 +3710,22 @@ var View = function (_Mixin$with) {
 
       return clearTimeout;
     }(function (timeout) {
-      for (var i in this.timeouts) {
-        if (timeout === this.timeouts[i].timeout) {
-          clearTimeout(this.timeouts[i].timeout);
-          delete this.timeouts[i];
+      var _iterator = _createForOfIteratorHelper(this.timeouts),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var _step$value = _slicedToArray(_step.value, 2),
+              callback = _step$value[0],
+              timeoutInfo = _step$value[1];
+
+          clearTimeout(timeoutInfo.timeout);
+          this.timeouts["delete"](timeoutInfo.timeout);
         }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
       }
     })
   }, {
@@ -3605,69 +3772,116 @@ var View = function (_Mixin$with) {
       this.paused = paused;
 
       if (this.paused) {
-        for (var i in this.timeouts) {
-          if (this.timeouts[i].fired) {
-            delete this.timeouts[i];
-            continue;
-          }
+        var _iterator2 = _createForOfIteratorHelper(this.timeouts),
+            _step2;
 
-          clearTimeout(this.timeouts[i].timeout);
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var _step2$value = _slicedToArray(_step2.value, 2),
+                callback = _step2$value[0],
+                timeout = _step2$value[1];
+
+            if (timeout.fired) {
+              this.timeouts["delete"](timeout.timeout);
+              continue;
+            }
+
+            clearTimeout(timeout.timeout);
+            timeout.paused = true;
+            timeout.time = Math.max(0, timeout.time - (Date.now() - timeout.created));
+          }
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
         }
 
-        for (var _i in this.intervals) {
-          clearInterval(this.intervals[_i].timeout);
+        for (var i in this.intervals) {
+          clearInterval(this.intervals[i].timeout);
         }
       } else {
-        for (var _i2 in this.timeouts) {
-          if (!this.timeouts[_i2].timeout.paused) {
-            continue;
-          }
+        var _iterator3 = _createForOfIteratorHelper(this.timeouts),
+            _step3;
 
-          if (this.timeouts[_i2].fired) {
-            delete this.timeouts[_i2];
-            continue;
-          }
+        try {
+          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+            var _step3$value = _slicedToArray(_step3.value, 2),
+                _callback = _step3$value[0],
+                _timeout = _step3$value[1];
 
-          this.timeouts[_i2].timeout = setTimeout(this.timeouts[_i2].callback, this.timeouts[_i2].time);
+            if (!_timeout.paused) {
+              continue;
+            }
+
+            if (_timeout.fired) {
+              this.timeouts["delete"](_timeout.timeout);
+              continue;
+            }
+
+            _timeout.timeout = setTimeout(_timeout.callback, _timeout.time);
+            _timeout.paused = false;
+          }
+        } catch (err) {
+          _iterator3.e(err);
+        } finally {
+          _iterator3.f();
         }
 
-        for (var _i3 in this.intervals) {
-          if (!this.intervals[_i3].timeout.paused) {
+        for (var _i2 in this.intervals) {
+          if (!this.intervals[_i2].timeout.paused) {
             continue;
           }
 
-          this.intervals[_i3].timeout.paused = false;
-          this.intervals[_i3].timeout = setInterval(this.intervals[_i3].callback, this.intervals[_i3].time);
+          this.intervals[_i2].timeout.paused = false;
+          this.intervals[_i2].timeout = setInterval(this.intervals[_i2].callback, this.intervals[_i2].time);
         }
+
+        var _iterator4 = _createForOfIteratorHelper(this.unpauseCallbacks),
+            _step4;
+
+        try {
+          for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+            var _step4$value = _slicedToArray(_step4.value, 2),
+                _callback2 = _step4$value[1];
+
+            _callback2();
+          }
+        } catch (err) {
+          _iterator4.e(err);
+        } finally {
+          _iterator4.f();
+        }
+
+        this.unpauseCallbacks.clear();
       }
 
-      var _iterator = _createForOfIteratorHelper(this.viewLists),
-          _step;
+      var _iterator5 = _createForOfIteratorHelper(this.viewLists),
+          _step5;
 
       try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var _step$value = _slicedToArray(_step.value, 2),
-              tag = _step$value[0],
-              viewList = _step$value[1];
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var _step5$value = _slicedToArray(_step5.value, 2),
+              tag = _step5$value[0],
+              viewList = _step5$value[1];
 
           viewList.pause(!!paused);
         }
       } catch (err) {
-        _iterator.e(err);
+        _iterator5.e(err);
       } finally {
-        _iterator.f();
+        _iterator5.f();
       }
 
-      for (var _i4 in this.tags) {
-        if (Array.isArray(this.tags[_i4])) {
-          for (var j in this.tags[_i4]) {
-            this.tags[_i4][j].pause(!!paused);
+      for (var _i3 in this.tags) {
+        if (Array.isArray(this.tags[_i3])) {
+          for (var j in this.tags[_i3]) {
+            this.tags[_i3][j].pause(!!paused);
           }
 
           continue;
         }
 
-        this.tags[_i4].pause(!!paused);
+        this.tags[_i3].pause(!!paused);
       }
     }
   }, {
@@ -3772,7 +3986,7 @@ var View = function (_Mixin$with) {
       this.dispatchEvent(new CustomEvent('attached', {
         target: this
       }));
-      var attach = this.attach.items();
+      var attach = this.nodesAttached.items();
 
       for (var i in attach) {
         attach[i](rootNode, parentNode);
@@ -3815,7 +4029,7 @@ var View = function (_Mixin$with) {
       var subDoc = new DocumentFragment();
 
       if (this.firstNode.isConnected) {
-        var detach = this.detach.items();
+        var detach = this.nodesDetached.items();
 
         for (var i in detach) {
           detach[i]();
@@ -3903,6 +4117,7 @@ var View = function (_Mixin$with) {
         proxy[expandProperty] = {};
       }
 
+      proxy[expandProperty] = _Bindable.Bindable.make(proxy[expandProperty]);
       this.onRemove(tag[expandBind] = proxy[expandProperty].bindTo(function (v, k, t, d, p) {
         if (d || v === undefined) {
           tag.removeAttribute(k, v);
@@ -4108,7 +4323,7 @@ var View = function (_Mixin$with) {
                 }
               };
 
-              _this6.attach.add(onAttach);
+              _this6.nodesAttached.add(onAttach);
 
               v.render(tag.parentNode, dynamicNode);
 
@@ -4121,7 +4336,7 @@ var View = function (_Mixin$with) {
               _this6.onRemove(cleanup);
 
               v.onRemove(function () {
-                _this6.attach.remove(onAttach);
+                _this6.nodesAttached.remove(onAttach);
 
                 _this6._onRemove.remove(cleanup);
               });
@@ -4166,9 +4381,9 @@ var View = function (_Mixin$with) {
         staticNode[dontParse] = true;
         tag.parentNode.insertBefore(staticNode, tag);
         tag.nodeValue = '';
-      }
+      } else if (tag.nodeType === Node.ELEMENT_NODE) {
+        tag[AttributeBuffer] = tag[AttributeBuffer] || new Map();
 
-      if (tag.nodeType === Node.ELEMENT_NODE) {
         var _loop4 = function _loop4(i) {
           if (!_this6.interpolatable(tag.attributes[i].value)) {
             return "continue";
@@ -4225,9 +4440,9 @@ var View = function (_Mixin$with) {
                 v = transformer(v);
               }
 
-              for (var _i5 in bindProperties) {
+              for (var _i4 in bindProperties) {
                 for (var _j in bindProperties[longProperty]) {
-                  segments[bindProperties[longProperty][_j]] = t[_i5];
+                  segments[bindProperties[longProperty][_j]] = t[_i4];
 
                   if (k === property) {
                     segments[bindProperties[longProperty][_j]] = v;
@@ -4235,7 +4450,13 @@ var View = function (_Mixin$with) {
                 }
               }
 
-              tag.setAttribute(attribute.name, segments.join(''));
+              if (!_this6.paused) {
+                tag.setAttribute(attribute.name, segments.join(''));
+              } else {
+                _this6.unpauseCallbacks.set(attribute, function () {
+                  return tag.setAttribute(attribute.name, segments.join(''));
+                });
+              }
             }));
 
             _this6.onRemove(function () {
@@ -4386,7 +4607,7 @@ var View = function (_Mixin$with) {
 
               selectOption();
 
-              _this7.attach.add(selectOption);
+              _this7.nodesAttached.add(selectOption);
             } else {
               tag.value = v == null ? '' : v;
             }
@@ -4395,18 +4616,18 @@ var View = function (_Mixin$with) {
           }
         } else {
           if (v instanceof View) {
-            var _iterator2 = _createForOfIteratorHelper(tag.childNodes),
-                _step2;
+            var _iterator6 = _createForOfIteratorHelper(tag.childNodes),
+                _step6;
 
             try {
-              for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-                var node = _step2.value;
+              for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+                var node = _step6.value;
                 node.remove();
               }
             } catch (err) {
-              _iterator2.e(err);
+              _iterator6.e(err);
             } finally {
-              _iterator2.f();
+              _iterator6.f();
             }
 
             var onAttach = function onAttach(parentNode) {
@@ -4416,11 +4637,11 @@ var View = function (_Mixin$with) {
               }
             };
 
-            _this7.attach.add(onAttach);
+            _this7.nodesAttached.add(onAttach);
 
             v.render(tag);
             v.onRemove(function () {
-              return _this7.attach.remove(onAttach);
+              return _this7.nodesAttached.remove(onAttach);
             });
           } else if (v instanceof Node) {
             tag.insert(v);
@@ -4433,19 +4654,19 @@ var View = function (_Mixin$with) {
               if (tag.innerHTML === v.substring(0, tag.innerHTML.length)) {
                 tag.innerHTML += v.substring(tag.innerHTML.length);
               } else {
-                var _iterator3 = _createForOfIteratorHelper(tag.childNodes),
-                    _step3;
+                var _iterator7 = _createForOfIteratorHelper(tag.childNodes),
+                    _step7;
 
                 try {
-                  for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-                    var _node = _step3.value;
+                  for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+                    var _node = _step7.value;
 
                     _node.remove();
                   }
                 } catch (err) {
-                  _iterator3.e(err);
+                  _iterator7.e(err);
                 } finally {
-                  _iterator3.f();
+                  _iterator7.f();
                 }
 
                 tag.innerHTML = v;
@@ -4457,19 +4678,19 @@ var View = function (_Mixin$with) {
             }
           } else {
             if (tag.textContent !== v) {
-              var _iterator4 = _createForOfIteratorHelper(tag.childNodes),
-                  _step4;
+              var _iterator8 = _createForOfIteratorHelper(tag.childNodes),
+                  _step8;
 
               try {
-                for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-                  var _node2 = _step4.value;
+                for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+                  var _node2 = _step8.value;
 
                   _node2.remove();
                 }
               } catch (err) {
-                _iterator4.e(err);
+                _iterator8.e(err);
               } finally {
-                _iterator4.f();
+                _iterator8.f();
               }
 
               tag.textContent = v;
@@ -4686,12 +4907,12 @@ var View = function (_Mixin$with) {
             break;
 
           case '_attach':
-            _this8.attach.add(eventListener);
+            _this8.nodesAttached.add(eventListener);
 
             break;
 
           case '_detach':
-            _this8.detach.add(eventListener);
+            _this8.nodesDetached.add(eventListener);
 
             break;
 
@@ -4827,11 +5048,11 @@ var View = function (_Mixin$with) {
           _loop7(i);
         }
 
-        var _loop8 = function _loop8(_i6) {
-          var debind = v.bindTo(_i6, function (vv, kk) {
+        var _loop8 = function _loop8(_i5) {
+          var debind = v.bindTo(_i5, function (vv, kk) {
             view.args[kk] = vv;
           });
-          var debindUp = view.args.bindTo(_i6, function (vv, kk) {
+          var debindUp = view.args.bindTo(_i5, function (vv, kk) {
             v[kk] = vv;
           });
 
@@ -4854,8 +5075,8 @@ var View = function (_Mixin$with) {
           });
         };
 
-        for (var _i6 in v) {
-          _loop8(_i6);
+        for (var _i5 in v) {
+          _loop8(_i5);
         }
 
         view.render(tag);
@@ -5018,12 +5239,21 @@ var View = function (_Mixin$with) {
       var ifDoc = new DocumentFragment();
       var view = new viewClass(this.args, bindingView);
       this.onRemove(view.tags.bindTo(function (v, k) {
-        console.log(k);
         _this12.tags[k] = v;
       }));
       view.template = subTemplate;
       var proxy = bindingView.args;
       var property = ifProperty;
+
+      if (ifProperty.match(/\./)) {
+        var _Bindable$resolve11 = _Bindable.Bindable.resolve(bindingView.args, ifProperty, true);
+
+        var _Bindable$resolve12 = _slicedToArray(_Bindable$resolve11, 2);
+
+        proxy = _Bindable$resolve12[0];
+        property = _Bindable$resolve12[1];
+      }
+
       view.render(ifDoc);
       var propertyDebind = proxy.bindTo(property, function (v, k) {
         var o = v;
@@ -5104,12 +5334,12 @@ var View = function (_Mixin$with) {
         var property = ifProperty;
 
         if (ifProperty.match(/\./)) {
-          var _Bindable$resolve11 = _Bindable.Bindable.resolve(bindingView.args, ifProperty, true);
+          var _Bindable$resolve13 = _Bindable.Bindable.resolve(bindingView.args, ifProperty, true);
 
-          var _Bindable$resolve12 = _slicedToArray(_Bindable$resolve11, 2);
+          var _Bindable$resolve14 = _slicedToArray(_Bindable$resolve13, 2);
 
-          proxy = _Bindable$resolve12[0];
-          property = _Bindable$resolve12[1];
+          proxy = _Bindable$resolve14[0];
+          property = _Bindable$resolve14[1];
         }
 
         var hasRendered = false;
@@ -5280,23 +5510,23 @@ var View = function (_Mixin$with) {
       var now = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
       var remover = function remover() {
-        for (var _i7 in _this14.tags) {
-          if (Array.isArray(_this14.tags[_i7])) {
-            _this14.tags[_i7] && _this14.tags[_i7].map(function (t) {
+        for (var _i6 in _this14.tags) {
+          if (Array.isArray(_this14.tags[_i6])) {
+            _this14.tags[_i6] && _this14.tags[_i6].map(function (t) {
               return t.remove();
             });
 
-            _this14.tags[_i7].splice(0);
+            _this14.tags[_i6].splice(0);
           } else {
-            _this14.tags[_i7] && _this14.tags[_i7].remove();
-            _this14.tags[_i7] = undefined;
+            _this14.tags[_i6] && _this14.tags[_i6].remove();
+            _this14.tags[_i6] = undefined;
           }
         }
 
-        for (var _i8 in _this14.nodes) {
-          _this14.nodes[_i8] && _this14.nodes[_i8].dispatchEvent(new Event('cvDomDetached'));
-          _this14.nodes[_i8] && _this14.nodes[_i8].remove();
-          _this14.nodes[_i8] = undefined;
+        for (var _i7 in _this14.nodes) {
+          _this14.nodes[_i7] && _this14.nodes[_i7].dispatchEvent(new Event('cvDomDetached'));
+          _this14.nodes[_i7] && _this14.nodes[_i7].remove();
+          _this14.nodes[_i7] = undefined;
         }
 
         _this14.nodes.splice(0);
@@ -5312,21 +5542,21 @@ var View = function (_Mixin$with) {
 
       var callbacks = this._onRemove.items();
 
-      var _iterator5 = _createForOfIteratorHelper(callbacks),
-          _step5;
+      var _iterator9 = _createForOfIteratorHelper(callbacks),
+          _step9;
 
       try {
-        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-          var callback = _step5.value;
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var callback = _step9.value;
 
           this._onRemove.remove(callback);
 
           callback();
         }
       } catch (err) {
-        _iterator5.e(err);
+        _iterator9.e(err);
       } finally {
-        _iterator5.f();
+        _iterator9.f();
       }
 
       var cleanup;
@@ -5335,28 +5565,41 @@ var View = function (_Mixin$with) {
         cleanup && cleanup();
       }
 
-      var _iterator6 = _createForOfIteratorHelper(this.viewLists),
-          _step6;
+      var _iterator10 = _createForOfIteratorHelper(this.viewLists),
+          _step10;
 
       try {
-        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-          var _step6$value = _slicedToArray(_step6.value, 2),
-              tag = _step6$value[0],
-              viewList = _step6$value[1];
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var _step10$value = _slicedToArray(_step10.value, 2),
+              tag = _step10$value[0],
+              viewList = _step10$value[1];
 
           viewList.remove();
         }
       } catch (err) {
-        _iterator6.e(err);
+        _iterator10.e(err);
       } finally {
-        _iterator6.f();
+        _iterator10.f();
       }
 
       this.viewLists.clear();
 
-      for (var _i9 in this.timeouts) {
-        clearTimeout(this.timeouts[_i9].timeout);
-        delete this.timeouts[_i9];
+      var _iterator11 = _createForOfIteratorHelper(this.timeouts),
+          _step11;
+
+      try {
+        for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+          var _step11$value = _slicedToArray(_step11.value, 2),
+              _callback3 = _step11$value[0],
+              timeout = _step11$value[1];
+
+          clearTimeout(timeout.timeout);
+          this.timeouts["delete"](timeout.timeout);
+        }
+      } catch (err) {
+        _iterator11.e(err);
+      } finally {
+        _iterator11.f();
       }
 
       for (var i in this.intervals) {
@@ -5515,6 +5758,15 @@ var View = function (_Mixin$with) {
         return remover();
       });
       return remover;
+    }
+  }, {
+    key: "detach",
+    value: function detach() {
+      for (var n in this.nodes) {
+        this.nodes[n].remove();
+      }
+
+      return this.nodes;
     }
   }], [{
     key: "isView",

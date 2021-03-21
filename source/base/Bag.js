@@ -1,7 +1,7 @@
 import { Bindable } from './Bindable';
 
-const toId   = int => Number(int).toString(36);
-const fromId = id  => parseInt(id, 36);
+const toId   = int => Number(int);
+const fromId = id  => parseInt(id);
 
 export class Bag
 {
@@ -9,11 +9,16 @@ export class Bag
 	{
 		this.meta    = Symbol('meta');
 		this.content = new Map;
-		this.list    = Bindable.makeBindable({});
+		this.list    = Bindable.makeBindable([]);
 		this.current = 0;
 		this.type    = undefined;
 
 		this.changeCallback = changeCallback;
+	}
+
+	has(item)
+	{
+		return this.content.has(item);
 	}
 
 	add(item)

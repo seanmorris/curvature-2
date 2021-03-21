@@ -1,22 +1,26 @@
-const Ref        = Symbol('ref');
-const Original   = Symbol('original');
-const Deck       = Symbol('deck');
-const Binding    = Symbol('binding');
-const SubBinding = Symbol('subBinding');
-const BindingAll = Symbol('bindingAll');
-const IsBindable = Symbol('isBindable');
-const Wrapping   = Symbol('wrapping');
-const Executing  = Symbol('executing');
-const Stack      = Symbol('stack');
-const ObjSymbol  = Symbol('object');
-const Wrapped    = Symbol('wrapped');
-const Unwrapped  = Symbol('unwrapped');
-const GetProto   = Symbol('getProto');
-const OnGet      = Symbol('onGet');
-const OnAllGet   = Symbol('onAllGet');
-const BindChain  = Symbol('bindChain');
+const Ref         = Symbol('ref');
+const Original    = Symbol('original');
+const Deck        = Symbol('deck');
+const Binding     = Symbol('binding');
+const SubBinding  = Symbol('subBinding');
+const BindingAll  = Symbol('bindingAll');
+const IsBindable  = Symbol('isBindable');
+const Wrapping    = Symbol('wrapping');
+const Names       = Symbol('Names');
+const Executing   = Symbol('executing');
+const Stack       = Symbol('stack');
+const ObjSymbol   = Symbol('object');
+const Wrapped     = Symbol('wrapped');
+const Unwrapped   = Symbol('unwrapped');
+const GetProto    = Symbol('getProto');
+const OnGet       = Symbol('onGet');
+const OnAllGet    = Symbol('onAllGet');
+const BindChain   = Symbol('bindChain');
+const Descriptors = Symbol('Descriptors');
 
 const TypedArray  = Object.getPrototypeOf(Int8Array);
+
+const emptyObject = {};
 
 const win = window || {};
 
@@ -25,6 +29,8 @@ const excludedClasses = [
 	, win.File
 	, win.Map
 	, win.Set
+	, win.WeakMap
+	, win.WeakSet
 	, win.ArrayBuffer
 	, win.ResizeObserver
 	, win.MutationObserver
@@ -34,6 +40,7 @@ const excludedClasses = [
 
 export class Bindable
 {
+	static waiters   = new WeakMap;
 	static throttles = new WeakMap;
 
 	static isBindable(object)
@@ -53,7 +60,7 @@ export class Bindable
 
 	static ref(object)
 	{
-		return object[Ref] || false;
+		return object[Ref] || object || false;
 	}
 
 	static makeBindable(object)
@@ -74,7 +81,7 @@ export class Bindable
 			return clone;
 		}
 
-		const properties = Object.getOwnPropertyNames(original);
+		const properties = Object.keys(original);
 
 		for(const i in properties)
 		{
@@ -144,7 +151,7 @@ export class Bindable
 
 		if(object[Ref])
 		{
-			return object;
+			return object[Ref];
 		}
 
 		if(object[Binding])
@@ -156,7 +163,7 @@ export class Bindable
 			configurable: true
 			, enumerable: false
 			, writable:   true
-			, value:      object
+			, value:      false
 		});
 
 		Object.defineProperty(object, Original, {
@@ -244,6 +251,14 @@ export class Bindable
 			, enumerable: false
 			, writable:   false
 			, value:      {}
+		});
+
+
+		Object.defineProperty(object, Descriptors, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      new Map
 		});
 
 		const bindTo = (property, callback = null, options = {}) => {
@@ -472,8 +487,6 @@ export class Bindable
 					debind = debind.concat(v[BindChain](rest, callback));
 				}));
 
-				// console.log(debind);
-
 				return () => debind.map(x=>x());
 			}
 		});
@@ -591,7 +604,7 @@ export class Bindable
 						continue;
 					}
 
-					if (object[Binding][key][i](value, key, target, false, target[key]) === false)
+					if(object[Binding][key][i](value, key, target, false, target[key]) === false)
 					{
 						stop = true;
 					}
@@ -600,7 +613,7 @@ export class Bindable
 
 			delete object[Deck][key];
 
-			if (!stop)
+			if(!stop)
 			{
 				let descriptor = Object.getOwnPropertyDescriptor(target, key);
 
@@ -617,7 +630,19 @@ export class Bindable
 				}
 			}
 
-			return Reflect.set(target, key, value);
+			const result = Reflect.set(target, key, value);
+
+			if(Array.isArray(target) && object[Binding]['length'])
+			{
+				for(let i in object[Binding]['length'])
+				{
+					const callback = object[Binding]['length'][i];
+
+					callback(target.length, 'length', target, false, target.length);
+				}
+			}
+
+			return result;
 		};
 
 		const deleteProperty = (target, key) => {
@@ -655,126 +680,176 @@ export class Bindable
 
 			for(let i in target.___before___)
 			{
-				target.___before___[i](target, key, target[Stack], undefined, args);
+				target.___before___[i](target, key, object[Stack], undefined, args);
 			}
 
 			const instance = Bindable.make(new target[Original](...args));
 
 			for(let i in target.___after___)
 			{
-				target.___after___[i](target, key, target[Stack], instance, args);
+				target.___after___[i](target, key, object[Stack], instance, args);
 			}
 
 			return instance;
 		};
 
+		const descriptors = object[Descriptors];
+		const wrapped     = object[Wrapped];
+		const stack       = object[Stack];
+
 		const get = (target, key) => {
-			if(key === Ref || key === Original || key === 'apply' ||  key === 'isBound' || key === 'bindTo' || key === '__proto__')
-			{
-				return target[key];
+
+			if(key === Ref
+				|| key === Original
+				|| key === 'apply'
+				||  key === 'isBound'
+				|| key === 'bindTo'
+				|| key === '__proto__'
+				|| key === 'constructor'
+			){
+				return object[key];
 			}
 
-			const descriptor = Object.getOwnPropertyDescriptor(object, key);
+			if(key in wrapped)
+			{
+				if(key in emptyObject && window.startDump === true)
+				{
+					console.log(key);
+				}
+
+				return wrapped[key];
+			}
+
+			let descriptor;
+
+			if(descriptors.has(key))
+			{
+				descriptor = descriptors.get(key)
+			}
+			else
+			{
+				descriptor = Object.getOwnPropertyDescriptor(object, key);
+
+				descriptors.set(key, descriptor);
+			}
 
 			if(descriptor && !descriptor.configurable && !descriptor.writable)
 			{
-				return target[key];
+				return object[key];
 			}
 
-			if(object[OnAllGet])
+			if(OnAllGet in object)
 			{
 				return object[OnAllGet](key);
 			}
 
-			if(object[OnGet] && !(key in object))
+			if((OnGet in object) && !(key in object))
 			{
 				return object[OnGet](key);
 			}
 
-			if(target[Wrapped][key])
-			{
-				return target[Wrapped][key];
-			}
-
 			if(descriptor && !descriptor.configurable && !descriptor.writable)
 			{
-				target[Wrapped][key] = target[key];
+				wrapped[key] = object[key];
 
-				return target[Wrapped][key];
+				return wrapped[key];
 			}
 
-			if(typeof target[key] === 'function')
+			if(typeof object[key] === 'function')
 			{
-				Object.defineProperty(target[Unwrapped], key, {
+				Object.defineProperty(object[Unwrapped], key, {
 					configurable: false
 					, enumerable: false
 					, writable:   false
-					, value:      target[key]
+					, value:      object[key]
 				});
 
-				target[Wrapped][key] = Bindable.make(function(...providedArgs){
+				const wrappedMethod = function(...providedArgs){
+
+					const SetIterator = Set.prototype[Symbol.iterator];
+					const MapIterator = Map.prototype[Symbol.iterator];
 
 					const objRef = (
-						object instanceof Promise
-						|| object instanceof Map
-						|| object instanceof Set
-						|| (typeof Date === 'function'                 && object instanceof Date)
-						|| (typeof TypedArray === 'function'           && object instanceof TypedArray)
-						|| (typeof ArrayBuffer === 'function'          && object instanceof ArrayBuffer)
-						|| (typeof EventTarget === 'function'          && object instanceof EventTarget)
-						|| (typeof ResizeObserver === 'function'       && object instanceof ResizeObserver)
-						|| (typeof MutationObserver === 'function'     && object instanceof MutationObserver)
-						|| (typeof PerformanceObserver === 'function'  && object instanceof PerformanceObserver)
-						|| (typeof IntersectionObserver === 'function' && object instanceof IntersectionObserver)
+						(typeof Promise === 'function'                     && object instanceof Promise)
+						|| (typeof Map === 'function'                      && object instanceof Map)
+						|| (typeof Set === 'function'                      && object instanceof Set)
+						|| (typeof MapIterator === 'function'              && object.prototype === MapIterator)
+						|| (typeof SetIterator === 'function'              && object.prototype === SetIterator)
+						|| (typeof SetIterator === 'function'              && object.prototype === SetIterator)
+						|| (typeof WeakMap === 'function'                  && object instanceof WeakMap)
+						|| (typeof WeakSet === 'function'                  && object instanceof WeakSet)
+						|| (typeof Date === 'function'                     && object instanceof Date)
+						|| (typeof TypedArray === 'function'               && object instanceof TypedArray)
+						|| (typeof ArrayBuffer === 'function'              && object instanceof ArrayBuffer)
+						|| (typeof EventTarget === 'function'              && object instanceof EventTarget)
+						|| (typeof ResizeObserver === 'function'           && object instanceof ResizeObserver)
+						|| (typeof MutationObserver === 'function'         && object instanceof MutationObserver)
+						|| (typeof PerformanceObserver === 'function'      && object instanceof PerformanceObserver)
+						|| (typeof IntersectionObserver === 'function'     && object instanceof IntersectionObserver)
+						|| (typeof object[Symbol.iterator]  === 'function' && key === 'next')
+						// Map.prototype[@@iterator]
 					)	? object
 						: object[Ref];
 
-					target[Executing] = key;
+					object[Executing] = key;
 
-					target[Stack].unshift(key);
+					stack.unshift(key);
 
-					for(let i in target.___before___)
+					for(let i in object.___before___)
 					{
-						target.___before___[i](target, key, target[Stack], object, providedArgs);
+						object.___before___[i](object, key, stack, object, providedArgs);
 					}
 
 					let ret;
 
 					if(new.target)
 					{
-						ret = new target[Unwrapped][key](...providedArgs);
+						ret = new object[Unwrapped][key](...providedArgs);
 					}
 					else
 					{
-						const prototype = Object.getPrototypeOf(target);
-						const isMethod  = prototype[key] === target[key];
+						const prototype = Object.getPrototypeOf(object);
+						const isMethod  = prototype[key] === object[key];
 
 						if(isMethod)
 						{
-							ret = target[key].apply(objRef || object, providedArgs);
+							ret = object[key].apply(objRef || object, providedArgs);
 						}
 						else
 						{
-							ret = target[key](...providedArgs);
+							ret = object[key](...providedArgs);
 						}
 					}
 
-					for(const i in target.___after___)
+					for(const i in object.___after___)
 					{
-						target.___after___[i](target, key, target[Stack], object, providedArgs);
+						object.___after___[i](object, key, stack, object, providedArgs);
 					}
 
-					target[Executing] = null;
+					object[Executing] = null;
 
-					target[Stack].shift();
+					stack.shift();
 
 					return ret;
-				});
+				}
 
-				return target[Wrapped][key];
+				wrappedMethod[Names] = wrappedMethod[Names] || new WeakMap;
+
+				wrappedMethod[Names].set(object, key);
+
+				wrappedMethod[OnAllGet] = (key) => {
+
+					const selfName = wrappedMethod[Names].get(object);
+
+					return object[selfName][key];
+				};
+
+				wrapped[key] = Bindable.make(wrappedMethod);
+
+				return wrapped[key];
 			}
 
-			return target[key];
+			return object[key];
 		};
 
 		const getPrototypeOf = (target) => {
@@ -851,38 +926,37 @@ export class Bindable
 	{
 		this.throttles.set(callback, false);
 
-		return ((callback) => {
+		return (...args) => {
 
-			return (...args) => {
-
-				if(this.throttles.get(callback, true))
-				{
-					return;
-				}
-
-				callback(...args);
-
-				this.throttles.set(callback, true);
-
-				setTimeout(()=> {this.throttles.set(callback, false)}, throttle);
-
+			if(this.throttles.get(callback, true))
+			{
+				return;
 			}
-		})(callback);
+
+			callback(...args);
+
+			this.throttles.set(callback, true);
+
+			setTimeout(()=> {this.throttles.set(callback, false)}, throttle);
+
+		};
 	}
 
 	static wrapWaitCallback(callback, wait)
 	{
-		let waiter = false;
-
 		return (...args) => {
 
-			if (waiter)
+			let waiter;
+
+			if(waiter = this.waiters.get(callback))
 			{
+				this.waiters.delete(callback);
 				clearTimeout(waiter);
-				waiter = false;
 			}
 
 			waiter = setTimeout(()=> callback(...args), wait);
+
+			this.waiters.set(callback, waiter);
 		};
 	}
 

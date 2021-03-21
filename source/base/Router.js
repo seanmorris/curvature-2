@@ -17,7 +17,7 @@ export class Router {
 
 	static listen(listener, routes = false)
 	{
-		this.routes = routes;
+		this.routes = routes || listener.routes;
 
 		Object.assign(this.query, this.queryOver({}));
 

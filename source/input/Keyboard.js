@@ -37,8 +37,13 @@ export class Keyboard
 				return;
 			}
 
-			if(this.focusElement && document.activeElement !== this.focusElement)
-			{
+			if(this.focusElement
+				&& document.activeElement !== this.focusElement
+				&& (
+					!this.focusElement.contains(document.activeElement)
+					|| document.activeElement.matches('input,textarea')
+				)
+			){
 				return;
 			}
 
@@ -60,8 +65,13 @@ export class Keyboard
 				return;
 			}
 
-			if(this.focusElement && document.activeElement !== this.focusElement)
-			{
+			if(this.focusElement
+				&& document.activeElement !== this.focusElement
+				&& (
+					!this.focusElement.contains(document.activeElement)
+					|| document.activeElement.matches('input,textarea')
+				)
+			){
 				return;
 			}
 

@@ -9,9 +9,9 @@ export class Mixin
 	{
 		const constructors = [];
 
-		const newClass = class  extends baseClass {
+		const newClass = class extends baseClass {
 			constructor(...args) {
-				super(...args);
+				const instance = super(...args);
 
 				for(const mixin of mixins)
 				{
@@ -31,10 +31,45 @@ export class Mixin
 							break;
 					}
 				}
+
+				return instance;
 			}
 		};
 
 		return newClass;
+	}
+
+	static to(base, ...mixins)
+	{
+		const descriptors = {};
+
+		mixins.map(mixin => {
+			switch (typeof mixin)
+			{
+				case 'object':
+					Object.assign(
+						descriptors
+						, Object.getOwnPropertyDescriptors(mixin)
+					);
+
+					break;
+
+				case 'function':
+					Object.assign(
+						descriptors
+						, Object.getOwnPropertyDescriptors(mixin.prototype)
+					);
+
+					break;
+			}
+
+			delete descriptors.constructor;
+
+			Object.defineProperties(
+				base.prototype
+				, descriptors
+			);
+		});
 	}
 
 	static with(...mixins)

@@ -5,6 +5,8 @@ import { EventTargetMixin } from '../mixin/EventTargetMixin';
 
 const BeforeWrite  = Symbol('BeforeWrite');
 const AfterWrite   = Symbol('AfterWrite');
+const BeforeDelete = Symbol('BeforeDelete');
+const AfterDelete  = Symbol('AfterDelete');
 const BeforeInsert = Symbol('BeforeInsert');
 const AfterInsert  = Symbol('AfterInsert');
 const BeforeUpdate = Symbol('BeforeUpdate');
@@ -303,8 +305,8 @@ export class Database extends Mixin.with(EventTargetMixin)
 				, origin:   origin
 			};
 
-			const beforeDeleteResult = record[Database.beforeDelete]
-				? record[Database.beforeDelete](detail)
+			const beforeDeleteResult = record[Database.BeforeDelete]
+				? record[Database.BeforeDelete](detail)
 				: null;
 
 			if(beforeDeleteResult === false)
@@ -608,6 +610,9 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 Object.defineProperty(Database, Instances, {value: []});
 Object.defineProperty(Database, Target,    {value: document.createDocumentFragment()});
+
+Object.defineProperty(Database, 'BeforeDelete', {value: BeforeDelete});
+Object.defineProperty(Database, 'AfterDelete',  {value: AfterDelete});
 
 Object.defineProperty(Database, 'BeforeWrite', {value: BeforeWrite});
 Object.defineProperty(Database, 'AfterWrite',  {value: AfterWrite});

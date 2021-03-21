@@ -46,12 +46,12 @@ export class Tag
 				return;
 			}
 
-			let styleEvent = new CustomEvent('cvStyle', {detail:{styles}});
+			// let styleEvent = new CustomEvent('cvStyle', {detail:{styles}});
 
-			if(!_this.node.dispatchEvent(styleEvent))
-			{
-				return;
-			}
+			// if(!_this.node.dispatchEvent(styleEvent))
+			// {
+			// 	return;
+			// }
 
 			for(const property in styles)
 			{

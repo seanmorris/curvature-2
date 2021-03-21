@@ -34,13 +34,13 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	constructor(args = {}, mainView = null)
 	{
-		super();
+		super(args, mainView);
 
 		Object.defineProperty(this, 'args', { value: Bindable.make(args) });
 		Object.defineProperty(this, uuid,   { value: this.uuid() });
 
-		Object.defineProperty(this, 'attach',  { value: new Bag((i,s,a) => {}) });
-		Object.defineProperty(this, 'detach',  { value: new Bag((i,s,a) => {}) });
+		Object.defineProperty(this, 'nodesAttached',  { value: new Bag((i,s,a) => {}) });
+		Object.defineProperty(this, 'nodesDetached',  { value: new Bag((i,s,a) => {}) });
 
 		Object.defineProperty(this, '_onRemove', { value: new Bag((i,s,a) => {}) });
 		Object.defineProperty(this, 'cleanup',   { value: [] });
@@ -54,8 +54,8 @@ export class View extends Mixin.with(EventTargetMixin)
 		Object.defineProperty(this, 'tags',      { value: Bindable.make({}) });
 		Object.defineProperty(this, 'nodes',     { value: Bindable.make([]) });
 
+		Object.defineProperty(this, 'timeouts',  { value: new Map });
 		Object.defineProperty(this, 'intervals', { value: [] });
-		Object.defineProperty(this, 'timeouts',  { value: [] });
 		Object.defineProperty(this, 'frames',    { value: [] });
 
 		Object.defineProperty(this, 'ruleSet',    { value: new RuleSet });
@@ -65,6 +65,8 @@ export class View extends Mixin.with(EventTargetMixin)
 		Object.defineProperty(this, 'templates',   { value: {} });
 
 		Object.defineProperty(this, 'eventCleanup', { value: [] });
+
+		Object.defineProperty(this, 'unpauseCallbacks', { value: new Map });
 
 		Object.defineProperty(this, 'interpolateRegex', {
 			value: /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g
@@ -139,34 +141,36 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	onTimeout(time, callback)
 	{
-		let wrappedCallback = () => {
-			this.timeouts[index].fired    = true;
-			this.timeouts[index].callback = null;
-			callback();
-		};
-		let timeout = setTimeout(wrappedCallback, time)
-		let index   = this.timeouts.length;
-
-		this.timeouts.push({
-			timeout:    timeout
-			, callback: wrappedCallback
+		const timeoutInfo = {
+			timeout:    null
+			, callback: null
 			, time:     time
 			, fired:    false
 			, created:  (new Date).getTime()
 			, paused:   false
-		});
+		};
+
+		const wrappedCallback = () => {
+			callback();
+			timeoutInfo.fired = true;
+			this.timeouts.delete(timeoutInfo.timeout);
+		};
+
+		const timeout = setTimeout(wrappedCallback, time);
+
+		timeoutInfo.callback = wrappedCallback;
+		timeoutInfo.timeout  = timeout;
+
+		this.timeouts.set(timeoutInfo.timeout, timeoutInfo);
 
 		return timeout;
 	}
 
 	clearTimeout(timeout)
 	{
-		for(var i in this.timeouts) {
-			if(timeout === this.timeouts[i].timeout) {
-				clearTimeout(this.timeouts[i].timeout);
-
-				delete this.timeouts[i];
-			}
+		for(const [callback, timeoutInfo] of this.timeouts) {
+			clearTimeout(timeoutInfo.timeout);
+			this.timeouts.delete(timeoutInfo.timeout);
 		}
 	}
 
@@ -206,15 +210,18 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		if(this.paused)
 		{
-			for(let i in this.timeouts)
+			for(const [callback, timeout] of this.timeouts)
 			{
-				if(this.timeouts[i].fired)
+				if(timeout.fired)
 				{
-					delete this.timeouts[i];
+					this.timeouts.delete(timeout.timeout);
 					continue;
 				}
 
-				clearTimeout(this.timeouts[i].timeout);
+				clearTimeout(timeout.timeout);
+
+				timeout.paused = true;
+				timeout.time   = Math.max(0, timeout.time - (Date.now() - timeout.created));
 			}
 
 			for(let i in this.intervals)
@@ -224,23 +231,22 @@ export class View extends Mixin.with(EventTargetMixin)
 		}
 		else
 		{
-			for(let i in this.timeouts)
+			for(const [callback, timeout] of this.timeouts)
 			{
-				if(!this.timeouts[i].timeout.paused)
+				if(!timeout.paused)
 				{
 					continue;
 				}
 
-				if(this.timeouts[i].fired)
+
+				if(timeout.fired)
 				{
-					delete this.timeouts[i];
+					this.timeouts.delete(timeout.timeout);
 					continue;
 				}
 
-				this.timeouts[i].timeout = setTimeout(
-					this.timeouts[i].callback
-					, this.timeouts[i].time
-				);
+				timeout.timeout = setTimeout(timeout.callback, timeout.time);
+				timeout.paused  = false;
 			}
 
 			for(let i in this.intervals)
@@ -257,6 +263,13 @@ export class View extends Mixin.with(EventTargetMixin)
 					, this.intervals[i].time
 				);
 			}
+
+			for(const [, callback] of this.unpauseCallbacks)
+			{
+				callback();
+			}
+
+			this.unpauseCallbacks.clear();
 		}
 
 		for(const [tag, viewList] of this.viewLists)
@@ -406,7 +419,7 @@ export class View extends Mixin.with(EventTargetMixin)
 	{
 		this.dispatchEvent(new CustomEvent('attached', {target: this}));
 
-		const attach = this.attach.items();
+		const attach = this.nodesAttached.items();
 
 		for(let i in attach)
 		{
@@ -449,7 +462,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		if(this.firstNode.isConnected)
 		{
-			const detach = this.detach.items();
+			const detach = this.nodesDetached.items();
 
 			for(let i in detach)
 			{
@@ -601,6 +614,8 @@ export class View extends Mixin.with(EventTargetMixin)
 		{
 			proxy[expandProperty] = {};
 		}
+
+		proxy[expandProperty] = Bindable.make(proxy[expandProperty]);
 
 		this.onRemove(tag[expandBind] = proxy[expandProperty].bindTo(
 			(v,k,t,d,p) => {
@@ -919,7 +934,7 @@ export class View extends Mixin.with(EventTargetMixin)
 							}
 						};
 
-						this.attach.add(onAttach);
+						this.nodesAttached.add(onAttach);
 
 						v.render(tag.parentNode, dynamicNode);
 
@@ -933,7 +948,7 @@ export class View extends Mixin.with(EventTargetMixin)
 						this.onRemove(cleanup);
 
 						v.onRemove(() => {
-							this.attach.remove(onAttach);
+							this.nodesAttached.remove(onAttach);
 							this._onRemove.remove(cleanup);
 						});
 					}
@@ -983,8 +998,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			tag.nodeValue = '';
 
 		}
-
-		if(tag.nodeType === Node.ELEMENT_NODE)
+		else if(tag.nodeType === Node.ELEMENT_NODE)
 		{
 			for (let i = 0; i < tag.attributes.length; i++)
 			{
@@ -1060,7 +1074,12 @@ export class View extends Mixin.with(EventTargetMixin)
 
 					const matchingSegments = bindProperties[longProperty];
 
-					this.onRemove(proxy.bindTo(property, (v, k, t, d) => {
+					// const changeAttribute = (v, k, t, d) => {
+					// 	tag.setAttribute(attribute.name, segments.join(''));
+					// };
+
+					this.onRemove(proxy.bindTo(property, (v,k,t,d) => {
+
 						if(transformer)
 						{
 							v = transformer(v);
@@ -1079,7 +1098,16 @@ export class View extends Mixin.with(EventTargetMixin)
 							}
 						}
 
-						tag.setAttribute(attribute.name, segments.join(''));
+						if(!this.paused)
+						{
+							// changeAttribute(v,k,t,d);
+							tag.setAttribute(attribute.name, segments.join(''))
+						}
+						else
+						{
+							// this.unpauseCallbacks.set(attribute, () => changeAttribute(v,k,t,d));
+							this.unpauseCallbacks.set(attribute, () => tag.setAttribute(attribute.name, segments.join('')));
+						}
 					}));
 
 					this.onRemove(()=>{
@@ -1258,7 +1286,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 						selectOption();
 
-						this.attach.add(selectOption);
+						this.nodesAttached.add(selectOption);
 					}
 					else
 					{
@@ -1286,11 +1314,11 @@ export class View extends Mixin.with(EventTargetMixin)
 						}
 					};
 
-					this.attach.add(onAttach);
+					this.nodesAttached.add(onAttach);
 
 					v.render(tag);
 
-					v.onRemove(()=>this.attach.remove(onAttach));
+					v.onRemove(()=>this.nodesAttached.remove(onAttach));
 				}
 				else if(v instanceof Node)
 				{
@@ -1595,11 +1623,11 @@ export class View extends Mixin.with(EventTargetMixin)
 					break;
 
 				case '_attach':
-					this.attach.add(eventListener);
+					this.nodesAttached.add(eventListener);
 					break;
 
 				case '_detach':
-					this.detach.add(eventListener);
+					this.nodesDetached.add(eventListener);
 					break;
 
 				default:
@@ -1963,7 +1991,6 @@ export class View extends Mixin.with(EventTargetMixin)
 		let view = new viewClass(this.args, bindingView);
 
 		this.onRemove(view.tags.bindTo((v,k)=>{
-			console.log(k);
 			this.tags[k]=v
 		}));
 
@@ -2373,10 +2400,10 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		this.viewLists.clear();
 
-		for(let i in this.timeouts)
+		for(const [callback, timeout] of this.timeouts)
 		{
-			clearTimeout(this.timeouts[i].timeout);
-			delete this.timeouts[i];
+			clearTimeout(timeout.timeout);
+			this.timeouts.delete(timeout.timeout);
 		}
 
 		for(var i in this.intervals)
@@ -2537,6 +2564,17 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		return remover;
 	}
+
+	detach()
+	{
+		for(const n in this.nodes)
+		{
+			this.nodes[n].remove();
+		}
+
+		return this.nodes;
+	}
+
 }
 
 Object.defineProperty(View, 'templates',  {value: new Map()});
