@@ -7,11 +7,31 @@ exports.Bag = void 0;
 
 var _Bindable = require("./Bindable");
 
+var _Mixin = require("./Mixin");
+
+var _EventTargetMixin = require("../mixin/EventTargetMixin");
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 var toId = function toId(_int) {
   return Number(_int);
@@ -21,18 +41,27 @@ var fromId = function fromId(id) {
   return parseInt(id);
 };
 
-var Bag = function () {
+var Bag = function (_Mixin$with) {
+  _inherits(Bag, _Mixin$with);
+
+  var _super = _createSuper(Bag);
+
   function Bag() {
+    var _this;
+
     var changeCallback = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
 
     _classCallCheck(this, Bag);
 
-    this.meta = Symbol('meta');
-    this.content = new Map();
-    this.list = _Bindable.Bindable.makeBindable([]);
-    this.current = 0;
-    this.type = undefined;
-    this.changeCallback = changeCallback;
+    _this = _super.call(this);
+    _this.meta = Symbol('meta');
+    _this.content = new Map();
+    _this.list = _Bindable.Bindable.makeBindable([]);
+    _this.current = 0;
+    _this.type = undefined;
+    _this.length = 0;
+    _this.changeCallback = changeCallback;
+    return _this;
   }
 
   _createClass(Bag, [{
@@ -56,6 +85,16 @@ var Bag = function () {
         return;
       }
 
+      var adding = new CustomEvent('adding', {
+        detail: {
+          item: item
+        }
+      });
+
+      if (!this.dispatchEvent(adding)) {
+        return;
+      }
+
       var id = toId(this.current++);
       this.content.set(item, id);
       this.list[id] = item;
@@ -63,6 +102,15 @@ var Bag = function () {
       if (this.changeCallback) {
         this.changeCallback(item, this.meta, Bag.ITEM_ADDED, id);
       }
+
+      var add = new CustomEvent('added', {
+        detail: {
+          item: item,
+          id: id
+        }
+      });
+      this.dispatchEvent(add);
+      this.length = this.size;
     }
   }, {
     key: "remove",
@@ -84,6 +132,16 @@ var Bag = function () {
         return false;
       }
 
+      var removing = new CustomEvent('removing', {
+        detail: {
+          item: item
+        }
+      });
+
+      if (!this.dispatchEvent(removing)) {
+        return;
+      }
+
       var id = this.content.get(item);
       delete this.list[id];
       this.content["delete"](item);
@@ -92,6 +150,14 @@ var Bag = function () {
         this.changeCallback(item, this.meta, Bag.ITEM_REMOVED, id);
       }
 
+      var remove = new CustomEvent('removed', {
+        detail: {
+          item: item,
+          id: id
+        }
+      });
+      this.dispatchEvent(remove);
+      this.length = this.size;
       return item;
     }
   }, {
@@ -101,10 +167,15 @@ var Bag = function () {
         return entry[0];
       });
     }
+  }, {
+    key: "size",
+    get: function get() {
+      return this.content.size;
+    }
   }]);
 
   return Bag;
-}();
+}(_Mixin.Mixin["with"](_EventTargetMixin.EventTargetMixin));
 
 exports.Bag = Bag;
 Object.defineProperty(Bag, 'ITEM_ADDED', {
@@ -796,6 +867,10 @@ var Bindable = function () {
         }
 
         if (typeof object[key] === 'function') {
+          if (Names in object[key]) {
+            return object[key];
+          }
+
           Object.defineProperty(object[Unwrapped], key, {
             configurable: false,
             enumerable: false,
@@ -825,11 +900,12 @@ var Bindable = function () {
             } else {
               var prototype = Object.getPrototypeOf(object);
               var isMethod = prototype[key] === object[key];
+              var func = object[Unwrapped][key];
 
               if (isMethod) {
-                ret = object[key].apply(objRef || object, providedArgs);
+                ret = func.apply(objRef || object, providedArgs);
               } else {
-                ret = object[key].apply(object, providedArgs);
+                ret = func.apply(void 0, providedArgs);
               }
             }
 
@@ -3512,7 +3588,6 @@ var dontParse = Symbol('dontParse');
 var expandBind = Symbol('expandBind');
 var uuid = Symbol('uuid');
 var moveIndex = 0;
-var AttributeBuffer = Symbol('AttributeBuffer');
 
 var View = function (_Mixin$with) {
   _inherits(View, _Mixin$with);
@@ -4382,8 +4457,6 @@ var View = function (_Mixin$with) {
         tag.parentNode.insertBefore(staticNode, tag);
         tag.nodeValue = '';
       } else if (tag.nodeType === Node.ELEMENT_NODE) {
-        tag[AttributeBuffer] = tag[AttributeBuffer] || new Map();
-
         var _loop4 = function _loop4(i) {
           if (!_this6.interpolatable(tag.attributes[i].value)) {
             return "continue";

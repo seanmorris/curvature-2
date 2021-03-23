@@ -1,17 +1,24 @@
 import { Bindable } from './Bindable';
+import { Mixin    } from './Mixin';
+
+import { EventTargetMixin  } from '../mixin/EventTargetMixin';
 
 const toId   = int => Number(int);
 const fromId = id  => parseInt(id);
 
-export class Bag
+export class Bag extends Mixin.with(EventTargetMixin)
 {
 	constructor(changeCallback = undefined)
 	{
+		super();
+
 		this.meta    = Symbol('meta');
 		this.content = new Map;
 		this.list    = Bindable.makeBindable([]);
 		this.current = 0;
 		this.type    = undefined;
+
+		this.length  = 0;
 
 		this.changeCallback = changeCallback;
 	}
@@ -42,6 +49,13 @@ export class Bag
 			return;
 		}
 
+		const adding = new CustomEvent('adding', {detail: {item}});
+
+		if(!this.dispatchEvent(adding))
+		{
+			return;
+		}
+
 		const id = toId(this.current++);
 
 		this.content.set(item, id);
@@ -52,6 +66,12 @@ export class Bag
 		{
 			this.changeCallback(item, this.meta, Bag.ITEM_ADDED, id);
 		}
+
+		const add = new CustomEvent('added', {detail: {item, id}});
+
+		this.dispatchEvent(add);
+
+		this.length = this.size;
 	}
 
 	remove(item)
@@ -80,6 +100,13 @@ export class Bag
 			return false;
 		}
 
+		const removing = new CustomEvent('removing', {detail: {item}});
+
+		if(!this.dispatchEvent(removing))
+		{
+			return;
+		}
+
 		const id = this.content.get(item);
 
 		delete this.list[id];
@@ -91,7 +118,18 @@ export class Bag
 			this.changeCallback(item, this.meta, Bag.ITEM_REMOVED, id);
 		}
 
+		const remove = new CustomEvent('removed', {detail: {item, id}});
+
+		this.dispatchEvent(remove);
+
+		this.length = this.size;
+
 		return item;
+	}
+
+	get size()
+	{
+		return this.content.size;
 	}
 
 	items()

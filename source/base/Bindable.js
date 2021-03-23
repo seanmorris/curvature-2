@@ -757,6 +757,11 @@ export class Bindable
 
 			if(typeof object[key] === 'function')
 			{
+				if(Names in object[key])
+				{
+					return object[key];
+				}
+
 				Object.defineProperty(object[Unwrapped], key, {
 					configurable: false
 					, enumerable: false
@@ -787,7 +792,6 @@ export class Bindable
 						|| (typeof PerformanceObserver === 'function'      && object instanceof PerformanceObserver)
 						|| (typeof IntersectionObserver === 'function'     && object instanceof IntersectionObserver)
 						|| (typeof object[Symbol.iterator]  === 'function' && key === 'next')
-						// Map.prototype[@@iterator]
 					)	? object
 						: object[Ref];
 
@@ -811,13 +815,16 @@ export class Bindable
 						const prototype = Object.getPrototypeOf(object);
 						const isMethod  = prototype[key] === object[key];
 
+						const func = object[Unwrapped][key];
+
 						if(isMethod)
 						{
-							ret = object[key].apply(objRef || object, providedArgs);
+							ret = func.apply(objRef || object, providedArgs);
 						}
 						else
 						{
-							ret = object[key](...providedArgs);
+
+							ret = func(...providedArgs);
 						}
 					}
 
