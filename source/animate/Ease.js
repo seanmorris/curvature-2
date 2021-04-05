@@ -35,6 +35,8 @@ export class Ease extends Mixin.with(PromiseMixin)
 
 	start()
 	{
+		this.done = false;
+
 		requestAnimationFrame(()=>{
 			this.initial  = Date.now();
 			this.terminal = this.initial + this.interval;
@@ -47,12 +49,12 @@ export class Ease extends Mixin.with(PromiseMixin)
 
 						if(this.done)
 						{
-							return this.final;
+							return this.reverse ? 0 : 1;
 						}
 
-						this.done  = true;
-						this.final = this.reverse ? 0 : 1;
-						this[PromiseMixin.Accept](this.final);
+						this.done = true;
+
+						this[PromiseMixin.Accept](this.reverse ? 0 : 1);
 					}
 					, this.interval * this.repeat
 				);
@@ -81,7 +83,7 @@ export class Ease extends Mixin.with(PromiseMixin)
 	{
 		if(this.done)
 		{
-			return this.final;
+			return this.reverse ? 0 : 1;
 		}
 
 		if(this.initial === false)
@@ -89,15 +91,14 @@ export class Ease extends Mixin.with(PromiseMixin)
 			return this.reverse ? 1 : 0;
 		}
 
-		const now = Date.now();
-		const elapsed = now - this.initial;
+		const elapsed = Date.now() - this.initial;
 
-		const fraction = (elapsed  % this.interval) / this.interval;
-
-		if(this.initial && fraction === 0)
+		if(elapsed / this.interval >= this.repeat)
 		{
 			return this.reverse ? 0 : 1;
 		}
+
+		let fraction = (elapsed  % this.interval) / this.interval;
 
 		return this.reverse
 			? 1 - fraction

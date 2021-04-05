@@ -99,7 +99,6 @@ class Parser
 							break;
 
 						case ENTER:
-
 							const newChunk = new Chunk;
 							newChunk.depth = chunk.depth + 1;
 							newChunk.match = value;

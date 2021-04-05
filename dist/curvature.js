@@ -306,6 +306,7 @@ var Ease = function (_Mixin$with) {
     value: function start() {
       var _this2 = this;
 
+      this.done = false;
       requestAnimationFrame(function () {
         _this2.initial = Date.now();
         _this2.terminal = _this2.initial + _this2.interval;
@@ -314,13 +315,12 @@ var Ease = function (_Mixin$with) {
           _this2.terminal = _this2.initial + _this2.interval * _this2.repeat;
           _this2.timeout = setTimeout(function () {
             if (_this2.done) {
-              return _this2["final"];
+              return _this2.reverse ? 0 : 1;
             }
 
             _this2.done = true;
-            _this2["final"] = _this2.reverse ? 0 : 1;
 
-            _this2[_PromiseMixin.PromiseMixin.Accept](_this2["final"]);
+            _this2[_PromiseMixin.PromiseMixin.Accept](_this2.reverse ? 0 : 1);
           }, _this2.interval * _this2.repeat);
         }
       });
@@ -344,21 +344,20 @@ var Ease = function (_Mixin$with) {
     key: "fraction",
     value: function fraction() {
       if (this.done) {
-        return this["final"];
+        return this.reverse ? 0 : 1;
       }
 
       if (this.initial === false) {
         return this.reverse ? 1 : 0;
       }
 
-      var now = Date.now();
-      var elapsed = now - this.initial;
-      var fraction = elapsed % this.interval / this.interval;
+      var elapsed = Date.now() - this.initial;
 
-      if (this.initial && fraction === 0) {
+      if (elapsed / this.interval >= this.repeat) {
         return this.reverse ? 0 : 1;
       }
 
+      var fraction = elapsed % this.interval / this.interval;
       return this.reverse ? 1 - fraction : fraction;
     }
   }, {
@@ -1683,11 +1682,13 @@ function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableTo
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
@@ -1721,8 +1722,7 @@ var OnAllGet = Symbol('onAllGet');
 var BindChain = Symbol('bindChain');
 var Descriptors = Symbol('Descriptors');
 var TypedArray = Object.getPrototypeOf(Int8Array);
-var emptyObject = {};
-var win = window || {};
+var win = globalThis;
 var excludedClasses = [win.Node, win.File, win.Map, win.Set, win.WeakMap, win.WeakSet, win.ArrayBuffer, win.ResizeObserver, win.MutationObserver, win.PerformanceObserver, win.IntersectionObserver].filter(function (x) {
   return typeof x === 'function';
 });
@@ -1966,7 +1966,7 @@ var Bindable = function () {
         }
 
         if (bindToAll) {
-          var _bindIndex = object[BindingAll].length;
+          var bindIndex = object[BindingAll].length;
           object[BindingAll].push(callback);
 
           if (!('now' in options) || options.now) {
@@ -1976,15 +1976,13 @@ var Bindable = function () {
           }
 
           return function () {
-            delete object[BindingAll][_bindIndex];
+            delete object[BindingAll][bindIndex];
           };
         }
 
         if (!object[Binding][property]) {
-          object[Binding][property] = [];
+          object[Binding][property] = new Set();
         }
-
-        var bindIndex = object[Binding][property].length;
 
         if (options.children) {
           var original = callback;
@@ -2025,13 +2023,11 @@ var Bindable = function () {
           };
         }
 
-        object[Binding][property].push(callback);
+        object[Binding][property].add(callback);
 
         if (!('now' in options) || options.now) {
           callback(object[property], property, object, false);
         }
-
-        var cleaned = false;
 
         var debinder = function debinder() {
           var subDebind = object[SubBinding].get(callback);
@@ -2041,17 +2037,15 @@ var Bindable = function () {
             subDebind();
           }
 
-          if (cleaned) {
-            return;
-          }
-
-          cleaned = true;
-
           if (!object[Binding][property]) {
             return;
           }
 
-          delete object[Binding][property][bindIndex];
+          if (!object[Binding][property].has(callback)) {
+            return;
+          }
+
+          object[Binding][property]["delete"](callback);
         };
 
         if (options.removeWith && options.removeWith instanceof View) {
@@ -2222,18 +2216,21 @@ var Bindable = function () {
         var stop = false;
 
         if (key in object[Binding]) {
-          for (var _i3 in object[Binding][key]) {
-            if (!object[Binding][key]) {
-              continue;
-            }
+          var _iterator = _createForOfIteratorHelper(object[Binding][key]),
+              _step;
 
-            if (!object[Binding][key][_i3]) {
-              continue;
-            }
+          try {
+            for (_iterator.s(); !(_step = _iterator.n()).done;) {
+              var callback = _step.value;
 
-            if (object[Binding][key][_i3](value, key, target, false, target[key]) === false) {
-              stop = true;
+              if (callback(value, key, target, false, target[key]) === false) {
+                stop = true;
+              }
             }
+          } catch (err) {
+            _iterator.e(err);
+          } finally {
+            _iterator.f();
           }
         }
 
@@ -2251,9 +2248,10 @@ var Bindable = function () {
         var result = Reflect.set(target, key, value);
 
         if (Array.isArray(target) && object[Binding]['length']) {
-          for (var _i4 in object[Binding]['length']) {
-            var callback = object[Binding]['length'][_i4];
-            callback(target.length, 'length', target, false, target.length);
+          for (var _i3 in object[Binding]['length']) {
+            var _callback = object[Binding]['length'][_i3];
+
+            _callback(target.length, 'length', target, false, target.length);
           }
         }
 
@@ -2265,17 +2263,17 @@ var Bindable = function () {
           return true;
         }
 
-        for (var _i5 in object[BindingAll]) {
-          object[BindingAll][_i5](undefined, key, target, true, target[key]);
+        for (var _i4 in object[BindingAll]) {
+          object[BindingAll][_i4](undefined, key, target, true, target[key]);
         }
 
         if (key in object[Binding]) {
-          for (var _i6 in object[Binding][key]) {
-            if (!object[Binding][key][_i6]) {
+          for (var _i5 in object[Binding][key]) {
+            if (!object[Binding][key][_i5]) {
               continue;
             }
 
-            object[Binding][key][_i6](undefined, key, target, true, target[key]);
+            object[Binding][key][_i5](undefined, key, target, true, target[key]);
           }
         }
 
@@ -2286,14 +2284,14 @@ var Bindable = function () {
       var construct = function construct(target, args) {
         var key = 'constructor';
 
-        for (var _i7 in target.___before___) {
-          target.___before___[_i7](target, key, object[Stack], undefined, args);
+        for (var _i6 in target.___before___) {
+          target.___before___[_i6](target, key, object[Stack], undefined, args);
         }
 
         var instance = Bindable.make(_construct(target[Original], _toConsumableArray(args)));
 
-        for (var _i8 in target.___after___) {
-          target.___after___[_i8](target, key, object[Stack], instance, args);
+        for (var _i7 in target.___after___) {
+          target.___after___[_i7](target, key, object[Stack], instance, args);
         }
 
         return instance;
@@ -2309,10 +2307,6 @@ var Bindable = function () {
         }
 
         if (key in wrapped) {
-          if (key in emptyObject && window.startDump === true) {
-            console.log(key);
-          }
-
           return wrapped[key];
         }
 
@@ -2365,8 +2359,8 @@ var Bindable = function () {
               providedArgs[_key3] = arguments[_key3];
             }
 
-            for (var _i9 in object.___before___) {
-              object.___before___[_i9](object, key, stack, object, providedArgs);
+            for (var _i8 in object.___before___) {
+              object.___before___[_i8](object, key, stack, object, providedArgs);
             }
 
             var ret;
@@ -2385,8 +2379,8 @@ var Bindable = function () {
               }
             }
 
-            for (var _i10 in object.___after___) {
-              object.___after___[_i10](object, key, stack, object, providedArgs);
+            for (var _i9 in object.___after___) {
+              object.___after___[_i9](object, key, stack, object, providedArgs);
             }
 
             object[Executing] = null;
@@ -4340,7 +4334,7 @@ var AppRoutes = {};
 try {
   Object.assign(AppRoutes, require('Routes').Routes || {});
 } catch (error) {
-  window.devMode === true && console.warn(error);
+  globalThis.devMode === true && console.warn(error);
 }
 
 var Routes = function () {
@@ -6764,10 +6758,12 @@ var View = function (_Mixin$with) {
       var sourceTag = tag;
       var viewProperty = tag.getAttribute('cv-view');
       var ifProperty = sourceTag.getAttribute('cv-if');
+      var isProperty = sourceTag.getAttribute('cv-is');
       var inverted = false;
       var defined = false;
       sourceTag.removeAttribute('cv-view');
       sourceTag.removeAttribute('cv-if');
+      sourceTag.removeAttribute('cv-is');
       var viewClass = viewProperty ? this.stringToClass(viewProperty) : View;
 
       if (ifProperty.substr(0, 1) === '!') {
@@ -6820,7 +6816,11 @@ var View = function (_Mixin$with) {
         }
 
         if (v) {
-          tag.appendChild(ifDoc);
+          if (isProperty !== null && o == isProperty) {
+            tag.appendChild(ifDoc);
+          } else if (isProperty === null) {
+            tag.appendChild(ifDoc);
+          }
         } else {
           view.nodes.map(function (n) {
             return ifDoc.appendChild(n);
@@ -7294,7 +7294,7 @@ var View = function (_Mixin$with) {
       node.addEventListener(eventName, callback, options);
 
       var remove = function remove() {
-        node.removeEventListener(eventName, callback, options);
+        return node.removeEventListener(eventName, callback, options);
       };
 
       var remover = function remover() {

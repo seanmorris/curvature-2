@@ -1955,11 +1955,13 @@ export class View extends Mixin.with(EventTargetMixin)
 		const sourceTag  = tag;
 		let viewProperty = tag.getAttribute('cv-view');
 		let ifProperty   = sourceTag.getAttribute('cv-if');
+		let isProperty   = sourceTag.getAttribute('cv-is');
 		let inverted     = false;
 		let defined      = false;
 
 		sourceTag.removeAttribute('cv-view');
 		sourceTag.removeAttribute('cv-if');
+		sourceTag.removeAttribute('cv-is');
 
 		const viewClass = viewProperty
 			? this.stringToClass(viewProperty)
@@ -2031,7 +2033,14 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			if(v)
 			{
-				tag.appendChild(ifDoc);
+				if(isProperty !== null && o == isProperty)
+				{
+					tag.appendChild(ifDoc);
+				}
+				else if(isProperty === null)
+				{
+					tag.appendChild(ifDoc);
+				}
 			}
 			else
 			{
@@ -2552,13 +2561,9 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		node.addEventListener(eventName, callback, options);
 
-		let remove = () => {
-			node.removeEventListener(eventName, callback, options);
-		}
+		let remove = () => node.removeEventListener(eventName, callback, options);
 
-		const remover = () => {
-			remove(); remove = () => {};
-		}
+		const remover = () => { remove(); remove = () => {}; };
 
 		this.onRemove(() => remover());
 

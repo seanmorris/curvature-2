@@ -20,9 +20,7 @@ const Descriptors = Symbol('Descriptors');
 
 const TypedArray  = Object.getPrototypeOf(Int8Array);
 
-const emptyObject = {};
-
-const win = window || {};
+const win = globalThis;
 
 const excludedClasses = [
 	win.Node
@@ -262,6 +260,7 @@ export class Bindable
 		});
 
 		const bindTo = (property, callback = null, options = {}) => {
+
 			let bindToAll = false;
 
 			if(Array.isArray(property))
@@ -322,12 +321,12 @@ export class Bindable
 				};
 			}
 
-			if (!object[Binding][property])
+			if(!object[Binding][property])
 			{
-				object[Binding][property] = [];
+				object[Binding][property] = new Set;
 			}
 
-			let bindIndex = object[Binding][property].length;
+			// let bindIndex = object[Binding][property].length;
 
 			if(options.children)
 			{
@@ -366,14 +365,12 @@ export class Bindable
 				}
 			}
 
-			object[Binding][property].push(callback);
+			object[Binding][property].add(callback);
 
 			if(!('now' in options) || options.now)
 			{
 				callback(object[property], property, object, false);
 			}
-
-			let cleaned = false;
 
 			const debinder = () => {
 
@@ -386,20 +383,17 @@ export class Bindable
 					subDebind();
 				}
 
-				if(cleaned)
+				if(!object[Binding][property])
 				{
 					return;
 				}
 
-				cleaned = true;
-
-				if (!object[Binding][property])
+				if(!object[Binding][property].has(callback))
 				{
 					return;
 				}
 
-				delete object[Binding][property][bindIndex];
-
+				object[Binding][property].delete(callback);
 			};
 
 			if(options.removeWith && options.removeWith instanceof View)
@@ -592,19 +586,19 @@ export class Bindable
 
 			if(key in object[Binding])
 			{
-				for(let i in object[Binding][key])
+				for(const callback of object[Binding][key])
 				{
-					if(!object[Binding][key])
-					{
-						continue;
-					}
+					// if(!object[Binding][key])
+					// {
+					// 	continue;
+					// }
 
-					if(!object[Binding][key][i])
-					{
-						continue;
-					}
+					// if(!object[Binding][key][i])
+					// {
+					// 	continue;
+					// }
 
-					if(object[Binding][key][i](value, key, target, false, target[key]) === false)
+					if(callback(value, key, target, false, target[key]) === false)
 					{
 						stop = true;
 					}
@@ -712,11 +706,6 @@ export class Bindable
 
 			if(key in wrapped)
 			{
-				if(key in emptyObject && window.startDump === true)
-				{
-					console.log(key);
-				}
-
 				return wrapped[key];
 			}
 
