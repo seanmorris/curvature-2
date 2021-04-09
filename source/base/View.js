@@ -37,7 +37,7 @@ export class View extends Mixin.with(EventTargetMixin)
 		super(args, mainView);
 
 		Object.defineProperty(this, 'args', { value: Bindable.make(args) });
-		Object.defineProperty(this, uuid,   { value: this.uuid() });
+		Object.defineProperty(this, uuid,   { value: this.constructor.uuid() });
 
 		Object.defineProperty(this, 'nodesAttached',  { value: new Bag((i,s,a) => {}) });
 		Object.defineProperty(this, 'nodesDetached',  { value: new Bag((i,s,a) => {}) });
@@ -2333,7 +2333,7 @@ export class View extends Mixin.with(EventTargetMixin)
 		return !!(String(str).match(this.interpolateRegex));
 	}
 
-	uuid()
+	static uuid()
 	{
 		return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(
 			/[018]/g
@@ -2582,5 +2582,5 @@ export class View extends Mixin.with(EventTargetMixin)
 
 }
 
-Object.defineProperty(View, 'templates',  {value: new Map()});
+Object.defineProperty(View, 'templates', {value: new Map()});
 Object.defineProperty(View, 'refClasses', {value: new Map()});

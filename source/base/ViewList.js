@@ -120,6 +120,10 @@ export class ViewList
 		this.tag = tag;
 
 		Promise.all(renders).then(views => this.renderComplete(views));
+
+		this.parent.dispatchEvent(new CustomEvent('listRendered', {detail: {
+			detail: {key: this.subProperty, value: this.args.value}
+		}}));
 	}
 
 	reRender()
@@ -352,6 +356,10 @@ export class ViewList
 		}
 
 		this.willReRender = false;
+
+		this.parent.dispatchEvent(new CustomEvent('listRendered', {detail: {
+			detail: {key: this.subProperty, value: this.args.value}
+		}}));
 	}
 
 	pause(pause=true)

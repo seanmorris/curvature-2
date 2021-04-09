@@ -645,6 +645,18 @@ export class Bindable
 				return true;
 			}
 
+			if(descriptors.has(key))
+			{
+				const descriptor = descriptors.get(key);
+
+				if(!descriptor.configurable)
+				{
+					return false;
+				}
+
+				descriptors.delete(key);
+			}
+
 			for(let i in object[BindingAll])
 			{
 				object[BindingAll][i](undefined, key, target, true, target[key]);
