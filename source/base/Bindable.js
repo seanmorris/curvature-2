@@ -17,8 +17,12 @@ const OnGet       = Symbol('onGet');
 const OnAllGet    = Symbol('onAllGet');
 const BindChain   = Symbol('bindChain');
 const Descriptors = Symbol('Descriptors');
+const NoGetters   = Symbol('NoGetters');
 
 const TypedArray  = Object.getPrototypeOf(Int8Array);
+
+const SetIterator = Set.prototype[Symbol.iterator];
+const MapIterator = Map.prototype[Symbol.iterator];
 
 const win = globalThis;
 
@@ -241,7 +245,7 @@ export class Bindable
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      {}
+			, value:      new Map
 		});
 
 		Object.defineProperty(object, Unwrapped, {
@@ -523,15 +527,18 @@ export class Bindable
 			, value:      isBound
 		});
 
-		for(let i in object)
+		if(!object[ NoGetters ])
 		{
-			if(object[i] && object[i] instanceof Object && !object[i] instanceof Promise)
+			for(let i in object)
 			{
-				if(!excludedClasses.filter(excludeClass => object[i] instanceof excludeClass).length
-					&& Object.isExtensible(object[i])
-					&& !Object.isSealed(object[i])
-				){
-					object[i] = Bindable.make(object[i]);
+				if(object[i] && object[i] instanceof Object && !object[i] instanceof Promise)
+				{
+					if(!excludedClasses.filter(excludeClass => object[i] instanceof excludeClass).length
+						&& Object.isExtensible(object[i])
+						&& !Object.isSealed(object[i])
+					){
+						object[i] = Bindable.make(object[i]);
+					}
 				}
 			}
 		}
@@ -566,7 +573,10 @@ export class Bindable
 					&& Object.isExtensible(object)
 					&& !Object.isSealed(object)
 				) {
-					value = Bindable.makeBindable(value);
+					if(!object[ NoGetters ])
+					{
+						value = Bindable.makeBindable(value);
+					}
 				}
 			}
 
@@ -649,7 +659,7 @@ export class Bindable
 			{
 				const descriptor = descriptors.get(key);
 
-				if(!descriptor.configurable)
+				if(descriptor && !descriptor.configurable)
 				{
 					return false;
 				}
@@ -705,6 +715,11 @@ export class Bindable
 
 		const get = (target, key) => {
 
+			if(wrapped.has(key))
+			{
+				return wrapped.get(key);
+			}
+
 			if(key === Ref
 				|| key === Original
 				|| key === 'apply'
@@ -714,11 +729,6 @@ export class Bindable
 				|| key === 'constructor'
 			){
 				return object[key];
-			}
-
-			if(key in wrapped)
-			{
-				return wrapped[key];
 			}
 
 			let descriptor;
@@ -751,9 +761,9 @@ export class Bindable
 
 			if(descriptor && !descriptor.configurable && !descriptor.writable)
 			{
-				wrapped[key] = object[key];
+				wrapped.set(key, object[key]);
 
-				return wrapped[key];
+				return object[key];
 			}
 
 			if(typeof object[key] === 'function')
@@ -770,39 +780,38 @@ export class Bindable
 					, value:      object[key]
 				});
 
+				const prototype = Object.getPrototypeOf(object);
+				const isMethod  = prototype[key] === object[key];
+				const objRef = (
+					(typeof Promise === 'function'                     && object instanceof Promise)
+					|| (typeof Map === 'function'                      && object instanceof Map)
+					|| (typeof Set === 'function'                      && object instanceof Set)
+					|| (typeof MapIterator === 'function'              && object.prototype === MapIterator)
+					|| (typeof SetIterator === 'function'              && object.prototype === SetIterator)
+					|| (typeof SetIterator === 'function'              && object.prototype === SetIterator)
+					|| (typeof WeakMap === 'function'                  && object instanceof WeakMap)
+					|| (typeof WeakSet === 'function'                  && object instanceof WeakSet)
+					|| (typeof Date === 'function'                     && object instanceof Date)
+					|| (typeof TypedArray === 'function'               && object instanceof TypedArray)
+					|| (typeof ArrayBuffer === 'function'              && object instanceof ArrayBuffer)
+					|| (typeof EventTarget === 'function'              && object instanceof EventTarget)
+					|| (typeof ResizeObserver === 'function'           && object instanceof ResizeObserver)
+					|| (typeof MutationObserver === 'function'         && object instanceof MutationObserver)
+					|| (typeof PerformanceObserver === 'function'      && object instanceof PerformanceObserver)
+					|| (typeof IntersectionObserver === 'function'     && object instanceof IntersectionObserver)
+					|| (typeof object[Symbol.iterator]  === 'function' && key === 'next')
+				)	? object
+					: object[Ref];
+
 				const wrappedMethod = function(...providedArgs){
-
-					const SetIterator = Set.prototype[Symbol.iterator];
-					const MapIterator = Map.prototype[Symbol.iterator];
-
-					const objRef = (
-						(typeof Promise === 'function'                     && object instanceof Promise)
-						|| (typeof Map === 'function'                      && object instanceof Map)
-						|| (typeof Set === 'function'                      && object instanceof Set)
-						|| (typeof MapIterator === 'function'              && object.prototype === MapIterator)
-						|| (typeof SetIterator === 'function'              && object.prototype === SetIterator)
-						|| (typeof SetIterator === 'function'              && object.prototype === SetIterator)
-						|| (typeof WeakMap === 'function'                  && object instanceof WeakMap)
-						|| (typeof WeakSet === 'function'                  && object instanceof WeakSet)
-						|| (typeof Date === 'function'                     && object instanceof Date)
-						|| (typeof TypedArray === 'function'               && object instanceof TypedArray)
-						|| (typeof ArrayBuffer === 'function'              && object instanceof ArrayBuffer)
-						|| (typeof EventTarget === 'function'              && object instanceof EventTarget)
-						|| (typeof ResizeObserver === 'function'           && object instanceof ResizeObserver)
-						|| (typeof MutationObserver === 'function'         && object instanceof MutationObserver)
-						|| (typeof PerformanceObserver === 'function'      && object instanceof PerformanceObserver)
-						|| (typeof IntersectionObserver === 'function'     && object instanceof IntersectionObserver)
-						|| (typeof object[Symbol.iterator]  === 'function' && key === 'next')
-					)	? object
-						: object[Ref];
 
 					object[Executing] = key;
 
 					stack.unshift(key);
 
-					for(let i in object.___before___)
+					for(const beforeCallback of object.___before___)
 					{
-						object.___before___[i](object, key, stack, object, providedArgs);
+						beforeCallback(object, key, stack, object, providedArgs);
 					}
 
 					let ret;
@@ -813,9 +822,6 @@ export class Bindable
 					}
 					else
 					{
-						const prototype = Object.getPrototypeOf(object);
-						const isMethod  = prototype[key] === object[key];
-
 						const func = object[Unwrapped][key];
 
 						if(isMethod)
@@ -829,9 +835,9 @@ export class Bindable
 						}
 					}
 
-					for(const i in object.___after___)
+					for(const afterCallback of object.___after___)
 					{
-						object.___after___[i](object, key, stack, object, providedArgs);
+						afterCallback(object, key, stack, object, providedArgs);
 					}
 
 					object[Executing] = null;
@@ -852,9 +858,11 @@ export class Bindable
 					return object[selfName][key];
 				};
 
-				wrapped[key] = Bindable.make(wrappedMethod);
+				const result = Bindable.make(wrappedMethod);
 
-				return wrapped[key];
+				wrapped.set(key, result);
+
+				return result;
 			}
 
 			return object[key];
@@ -869,13 +877,20 @@ export class Bindable
 			return Reflect.getPrototypeOf(target);
 		}
 
+		const handler = {
+			get, set, construct, getPrototypeOf, deleteProperty
+		}
+
+		if(object[NoGetters])
+		{
+			delete handler.get;
+		}
+
 		Object.defineProperty(object, Ref, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      new Proxy(object, {
-				get, set, construct, getPrototypeOf, deleteProperty
-			})
+			, value:      new Proxy(object, handler)
 		});
 
 		return object[Ref];
@@ -905,7 +920,7 @@ export class Bindable
 		{
 			if(owner && pathParts.length === 1)
 			{
-				let obj = this.makeBindable(object);
+				let obj = object.NoGetters ? this.make(object) : object;
 
 				return [obj, pathParts.shift(), top];
 			}
@@ -919,10 +934,10 @@ export class Bindable
 				object[node] = {};
 			}
 
-			object = this.makeBindable(object[node]);
+			object = object.NoGetters ? this.make(object[node]) : object[node];
 		}
 
-		return [this.makeBindable(object), node, top];
+		return [this.make(object), node, top];
 	}
 
 	static wrapDelayCallback(callback, delay)
@@ -990,6 +1005,13 @@ Object.defineProperty(Bindable, 'OnGet', {
 	, enumerable: false
 	, writable:   false
 	, value:      OnGet
+});
+
+Object.defineProperty(Bindable, 'NoGetters', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      NoGetters
 });
 
 Object.defineProperty(Bindable, 'GetProto', {

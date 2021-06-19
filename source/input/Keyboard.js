@@ -235,6 +235,24 @@ export class Keyboard
 		return this.codes[code];
 	}
 
+	reset()
+	{
+		for(var i in this.keys)
+		{
+			delete this.keys[i];
+		}
+
+		for(var i in this.codes)
+		{
+			delete this.codes[i];
+		}
+
+		for(var i in this.whichs)
+		{
+			delete this.whichs[i];
+		}
+	}
+
 	update()
 	{
 		for(var i in this.keys)

@@ -19,7 +19,7 @@ export class Model
 
 	static from(skeleton)
 	{
-		const keyProps = this.keyProps;
+		const keyProps = this.prototype.constructor.keyProps;
 		const cacheKey = keyProps.map(prop => skeleton[prop]).join('::');
 
 		const bucket   = 'models-by-type-and-publicId';

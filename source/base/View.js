@@ -91,7 +91,7 @@ export class View extends Mixin.with(EventTargetMixin)
 		this.preserve  = false;
 		this.removed   = false;
 
-		return Bindable.make(this);
+		// return Bindable.make(this);
 	}
 
 	static isView()
@@ -361,13 +361,14 @@ export class View extends Mixin.with(EventTargetMixin)
 		if(parentNode)
 		{
 			const rootNode = parentNode.getRootNode();
+
 			let moveType   = 'internal';
 			let toRoot     = false;
 
 			if(rootNode.isConnected)
 			{
-				toRoot = true;
 				moveType = 'external';
+				toRoot   = true;
 			}
 
 			if(insertPoint)
@@ -392,14 +393,20 @@ export class View extends Mixin.with(EventTargetMixin)
 			}
 			else
 			{
-				parentNode.addEventListener(
-					'cvDomAttached'
-					, () => {
-						this.attached(rootNode, parentNode);
-						this.dispatchAttached(rootNode, parentNode);
+				const firstDomAttach = event => {
+
+					if(!event.target.isConnected)
+					{
+						return;
 					}
-					, {once: true}
-				);
+
+					this.attached(rootNode, parentNode);
+					this.dispatchAttached(rootNode, parentNode);
+
+					parentNode.removeEventListener('cvDomAttached', firstDomAttach);
+				};
+
+				parentNode.addEventListener('cvDomAttached', firstDomAttach);
 			}
 		}
 
@@ -415,9 +422,11 @@ export class View extends Mixin.with(EventTargetMixin)
 		}));
 	}
 
-	dispatchAttached(rootNode, parentNode)
+	dispatchAttached(rootNode, parentNode, view = undefined)
 	{
-		this.dispatchEvent(new CustomEvent('attached', {target: this}));
+		this.dispatchEvent(new CustomEvent('attached', {detail: {
+			view: view || this, node: parentNode, root: rootNode, mainView: this
+		}}));
 
 		const attach = this.nodesAttached.items();
 
@@ -426,6 +435,11 @@ export class View extends Mixin.with(EventTargetMixin)
 			attach[i](rootNode, parentNode);
 		}
 
+		this.dispatchDomAttached(view);
+	}
+
+	dispatchDomAttached(view)
+	{
 		this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
 
 			if(!child.matches)
@@ -433,17 +447,23 @@ export class View extends Mixin.with(EventTargetMixin)
 				return;
 			}
 
-			Dom.mapTags(child, false, (tag, walker)=>{
+			Dom.mapTags(child, false, (tag, walker) => {
 
 				if(!tag.matches)
 				{
 					return;
 				}
 
-				tag.dispatchEvent(new Event('cvDomAttached', {target: tag}));
+				tag.dispatchEvent(new CustomEvent('cvDomAttached', {
+					target: tag
+					, detail: { view: view || this, mainView: this }
+				}));
 			});
 
-			child.dispatchEvent(new Event('cvDomAttached', {target: child}));
+			child.dispatchEvent(new CustomEvent('cvDomAttached', {
+				target: child
+				, detail: { view: view || this, mainView: this }
+			}));
 		});
 	}
 
@@ -926,12 +946,15 @@ export class View extends Mixin.with(EventTargetMixin)
 
 					if(v instanceof View)
 					{
-						const onAttach = (parentNode) => {
-							if(v.dispatchAttach())
-							{
-								v.attached(parentNode);
-								v.dispatchAttached();
-							}
+						const onAttach = (rootNode, parentNode) => {
+
+							v.dispatchDomAttached(this);
+
+							// if(v.nodes.length && v.dispatchAttach())
+							// {
+							// 	v.attached(rootNode, parentNode, this);
+							// 	v.dispatchAttached(rootNode, parentNode, this);
+							// }
 						};
 
 						this.nodesAttached.add(onAttach);
@@ -1307,11 +1330,14 @@ export class View extends Mixin.with(EventTargetMixin)
 					}
 
 					const onAttach = (parentNode) => {
-						if(v.dispatchAttach())
-						{
-							v.attached(parentNode);
-							v.dispatchAttached();
-						}
+
+						v.dispatchDomAttached(this);
+
+						// if(v.nodes.length && v.dispatchAttach())
+						// {
+						// 	v.attached(parentNode.getRootNode(), parentNode, this);
+						// 	v.dispatchAttached(parentNode.getRootNode(), parentNode, this);
+						// }
 					};
 
 					this.nodesAttached.add(onAttach);
@@ -1546,7 +1572,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 				let argRefs = argList.map((arg) => {
 					let match;
-					if(parseInt(arg) == arg)
+					if(Number(arg) == arg)
 					{
 						return arg;
 					}
@@ -1953,7 +1979,7 @@ export class View extends Mixin.with(EventTargetMixin)
 	mapIfTag(tag)
 	{
 		const sourceTag  = tag;
-		let viewProperty = tag.getAttribute('cv-view');
+		let viewProperty = sourceTag.getAttribute('cv-view');
 		let ifProperty   = sourceTag.getAttribute('cv-if');
 		let isProperty   = sourceTag.getAttribute('cv-is');
 		let inverted     = false;

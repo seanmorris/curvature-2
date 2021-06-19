@@ -41,17 +41,11 @@ export class Tag
 		};
 
 		this.style = ((_this) => Bindable.make(function(styles){
+
 			if(!_this.node)
 			{
 				return;
 			}
-
-			// let styleEvent = new CustomEvent('cvStyle', {detail:{styles}});
-
-			// if(!_this.node.dispatchEvent(styleEvent))
-			// {
-			// 	return;
-			// }
 
 			for(const property in styles)
 			{
@@ -59,9 +53,12 @@ export class Tag
 				{
 					_this.node.style.setProperty(property, styles[property]);
 				}
-
-				_this.node.style[property] = styles[property];
+				else
+				{
+					_this.node.style[property] = styles[property];
+				}
 			}
+
 		}))(this);
 
 		this.proxy = Bindable.make(this);

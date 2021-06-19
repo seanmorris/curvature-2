@@ -1,4 +1,5 @@
 import { Bindable } from './Bindable';
+import { SetMap   } from './SetMap';
 import { View     } from './View';
 import { Bag      } from './Bag';
 
@@ -80,7 +81,7 @@ export class ViewList
 
 				for(let i in this.views)
 				{
-					if(typeof i === 'string')
+					if(isNaN(i))
 					{
 						this.views[i].args[ this.keyProperty ] = i.substr(1);
 						continue;
@@ -134,13 +135,20 @@ export class ViewList
 		}
 
 		let views = [];
+		let existingViews = new SetMap;
 
 		for(let i in this.views)
 		{
-			views[i] = this.views[i];
+			const view     = this.views[i]
+			const rawValue = view.args[ this.subProperty ];
+
+			existingViews.add(rawValue, view);
+
+			views[i] = view;
 		}
 
 		let finalViews = [];
+		let finalViewSet = new Set;
 
 		this.upDebind   && this.upDebind.map(d=>d&&d());
 		this.downDebind && this.downDebind.map(d=>d&&d());
@@ -165,14 +173,19 @@ export class ViewList
 				k = Number(k);
 			}
 
-			for(let j = views.length - 1; j >= 0; j--)
+			if(this.args.value[i] !== undefined && existingViews.has(this.args.value[i]))
 			{
-				if(views[j]
-					&& this.args.value[i] !== undefined
-					&& this.args.value[i] === views[j].args[ this.subProperty ]
-				){
+				const existingView = existingViews.getOne(this.args.value[i]);
+
+				if(existingView)
+				{
+					existingView.args[ this.keyProperty ] = i;
+
+					finalViews[k] = existingView;
+
+					finalViewSet.add(existingView);
+
 					found = true;
-					finalViews[k] = views[j];
 
 					if(!isNaN(k))
 					{
@@ -180,13 +193,33 @@ export class ViewList
 						k > 0 && (anteMinKey = Math.min(anteMinKey, k));
 					}
 
-					finalViews[k].args[ this.keyProperty ] = i;
-
-					delete views[j];
-
-					break;
+					existingViews.remove(this.args.value[i], existingView);
 				}
+
 			}
+
+			// for(let j = views.length - 1; j >= 0; j--)
+			// {
+			// 	if(views[j]
+			// 		&& this.args.value[i] !== undefined
+			// 		&& this.args.value[i] === views[j].args[ this.subProperty ]
+			// 	){
+			// 		found = true;
+			// 		finalViews[k] = views[j];
+
+			// 		if(!isNaN(k))
+			// 		{
+			// 			minKey = Math.min(minKey, k);
+			// 			k > 0 && (anteMinKey = Math.min(anteMinKey, k));
+			// 		}
+
+			// 		finalViews[k].args[ this.keyProperty ] = i;
+
+			// 		delete views[j];
+
+			// 		break;
+			// 	}
+			// }
 
 			if(!found)
 			{
@@ -253,18 +286,7 @@ export class ViewList
 
 		for(let i in views)
 		{
-			let found = false;
-
-			for(let j in finalViews)
-			{
-				if(views[i] === finalViews[j])
-				{
-					found = true;
-					break;
-				}
-			}
-
-			if(!found)
+			if(!finalViewSet.has(views[i]))
 			{
 				views[i].remove();
 			}

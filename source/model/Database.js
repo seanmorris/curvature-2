@@ -314,7 +314,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				return;
 			}
 
-			const request = store.delete(Number(record[PrimaryKey].description));
+			const request = store.delete(record[PrimaryKey].description);
 
 			record[PrimaryKey] = undefined;
 
