@@ -9,39 +9,50 @@ export class Cache
 			expiration = (expiry * 1000) + (new Date).getTime();
 		}
 
-		// console.log(
-		// 	`Caching ${key} until ${expiration} in ${bucket}.`
-		// 	, value
-		// 	, this.bucket
-		// );
-
-		if(!this.bucket)
+		if(!this.buckets)
 		{
-			this.bucket = {};
+			this.buckets = new Map;
 		}
 
-		if(!this.bucket[bucket])
+		if(!this.buckets.has(bucket))
 		{
-			this.bucket[bucket]	= {};
+			this.buckets.set(bucket, new Map);
 		}
 
-		this.bucket[bucket][key] = {expiration, value};
+		let eventEnd = new CustomEvent('cvCacheStore', {
+			cancelable: true
+			, detail:   {
+				key, value, expiry, bucket
+			}
+		});
+
+		if(document.dispatchEvent(eventEnd))
+		{
+			this.buckets.get(bucket).set(key, {value, expiration});
+		}
 	}
 
 	static load(key, defaultvalue = false, bucket = 'standard')
 	{
-		// console.log(
-		// 	`Checking cache for ${key} in ${bucket}.`
-		// 	, this.bucket
-		// );
+		let eventEnd = new CustomEvent('cvCacheLoad', {
+			cancelable: true
+			, detail:   {
+				key, defaultvalue, bucket
+			}
+		});
 
-		if(this.bucket && this.bucket[bucket] && this.bucket[bucket][key])
+		if(!document.dispatchEvent(eventEnd))
 		{
+			return defaultvalue;
+		}
+
+		if(this.buckets && this.buckets.has(bucket) && this.buckets.get(bucket).has(key))
+		{
+			const entry = this.buckets.get(bucket).get(key);
 			// console.log(this.bucket[bucket][key].expiration, (new Date).getTime());
-			if(this.bucket[bucket][key].expiration == 0
-				|| this.bucket[bucket][key].expiration > (new Date).getTime()
-			){
-				return this.bucket[bucket][key].value;
+			if(entry.expiration === 0 || entry.expiration > (new Date).getTime())
+			{
+				return this.buckets.get(bucket).get(key).value;
 			}
 		}
 

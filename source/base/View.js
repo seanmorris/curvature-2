@@ -2453,6 +2453,9 @@ export class View extends Mixin.with(EventTargetMixin)
 			delete this.frames[i];
 		}
 
+		this.preRuleSet.purge();
+		this.ruleSet.purge();
+
 		this.removed = true;
 	}
 

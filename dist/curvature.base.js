@@ -1187,28 +1187,54 @@ var Cache = function () {
         expiration = expiry * 1000 + new Date().getTime();
       }
 
-      if (!this.bucket) {
-        this.bucket = {};
+      if (!this.buckets) {
+        this.buckets = new Map();
       }
 
-      if (!this.bucket[bucket]) {
-        this.bucket[bucket] = {};
+      if (!this.buckets.has(bucket)) {
+        this.buckets.set(bucket, new Map());
       }
 
-      this.bucket[bucket][key] = {
-        expiration: expiration,
-        value: value
-      };
+      var eventEnd = new CustomEvent('cvCacheStore', {
+        cancelable: true,
+        detail: {
+          key: key,
+          value: value,
+          expiry: expiry,
+          bucket: bucket
+        }
+      });
+
+      if (document.dispatchEvent(eventEnd)) {
+        this.buckets.get(bucket).set(key, {
+          value: value,
+          expiration: expiration
+        });
+      }
     }
   }, {
     key: "load",
     value: function load(key) {
       var defaultvalue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var bucket = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'standard';
+      var eventEnd = new CustomEvent('cvCacheLoad', {
+        cancelable: true,
+        detail: {
+          key: key,
+          defaultvalue: defaultvalue,
+          bucket: bucket
+        }
+      });
 
-      if (this.bucket && this.bucket[bucket] && this.bucket[bucket][key]) {
-        if (this.bucket[bucket][key].expiration == 0 || this.bucket[bucket][key].expiration > new Date().getTime()) {
-          return this.bucket[bucket][key].value;
+      if (!document.dispatchEvent(eventEnd)) {
+        return defaultvalue;
+      }
+
+      if (this.buckets && this.buckets.has(bucket) && this.buckets.get(bucket).has(key)) {
+        var entry = this.buckets.get(bucket).get(key);
+
+        if (entry.expiration === 0 || entry.expiration > new Date().getTime()) {
+          return this.buckets.get(bucket).get(key).value;
         }
       }
 
@@ -2950,7 +2976,15 @@ var _Tag = require("./Tag");
 
 var _View = require("./View");
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
@@ -3001,6 +3035,27 @@ var RuleSet = function () {
           } finally {
             _iterator.f();
           }
+        }
+      }
+    }
+  }, {
+    key: "purge",
+    value: function purge() {
+      if (!this.rules) {
+        return;
+      }
+
+      for (var _i = 0, _Object$entries = Object.entries(this.rules); _i < _Object$entries.length; _i++) {
+        var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
+            k = _Object$entries$_i[0],
+            v = _Object$entries$_i[1];
+
+        if (!this.rules[k]) {
+          continue;
+        }
+
+        for (var kk in this.rules[k]) {
+          delete this.rules[k][kk];
         }
       }
     }
@@ -3059,15 +3114,14 @@ var RuleSet = function () {
     }
   }, {
     key: "wrap",
-    value: function wrap(doc, callback) {
+    value: function wrap(doc, originalCallback) {
       var view = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+      var callback = originalCallback;
 
-      if (callback instanceof _View.View || callback && callback.prototype && callback.prototype instanceof _View.View) {
-        callback = function (callback) {
-          return function () {
-            return callback;
-          };
-        }(callback);
+      if (originalCallback instanceof _View.View || originalCallback && originalCallback.prototype && originalCallback.prototype instanceof _View.View) {
+        callback = function callback() {
+          return originalCallback;
+        };
       }
 
       return function (element) {
@@ -3075,14 +3129,12 @@ var RuleSet = function () {
           Object.defineProperty(element, '___cvApplied___', {
             enumerable: false,
             writable: false,
-            value: []
+            value: new WeakSet()
           });
         }
 
-        for (var i in element.___cvApplied___) {
-          if (callback == element.___cvApplied___[i]) {
-            return;
-          }
+        if (element.___cvApplied___.has(originalCallback)) {
+          return;
         }
 
         var direct, parentView;
@@ -3095,19 +3147,13 @@ var RuleSet = function () {
           }
         }
 
-        if (parentView) {
-          parentView.onRemove(function () {
-            return element.___cvApplied___.splice(0);
-          });
-        }
-
         var tag = new _Tag.Tag(element, parentView, null, undefined, direct);
         var parent = tag.element.parentNode;
         var sibling = tag.element.nextSibling;
         var result = callback(tag);
 
         if (result !== false) {
-          element.___cvApplied___.push(callback);
+          element.___cvApplied___.add(originalCallback);
         }
 
         if (result instanceof HTMLElement) {
@@ -5770,6 +5816,8 @@ var View = function (_Mixin$with) {
         delete this.frames[i];
       }
 
+      this.preRuleSet.purge();
+      this.ruleSet.purge();
       this.removed = true;
     }
   }, {
@@ -6216,14 +6264,7 @@ var ViewList = function () {
             viewArgs[k] = v;
           });
 
-          _view.onRemove(function () {
-            _this3.upDebind[k] && _this3.upDebind[k]();
-            _this3.downDebind[k] && _this3.downDebind[k]();
-            delete _this3.downDebind[k];
-            delete _this3.upDebind[k];
-          });
-
-          _this3._onRemove.add(function () {
+          var upDebind = function upDebind() {
             _this3.upDebind.filter(function (x) {
               return x;
             }).map(function (d) {
@@ -6231,9 +6272,9 @@ var ViewList = function () {
             });
 
             _this3.upDebind.splice(0);
-          });
+          };
 
-          _this3._onRemove.add(function () {
+          var downDebind = function downDebind() {
             _this3.downDebind.filter(function (x) {
               return x;
             }).map(function (d) {
@@ -6241,7 +6282,22 @@ var ViewList = function () {
             });
 
             _this3.downDebind.splice(0);
+          };
+
+          _view.onRemove(function () {
+            _this3._onRemove.remove(upDebind);
+
+            _this3._onRemove.remove(downDebind);
+
+            _this3.upDebind[k] && _this3.upDebind[k]();
+            _this3.downDebind[k] && _this3.downDebind[k]();
+            delete _this3.upDebind[k];
+            delete _this3.downDebind[k];
           });
+
+          _this3._onRemove.add(upDebind);
+
+          _this3._onRemove.add(downDebind);
 
           viewArgs[_this3.subProperty] = _this3.args.value[_i];
         }
@@ -6293,6 +6349,9 @@ var ViewList = function () {
         };
 
         this.rendered = renderRecurse();
+        this.rendered.then(function () {
+          return finalViews.splice(0);
+        });
       } else {
         var renders = [];
         var leftovers = Object.assign({}, finalViews);
@@ -6325,8 +6384,6 @@ var ViewList = function () {
         this.rendered = Promise.all(renders);
       }
 
-      this.views = finalViews;
-
       for (var _i5 in finalViews) {
         if (isNaN(_i5)) {
           finalViews[_i5].args[this.keyProperty] = _i5.substr(1);
@@ -6336,6 +6393,8 @@ var ViewList = function () {
         finalViews[_i5].args[this.keyProperty] = _i5;
       }
 
+      this.views = [].concat(finalViews);
+      finalViewSet.clear();
       this.willReRender = false;
       this.parent.dispatchEvent(new CustomEvent('listRendered', {
         detail: {

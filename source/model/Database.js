@@ -43,10 +43,10 @@ export class Database extends Mixin.with(EventTargetMixin)
 	{
 		if(this[Instances][dbName])
 		{
-			return Promise.resolve(this[Instances][dbName]);
+			return this[Instances][dbName];
 		}
 
-		return new Promise((accept, reject) => {
+		return this[Instances][dbName] = new Promise((accept, reject) => {
 			const request = indexedDB.open(dbName, version);
 
 			request.onerror = error => {
@@ -64,8 +64,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 			request.onsuccess = event => {
 				const instance = new this(event.target.result);
 
-				this[Instances][dbName] = instance;
-
 				accept(instance);
 			};
 
@@ -80,8 +78,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 				{
 					instance['_version_' + v](connection);
 				}
-
-				this[Instances][dbName] = instance
 			};
 		});
 	}
@@ -459,9 +455,9 @@ export class Database extends Mixin.with(EventTargetMixin)
 					? source.objectStore.name
 					: index.name;
 
-				bank[pk][Database.AfterRead] && bank[pk][Database.AfterRead](detail);
-
 				detail.record = value;
+
+				bank[pk][Database.AfterRead] && bank[pk][Database.AfterRead](detail);
 
 				const cancelable = true;
 

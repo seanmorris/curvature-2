@@ -263,22 +263,29 @@ export class ViewList
 					viewArgs[k] = v;
 				});
 
+				const upDebind = () => {
+					this.upDebind.filter(x=>x).map(d=>d());
+					this.upDebind.splice(0);
+				};
+
+				const downDebind = () => {
+					this.downDebind.filter(x=>x).map(d=>d());
+					this.downDebind.splice(0);
+				};
+
 				view.onRemove(()=>{
+					this._onRemove.remove(upDebind);
+					this._onRemove.remove(downDebind);
+
 					this.upDebind[k]   && this.upDebind[k]();
 					this.downDebind[k] && this.downDebind[k]();
 
-					delete this.downDebind[k]
 					delete this.upDebind[k];
+					delete this.downDebind[k]
 				});
 
-				this._onRemove.add(()=>{
-					this.upDebind.filter(x=>x).map(d=>d());
-					this.upDebind.splice(0);
-				});
-				this._onRemove.add(()=>{
-					this.downDebind.filter(x=>x).map(d=>d());
-					this.downDebind.splice(0);
-				});
+				this._onRemove.add(upDebind);
+				this._onRemove.add(downDebind);
 
 				viewArgs[this.subProperty] = this.args.value[i];
 			}
@@ -334,6 +341,8 @@ export class ViewList
 			}
 
 			this.rendered = renderRecurse();
+
+			this.rendered.then(() => finalViews.splice(0));
 		}
 		else
 		{
@@ -364,7 +373,6 @@ export class ViewList
 			this.rendered = Promise.all(renders);
 		}
 
-		this.views = finalViews;
 
 		for(let i in finalViews)
 		{
@@ -376,6 +384,10 @@ export class ViewList
 
 			finalViews[i].args[ this.keyProperty ] = i;
 		}
+
+		this.views = [...finalViews];
+
+		finalViewSet.clear();
 
 		this.willReRender = false;
 

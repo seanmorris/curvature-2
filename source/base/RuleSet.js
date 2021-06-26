@@ -6,11 +6,8 @@ export class RuleSet
 {
 	static add(selector, callback)
 	{
-		this.globalRules = this.globalRules
-			|| {};
-		this.globalRules[selector] = this.globalRules[selector]
-			|| [];
-
+		this.globalRules = this.globalRules || {};
+		this.globalRules[selector] = this.globalRules[selector] || [];
 		this.globalRules[selector].push(callback);
 
 		return this;
@@ -64,6 +61,27 @@ export class RuleSet
 		}
 	}
 
+	purge()
+	{
+		if(!this.rules)
+		{
+			return;
+		}
+
+		for(const [k,v] of Object.entries(this.rules))
+		{
+			if(!this.rules[k])
+			{
+				continue;
+			}
+
+			for(const kk in this.rules[k])
+			{
+				delete this.rules[k][kk];
+			}
+		}
+	}
+
 	static wait(event = 'DOMContentLoaded', node = document)
 	{
 		let listener = ((event, node) => () => {
@@ -74,15 +92,17 @@ export class RuleSet
 		node.addEventListener(event, listener);
 	}
 
-	static wrap(doc, callback, view = null)
+	static wrap(doc, originalCallback, view = null)
 	{
-		if(callback instanceof View
-			|| (callback
-				&& callback.prototype
-				&& callback.prototype instanceof View
+		let callback = originalCallback;
+
+		if(originalCallback instanceof View
+			|| (originalCallback
+				&& originalCallback.prototype
+				&& originalCallback.prototype instanceof View
 			)
 		){
-			callback = ((callback)=>()=>callback)(callback);
+			callback = () => originalCallback;
 		}
 
 		return (element) => {
@@ -94,17 +114,14 @@ export class RuleSet
 					, {
 						enumerable: false,
 						writable: false,
-						value: []
+						value: new WeakSet
 					}
 				);
 			}
 
-			for(let i in element.___cvApplied___)
+			if(element.___cvApplied___.has(originalCallback))
 			{
-				if(callback == element.___cvApplied___[i])
-				{
-					return;
-				}
+				return;
 			}
 
 			let direct, parentView;
@@ -119,11 +136,6 @@ export class RuleSet
 				}
 			}
 
-			if(parentView)
-			{
-				parentView.onRemove(()=>element.___cvApplied___.splice(0));
-			}
-
 			const tag     = new Tag(element, parentView, null, undefined, direct);
 			const parent  = tag.element.parentNode;
 			const sibling = tag.element.nextSibling;
@@ -132,7 +144,7 @@ export class RuleSet
 
 			if(result !== false)
 			{
-				element.___cvApplied___.push(callback);
+				element.___cvApplied___.add(originalCallback);
 			}
 
 			if(result instanceof HTMLElement)
