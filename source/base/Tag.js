@@ -40,7 +40,7 @@ export class Tag
 			return this[name];
 		};
 
-		this.style = ((_this) => Bindable.make(function(styles){
+		const generateStyler = (_this) => Bindable.make(function(styles) {
 
 			if(!_this.node)
 			{
@@ -51,15 +51,16 @@ export class Tag
 			{
 				if(property[0] === '-')
 				{
-					_this.node.style.setProperty(property, styles[property]);
+					_this.node.style.setProperty(property, String(styles[property]));
 				}
 				else
 				{
-					_this.node.style[property] = styles[property];
+					_this.node.style[property] = String(styles[property]);
 				}
 			}
+		});
 
-		}))(this);
+		this.style = generateStyler(this);
 
 		this.proxy = Bindable.make(this);
 

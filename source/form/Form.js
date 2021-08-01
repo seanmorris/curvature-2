@@ -102,25 +102,10 @@ export class Form extends View
 		// console.log(event);
 	}
 
-	// onSubmit(callback)
-	// {
-	// 	this._onSubmit.push(callback);
-	// }
-
-	// onRender(callback)
-	// {
-	// 	if(this.nodes)
-	// 	{
-	// 		callback(this);
-	// 		return;
-	// 	}
-
-	// 	this._onRender.push(callback);
-	// }
-
 	static renderFields(skeleton, parent = null, customFields = {})
 	{
 		let fields = {};
+
 		for(let i in skeleton)
 		{
 			if(fields[i])
@@ -148,8 +133,6 @@ export class Form extends View
 				}
 			}
 
-			// console.log(customFields);
-
 			if(customFields && skeleton[i].name in customFields)
 			{
 				field = new customFields[ skeleton[i].name ](skeleton[i], form, parent, i)
@@ -168,38 +151,46 @@ export class Form extends View
 							field = new FieldSet(skeleton[i], form, parent, i);
 						}
 						break;
+
 					case 'select':
 						field = new SelectField(skeleton[i], form, parent, i);
 						break;
+
 					case 'radios':
 						field = new RadioField(skeleton[i], form, parent, i);
 						break;
+
 					case 'html':
 						field = new HtmlField(skeleton[i], form, parent, i);
 						break;
+
 					case 'submit':
 					case 'button':
 						field = new ButtonField(skeleton[i], form, parent, i);
 						break;
+
 					case 'hidden':
 						field = new HiddenField(skeleton[i], form, parent, i);
 						break;
+
 					case 'textarea':
 						field = new TextareaField(skeleton[i], form, parent, i);
 						break;
+
 					default :
 						field = new Field(skeleton[i], form, parent, i);
 						break;
 				}
 			}
 
-			fields[i] = field;
+			fields[i] = Bindable.make(field);
 
 			const fieldName = field.key;//field.getName();
 
 			field.args.bindTo('value', (v, k ,t, d) => {
 
 				if(!isNaN(v)
+					&& v !== null
 					&& v.length
 					&& v == Number(v)
 					&& v.length === String(Number(v)).length
@@ -207,15 +198,10 @@ export class Form extends View
 					v = Number(v);
 				}
 
-				// console.log(t,v);
-				if(t.type == 'html'
-					&& !t.contentEditable
-					|| t.type == 'fieldset'
-				){
+				if(t.type == 'html' && !t.contentEditable || t.type == 'fieldset')
+				{
 					return;
 				}
-
-				// let fieldName = field.args.name;
 
 				if(t.disabled)
 				{
@@ -252,11 +238,11 @@ export class Form extends View
 				form.args.flatValue[ fieldName ] = v;
 
 				form.args.valueString = JSON.stringify(form.args.value, null, 4);
-				console.log();
-
-
 			});
+
+			field.render();
 		}
+
 		return fields;
 	}
 
@@ -377,8 +363,6 @@ export class Form extends View
 		{
 			const field = parent.args.fields[i];
 
-			// console.log(i, field, skeleton[i]);
-
 			if(skeleton[i])
 			{
 				if(skeleton[i].value)
@@ -418,12 +402,4 @@ export class Form extends View
 	{
 		return !!Object.keys(this.args.fields).length;
 	}
-
-	// postRender()
-	// {
-	// 	for(let i in this._onRender)
-	// 	{
-	// 		this._onRender[i](this);
-	// 	}
-	// }
 }

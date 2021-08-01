@@ -3374,7 +3374,7 @@ var Tag = function () {
       return _this2[name];
     };
 
-    this.style = function (_this) {
+    var generateStyler = function generateStyler(_this) {
       return _Bindable.Bindable.make(function (styles) {
         if (!_this.node) {
           return;
@@ -3382,14 +3382,15 @@ var Tag = function () {
 
         for (var property in styles) {
           if (property[0] === '-') {
-            _this.node.style.setProperty(property, styles[property]);
+            _this.node.style.setProperty(property, String(styles[property]));
           } else {
-            _this.node.style[property] = styles[property];
+            _this.node.style[property] = String(styles[property]);
           }
         }
       });
-    }(this);
+    };
 
+    this.style = generateStyler(this);
     this.proxy = _Bindable.Bindable.make(this);
     this.proxy.style.bindTo(function (v, k) {
       _this2.element.style[k] = v;
@@ -4955,7 +4956,7 @@ var View = function (_Mixin$with) {
               if (_ret4 === "break") break;
             }
           }
-        } else if (type === 'file' && !multi) {
+        } else if (type === 'file' && !multi && event.target.files.length) {
           var _file = event.target.files.item(0);
 
           _file.toJSON = function () {

@@ -1,8 +1,10 @@
 import { View     } from '../base/View';
 import { Bindable } from '../base/Bindable';
 
-export class Field extends View {
-	constructor(values, form, parent, key) {
+export class Field extends View
+{
+	constructor(values, form, parent, key)
+	{
 		let skeleton = Object.assign({}, values);
 
 		super(skeleton, parent);
@@ -65,6 +67,7 @@ export class Field extends View {
 		this.args.bindTo('value', (v, k) => {
 
 			if(!isNaN(v)
+				&& v !== null
 				&& v.length
 				&& v == Number(v)
 				&& v.length === String(Number(v)).length
@@ -89,6 +92,8 @@ export class Field extends View {
 				&& this.tags.input.element.files
 				&& this.tags.input.element.length
 			){
+				this.tags.input.node.removeAttribute('title');
+
 				if(!attrs.multiple)
 				{
 					this.parent.args.value[key] = this.tags.input.element.files[0];
@@ -113,6 +118,28 @@ export class Field extends View {
 
 						this.parent.args.value.splice(files.length);
 					}
+				}
+
+			}
+			else if(attrs.type == 'file' && this.tags.input)
+			{
+				if(!v && this.tags.input)
+				{
+					this.tags.input.node.value = null;
+
+					if(attrs.placeholder)
+					{
+						this.tags.input.node.setAttribute('title', attrs.placeholder);
+					}
+					else
+					{
+						this.tags.input.node.removeAttribute('title');
+					}
+
+				}
+				else if(v instanceof File)
+				{
+					this.tags.input.node.setAttribute('title', v.name);
 				}
 			}
 			else
@@ -142,7 +169,6 @@ export class Field extends View {
 			}
 
 			setting = k;
-
 
 			if(attrs.type == 'file')
 			{
@@ -174,7 +200,6 @@ export class Field extends View {
 
 							this.parent.args.value[key].splice(files.length);
 						}
-
 					}
 				}
 				else

@@ -4849,7 +4849,7 @@ var Tag = function () {
       return _this2[name];
     };
 
-    this.style = function (_this) {
+    var generateStyler = function generateStyler(_this) {
       return _Bindable.Bindable.make(function (styles) {
         if (!_this.node) {
           return;
@@ -4857,14 +4857,15 @@ var Tag = function () {
 
         for (var property in styles) {
           if (property[0] === '-') {
-            _this.node.style.setProperty(property, styles[property]);
+            _this.node.style.setProperty(property, String(styles[property]));
           } else {
-            _this.node.style[property] = styles[property];
+            _this.node.style[property] = String(styles[property]);
           }
         }
       });
-    }(this);
+    };
 
+    this.style = generateStyler(this);
     this.proxy = _Bindable.Bindable.make(this);
     this.proxy.style.bindTo(function (v, k) {
       _this2.element.style[k] = v;
@@ -6430,7 +6431,7 @@ var View = function (_Mixin$with) {
               if (_ret4 === "break") break;
             }
           }
-        } else if (type === 'file' && !multi) {
+        } else if (type === 'file' && !multi && event.target.files.length) {
           var _file = event.target.files.item(0);
 
           _file.toJSON = function () {
@@ -8098,7 +8099,7 @@ var Field = function (_View) {
     var setting = null;
 
     _this.args.bindTo('value', function (v, k) {
-      if (!isNaN(v) && v.length && v == Number(v) && v.length === String(Number(v)).length) {
+      if (!isNaN(v) && v !== null && v.length && v == Number(v) && v.length === String(Number(v)).length) {
         v = Number(v);
       }
 
@@ -8113,6 +8114,8 @@ var Field = function (_View) {
       _this.valueString = _this.args.valueString;
 
       if (attrs.type == 'file' && _this.tags.input && _this.tags.input.element.files && _this.tags.input.element.length) {
+        _this.tags.input.node.removeAttribute('title');
+
         if (!attrs.multiple) {
           _this.parent.args.value[key] = _this.tags.input.element.files[0];
         } else {
@@ -8129,6 +8132,18 @@ var Field = function (_View) {
 
             _this.parent.args.value.splice(files.length);
           }
+        }
+      } else if (attrs.type == 'file' && _this.tags.input) {
+        if (!v && _this.tags.input) {
+          _this.tags.input.node.value = null;
+
+          if (attrs.placeholder) {
+            _this.tags.input.node.setAttribute('title', attrs.placeholder);
+          } else {
+            _this.tags.input.node.removeAttribute('title');
+          }
+        } else if (v instanceof File) {
+          _this.tags.input.node.setAttribute('title', v.name);
         }
       } else {
         if (!_this.parent.args.value) {
@@ -8620,10 +8635,10 @@ var Form = function (_View) {
           }
         }
 
-        fields[i] = field;
+        fields[i] = _Bindable.Bindable.make(field);
         var fieldName = field.key;
         field.args.bindTo('value', function (v, k, t, d) {
-          if (!isNaN(v) && v.length && v == Number(v) && v.length === String(Number(v)).length) {
+          if (!isNaN(v) && v !== null && v.length && v == Number(v) && v.length === String(Number(v)).length) {
             v = Number(v);
           }
 
@@ -8656,8 +8671,8 @@ var Form = function (_View) {
 
           form.args.flatValue[fieldName] = v;
           form.args.valueString = JSON.stringify(form.args.value, null, 4);
-          console.log();
         });
+        field.render();
       };
 
       for (var i in skeleton) {
@@ -11745,7 +11760,7 @@ var PopOutTag = function (_Tag) {
     _this.element.classList.add('unpopped');
 
     _this.scrollStyle = '';
-    _this.style = '';
+    _this.existingStyle = '';
     _this.popTimeout = null;
     _this.rect = null;
     _this.transformRect = null;
@@ -11826,7 +11841,7 @@ var PopOutTag = function (_Tag) {
       }
 
       var hostRect = hostTag.getBoundingClientRect();
-      var style = _this.style + _this.unpoppedStyle;
+      var style = _this.existingStyle + _this.unpoppedStyle;
       var x = hostRect.x;
       var y = hostRect.y + document.documentElement.scrollTop;
       var w = hostRect.width;
@@ -11892,7 +11907,7 @@ var PopOutTag = function (_Tag) {
       PopOutTag.popLevel();
       this.previousScroll = window.scrollY;
       this.rect = this.element.getBoundingClientRect();
-      this.style = this.element.getAttribute('style');
+      this.existingStyle = this.element.getAttribute('style');
       var hostTag = this.element;
       this.transformRect = null;
 
@@ -11908,7 +11923,6 @@ var PopOutTag = function (_Tag) {
         }
       }
 
-      console.log(this.transformRect);
       var hostRect = hostTag.getBoundingClientRect();
       this.element.classList.add('popping');
       var oX = this.rect.x;
@@ -11927,7 +11941,6 @@ var PopOutTag = function (_Tag) {
         var y = hostRect.y + document.documentElement.scrollTop;
         var w = hostRect.width;
         var h = hostRect.height;
-        console.log(_this2.transformRect);
 
         if (_this2.transformRect) {
           x -= _this2.transformRect.x;
@@ -11938,7 +11951,7 @@ var PopOutTag = function (_Tag) {
         y + _this2.popMargin;
         w + _this2.popMargin * 2;
         h + _this2.popMargin * 2;
-        var style = _this2.style + _this2.unpoppedStyle;
+        var style = _this2.existingStyle + _this2.unpoppedStyle;
 
         _this2.element.setAttribute('style', style);
 
@@ -12008,7 +12021,7 @@ var PopOutTag = function (_Tag) {
       }
 
       window.scrollTo(0, this.previousScroll);
-      var style = this.style + this.unpoppedStyle + ";transition: width ".concat(this.horizontalDuration, "s ease-in\n\t\t\t\t\t, height ").concat(this.verticalDuration, "s        ease-in\n\t\t\t\t\t, all ").concat(this.horizontalDuration, "s         ease-in;");
+      var style = this.existingStyle + this.unpoppedStyle + ";transition: width ".concat(this.horizontalDuration, "s ease-out\n\t\t\t\t\t, height ").concat(this.verticalDuration, "s        ease-out\n\t\t\t\t\t, all ").concat(this.horizontalDuration, "s         ease-out;");
       this.element.setAttribute('style', style);
       this.moving = true;
       setTimeout(function () {

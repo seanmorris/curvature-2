@@ -1453,7 +1453,7 @@ export class View extends Mixin.with(EventTargetMixin)
 				}
 
 			}
-			else if(type === 'file' && !multi)
+			else if(type === 'file' && !multi && event.target.files.length)
 			{
 				const file = event.target.files.item(0);
 

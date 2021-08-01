@@ -33,7 +33,7 @@ export class PopOutTag extends Tag
 
 		this.scrollStyle = '';
 
-		this.style = '';
+		this.existingStyle = '';
 
 		this.popTimeout = null;
 
@@ -140,7 +140,7 @@ export class PopOutTag extends Tag
 
 			let hostRect = hostTag.getBoundingClientRect();
 
-			let style = this.style + this.unpoppedStyle;
+			let style = this.existingStyle + this.unpoppedStyle;
 
 			let x = hostRect.x;
 			let y = hostRect.y  + document.documentElement.scrollTop;
@@ -245,7 +245,7 @@ export class PopOutTag extends Tag
 		this.previousScroll = window.scrollY;
 
 		this.rect  = this.element.getBoundingClientRect();
-		this.style = this.element.getAttribute('style');
+		this.existingStyle = this.element.getAttribute('style');
 
 		let hostTag = this.element;
 
@@ -268,7 +268,7 @@ export class PopOutTag extends Tag
 			}
 		}
 
-		console.log(this.transformRect);
+		// console.log(this.transformRect);
 
 		let hostRect = hostTag.getBoundingClientRect();
 
@@ -302,7 +302,7 @@ export class PopOutTag extends Tag
 			let w = hostRect.width;
 			let h = hostRect.height;
 
-			console.log(this.transformRect);
+			// console.log(this.transformRect);
 
 			if(this.transformRect)
 			{
@@ -321,7 +321,7 @@ export class PopOutTag extends Tag
 			// , height ${this.verticalDuration}s ease-out
 			// , all ${this.horizontalDuration}s  ease-out;
 
-			let style = this.style + this.unpoppedStyle;
+			let style = this.existingStyle + this.unpoppedStyle;
 
 			this.element.setAttribute('style', style);
 
@@ -407,11 +407,11 @@ export class PopOutTag extends Tag
 
 		window.scrollTo(0,this.previousScroll);
 
-		let style = this.style
+		let style = this.existingStyle
 			+ this.unpoppedStyle
-			+ `;transition: width ${this.horizontalDuration}s ease-in
-					, height ${this.verticalDuration}s        ease-in
-					, all ${this.horizontalDuration}s         ease-in;`;
+			+ `;transition: width ${this.horizontalDuration}s ease-out
+					, height ${this.verticalDuration}s        ease-out
+					, all ${this.horizontalDuration}s         ease-out;`;
 
 		this.element.setAttribute('style', style);
 
