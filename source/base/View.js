@@ -919,6 +919,13 @@ export class View extends Mixin.with(EventTargetMixin)
 
 				tag.parentNode.insertBefore(dynamicNode, tag);
 
+				if(typeof proxy !== 'object')
+				{
+					break;
+				}
+
+				proxy = Bindable.make(proxy);
+
 				let debind = proxy.bindTo(property, (v,k,t) => {
 					if(t[k] !== v && (t[k] instanceof View || t[k] instanceof Node || t[k] instanceof Tag))
 					{
@@ -1081,16 +1088,6 @@ export class View extends Mixin.with(EventTargetMixin)
 							, true
 						);
 					}
-					// if(property.match(/\./))
-					// {
-					// 	[proxy, property] = Bindable.resolve(
-					// 		this.args
-					// 		, property
-					// 		, true
-					// 	);
-					// }
-
-					// console.log(this.args, property);
 
 					const matching = [];
 					const bindProperty = j;
@@ -1684,18 +1681,18 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		return newTag;
 		/*/
+
 		let linkAttr = tag.getAttribute('cv-link');
 
 		tag.setAttribute('href', linkAttr);
 
 		let linkClick = (event) => {
+
 			event.preventDefault();
 
-			if(linkAttr.substring(0, 4) === 'http'
-				|| linkAttr.substring(0, 2) === '//'
-			){
+			if(linkAttr.substring(0, 4) === 'http' || linkAttr.substring(0, 2) === '//')
+			{
 				window.open(tag.getAttribute('href', linkAttr));
-
 				return;
 			}
 
@@ -1811,6 +1808,13 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			for(let i in v)
 			{
+				if(typeof v !== 'object')
+				{
+					continue;
+				}
+
+				v = Bindable.make(v);
+
 				let debind = v.bindTo(i, (vv, kk) => {
 					view.args[kk] = vv;
 				});
@@ -2488,7 +2492,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			.filter(n=>n.querySelectorAll)
 			.map(n=> [...n.querySelectorAll(selector)])
 			.flat()
-			.map(n=> new Tag(n, this, undefined,  undefined, this));
+			.map(n=> new Tag(n, this, undefined,  undefined, this)) || [];
 	}
 
 	onRemove(callback)

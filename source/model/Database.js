@@ -82,16 +82,21 @@ export class Database extends Mixin.with(EventTargetMixin)
 		});
 	}
 
-	select({store, index, range = null, direction = 'next', limit = 0, offset = 0, type = false, origin = undefined})
+	select({store, index, range = null, ranges = [], direction = 'next', limit = 0, offset = 0, type = false, origin = undefined})
 	{
 		const t = this[Connection].transaction(store, "readonly");
 		const s = t.objectStore(store);
 		const i = index ? s.index(index) : s;
 
+		if(!ranges || !ranges.length)
+		{
+			ranges = [range];
+		}
+
 		return {
-			each:   this[Fetch](type, i, direction, range, limit, offset, origin)
-			, one:  this[Fetch](type, i, direction, range, 1, offset, origin)
-			, then: c=>(this[Fetch](type, i, direction, range, limit, offset, origin))(e=>e).then(c)
+			each:   this[Fetch](type, i, direction, ranges, limit, offset, origin)
+			, one:  this[Fetch](type, i, direction, ranges, 1, offset, origin)
+			, then: c=>(this[Fetch](type, i, direction, ranges, limit, offset, origin))(e=>e).then(c)
 		};
 	}
 
@@ -395,15 +400,15 @@ export class Database extends Mixin.with(EventTargetMixin)
 		return [...store.indexNames];
 	}
 
-	[Fetch](type, index, direction, range, limit, offset, origin)
+	[Fetch](type, index, direction, ranges, limit, offset, origin)
 	{
-		return callback => new Promise((accept, reject) => {
+		return callback => Promise.all(ranges.map(range => new Promise((accept, reject) => {
+			const request = index.openCursor(range, direction);
 
 			let i = 0;
 
-			const request = index.openCursor(range, direction);
+			const resultHandler = event => {
 
-			request.addEventListener('success', event => {
 				const cursor = event.target.result;
 
 				if(!cursor)
@@ -482,7 +487,18 @@ export class Database extends Mixin.with(EventTargetMixin)
 				}
 
 				cursor.continue();
-			});
+			};
+
+			request.addEventListener('success', resultHandler);
+
+		}))).then(results => {
+
+			if(results.length === 1)
+			{
+				return results[0];
+			}
+
+			return results;
 		});
 	}
 

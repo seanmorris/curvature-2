@@ -53,4 +53,25 @@ export class RadioField extends Field {
 	{
 		this.args.value = event.target.value;
 	}
+
+	postRender()
+	{
+		this.args.bindTo('value', v => this.selectOptionByValue(v));
+
+		this.args.options.bindTo(
+			v => this.selectOptionByValue(this.args.value)
+			, {frame: 1}
+		);
+	}
+
+	selectOptionByValue(value)
+	{
+		this.findTags('input').forEach(option => {
+			console.log(option.value, value);
+			if(option.value == value)
+			{
+				option.checked = true;
+			}
+		});
+	}
 }

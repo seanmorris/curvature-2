@@ -17,7 +17,14 @@ export const EventTargetMixin = {
 
 	, dispatchEvent(...args)
 	{
-		const [event] = args;
+		let [event] = args;
+
+		if(typeof event === 'string')
+		{
+			event = new CustomEvent(event);
+
+			args[0] = event;
+		}
 
 		this[_EventTarget].dispatchEvent(...args);
 
