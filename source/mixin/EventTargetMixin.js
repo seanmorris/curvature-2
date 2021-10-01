@@ -26,6 +26,7 @@ export const EventTargetMixin = {
 			args[0] = event;
 		}
 
+
 		this[_EventTarget].dispatchEvent(...args);
 
 		const defaultHandler = `on${event.type[0].toUpperCase() + event.type.slice(1)}`;

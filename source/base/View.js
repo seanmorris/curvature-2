@@ -80,6 +80,8 @@ export class View extends Mixin.with(EventTargetMixin)
 			))
 		});
 
+		this.loaded = Promise.resolve(this);
+
 		this.template  = ``;
 
 		this.firstNode = null;
@@ -2056,6 +2058,11 @@ export class View extends Mixin.with(EventTargetMixin)
 				v = !!v.length;
 			}
 
+			if(isProperty !== null)
+			{
+				v = o == isProperty;
+			}
+
 			if(inverted)
 			{
 				v = !v;
@@ -2063,18 +2070,39 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			if(v)
 			{
-				if(isProperty !== null && o == isProperty)
-				{
-					tag.appendChild(ifDoc);
-				}
-				else if(isProperty === null)
-				{
-					tag.appendChild(ifDoc);
-				}
+				tag.appendChild(ifDoc);
+
+				const nodes = [...ifDoc.childNodes];
+
+				nodes.map(node => Dom.mapTags(node, false, (tag, walker) => {
+
+					if(!tag.matches)
+					{
+						return;
+					}
+
+					tag.dispatchEvent(new CustomEvent('cvDomAttached', {
+						target: tag
+						, detail: { view: view || this, mainView: this }
+					}));
+				}));
 			}
 			else
 			{
 				view.nodes.map(n=>ifDoc.appendChild(n));
+
+				Dom.mapTags(ifDoc, false, (tag, walker) => {
+
+					if(!tag.matches)
+					{
+						return;
+					}
+
+					tag.dispatchEvent(new CustomEvent('cvDomDetached', {
+						target: tag
+						, detail: { view: view || this, mainView: this }
+					}));
+				});
 			}
 		}, {wait: 0, children: Array.isArray(proxy[property])});
 

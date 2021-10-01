@@ -21,7 +21,7 @@ export class Router {
 
 		Object.assign(this.query, this.queryOver({}));
 
-		const listen = (event) => {
+		const listen = event => {
 
 			event.preventDefault();
 
@@ -39,6 +39,8 @@ export class Router {
 
 					this.routeCount = event.state.routedId;
 				}
+
+				this.state = event.state;
 			}
 			else
 			{
@@ -77,6 +79,14 @@ export class Router {
 			route += location.hash;
 		}
 
+		const state = {
+			routedId: this.routeCount
+			, url:    location.pathname
+			, prev:   this.prevPath
+		};
+
+		history.replaceState(state, null, location.pathname);
+
 		this.go(route !== false ? route : '/');
 	}
 
@@ -89,33 +99,23 @@ export class Router {
 			document.title = configTitle;
 		}
 
+		const state = {
+			routedId: this.routeCount
+			, prev:   this.prevPath
+			, url:    location.pathname
+		};
+
 		if(location.origin === 'null')
 		{
 			this.nextPath = path;
 		}
 		else if(silent === 2 && location.pathname !== path)
 		{
-			history.replaceState(
-				{
-					routedId: this.routeCount
-					, prev:   this.prevPath
-					, url:    location.pathname
-				}
-				, null
-				, path
-			);
+			history.replaceState(state, null, path);
 		}
 		else if(location.pathname !== path)
 		{
-			history.pushState(
-				{
-					routedId: ++this.routeCount
-					, prev:   this.prevPath
-					, url:    location.pathname
-				}
-				, null
-				, path
-			);
+			history.pushState(state, null, path);
 		}
 
 		if(!silent)

@@ -2522,6 +2522,8 @@ var Router = function () {
 
             _this2.routeCount = event.state.routedId;
           }
+
+          _this2.state = event.state;
         } else {
           if (_this2.prevPath !== null && _this2.prevPath !== location.pathname) {
             _this2.history.push(_this2.prevPath);
@@ -2549,6 +2551,12 @@ var Router = function () {
         route += location.hash;
       }
 
+      var state = {
+        routedId: this.routeCount,
+        url: location.pathname,
+        prev: this.prevPath
+      };
+      history.replaceState(state, null, location.pathname);
       this.go(route !== false ? route : '/');
     }
   }, {
@@ -2560,20 +2568,18 @@ var Router = function () {
         document.title = configTitle;
       }
 
+      var state = {
+        routedId: this.routeCount,
+        prev: this.prevPath,
+        url: location.pathname
+      };
+
       if (location.origin === 'null') {
         this.nextPath = path;
       } else if (silent === 2 && location.pathname !== path) {
-        history.replaceState({
-          routedId: this.routeCount,
-          prev: this.prevPath,
-          url: location.pathname
-        }, null, path);
+        history.replaceState(state, null, path);
       } else if (location.pathname !== path) {
-        history.pushState({
-          routedId: ++this.routeCount,
-          prev: this.prevPath,
-          url: location.pathname
-        }, null, path);
+        history.pushState(state, null, path);
       }
 
       if (!silent) {
@@ -3799,6 +3805,7 @@ var View = function (_Mixin$with) {
         });
       })
     });
+    _this.loaded = Promise.resolve(_assertThisInitialized(_this));
     _this.template = "";
     _this.firstNode = null;
     _this.lastNode = null;
@@ -5488,19 +5495,51 @@ var View = function (_Mixin$with) {
           v = !!v.length;
         }
 
+        if (isProperty !== null) {
+          v = o == isProperty;
+        }
+
         if (inverted) {
           v = !v;
         }
 
         if (v) {
-          if (isProperty !== null && o == isProperty) {
-            tag.appendChild(ifDoc);
-          } else if (isProperty === null) {
-            tag.appendChild(ifDoc);
-          }
+          tag.appendChild(ifDoc);
+
+          var nodes = _toConsumableArray(ifDoc.childNodes);
+
+          nodes.map(function (node) {
+            return _Dom.Dom.mapTags(node, false, function (tag, walker) {
+              if (!tag.matches) {
+                return;
+              }
+
+              tag.dispatchEvent(new CustomEvent('cvDomAttached', {
+                target: tag,
+                detail: {
+                  view: view || _this13,
+                  mainView: _this13
+                }
+              }));
+            });
+          });
         } else {
           view.nodes.map(function (n) {
             return ifDoc.appendChild(n);
+          });
+
+          _Dom.Dom.mapTags(ifDoc, false, function (tag, walker) {
+            if (!tag.matches) {
+              return;
+            }
+
+            tag.dispatchEvent(new CustomEvent('cvDomDetached', {
+              target: tag,
+              detail: {
+                view: view || _this13,
+                mainView: _this13
+              }
+            }));
           });
         }
       }, {

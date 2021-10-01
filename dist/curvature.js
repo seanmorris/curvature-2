@@ -3997,6 +3997,8 @@ var Router = function () {
 
             _this2.routeCount = event.state.routedId;
           }
+
+          _this2.state = event.state;
         } else {
           if (_this2.prevPath !== null && _this2.prevPath !== location.pathname) {
             _this2.history.push(_this2.prevPath);
@@ -4024,6 +4026,12 @@ var Router = function () {
         route += location.hash;
       }
 
+      var state = {
+        routedId: this.routeCount,
+        url: location.pathname,
+        prev: this.prevPath
+      };
+      history.replaceState(state, null, location.pathname);
       this.go(route !== false ? route : '/');
     }
   }, {
@@ -4035,20 +4043,18 @@ var Router = function () {
         document.title = configTitle;
       }
 
+      var state = {
+        routedId: this.routeCount,
+        prev: this.prevPath,
+        url: location.pathname
+      };
+
       if (location.origin === 'null') {
         this.nextPath = path;
       } else if (silent === 2 && location.pathname !== path) {
-        history.replaceState({
-          routedId: this.routeCount,
-          prev: this.prevPath,
-          url: location.pathname
-        }, null, path);
+        history.replaceState(state, null, path);
       } else if (location.pathname !== path) {
-        history.pushState({
-          routedId: ++this.routeCount,
-          prev: this.prevPath,
-          url: location.pathname
-        }, null, path);
+        history.pushState(state, null, path);
       }
 
       if (!silent) {
@@ -5274,6 +5280,7 @@ var View = function (_Mixin$with) {
         });
       })
     });
+    _this.loaded = Promise.resolve(_assertThisInitialized(_this));
     _this.template = "";
     _this.firstNode = null;
     _this.lastNode = null;
@@ -6963,19 +6970,51 @@ var View = function (_Mixin$with) {
           v = !!v.length;
         }
 
+        if (isProperty !== null) {
+          v = o == isProperty;
+        }
+
         if (inverted) {
           v = !v;
         }
 
         if (v) {
-          if (isProperty !== null && o == isProperty) {
-            tag.appendChild(ifDoc);
-          } else if (isProperty === null) {
-            tag.appendChild(ifDoc);
-          }
+          tag.appendChild(ifDoc);
+
+          var nodes = _toConsumableArray(ifDoc.childNodes);
+
+          nodes.map(function (node) {
+            return _Dom.Dom.mapTags(node, false, function (tag, walker) {
+              if (!tag.matches) {
+                return;
+              }
+
+              tag.dispatchEvent(new CustomEvent('cvDomAttached', {
+                target: tag,
+                detail: {
+                  view: view || _this13,
+                  mainView: _this13
+                }
+              }));
+            });
+          });
         } else {
           view.nodes.map(function (n) {
             return ifDoc.appendChild(n);
+          });
+
+          _Dom.Dom.mapTags(ifDoc, false, function (tag, walker) {
+            if (!tag.matches) {
+              return;
+            }
+
+            tag.dispatchEvent(new CustomEvent('cvDomDetached', {
+              target: tag,
+              detail: {
+                view: view || _this13,
+                mainView: _this13
+              }
+            }));
           });
         }
       }, {
@@ -10198,6 +10237,555 @@ var Wrapper = function (_View) {
 
 exports.Wrapper = Wrapper;
 "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Axis = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var Axis = function () {
+  function Axis(_ref) {
+    var _ref$deadZone = _ref.deadZone,
+        deadZone = _ref$deadZone === void 0 ? 0 : _ref$deadZone,
+        _ref$proportional = _ref.proportional,
+        proportional = _ref$proportional === void 0 ? true : _ref$proportional;
+
+    _classCallCheck(this, Axis);
+
+    _defineProperty(this, "magnitude", 0);
+
+    _defineProperty(this, "delta", 0);
+
+    this.proportional = proportional;
+    this.deadZone = deadZone;
+  }
+
+  _createClass(Axis, [{
+    key: "tilt",
+    value: function tilt(magnitude) {
+      if (this.deadZone && Math.abs(magnitude) >= this.deadZone) {
+        magnitude = (Math.abs(magnitude) - this.deadZone) / (1 - this.deadZone) * Math.sign(magnitude);
+      } else if (this.deadZone && Math.abs(magnitude) < this.deadZone) {
+        magnitude = 0;
+      }
+
+      this.delta = Number(magnitude - this.magnitude).toFixed(3) - 0;
+      this.magnitude = Number(magnitude).toFixed(3) - 0;
+    }
+  }, {
+    key: "zero",
+    value: function zero() {
+      this.magnitude = this.delta = 0;
+    }
+  }]);
+
+  return Axis;
+}();
+
+exports.Axis = Axis;
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Button = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var Button = function () {
+  function Button() {
+    _classCallCheck(this, Button);
+
+    _defineProperty(this, "active", false);
+
+    _defineProperty(this, "pressure", 0);
+
+    _defineProperty(this, "delta", 0);
+
+    _defineProperty(this, "time", 0);
+  }
+
+  _createClass(Button, [{
+    key: "update",
+    value: function update() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      if (this.pressure) {
+        this.time++;
+      } else if (!this.pressure && this.time > 0) {
+        this.time = -1;
+      } else if (!this.pressure && this.time < 0) {
+        this.time--;
+      }
+
+      if (this.time < -1 && this.delta === -1) {
+        this.delta = 0;
+      }
+    }
+  }, {
+    key: "press",
+    value: function press(pressure) {
+      this.delta = Number(pressure - this.pressure).toFixed(3) - 0;
+      this.pressure = Number(pressure).toFixed(3) - 0;
+      this.active = true;
+      this.time = this.time > 0 ? this.time : 0;
+    }
+  }, {
+    key: "release",
+    value: function release() {
+      if (!this.active) {
+        return;
+      }
+
+      this.delta = Number(-this.pressure).toFixed(3) - 0;
+      this.pressure = 0;
+      this.active = false;
+    }
+  }, {
+    key: "zero",
+    value: function zero() {
+      this.pressure = this.delta = 0;
+      this.active = false;
+    }
+  }]);
+
+  return Button;
+}();
+
+exports.Button = Button;
+"use strict";
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Gamepad = void 0;
+
+var _Mixin = require("../base/Mixin");
+
+var _EventTargetMixin = require("../mixin/EventTargetMixin");
+
+var _Axis = require("./Axis");
+
+var _Button = require("./Button");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+var keys = {
+  'Space': 0,
+  'Enter': 0,
+  'NumpadEnter': 0,
+  'ControlLeft': 1,
+  'ControlRight': 1,
+  'ShiftLeft': 2,
+  'ShiftRight': 2,
+  'KeyZ': 3,
+  'KeyQ': 4,
+  'KeyE': 5,
+  'Digit1': 6,
+  'Digit3': 7,
+  'KeyW': 12,
+  'KeyA': 14,
+  'KeyS': 13,
+  'KeyD': 15,
+  'KeyH': 112,
+  'KeyJ': 113,
+  'KeyK': 114,
+  'KeyL': 115,
+  'KeyP': 9,
+  'Pause': 9,
+  'Tab': 11,
+  'ArrowUp': 12,
+  'ArrowDown': 13,
+  'ArrowLeft': 14,
+  'ArrowRight': 15,
+  'Numpad4': 112,
+  'Numpad2': 113,
+  'Numpad8': 114,
+  'Numpad6': 115,
+  'Backquote': 1010,
+  'NumpadAdd': 1011,
+  'NumpadSubtract': 1012,
+  'NumpadMultiply': 1013,
+  'NumpadDivide': 1014,
+  'Escape': 1020
+};
+
+_toConsumableArray(Array(12)).map(function (x, fn) {
+  return keys["F".concat(fn)] = 2000 + fn;
+});
+
+var axisMap = {};
+
+var Gamepad = function (_Mixin$with) {
+  _inherits(Gamepad, _Mixin$with);
+
+  var _super = _createSuper(Gamepad);
+
+  function Gamepad() {
+    var _this;
+
+    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        _ref$keys = _ref.keys,
+        keys = _ref$keys === void 0 ? {} : _ref$keys,
+        _ref$deadZone = _ref.deadZone,
+        deadZone = _ref$deadZone === void 0 ? 0 : _ref$deadZone,
+        _ref$gamepad = _ref.gamepad,
+        gamepad = _ref$gamepad === void 0 ? null : _ref$gamepad,
+        _ref$keyboard = _ref.keyboard,
+        keyboard = _ref$keyboard === void 0 ? null : _ref$keyboard;
+
+    _classCallCheck(this, Gamepad);
+
+    _this = _super.call(this);
+    _this.deadZone = deadZone;
+    _this.gamepad = gamepad;
+    Object.defineProperties(_assertThisInitialized(_this), {
+      buttons: {
+        value: {}
+      },
+      pressure: {
+        value: {}
+      },
+      axes: {
+        value: {}
+      },
+      keys: {
+        value: {}
+      }
+    });
+    return _this;
+  }
+
+  _createClass(Gamepad, [{
+    key: "update",
+    value: function update() {
+      for (var i in this.buttons) {
+        var button = this.buttons[i];
+        button.update();
+      }
+    }
+  }, {
+    key: "rumbleEffect",
+    value: function rumbleEffect(options) {
+      return this.gamepad.vibrationActuator.playEffect("dual-rumble", options);
+    }
+  }, {
+    key: "rumble",
+    value: function rumble() {
+      var _this$gamepad$vibrati;
+
+      console.log(this.gamepad.vibrationActuator.pulse);
+      return (_this$gamepad$vibrati = this.gamepad.vibrationActuator).pulse.apply(_this$gamepad$vibrati, arguments);
+    }
+  }, {
+    key: "readInput",
+    value: function readInput() {
+      var index = String(this.gamepad.index);
+      var stat = this.constructor;
+
+      if (!stat.padsRead.has(index)) {
+        stat.padsRead = new Map(Object.entries(navigator.getGamepads()));
+      }
+
+      var gamepad = this.gamepad = stat.padsRead.get(index);
+      stat.padsRead["delete"](index);
+      var pressed = {};
+      var released = {};
+
+      if (gamepad) {
+        for (var i in gamepad.buttons) {
+          var button = gamepad.buttons[i];
+
+          if (button.pressed) {
+            this.press(i, button.value);
+            pressed[i] = true;
+          }
+        }
+      }
+
+      if (this.keyboard) {
+        for (var _i in _toConsumableArray(Array(10))) {
+          if (pressed[_i]) {
+            continue;
+          }
+
+          if (this.keyboard.getKeyCode(_i) > 0) {
+            this.press(_i, 1);
+            pressed[_i] = true;
+          }
+        }
+
+        for (var keycode in keys) {
+          if (pressed[keycode]) {
+            continue;
+          }
+
+          var buttonId = keys[keycode];
+
+          if (this.keyboard.getKeyCode(keycode) > 0) {
+            this.press(buttonId, 1);
+            pressed[buttonId] = true;
+          }
+        }
+      }
+
+      if (gamepad) {
+        for (var _i2 in gamepad.buttons) {
+          if (pressed[_i2]) {
+            continue;
+          }
+
+          var _button = gamepad.buttons[_i2];
+
+          if (!_button.pressed) {
+            this.release(_i2);
+            released[_i2] = true;
+          }
+        }
+      }
+
+      if (this.keyboard) {
+        for (var _i3 in _toConsumableArray(Array(10))) {
+          if (released[_i3]) {
+            continue;
+          }
+
+          if (pressed[_i3]) {
+            continue;
+          }
+
+          if (this.keyboard.getKeyCode(_i3) < 0) {
+            this.release(_i3);
+            released[_i3] = true;
+          }
+        }
+
+        for (var _keycode in keys) {
+          var _buttonId = keys[_keycode];
+
+          if (released[_buttonId]) {
+            continue;
+          }
+
+          if (pressed[_buttonId]) {
+            continue;
+          }
+
+          if (this.keyboard.getKeyCode(_keycode) < 0) {
+            this.release(_buttonId);
+            released[_keycode] = true;
+          }
+        }
+      }
+
+      var tilted = {};
+
+      if (gamepad) {
+        for (var _i4 in gamepad.axes) {
+          var axis = gamepad.axes[_i4];
+          tilted[_i4] = true;
+          this.tilt(_i4, axis);
+        }
+      }
+
+      for (var inputId in axisMap) {
+        if (!this.buttons[inputId]) {
+          this.buttons[inputId] = new _Button.Button();
+        }
+
+        var _axis = axisMap[inputId];
+        var value = Math.sign(1 / _axis);
+        var axisId = Math.abs(_axis);
+
+        if (this.buttons[inputId].active) {
+          tilted[axisId] = true;
+          this.tilt(axisId, value);
+        } else if (!tilted[axisId]) {
+          this.tilt(axisId, 0);
+        }
+      }
+    }
+  }, {
+    key: "tilt",
+    value: function tilt(axisId, magnitude) {
+      if (!this.axes[axisId]) {
+        this.axes[axisId] = new _Axis.Axis({
+          deadZone: this.deadZone
+        });
+      }
+
+      this.axes[axisId].tilt(magnitude);
+    }
+  }, {
+    key: "press",
+    value: function press(buttonId) {
+      var pressure = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
+      if (!this.buttons[buttonId]) {
+        this.buttons[buttonId] = new _Button.Button();
+      }
+
+      this.buttons[buttonId].press(pressure);
+    }
+  }, {
+    key: "release",
+    value: function release(buttonId) {
+      if (!this.buttons[buttonId]) {
+        this.buttons[buttonId] = new _Button.Button();
+      }
+
+      this.buttons[buttonId].release();
+    }
+  }, {
+    key: "serialize",
+    value: function serialize() {
+      var buttons = {};
+
+      for (var i in this.buttons) {
+        buttons[i] = this.buttons[i].pressure;
+      }
+
+      var axes = {};
+
+      for (var _i5 in this.axes) {
+        axes[_i5] = this.axes[_i5].magnitude;
+      }
+
+      return {
+        axes: axes,
+        buttons: buttons
+      };
+    }
+  }, {
+    key: "replay",
+    value: function replay(input) {
+      if (input.buttons) {
+        for (var i in input.buttons) {
+          if (input.buttons[i] > 0) {
+            this.press(i, input.buttons[i]);
+          } else {
+            this.release(i);
+          }
+        }
+      }
+
+      if (input.axes) {
+        for (var _i6 in input.axes) {
+          if (input.axes[_i6].magnitude !== input.axes[_i6]) {
+            this.tilt(_i6, input.axes[_i6]);
+          }
+        }
+      }
+    }
+  }, {
+    key: "zero",
+    value: function zero() {
+      for (var i in this.axes) {
+        this.axes[i].zero();
+      }
+
+      for (var _i7 in this.buttons) {
+        this.buttons[_i7].zero();
+      }
+    }
+  }], [{
+    key: "getPad",
+    value: function getPad() {
+      var _this2 = this;
+
+      var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref2$index = _ref2.index,
+          index = _ref2$index === void 0 ? undefined : _ref2$index,
+          _ref2$deadZone = _ref2.deadZone,
+          deadZone = _ref2$deadZone === void 0 ? 0 : _ref2$deadZone,
+          _ref2$keys = _ref2.keys,
+          keys = _ref2$keys === void 0 ? {} : _ref2$keys,
+          _ref2$keyboard = _ref2.keyboard,
+          keyboard = _ref2$keyboard === void 0 ? null : _ref2$keyboard;
+
+      if (this.padsConnected.has(index)) {
+        return this.padsConnected.get(index);
+      }
+
+      var waitForPad = new Promise(function (accept) {
+        var registerPad = function registerPad(event) {
+          event.stopImmediatePropagation();
+          var pad = new _this2({
+            gamepad: event.gamepad,
+            deadZone: deadZone,
+            keys: keys,
+            keyboard: keyboard
+          });
+
+          _this2.padsConnected.set(event.gamepad.index, waitForPad);
+
+          accept(pad);
+        };
+
+        addEventListener('gamepadconnected', registerPad, {
+          once: true
+        });
+      });
+      return waitForPad;
+    }
+  }]);
+
+  return Gamepad;
+}(_Mixin.Mixin["with"](_EventTargetMixin.EventTargetMixin));
+
+exports.Gamepad = Gamepad;
+
+_defineProperty(Gamepad, "padsConnected", new Map());
+
+_defineProperty(Gamepad, "padsRead", new Map());
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
