@@ -315,7 +315,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				return;
 			}
 
-			const request = store.delete(record[PrimaryKey].description);
+		const request = store.delete(record.id);
 
 			record[PrimaryKey] = undefined;
 
@@ -505,7 +505,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 	static getPrimaryKey(record)
 	{
 		return record[PrimaryKey]
-			? record[PrimaryKey].description
+			? record[PrimaryKey]
 			: null;
 	}
 
@@ -637,6 +637,8 @@ Object.defineProperty(Database, 'AfterUpdate',  {value: AfterUpdate});
 
 Object.defineProperty(Database, 'BeforeRead', {value: BeforeRead});
 Object.defineProperty(Database, 'AfterRead',  {value: AfterRead});
+
+Object.defineProperty(Database, 'PKSymbol',  {value: PrimaryKey});
 
 for(const method in ['addEventListener', 'removeEventListener', 'dispatchEvent'])
 {

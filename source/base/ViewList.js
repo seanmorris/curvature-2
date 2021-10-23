@@ -19,6 +19,8 @@ export class ViewList
 		this.subProperty  = subProperty;
 		this.keyProperty  = keyProperty;
 		this.tag          = null;
+		this.downDebind   = [];
+		this.upDebind     = [];
 		this.paused       = false;
 		this.parent       = parent;
 		this.rendered     = new Promise((accept, reject) => {
@@ -90,9 +92,10 @@ export class ViewList
 					this.views[i].args[ this.keyProperty ] = i;
 				}
 			}
-			else if(!this.views[kk] && !this.willReRender)
+			else if(!this.views[kk])
 			{
 				cancelAnimationFrame(this.willReRender);
+
 				this.willReRender = requestAnimationFrame(()=>{
 					this.reRender();
 				});
@@ -150,11 +153,11 @@ export class ViewList
 		let finalViews = [];
 		let finalViewSet = new Set;
 
-		this.upDebind   && this.upDebind.map(d=>d&&d());
-		this.downDebind && this.downDebind.map(d=>d&&d());
+		this.downDebind.length && this.downDebind.forEach(d=>d&&d());
+		this.upDebind.length   && this.upDebind.forEach(d=>d&&d());
 
-		this.upDebind   = [];
-		this.downDebind = [];
+		this.upDebind.length = 0;
+		this.downDebind.length = 0;
 
 		let minKey = Infinity;
 		let anteMinKey = Infinity;
@@ -195,31 +198,7 @@ export class ViewList
 
 					existingViews.remove(this.args.value[i], existingView);
 				}
-
 			}
-
-			// for(let j = views.length - 1; j >= 0; j--)
-			// {
-			// 	if(views[j]
-			// 		&& this.args.value[i] !== undefined
-			// 		&& this.args.value[i] === views[j].args[ this.subProperty ]
-			// 	){
-			// 		found = true;
-			// 		finalViews[k] = views[j];
-
-			// 		if(!isNaN(k))
-			// 		{
-			// 			minKey = Math.min(minKey, k);
-			// 			k > 0 && (anteMinKey = Math.min(anteMinKey, k));
-			// 		}
-
-			// 		finalViews[k].args[ this.keyProperty ] = i;
-
-			// 		delete views[j];
-
-			// 		break;
-			// 	}
-			// }
 
 			if(!found)
 			{
@@ -264,13 +243,13 @@ export class ViewList
 				});
 
 				const upDebind = () => {
-					this.upDebind.filter(x=>x).map(d=>d());
-					this.upDebind.splice(0);
+					this.upDebind.filter(x=>x).forEach(d=>d());
+					this.upDebind.length = 0;
 				};
 
 				const downDebind = () => {
-					this.downDebind.filter(x=>x).map(d=>d());
-					this.downDebind.splice(0);
+					this.downDebind.filter(x=>x).forEach(d=>d());
+					this.downDebind.length = 0;
 				};
 
 				view.onRemove(()=>{
@@ -341,8 +320,6 @@ export class ViewList
 			}
 
 			this.rendered = renderRecurse();
-
-			this.rendered.then(() => finalViews.splice(0));
 		}
 		else
 		{
@@ -373,7 +350,6 @@ export class ViewList
 			this.rendered = Promise.all(renders);
 		}
 
-
 		for(let i in finalViews)
 		{
 			if(isNaN(i))
@@ -385,7 +361,9 @@ export class ViewList
 			finalViews[i].args[ this.keyProperty ] = i;
 		}
 
-		this.views = [...finalViews];
+		this.views = Array.isArray(this.args.value)
+			? [...finalViews]
+			: finalViews;
 
 		finalViewSet.clear();
 

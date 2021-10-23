@@ -1,5 +1,6 @@
 import { Cache } from '../base/Cache';
 import { Bindable } from '../base/Bindable';
+import { Database } from './Database';
 
 const Saved   = Symbol('Saved');
 const Changed = Symbol('Changed');
@@ -91,6 +92,11 @@ export class Model
 
 			this[property] = value;
 		};
+
+		if(Database.PKSymbol in skeleton)
+		{
+			setProp(Database.PKSymbol, skeleton[ Database.PKSymbol ]);
+		}
 
 		for(const property in skeleton)
 		{

@@ -269,9 +269,9 @@ export class Bindable
 
 			if(Array.isArray(property))
 			{
-				const debinders = property.map(p => bindTo(p, callback, options));
+				const debinders = property.forEach(p => bindTo(p, callback, options));
 
-				return () => debinders.map(d => d());
+				return () => debinders.forEach(d => d());
 			}
 
 			if(property instanceof Function)
@@ -485,7 +485,7 @@ export class Bindable
 					debind = debind.concat(v[BindChain](rest, callback));
 				}));
 
-				return () => debind.map(x=>x());
+				return () => debind.forEach(x=>x());
 			}
 		});
 
@@ -527,18 +527,15 @@ export class Bindable
 			, value:      isBound
 		});
 
-		if(!object[ NoGetters ])
+		for(let i in object)
 		{
-			for(let i in object)
+			if(object[i] && object[i] instanceof Object && !object[i] instanceof Promise)
 			{
-				if(object[i] && object[i] instanceof Object && !object[i] instanceof Promise)
-				{
-					if(!excludedClasses.filter(excludeClass => object[i] instanceof excludeClass).length
-						&& Object.isExtensible(object[i])
-						&& !Object.isSealed(object[i])
-					){
-						object[i] = Bindable.make(object[i]);
-					}
+				if(!excludedClasses.filter(excludeClass => object[i] instanceof excludeClass).length
+					&& Object.isExtensible(object[i])
+					&& !Object.isSealed(object[i])
+				){
+					object[i] = Bindable.make(object[i]);
 				}
 			}
 		}
@@ -575,8 +572,8 @@ export class Bindable
 				) {
 					if(!object[ NoGetters ])
 					{
-						value = Bindable.makeBindable(value);
 					}
+					value = Bindable.makeBindable(value);
 				}
 			}
 
@@ -723,7 +720,7 @@ export class Bindable
 			if(key === Ref
 				|| key === Original
 				|| key === 'apply'
-				||  key === 'isBound'
+				|| key === 'isBound'
 				|| key === 'bindTo'
 				|| key === '__proto__'
 				|| key === 'constructor'
@@ -830,7 +827,6 @@ export class Bindable
 						}
 						else
 						{
-
 							ret = func(...providedArgs);
 						}
 					}
@@ -920,7 +916,7 @@ export class Bindable
 		{
 			if(owner && pathParts.length === 1)
 			{
-				let obj = object.NoGetters ? this.make(object) : object;
+				let obj = this.make(object);
 
 				return [obj, pathParts.shift(), top];
 			}
@@ -934,7 +930,7 @@ export class Bindable
 				object[node] = {};
 			}
 
-			object = object.NoGetters ? this.make(object[node]) : object[node];
+			object = this.make(object[node]);
 		}
 
 		return [this.make(object), node, top];

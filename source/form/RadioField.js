@@ -67,7 +67,6 @@ export class RadioField extends Field {
 	selectOptionByValue(value)
 	{
 		this.findTags('input').forEach(option => {
-			console.log(option.value, value);
 			if(option.value == value)
 			{
 				option.checked = true;

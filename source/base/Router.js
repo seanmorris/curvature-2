@@ -85,7 +85,10 @@ export class Router {
 			, prev:   this.prevPath
 		};
 
-		history.replaceState(state, null, location.pathname);
+		if(location.origin !== 'null')
+		{
+			history.replaceState(state, null, location.pathname);
+		}
 
 		this.go(route !== false ? route : '/');
 	}

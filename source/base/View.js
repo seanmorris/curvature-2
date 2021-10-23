@@ -442,7 +442,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	dispatchDomAttached(view)
 	{
-		this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).map(child => {
+		this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).forEach(child => {
 
 			if(!child.matches)
 			{
@@ -1506,7 +1506,7 @@ export class View extends Mixin.with(EventTargetMixin)
 	{
 		const referents = String(tag.getAttribute('cv-on'));
 
-		referents.split(';').map(a=> a.split(':')).map((a)=>{
+		referents.split(';').map(a=> a.split(':')).forEach((a)=>{
 
 			a = a.map(a => a.trim());
 			const argLen = a.length;
@@ -1766,7 +1766,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		let subTemplate = new DocumentFragment;
 
-		[...tag.childNodes].map(n => subTemplate.appendChild(n));
+		[...tag.childNodes].forEach(n => subTemplate.appendChild(n));
 
 		let carryProps = [];
 
@@ -1864,7 +1864,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		let subTemplate = new DocumentFragment;
 
-		[...tag.childNodes].map(n => subTemplate.appendChild(n));
+		[...tag.childNodes].forEach(n => subTemplate.appendChild(n));
 
 		const parts = viewAttr.split(':');
 
@@ -1909,7 +1909,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const subTemplate = new DocumentFragment();
 
-		Array.from(tag.childNodes).map(n => subTemplate.appendChild(n));
+		[...tag.childNodes].forEach(n => subTemplate.appendChild(n));
 
 		const [eachProp, asProp, keyProp] = eachAttr.split(':');
 
@@ -2013,9 +2013,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const subTemplate = new DocumentFragment;
 
-		Array.from(sourceTag.childNodes).map(
+		[...sourceTag.childNodes].forEach(
 			n => subTemplate.appendChild(n)
-			// n => subTemplate.appendChild(n.cloneNode(true))
 		);
 
 		const bindingView = this;
@@ -2072,9 +2071,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			{
 				tag.appendChild(ifDoc);
 
-				const nodes = [...ifDoc.childNodes];
-
-				nodes.map(node => Dom.mapTags(node, false, (tag, walker) => {
+				[...ifDoc.childNodes].forEach(node => Dom.mapTags(node, false, (tag, walker) => {
 
 					if(!tag.matches)
 					{
@@ -2089,7 +2086,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			}
 			else
 			{
-				view.nodes.map(n=>ifDoc.appendChild(n));
+				view.nodes.forEach(n=>ifDoc.appendChild(n));
 
 				Dom.mapTags(ifDoc, false, (tag, walker) => {
 
@@ -2098,13 +2095,17 @@ export class View extends Mixin.with(EventTargetMixin)
 						return;
 					}
 
-					tag.dispatchEvent(new CustomEvent('cvDomDetached', {
-						target: tag
-						, detail: { view: view || this, mainView: this }
-					}));
+					const onIdle = globalThis.requestIdleCallback;
+
+					onIdle(() =>  tag.dispatchEvent(
+						new CustomEvent('cvDomDetached', {
+							target: tag
+							, detail: { view: view || this, mainView: this }
+						}))
+					);
 				});
 			}
-		}, {wait: 0, children: Array.isArray(proxy[property])});
+		}, { children: Array.isArray(proxy[property]) });
 
 		// const propertyDebind = this.args.bindChain(property, onUpdate);
 
@@ -2138,8 +2139,6 @@ export class View extends Mixin.with(EventTargetMixin)
 		});
 
 		return tag;
-
-		//*/
 	}
 
 	compileIfTag(sourceTag)
@@ -2157,7 +2156,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const subTemplate = new DocumentFragment;
 
-		Array.from(sourceTag.childNodes).map(
+		[...sourceTag.childNodes].forEach(
 			n => subTemplate.appendChild(n.cloneNode(true))
 		);
 
@@ -2218,7 +2217,7 @@ export class View extends Mixin.with(EventTargetMixin)
 				}
 				else
 				{
-					view.nodes.map(n=>ifDoc.appendChild(n));
+					view.nodes.forEach(n=>ifDoc.appendChild(n));
 				}
 
 			});
@@ -2409,7 +2408,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			{
 				if(Array.isArray(this.tags[i]))
 				{
-					this.tags[i] && this.tags[i].map(t=>t.remove());
+					this.tags[i] && this.tags[i].forEach(t=>t.remove());
 
 					this.tags[i].splice(0);
 				}
@@ -2610,9 +2609,9 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		if(Array.isArray(node))
 		{
-			const removers = node.map(n => this.listen(n, eventName, callback, options));
-
-			return () => removers.map(r => r());
+			return node
+				.map(n => this.listen(n, eventName, callback, options))
+				.forEach(r => r());
 		}
 
 		if(node instanceof Tag)

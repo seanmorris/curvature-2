@@ -1,4 +1,4 @@
-import { Bindable } from './Bindable';
+import { Bindable } from 'curvature/base/Bindable';
 
 const Constructor = Symbol('constructor');
 const MixinList   = Symbol('mixinList');
