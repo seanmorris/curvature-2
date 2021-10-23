@@ -1,4 +1,4 @@
-import { Mixin } from 'curvature/base/Mixin';
+import { Mixin } from '../base/Mixin';
 
 const _EventTarget = Symbol('Target');
 

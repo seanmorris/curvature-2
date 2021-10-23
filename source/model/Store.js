@@ -1,4 +1,4 @@
-import { Model } from 'curvature/model/Model';
+import { Model } from './Model';
 
 export class Store extends Model
 {

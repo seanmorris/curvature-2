@@ -4,7 +4,7 @@ exports.files = {
 
 exports.plugins = {
   babel: {
-    presets: [ "minify" , {} ]
+    presets: [[ "minify" , { builtIns: false } ]]
   },
   raw: {
     pattern: /\.(html|jss)$/,
@@ -13,9 +13,9 @@ exports.plugins = {
 };
 
 exports.paths = {
-  public: 'docs', watched: ['source','source-docs']
+  public: 'dist', watched: ['source', 'build']
 };
 
 exports.modules = {
-	nameCleaner: path => path.replace(/^source(?:-docs)?\//, '')
+	nameCleaner: path => path.replace(/^source(?:-docs)?\//, 'curvature/')
 }

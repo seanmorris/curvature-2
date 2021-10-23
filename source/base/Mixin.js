@@ -1,4 +1,4 @@
-import { Bindable } from 'curvature/base/Bindable';
+import { Bindable } from './Bindable';
 
 const Constructor = Symbol('constructor');
 const MixinList   = Symbol('mixinList');
@@ -10,8 +10,12 @@ export class Mixin
 		const constructors = [];
 
 		const newClass = class extends baseClass {
-			constructor(...args) {
-				const instance = super(...args);
+
+			constructor(...args)
+			{
+				const instance = baseClass.constructor
+					? super(...args)
+					: undefined;
 
 				for(const mixin of mixins)
 				{
@@ -34,6 +38,7 @@ export class Mixin
 
 				return instance;
 			}
+
 		};
 
 		return newClass;
@@ -74,7 +79,7 @@ export class Mixin
 
 	static with(...mixins)
 	{
-		return this.from(Object, ...mixins);
+		return this.from(class{constructor(){}}, ...mixins);
 	}
 
 	static mixObject(mixin, instance)

@@ -1,5 +1,5 @@
-import { Mixin } from 'curvature/base/Mixin';
-import { EventTargetMixin } from 'curvature/mixin/EventTargetMixin';
+import { Mixin } from '../base/Mixin';
+import { EventTargetMixin } from '../mixin/EventTargetMixin';
 
 export class Sequence extends Mixin.with(EventTargetMixin)
 {

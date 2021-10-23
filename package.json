@@ -1,6 +1,6 @@
 {
 	"name": "curvature",
-	"version": "0.0.66-p",
+	"version": "0.0.66-q",
 	"author": "Sean Morris <curvature@seanmorr.is> (https://seanmorr.is)",
 	"license": "Apache-2.0",
 	"repository": "https://github.com/seanmorris/curvature-2",
@@ -21,7 +21,6 @@
 	"dependencies": {},
 	"files": [
 		"dist/curvature.js",
-		"dist/curvature.min.js",
 		"access/*",
 		"animate/*",
 		"animate/ease/*",
