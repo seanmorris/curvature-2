@@ -211,10 +211,7 @@ export class ViewList
 					k > 0 && (anteMinKey = Math.min(anteMinKey, k));
 				}
 
-				finalViews[k].template = this.template instanceof Object
-					? this.template
-					: this.template;
-
+				finalViews[k].template = this.template;
 				finalViews[k].viewList = this;
 
 				finalViews[k].args[ this.keyProperty ] = i;
@@ -326,7 +323,25 @@ export class ViewList
 			const renders = [];
 			const leftovers = Object.assign({}, finalViews);
 
-			for(const i in finalViews)
+			const isInt = (x) => parseInt(x) === x - 0;
+
+			const keys = Object.keys(finalViews).sort((a, b) => {
+
+					if(isInt(a) && isInt(b))
+					{
+						return a - b;
+					}
+
+					if(!isInt(a) && isInt(b))
+					{
+						return -1;
+					}
+
+					return 1;
+				}
+			);
+
+			for(const i of keys)
 			{
 				delete leftovers[i];
 

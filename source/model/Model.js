@@ -2,29 +2,35 @@ import { Cache } from '../base/Cache';
 import { Bindable } from '../base/Bindable';
 import { Database } from './Database';
 
-const Saved   = Symbol('Saved');
 const Changed = Symbol('Changed');
+const Deleted = Symbol('Deleted');
+const Saved   = Symbol('Saved');
+const Keys    = Symbol('Keys');
 
 export class Model
 {
+	id;
+	class;
+
 	static get keyProps(){ return ['id', 'class'] };
 
 	constructor()
 	{
 		Object.defineProperty(this, Changed, {value: Bindable.make({})});
+		Object.defineProperty(this, Deleted, {writable: true, value: false});
+		Object.defineProperty(this, Saved, {writable: true, value: false});
+		Object.defineProperty(this, Keys, {writable: true, value: new Set});
 
-		Object.defineProperty(this, Saved, {writable: true, value:  false});
-
-		return Bindable.makeBindable(this);
+		return Bindable.make(this);
 	}
 
-	static from(skeleton)
+	static from(skeleton, isSaved = false)
 	{
-		const keyProps = this.prototype.constructor.keyProps;
+		const keyProps = this.keyProps;
 
 		const cacheProps = keyProps.map(prop => skeleton[prop]);
 
-		cacheProps.unshift(this.prototype.constructor.name);
+		cacheProps.unshift(this.name);
 
 		const cacheKey = cacheProps.join('::');
 
@@ -40,14 +46,13 @@ export class Model
 
 		instance.consume(skeleton);
 
-		Cache.store(cacheKey, instance, 0, bucket);
-
 		if(!cached)
 		{
+			Cache.store(cacheKey, instance, 0, bucket);
+
 			let changed = false;
 
-			instance.bindTo((v,k,t) => {
-
+			instance.bindTo((v,k,t,d) => {
 				if(typeof k === 'symbol')
 				{
 					return;
@@ -59,11 +64,17 @@ export class Model
 				}
 
 				instance[Changed][k] = changed;
-				instance[Saved]      = !!(changed ? false : this[Saved]);
+				instance[Saved]      = !!(changed ? false : instance[Saved]);
 			});
+
+			if(Object.keys(instance[Changed]).length === 0)
+			{
+				instance[Saved] = isSaved;
+			}
 
 			changed = true;
 		}
+
 
 		return instance;
 	}
@@ -90,6 +101,11 @@ export class Model
 				}
 			}
 
+			if(!override && this[Changed][property])
+			{
+				return;
+			}
+
 			this[property] = value;
 		};
 
@@ -98,7 +114,13 @@ export class Model
 			setProp(Database.PKSymbol, skeleton[ Database.PKSymbol ]);
 		}
 
-		for(const property in skeleton)
+		this[Keys] = new Set([
+			...this[Keys]
+			, ...Object.keys(this)
+			, ...Object.keys(skeleton)
+		]);
+
+		for(const property of this[Keys])
 		{
 			if(!override && this[Changed][property])
 			{
@@ -110,7 +132,10 @@ export class Model
 				continue;
 			}
 
-			setProp(property, skeleton[property]);
+			if(property in skeleton)
+			{
+				setProp(property, skeleton[property]);
+			}
 		}
 	}
 
@@ -119,14 +144,26 @@ export class Model
 		this[Saved] = false;
 	}
 
-	stored()
+	markDeleted()
 	{
 		for(const property in this[Changed])
 		{
 			this[Changed][property] = false;
 		}
 
-		this[Saved] = true;
+		this[Deleted] = true;
+		this[Saved]   = false;
+	}
+
+	markStored()
+	{
+		for(const property in this)
+		{
+			this[Changed][property] = false;
+		}
+
+		this[Deleted] = false;
+		this[Saved]   = true;
 	}
 
 	isSaved()
@@ -135,6 +172,7 @@ export class Model
 	}
 }
 
-Object.defineProperty(Model, 'Saved',   {value: Saved});
 Object.defineProperty(Model, 'Changed', {value: Changed});
+Object.defineProperty(Model, 'Deleted', {value: Deleted});
+Object.defineProperty(Model, 'Saved',   {value: Saved});
 

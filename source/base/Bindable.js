@@ -17,6 +17,8 @@ const OnGet       = Symbol('onGet');
 const OnAllGet    = Symbol('onAllGet');
 const BindChain   = Symbol('bindChain');
 const Descriptors = Symbol('Descriptors');
+const Before      = Symbol('Before');
+const After       = Symbol('After');
 const NoGetters   = Symbol('NoGetters');
 
 const TypedArray  = Object.getPrototypeOf(Int8Array);
@@ -156,10 +158,17 @@ export class Bindable
 			return object[Ref];
 		}
 
-		if(object[Binding])
+		if(object[IsBindable])
 		{
 			return object;
 		}
+
+		Object.defineProperty(object, IsBindable, {
+			configurable: false
+			, enumerable: false
+			, writable:   false
+			, value:      Bindable
+		});
 
 		Object.defineProperty(object, Ref, {
 			configurable: true
@@ -203,13 +212,6 @@ export class Bindable
 			, value:      []
 		});
 
-		Object.defineProperty(object, IsBindable, {
-			configurable: false
-			, enumerable: false
-			, writable:   false
-			, value:      Bindable
-		});
-
 		Object.defineProperty(object, Executing, {
 			enumerable: false,
 			writable: true
@@ -227,14 +229,14 @@ export class Bindable
 			, value:      []
 		});
 
-		Object.defineProperty(object, '___before___', {
+		Object.defineProperty(object, Before, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
 			, value:      []
 		});
 
-		Object.defineProperty(object, '___after___', {
+		Object.defineProperty(object, After, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
@@ -417,9 +419,9 @@ export class Bindable
 
 		const ___before = (callback) => {
 
-			const beforeIndex = object.___before___.length;
+			const beforeIndex = object[Before].length;
 
-			object.___before___.push(callback);
+			object[Before].push(callback);
 
 			let cleaned = false;
 
@@ -432,15 +434,15 @@ export class Bindable
 
 				cleaned = true;
 
-				delete object.___before___[beforeIndex];
+				delete object[Before][beforeIndex];
 			};
 		};
 
 		const ___after = (callback) => {
 
-			const afterIndex = object.___after___.length;
+			const afterIndex = object[After].length;
 
-			object.___after___.push(callback);
+			object[After].push(callback);
 
 			let cleaned = false;
 
@@ -453,7 +455,7 @@ export class Bindable
 
 				cleaned = true;
 
-				delete object.___after___[afterIndex];
+				delete object[After][afterIndex];
 			};
 		};
 
@@ -671,14 +673,9 @@ export class Bindable
 
 			if(key in object[Binding])
 			{
-				for(let i in object[Binding][key])
+				for(const binding of object[Binding][key])
 				{
-					if(!object[Binding][key][i])
-					{
-						continue;
-					}
-
-					object[Binding][key][i](undefined, key, target, true, target[key]);
+					binding(undefined, key, target, true, target[key]);
 				}
 			}
 
@@ -691,16 +688,16 @@ export class Bindable
 
 			const key = 'constructor';
 
-			for(let i in target.___before___)
+			for(let i in target[Before])
 			{
-				target.___before___[i](target, key, object[Stack], undefined, args);
+				target[Before][i](target, key, object[Stack], undefined, args);
 			}
 
 			const instance = Bindable.make(new target[Original](...args));
 
-			for(let i in target.___after___)
+			for(let i in target[After])
 			{
-				target.___after___[i](target, key, object[Stack], instance, args);
+				target[After][i](target, key, object[Stack], instance, args);
 			}
 
 			return instance;
@@ -806,7 +803,7 @@ export class Bindable
 
 					stack.unshift(key);
 
-					for(const beforeCallback of object.___before___)
+					for(const beforeCallback of object[Before])
 					{
 						beforeCallback(object, key, stack, object, providedArgs);
 					}
@@ -831,7 +828,7 @@ export class Bindable
 						}
 					}
 
-					for(const afterCallback of object.___after___)
+					for(const afterCallback of object[After])
 					{
 						afterCallback(object, key, stack, object, providedArgs);
 					}
@@ -901,8 +898,8 @@ export class Bindable
 			object[Wrapped]
 			, object[Binding]
 			, object[BindingAll]
-			, object.___after___
-			, object.___before___
+			, object[After]
+			, object[Before]
 		);
 	}
 

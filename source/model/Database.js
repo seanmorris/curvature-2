@@ -82,7 +82,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 		});
 	}
 
-	select({store, index, range = null, ranges = [], direction = 'next', limit = 0, offset = 0, type = false, origin = undefined})
+	select({store, index, range = null, ranges = [], direction = 'next', limit = 0, offset = 0, type = false, origin = undefined, map = undefined})
 	{
 		const t = this[Connection].transaction(store, "readonly");
 		const s = t.objectStore(store);
@@ -94,9 +94,9 @@ export class Database extends Mixin.with(EventTargetMixin)
 		}
 
 		return {
-			each:   this[Fetch](type, i, direction, ranges, limit, offset, origin)
-			, one:  this[Fetch](type, i, direction, ranges, 1, offset, origin)
-			, then: c=>(this[Fetch](type, i, direction, ranges, limit, offset, origin))(e=>e).then(c)
+			each:   this[Fetch](type, i, direction, ranges, limit, offset, origin, map)
+			, one:  this[Fetch](type, i, direction, ranges, 1, offset, origin, map)
+			, then: c=>(this[Fetch](type, i, direction, ranges, limit, offset, origin, map))(e=>e).then(c)
 		};
 	}
 
@@ -400,7 +400,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 		return [...store.indexNames];
 	}
 
-	[Fetch](type, index, direction, ranges, limit, offset, origin)
+	[Fetch](type, index, direction, ranges, limit, offset, origin, map)
 	{
 		return callback => Promise.all(ranges.map(range => new Promise((accept, reject) => {
 			const request = index.openCursor(range, direction);
@@ -418,9 +418,9 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				this[Bank][storeName] = this[Bank][storeName] || {};
 
-				const bank  = this[Bank][storeName];
-				const pk    = cursor.primaryKey;
-				const value = type
+				const bank   = this[Bank][storeName];
+				const pk     =  cursor.primaryKey;
+				const value  = type
 					? type.from(cursor.value)
 					: cursor.value;
 
@@ -474,15 +474,17 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 					record[PrimaryKey] = Symbol.for(pk);
 
+					const mapped = map ? map( record ) : record;
+
 					const result = callback
-						? callback(record, i)
-						: record;
+						? callback(mapped, i)
+						: mapped;
 
 					if(limit && i - offset >= limit)
 					{
 						offset += limit;
 
-						return accept({record, result, index: i});
+						return accept({mapped, result, index: i});
 					}
 				}
 

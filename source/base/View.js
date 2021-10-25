@@ -430,14 +430,12 @@ export class View extends Mixin.with(EventTargetMixin)
 			view: view || this, node: parentNode, root: rootNode, mainView: this
 		}}));
 
-		const attach = this.nodesAttached.items();
-
-		for(let i in attach)
-		{
-			attach[i](rootNode, parentNode);
-		}
-
 		this.dispatchDomAttached(view);
+
+		for(const callback of this.nodesAttached.items())
+		{
+			callback(rootNode, parentNode);
+		}
 	}
 
 	dispatchDomAttached(view)
@@ -956,13 +954,10 @@ export class View extends Mixin.with(EventTargetMixin)
 					if(v instanceof View)
 					{
 						const onAttach = (rootNode, parentNode) => {
-
-							v.dispatchDomAttached(this);
-
+							v.dispatchAttached(rootNode, parentNode, this);
 							// if(v.nodes.length && v.dispatchAttach())
 							// {
 							// 	v.attached(rootNode, parentNode, this);
-							// 	v.dispatchAttached(rootNode, parentNode, this);
 							// }
 						};
 
@@ -1028,7 +1023,6 @@ export class View extends Mixin.with(EventTargetMixin)
 			tag.parentNode.insertBefore(staticNode, tag);
 
 			tag.nodeValue = '';
-
 		}
 		else if(tag.nodeType === Node.ELEMENT_NODE)
 		{
@@ -1527,12 +1521,9 @@ export class View extends Mixin.with(EventTargetMixin)
 				{
 					argList = groups[2].split(',').map(s => s.trim());
 				}
-
-				if(groups.length)
-				{
-				}
 			}
-			else
+
+			if(!argList.length)
 			{
 				argList.push('$event');
 			}
@@ -1567,30 +1558,35 @@ export class View extends Mixin.with(EventTargetMixin)
 				}
 			}
 
-			let eventListener = ((event) => {
-
-				let argRefs = argList.map((arg) => {
+			const eventListener = ((event) => {
+				const argRefs = argList.map((arg) => {
 					let match;
 					if(Number(arg) == arg)
 					{
 						return arg;
 					}
-					else if(arg === 'event' || arg === '$event') {
+					else if(arg === 'event' || arg === '$event')
+					{
 						return event;
 					}
-					else if(arg === '$view') {
+					else if(arg === '$view')
+					{
 						return parent;
 					}
-					else if(arg === '$tag') {
+					else if(arg === '$tag')
+					{
 						return tag;
 					}
-					else if(arg === '$parent') {
+					else if(arg === '$parent')
+					{
 						return this.parent;
 					}
-					else if(arg === '$subview') {
+					else if(arg === '$subview')
+					{
 						return this;
 					}
-					else if(arg in this.args) {
+					else if(arg in this.args)
+					{
 						return this.args[arg];
 					}
 					else if(match = /^['"]([\w-]+?)["']$/.exec(arg))
@@ -1598,7 +1594,6 @@ export class View extends Mixin.with(EventTargetMixin)
 						return match[1];
 					}
 				});
-
 
 				if(!(typeof eventMethod === 'function'))
 				{
@@ -1817,13 +1812,27 @@ export class View extends Mixin.with(EventTargetMixin)
 
 				v = Bindable.make(v);
 
-				let debind = v.bindTo(i, (vv, kk) => {
-					view.args[kk] = vv;
+				let debind = v.bindTo(i, (vv, kk, tt, dd) => {
+					if(!dd)
+					{
+						view.args[kk] = vv;
+					}
+					else if(kk in view.args)
+					{
+						delete view.args[kk];
+					}
 				});
 
-				let debindUp = view.args.bindTo(i, (vv, kk) => {
-					v[kk] = vv;
-				});
+				let debindUp = view.args.bindTo(i, (vv, kk, tt, dd) => {
+					if(!dd)
+					{
+						v[kk] = vv;
+					}
+					else if(kk in v)
+					{
+						delete v[kk];
+					}
+				}, {wait: 0});
 
 				this.onRemove(()=>{
 					debind();
@@ -2326,16 +2335,6 @@ export class View extends Mixin.with(EventTargetMixin)
 			}
 		});
 
-		// for(let i in this.args)
-		// {
-		// 	if(i == '_id')
-		// 	{
-		// 		continue;
-		// 	}
-
-		// 	subView.args[i] = this.args[i];
-		// }
-
 		let debindB = subView.args.bindTo((v,k,t,d,p)=>{
 
 			if(k === '_id')
@@ -2639,7 +2638,6 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		return this.nodes;
 	}
-
 }
 
 Object.defineProperty(View, 'templates', {value: new Map()});

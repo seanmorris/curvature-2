@@ -2,25 +2,25 @@ import { Bindable } from './Bindable';
 
 export class Cookie
 {
+	static jar = Bindable.make({});
+
 	static set(name, value)
 	{
-		Cookie.jar[name] = value;
+		this.jar[name] = value;
 	}
 
 	static get(name)
 	{
-		return Cookie.jar[name];
+		return this.jar[name];
 	}
 
 	static delete(name)
 	{
-		delete Cookie.jar[name];
+		delete this.jar[name];
 	}
-};
+}
 
-Cookie.jar = Cookie.jar || Bindable.make({});
-
-if(document.cookie && window.location.href.substr(0,4) !== 'data')
+if(typeof document.cookie === 'string' && window.location.href.substr(0,4) !== 'data')
 {
 	document.cookie.split(';').map(c => {
 
@@ -42,7 +42,6 @@ if(document.cookie && window.location.href.substr(0,4) !== 'data')
 	});
 
 	Cookie.jar.bindTo((v,k,t,d) => {
-
 		if(d)
 		{
 			document.cookie = `${encodeURIComponent(k)}=;expires=${new Date(0)}`;
