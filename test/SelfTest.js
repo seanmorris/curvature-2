@@ -1,6 +1,6 @@
 import { TestBase } from './TestBase';
 
-const hostname = 'http://localhost:3333/';
+const hostname = `file://${process.cwd()}/../html/index.html`;
 
 const testInjection = () => {
 	document.write('!!!Injection successful !!!');

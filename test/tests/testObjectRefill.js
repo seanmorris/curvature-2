@@ -57,7 +57,7 @@ export const testObjectRefill = () => {
 		setTimeout(() => {
 			clearInterval(filterInterval);
 			setInterval(refill, 10)
-		}, 1000);
+		}, 500);
 
 
 	}, 1000);
