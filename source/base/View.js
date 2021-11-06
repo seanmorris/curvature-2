@@ -80,6 +80,8 @@ export class View extends Mixin.with(EventTargetMixin)
 			))
 		});
 
+		this.controller = this;
+
 		this.loaded = Promise.resolve(this);
 
 		this.template  = ``;
@@ -364,15 +366,6 @@ export class View extends Mixin.with(EventTargetMixin)
 		{
 			const rootNode = parentNode.getRootNode();
 
-			let moveType   = 'internal';
-			let toRoot     = false;
-
-			if(rootNode.isConnected)
-			{
-				moveType = 'external';
-				toRoot   = true;
-			}
-
 			if(insertPoint)
 			{
 				parentNode.insertBefore(this.firstNode, insertPoint);
@@ -388,7 +381,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			moveIndex++;
 
-			if(toRoot)
+			if(rootNode.isConnected)
 			{
 				this.attached(rootNode, parentNode);
 				this.dispatchAttached(rootNode, parentNode);
@@ -955,10 +948,6 @@ export class View extends Mixin.with(EventTargetMixin)
 					{
 						const onAttach = (rootNode, parentNode) => {
 							v.dispatchAttached(rootNode, parentNode, this);
-							// if(v.nodes.length && v.dispatchAttach())
-							// {
-							// 	v.attached(rootNode, parentNode, this);
-							// }
 						};
 
 						this.nodesAttached.add(onAttach);
@@ -1197,10 +1186,6 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		while(parent)
 		{
-			if(!parent.parent)
-			{
-			}
-
 			let refKeyVal = this.args[refKey];
 
 			if(refKeyVal !== undefined)
@@ -1215,6 +1200,11 @@ export class View extends Mixin.with(EventTargetMixin)
 			else
 			{
 				parent.tags[refProp] = tagObject;
+			}
+
+			if(!parent.parent)
+			{
+				break;
 			}
 
 			parent = parent.parent;
@@ -1535,15 +1525,17 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			let eventMethod;
 			let parent = this;
+			let controller = parent.controller;
 
 			while(parent)
 			{
-				if(typeof parent[callbackName] === 'function')
+				if(typeof controller[callbackName] === 'function')
 				{
 					let _parent       = parent;
+					let _controller   = _parent.controller;
 					let _callBackName = callbackName;
 					eventMethod = (...args) => {
-						_parent[ _callBackName ](...args);
+						_controller[ _callBackName ](...args);
 					};
 					break;
 				}
@@ -1551,6 +1543,7 @@ export class View extends Mixin.with(EventTargetMixin)
 				if(parent.parent)
 				{
 					parent = parent.parent;
+					controller = parent.controller;
 				}
 				else
 				{
@@ -1572,6 +1565,10 @@ export class View extends Mixin.with(EventTargetMixin)
 					else if(arg === '$view')
 					{
 						return parent;
+					}
+					else if(arg === '$controller')
+					{
+						return controller;
 					}
 					else if(arg === '$tag')
 					{
@@ -1922,7 +1919,12 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		const debind = this.args.bindTo(eachProp, (v,k,t,d,p)=>{
+		const debind = this.args.bindTo(eachProp, (v,k,t,d,p) => {
+
+			if(v instanceof Bag)
+			{
+				v = v.list;
+			}
 
 			if(this.viewLists.has(tag))
 			{
@@ -1968,7 +1970,7 @@ export class View extends Mixin.with(EventTargetMixin)
 					this.args[k] = v;
 				}
 
-			});
+			}, {wait:0});
 
 			viewList.onRemove(debindA);
 			viewList.onRemove(debindB);
@@ -2030,7 +2032,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const ifDoc = new DocumentFragment;
 
-		let view = new viewClass(this.args, bindingView);
+		let view = new viewClass({}, bindingView);
 
 		this.onRemove(view.tags.bindTo((v,k)=>{
 			this.tags[k]=v
@@ -2104,14 +2106,10 @@ export class View extends Mixin.with(EventTargetMixin)
 						return;
 					}
 
-					const onIdle = globalThis.requestIdleCallback;
-
-					onIdle(() =>  tag.dispatchEvent(
-						new CustomEvent('cvDomDetached', {
-							target: tag
-							, detail: { view: view || this, mainView: this }
-						}))
-					);
+					new CustomEvent('cvDomDetached', {
+						target: tag
+						, detail: { view: view || this, mainView: this }
+					});
 				});
 			}
 		}, { children: Array.isArray(proxy[property]) });
@@ -2120,27 +2118,53 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		bindingView.onRemove(propertyDebind);
 
-		let bindableDebind = () => {
+		const debindA = this.args.bindTo((v,k,t,d)=>{
 
-			if(!proxy.isBound())
+			if(k === '_id')
 			{
-				Bindable.clearBindings(proxy);
+				return;
 			}
 
-		};
+			if(d)
+			{
+				delete viewList.subArgs[k];
+			}
+
+			view.args[k] = v;
+		});
+
+		const debindB = view.args.bindTo((v,k,t,d,p)=>{
+
+			if(k === '_id' || k.substring(0,3) === '___')
+			{
+				return;
+			}
+
+			if(d)
+			{
+				delete this.args[k];
+			}
+
+			if(k in this.args)
+			{
+				this.args[k] = v;
+			}
+		}, {wait: 0});
 
 		let viewDebind = ()=>{
 			propertyDebind();
-			bindableDebind();
+			debindA();
+			debindB();
 			bindingView._onRemove.remove(propertyDebind);
-			bindingView._onRemove.remove(bindableDebind);
+			// bindingView._onRemove.remove(bindableDebind);
 		};
 
 		bindingView.onRemove(viewDebind);
 
 		this.onRemove(()=>{
+			debindA();
+			debindB();
 			view.remove();
-
 			if(bindingView !== this)
 			{
 				bindingView.remove();
@@ -2444,19 +2468,19 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const callbacks = this._onRemove.items();
 
-		for(let callback of callbacks)
+		for(const callback of callbacks)
 		{
-			this._onRemove.remove(callback);
-
 			callback();
+
+			this._onRemove.remove(callback);
 		}
 
-		let cleanup;
-
-		while(cleanup = this.cleanup.shift())
+		for(const cleanup of this.cleanup)
 		{
 			cleanup && cleanup();
 		}
+
+		this.cleanup.length = 0;
 
 		for(const [tag, viewList] of this.viewLists)
 		{
@@ -2471,17 +2495,19 @@ export class View extends Mixin.with(EventTargetMixin)
 			this.timeouts.delete(timeout.timeout);
 		}
 
-		for(var i in this.intervals)
+		for(const interval of this.intervals)
 		{
-			clearInterval(this.intervals[i].timeout);
-			delete this.intervals[i];
+			clearInterval(interval);
 		}
 
-		for(var i in this.frames)
+		this.intervals.length = 0;
+
+		for(const frame of this.frames)
 		{
-			this.frames[i]();
-			delete this.frames[i];
+			frame();
 		}
+
+		this.frames.length = 0;
 
 		this.preRuleSet.purge();
 		this.ruleSet.purge();

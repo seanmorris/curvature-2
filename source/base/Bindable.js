@@ -40,6 +40,20 @@ const excludedClasses = [
 	, win.MutationObserver
 	, win.PerformanceObserver
 	, win.IntersectionObserver
+	, win.IDBCursor
+	, win.IDBCursorWithValue
+	, win.IDBDatabase
+	, win.IDBFactory
+	, win.IDBIndex
+	, win.IDBKeyRange
+	, win.IDBObjectStore
+	, win.IDBOpenDBRequest
+	, win.IDBRequest
+	, win.IDBTransaction
+	, win.IDBVersionChangeEvent
+	, win.Event
+	, win.CustomEvent
+	, win.FileSystemFileHandle
 ].filter(x=>typeof x === 'function');
 
 export class Bindable
@@ -146,10 +160,10 @@ export class Bindable
 			return object;
 		}
 
-		if (excludedClasses.filter(x => object instanceof x).length
-			|| Object.isSealed(object)
+		if (Object.isSealed(object)
 			|| !Object.isExtensible(object)
-		) {
+			|| excludedClasses.filter(x => object instanceof x).length
+		){
 			return object;
 		}
 
@@ -549,15 +563,15 @@ export class Bindable
 				return true;
 			}
 
-			if(object[Deck][key] !== undefined && object[Deck][key] === value)
+			const onDeck = object[Deck];
+
+			if(onDeck[key] !== undefined && onDeck[key] === value)
 			{
 				return true;
 			}
 
-			if(typeof key === 'string'
-				&& key.substring(0,3) === '___'
-				&& key.slice(-3) === '___'
-			){
+			if(key.slice && key.slice(-3) === '___' )
+			{
 				return true;
 			}
 
@@ -579,7 +593,7 @@ export class Bindable
 				}
 			}
 
-			object[Deck][key] = value;
+			onDeck[key] = value;
 
 			for(let i in object[BindingAll])
 			{
@@ -597,16 +611,6 @@ export class Bindable
 			{
 				for(const callback of object[Binding][key])
 				{
-					// if(!object[Binding][key])
-					// {
-					// 	continue;
-					// }
-
-					// if(!object[Binding][key][i])
-					// {
-					// 	continue;
-					// }
-
 					if(callback(value, key, target, false, target[key]) === false)
 					{
 						stop = true;
@@ -614,7 +618,7 @@ export class Bindable
 				}
 			}
 
-			delete object[Deck][key];
+			delete onDeck[key];
 
 			if(!stop)
 			{

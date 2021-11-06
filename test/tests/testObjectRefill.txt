@@ -1,0 +1,27 @@
+<pre>prop-b: -23
+prop-d: -21
+prop-f: -19
+prop-h: -17
+prop-j: -15
+prop-l: -13
+prop-n: -11
+prop-p: -9
+prop-r: -7
+prop-t: -5
+prop-v: -3
+prop-x: -1
+prop-z: 1
+prop-a: -24
+prop-c: -22
+prop-e: -20
+prop-g: -18
+prop-i: -16
+prop-k: -14
+prop-m: -12
+prop-o: -10
+prop-q: -8
+prop-s: -6
+prop-u: -4
+prop-w: -2
+prop-y: 0
+</pre>

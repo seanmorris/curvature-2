@@ -1,0 +1,14 @@
+<pre>prop-b: 2
+prop-d: 4
+prop-f: 6
+prop-h: 8
+prop-j: 10
+prop-l: 12
+prop-n: 14
+prop-p: 16
+prop-r: 18
+prop-t: 20
+prop-v: 22
+prop-x: 24
+prop-z: 26
+</pre>

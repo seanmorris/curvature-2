@@ -6,6 +6,12 @@ import { EventTargetMixin  } from '../mixin/EventTargetMixin';
 const toId   = int => Number(int);
 const fromId = id  => parseInt(id);
 
+const Mapped = Symbol('Mapped');
+const Has = Symbol('Has');
+const Add = Symbol('Add');
+const Remove = Symbol('Remove');
+const Delete = Symbol('Delete');
+
 export class Bag extends Mixin.with(EventTargetMixin)
 {
 	constructor(changeCallback = undefined)
@@ -25,10 +31,30 @@ export class Bag extends Mixin.with(EventTargetMixin)
 
 	has(item)
 	{
+		if(this[Mapped])
+		{
+			return this[Mapped].has(item);
+		}
+
+		return this[Has](item);
+	}
+
+	[Has](item)
+	{
 		return this.content.has(item);
 	}
 
 	add(item)
+	{
+		if(this[Mapped])
+		{
+			return this[Mapped].add(item);
+		}
+
+		return this[Add](item);
+	}
+
+	[Add](item)
 	{
 		if(item === undefined || !(item instanceof Object))
 		{
@@ -72,9 +98,21 @@ export class Bag extends Mixin.with(EventTargetMixin)
 		this.dispatchEvent(add);
 
 		this.length = this.size;
+
+		return id;
 	}
 
 	remove(item)
+	{
+		if(this[Mapped])
+		{
+			return this[Mapped].remove(item);
+		}
+
+		return this[Remove](item);
+	}
+
+	[Remove](item)
 	{
 		if(item === undefined || !(item instanceof Object))
 		{
@@ -125,6 +163,65 @@ export class Bag extends Mixin.with(EventTargetMixin)
 		this.length = this.size;
 
 		return item;
+	}
+
+	delete(item)
+	{
+		if(this[Mapped])
+		{
+			return this[Mapped].delete(item);
+		}
+
+		this[Delete](item);
+	}
+
+	[Delete](item)
+	{
+		this.remove(item);
+	}
+
+	map(mapper = x => x, filter = x => x)
+	{
+		const mappedItems = new WeakMap;
+		const mappedBag   = new Bag;
+
+		mappedBag[Mapped] = this;
+
+		this.addEventListener('added', event => {
+			const item = event.detail.item;
+
+			if(!filter(item))
+			{
+				return;
+			}
+
+			if(mappedItems.has(item))
+			{
+				return;
+			}
+
+			const mapped = mapper(item);
+
+			mappedItems.set(item, mapped);
+
+			mappedBag[Add](mapped);
+		});
+
+		this.addEventListener('removed', event => {
+			const item = event.detail.item;
+
+			if(!mappedItems.has(item))
+			{
+				return;
+			}
+
+			const mapped = mappedItems.get(item);
+
+			mappedItems.delete(item);
+			mappedBag[Remove](mapped);
+		});
+
+		return mappedBag;
 	}
 
 	get size()

@@ -1,6 +1,8 @@
 const AppRoutes = {};
 
-try { Object.assign(AppRoutes, require('Routes').Routes || {}); }
+const _require = require;
+
+try { Object.assign(AppRoutes, _require('Routes').Routes || {}); }
 catch(error) { globalThis.devMode === true && console.warn(error); }
 
 export class Routes

@@ -357,27 +357,29 @@ export class PopOutTag extends Tag
 
 					this.moving = false;
 					Dom.mapTags(this.element, false, (tag)=>{
-						let event = new CustomEvent('cvPopped');
+						let poppedEvent = new CustomEvent('cvPopped');
 
-						tag.dispatchEvent(event);
+						tag.dispatchEvent(poppedEvent);
 
 						this.scrollStyle = this.element.getAttribute('style');
 					});
-					let event = new CustomEvent('cvPop', {
-						bubbles: true
-						, detail: {
-							tag: this
-							, view: this.parent
-							, publicId: this.parent.args.publicId
-						}
-					});
-					this.element.dispatchEvent(event);
-
 				}, this.horizontalDuration*1000);
 			}, 16.7*2);
 
+
 			this.poppedOut = true;
 		});
+
+		const popEvent = new CustomEvent('cvPop', {
+			bubbles: true
+			, detail: {
+				tag: this
+				, view: this.parent
+				, publicId: this.parent.args.publicId
+			}
+		});
+
+		Dom.mapTags(this.element, false, (tag) => tag.dispatchEvent(popEvent));
 	}
 
 	unpop()
@@ -425,6 +427,7 @@ export class PopOutTag extends Tag
 			this.element.classList.remove('popped');
 
 		}, this.horizontalDuration*1000);
+
 		setTimeout(()=>{
 			this.element.classList.add('unpopped');
 			this.element.classList.remove('unpopping');
@@ -435,20 +438,24 @@ export class PopOutTag extends Tag
 			this.element.setAttribute('style', this.style);
 			this.moving = false;
 			Dom.mapTags(this.element, false, (tag)=>{
-				let event = new CustomEvent('cvUnpopped');
+				const unpoppedEvent = new CustomEvent('cvUnpopped');
 
-				tag.dispatchEvent(event);
+				tag.dispatchEvent(unpoppedEvent);
 			});
-			let event = new CustomEvent('cvUnpop', {
-				bubbles: true
-				, detail: {
-					tag: this
-					, view: this.parent
-					, publicId: this.parent.args.publicId
-				}
-			});
-			this.element.dispatchEvent(event);
 		}, this.horizontalDuration*1000);
+
+		const unpopEvent = new CustomEvent('cvUnpop', {
+			bubbles: true
+			, detail: {
+				tag: this
+				, view: this.parent
+				, publicId: this.parent.args.publicId
+			}
+		});
+
+		this.element.dispatchEvent(unpopEvent);
+
+		Dom.mapTags(this.element, false, (tag)=> tag.dispatchEvent(unpopEvent));
 
 		this.poppedOut = false;
 	}

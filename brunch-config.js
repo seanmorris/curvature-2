@@ -17,5 +17,5 @@ exports.paths = {
 };
 
 exports.modules = {
-	nameCleaner: path => path.replace(/^source(?:-docs)?\//, 'curvature/')
+	nameCleaner: path => path.replace(/^(source|build)?\//, 'curvature/')
 }

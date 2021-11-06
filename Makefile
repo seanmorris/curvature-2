@@ -1,17 +1,19 @@
-.PHONY: all package min dist prod clean
+.PHONY: all package min dist test clean
 
-all: package
+all: package dist
 
 package:
 	npx babel source/ --out-dir .
 
-# dist:
-# 	NODE_ENV=prod npx babel source/ --no-comments --out-file dist/curvature.js
-# 	NODE_ENV=prod npx babel source/base --no-comments --out-file dist/curvature.base.js
+dist/curvature.js: source/
+	brunch b || true
 
-# min:
-# 	NODE_ENV=prod-min npx babel source/ --no-comments --out-file dist/curvature.min.js
-# 	NODE_ENV=prod-min npx babel source/base --no-comments --out-file dist/curvature.base.min.js
+test: dist/curvature.js
+	cp dist/curvature.js test/html/
+	cd test/ \
+	&& npx babel ./ ./tests  --out-dir build \
+	&& cd build/ \
+	&& cvtest \
 
 dependencies:
 	npm install

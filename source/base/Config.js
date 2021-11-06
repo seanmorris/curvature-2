@@ -1,8 +1,10 @@
 let AppConfig = {};
 
+const _require = require;
+
 try
 {
-	AppConfig = require('/Config').Config || {};
+	AppConfig = _require('/Config').Config || {};
 }
 catch (error)
 {

@@ -7,7 +7,7 @@ export class Mixin
 {
 	static from(baseClass, ...mixins)
 	{
-		const constructors = [];
+		console.log(baseClass);
 
 		const newClass = class extends baseClass {
 
@@ -15,7 +15,7 @@ export class Mixin
 			{
 				const instance = baseClass.constructor
 					? super(...args)
-					: undefined;
+					: null;
 
 				for(const mixin of mixins)
 				{
@@ -26,9 +26,9 @@ export class Mixin
 
 					switch(typeof mixin)
 					{
-						// case 'function':
-						// 	this.mixClass(mixin, newClass);
-						// 	break;
+						case 'function':
+							Mixin.mixClass(mixin, newClass);
+							break;
 
 						case 'object':
 							Mixin.mixObject(mixin, this);
@@ -40,6 +40,8 @@ export class Mixin
 			}
 
 		};
+
+		console.log(newClass);
 
 		return newClass;
 	}
@@ -113,18 +115,55 @@ export class Mixin
 	{
 		for(const func of Object.getOwnPropertyNames(cls.prototype))
 		{
+			if(['name', 'prototype', 'length'].includes(func))
+			{
+				continue;
+			}
+
+			const descriptor = Object.getOwnPropertyDescriptor(newClass, func);
+
+			if(descriptor && !descriptor.writable)
+			{
+				continue;
+			}
+
+			if(typeof cls[func] !== 'function')
+			{
+				newClass.prototype[func] = cls.prototype[func];
+				continue;
+			}
+
 			newClass.prototype[func] = cls.prototype[func].bind(newClass.prototype);
 		}
 
 		for(const func of Object.getOwnPropertySymbols(cls.prototype))
 		{
+			if(typeof cls[func] !== 'function')
+			{
+				newClass.prototype[func] = cls.prototype[func];
+				continue;
+			}
+
 			newClass.prototype[func] = cls.prototype[func].bind(newClass.prototype);
 		}
 
 		for(const func of Object.getOwnPropertyNames(cls))
 		{
+			if(['name', 'prototype', 'length'].includes(func))
+			{
+				continue;
+			}
+
+			const descriptor = Object.getOwnPropertyDescriptor(newClass, func);
+
+			if(descriptor && !descriptor.writable)
+			{
+				continue;
+			}
+
 			if(typeof cls[func] !== 'function')
 			{
+				newClass[func] = cls[func];
 				continue;
 			}
 
@@ -141,6 +180,7 @@ export class Mixin
 		{
 			if(typeof cls[func] !== 'function')
 			{
+				newClass.prototype[func] = cls[func];
 				continue;
 			}
 

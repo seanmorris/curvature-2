@@ -329,7 +329,12 @@ export class ViewList
 
 					if(isInt(a) && isInt(b))
 					{
-						return a - b;
+						return Math.sign(a - b);
+					}
+
+					if(!isInt(a) && !isInt(b))
+					{
+						return 0;
 					}
 
 					if(!isInt(a) && isInt(b))
@@ -337,7 +342,10 @@ export class ViewList
 						return -1;
 					}
 
-					return 1;
+					if(isInt(a) && !isInt(b))
+					{
+						return 1;
+					}
 				}
 			);
 
