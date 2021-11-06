@@ -7,6 +7,7 @@ commands:
       - run: sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
       - run: sudo apt-get update
       - run: sudo apt install -y software-properties-common nodejs npm google-chrome-stable
+      - run: mkdir -p /tmp/.chrome-user
 
 workflows:
   version: 2
