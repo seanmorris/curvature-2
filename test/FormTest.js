@@ -53,9 +53,9 @@ export class FormTest extends TestBase
 		));
 	}
 
-	testFormFlicker()
+	testFormInputFlicker()
 	{
-		const name = 'testFormFlicker';
+		const name = 'testFormInputFlicker';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -64,4 +64,43 @@ export class FormTest extends TestBase
 			, 'Form values incorrect or corrupted.'
 		));
 	}
+
+	testFormOutputFlicker()
+	{
+		const name = 'testFormOutputFlicker';
+
+		return this.pobot.goto(`${hostname}`)
+		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Form values incorrect or corrupted.'
+		));
+	}
+
+	testFormGroupInput()
+	{
+		const name = 'testFormGroupInput';
+
+		return this.pobot.goto(`${hostname}`)
+		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Form values incorrect or corrupted.'
+		));
+	}
+
+	testFormGroupOutput()
+	{
+		const name = 'testFormGroupOutput';
+
+		return this.pobot.goto(`${hostname}`)
+		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Form values incorrect or corrupted.'
+		));
+	}
+
+	// testFormGroups
+	// testForm
 }

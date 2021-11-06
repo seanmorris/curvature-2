@@ -11,12 +11,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testFlicker()
@@ -25,12 +23,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testList()
@@ -39,12 +35,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testListPrefill()
@@ -53,12 +47,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testListCascade()
@@ -67,12 +59,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testListCascadeUp()
@@ -81,12 +71,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testListSplicedOdds()
@@ -95,12 +83,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testListSplicedUpOdds()
@@ -109,12 +95,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testObjectSetProperties()
@@ -123,12 +107,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testObjectDeleteOdds()
@@ -137,12 +119,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 
 	testObjectRefill()
@@ -151,12 +131,10 @@ export class BasicViewTest extends TestBase
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => {
-			this.assert(
-				result === rawquire(`./tests/${name}.txt`)
-				, 'Document body incorrect or corrupted.'
-			);
-		});
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
 	}
 }
 

@@ -1,4 +1,4 @@
-export const testFormFlicker = () => {
+export const testFormOutputFlicker = () => {
 	while(document.body.firstChild)
 	{
 		document.body.firstChild.remove();
@@ -20,14 +20,10 @@ export const testFormFlicker = () => {
 	let x = 0;
 
 	setTimeout(() => {
-		const form = document.querySelector('form');
+		const formTag = document.querySelector('form');
 
-		form.style.display = 'flex';
-		form.style.flexDirection = 'column';
-
-		const title = document.querySelector('[name=title]');
-		const email = document.querySelector('[name=email]');
-		const body  = document.querySelector('[name=body]');
+		formTag.style.display = 'flex';
+		formTag.style.flexDirection = 'column';
 
 		const cascade = () => {
 
@@ -36,13 +32,9 @@ export const testFormFlicker = () => {
 				return;
 			}
 
-			title.value = x + ' this is the title';
-			email.value = `me${x}@example.com`;
-			body.value  = x + ' this is the message';
-
-			title.dispatchEvent(new Event('input'));
-			email.dispatchEvent(new Event('input'));
-			body.dispatchEvent(new Event('input'));
+			form.args.value.title = x + ' this is the title';
+			form.args.value.email = `me${x}@example.com`;
+			form.args.value.body  = x + ' this is the message';
 
 			view.args.number = x++;
 		};
