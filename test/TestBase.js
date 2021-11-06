@@ -5,8 +5,8 @@ const Pobot = require('pobot/Pobot');
 
 export class TestBase extends Test
 {
-	// options = ['--headless'];
-	options = [];
+	// options = [];
+	options = ['--headless', '--disable-gpu'];
 
 	setUp()
 	{
