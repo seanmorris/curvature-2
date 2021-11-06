@@ -3,11 +3,10 @@ version: 2.1
 commands:
   install-deps:
     steps:
-      - run: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
-          sudo apt-get update
-          sudo apt install -y software-properties-common nodejs google-chrome-stable
+      - run: wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+      - run: sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+      - run: sudo apt-get update
+      - run: sudo apt install -y software-properties-common nodejs npm google-chrome-stable
 
 workflows:
   version: 2
