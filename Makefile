@@ -1,17 +1,19 @@
-.PHONY: all package min dist test clean
+.PHONY: all package dist/curvature.js test clean
 
-all: package dist
+all: package dist/curvature.js
 
 package:
 	npx babel source/ --out-dir .
 
-dist/curvature.js: source/
-	brunch b || true
+dist/curvature.js:
+	brunch b
 
 test: dist/curvature.js
 	cp dist/curvature.js test/html/
 	cd test/ \
-	&& npx babel ./ ./tests  --out-dir build \
+	&& rm -rf build/* \
+	&& npx babel ./tests/ --out-dir build/tests/ \
+	&& npx babel ./*.js --out-dir build \
 	&& cd build/ \
 	&& cvtest \
 

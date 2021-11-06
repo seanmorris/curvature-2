@@ -3,9 +3,7 @@ import { rawquire } from 'rawquire/rawquire.macro';
 
 const hostname = `file://${process.cwd()}/../html/index.html`;
 
-console.log(hostname);
-
-export class BareScalarTest extends TestBase
+export class BasicViewTest extends TestBase
 {
 	testTemplate()
 	{

@@ -7,8 +7,6 @@ export class Mixin
 {
 	static from(baseClass, ...mixins)
 	{
-		console.log(baseClass);
-
 		const newClass = class extends baseClass {
 
 			constructor(...args)
@@ -40,8 +38,6 @@ export class Mixin
 			}
 
 		};
-
-		console.log(newClass);
 
 		return newClass;
 	}

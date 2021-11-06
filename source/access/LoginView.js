@@ -1,4 +1,4 @@
-import { Config         } from '../Config';
+import { Config         } from '../base/Config';
 
 import { View           } from '../base/View';
 import { Router         } from '../base/Router';
