@@ -26,5 +26,6 @@ jobs:
     steps:
       - checkout
       - install-deps
+      - run: sudo npm install -g cv3-test pobot
       - run: npm install
       - run: make test
