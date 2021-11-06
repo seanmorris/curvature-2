@@ -1,4 +1,4 @@
-import { Config         } from 'Config';
+import { Config         } from '../Config';
 
 import { View           } from '../base/View';
 import { Router         } from '../base/Router';
@@ -41,7 +41,7 @@ export class LoginView extends View{
 		console.log('fb!')
 		event.preventDefault();
 		let fbWindow = window.open(
-			Config.backend
+			Config.get('backend')
 				+ '/facebookLogin'
 		);
 
@@ -77,7 +77,7 @@ export class LoginView extends View{
 	}
 	logout(event) {
 		let logoutWindow = window.open(
-			Config.backend
+			Config.get('backend')
 				+ '/user/logout?page=app%3Fclose%3D1'
 		);
 	}
