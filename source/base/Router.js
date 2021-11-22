@@ -17,7 +17,8 @@ export class Router {
 
 	static listen(listener, routes = false)
 	{
-		this.routes = routes || listener.routes;
+		this.listener = listener || this.listener;
+		this.routes   = routes   || listener.routes;
 
 		Object.assign(this.query, this.queryOver({}));
 
@@ -108,7 +109,11 @@ export class Router {
 			, url:    location.pathname
 		};
 
-		if(location.origin === 'null')
+		if(silent === -1)
+		{
+			this.match(path, this.listener, true);
+		}
+		else if(location.origin === 'null')
 		{
 			this.nextPath = path;
 		}
@@ -128,13 +133,16 @@ export class Router {
 				this.path = null;
 			}
 
-			if(path.substring(0,1) === '#')
+			if(silent > 0)
 			{
-				window.dispatchEvent(new HashChangeEvent('hashchange'));
-			}
-			else
-			{
-				window.dispatchEvent(new CustomEvent('cvUrlChanged'));
+				if(path.substring(0,1) === '#')
+				{
+					window.dispatchEvent(new HashChangeEvent('hashchange'));
+				}
+				else
+				{
+					window.dispatchEvent(new CustomEvent('cvUrlChanged'));
+				}
 			}
 		}
 
@@ -267,36 +275,36 @@ export class Router {
 			return true;
 		}
 
-		try
+		if(!(selected in routes))
 		{
-			if(!(selected in routes))
+			routes[selected] = routes[NotFoundError];
+		}
+
+		const processRoute = (selected) => {
+
+			let result = false;
+
+			if(typeof routes[selected] === 'function')
 			{
-				routes[selected] = routes[NotFoundError];
-			}
-
-			const processRoute = (selected) => {
-
-				let result = false;
-
-				if(typeof routes[selected] === 'function')
+				if(routes[selected].prototype instanceof View)
 				{
-					if(routes[selected].prototype instanceof View)
-					{
-						result = new routes[selected](args);
-					}
-					else
-					{
-						result = routes[selected](args);
-					}
+					result = new routes[selected](args);
 				}
 				else
 				{
-					result = routes[selected];
+					result = routes[selected](args);
 				}
+			}
+			else
+			{
+				result = routes[selected];
+			}
 
-				return result;
-			};
+			return result;
+		};
 
+		try
+		{
 			result = processRoute(selected);
 
 			if(result === false)
@@ -360,6 +368,8 @@ export class Router {
 		}
 		catch(error)
 		{
+			console.error(error);
+
 			document.dispatchEvent(new CustomEvent('cvRouteError', {
 				detail: {
 					error
@@ -504,7 +514,7 @@ export class Router {
 		const queryString = this.queryToString(args, true);
 
 		this.go(
-			location.pathname + (queryString ? '?' + queryString : '')
+			location.pathname + (queryString ? ('?' + queryString) : ('?'))
 			, silent
 		);
 	}

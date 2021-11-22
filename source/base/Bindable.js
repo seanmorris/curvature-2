@@ -161,6 +161,7 @@ export class Bindable
 		}
 
 		if (Object.isSealed(object)
+			|| Object.isFrozen(object)
 			|| !Object.isExtensible(object)
 			|| excludedClasses.filter(x => object instanceof x).length
 		){
@@ -558,6 +559,11 @@ export class Bindable
 
 		const set = (target, key, value) => {
 
+			if(wrapped.has(key))
+			{
+				wrapped.delete(key);
+			}
+
 			if(key === Original)
 			{
 				return true;
@@ -653,6 +659,14 @@ export class Bindable
 		};
 
 		const deleteProperty = (target, key) => {
+
+			const onDeck = object[Deck];
+
+			if(onDeck[key] !== undefined)
+			{
+				return true;
+			}
+
 			if(!(key in target))
 			{
 				return true;
@@ -670,6 +684,13 @@ export class Bindable
 				descriptors.delete(key);
 			}
 
+			onDeck[key] = null;
+
+			if(wrapped.has(key))
+			{
+				wrapped.delete(key);
+			}
+
 			for(let i in object[BindingAll])
 			{
 				object[BindingAll][i](undefined, key, target, true, target[key]);
@@ -682,6 +703,8 @@ export class Bindable
 					binding(undefined, key, target, true, target[key]);
 				}
 			}
+
+			delete onDeck[key];
 
 			delete target[key];
 
@@ -774,7 +797,7 @@ export class Bindable
 				Object.defineProperty(object[Unwrapped], key, {
 					configurable: false
 					, enumerable: false
-					, writable:   false
+					, writable:   true
 					, value:      object[key]
 				});
 

@@ -932,7 +932,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 					if(unsafeView && !(v instanceof View))
 					{
-						const unsafeTemplate = v;
+						const unsafeTemplate = v ?? '';
 
 						v = new View(this.args, this);
 
@@ -1525,17 +1525,22 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			let eventMethod;
 			let parent = this;
-			let controller = parent.controller;
 
 			while(parent)
 			{
+				const controller = parent.controller;
+
 				if(typeof controller[callbackName] === 'function')
 				{
-					let _parent       = parent;
-					let _controller   = _parent.controller;
-					let _callBackName = callbackName;
 					eventMethod = (...args) => {
-						_controller[ _callBackName ](...args);
+						controller[callbackName](...args);
+					};
+					break;
+				}
+				else if(typeof parent[callbackName] === 'function')
+				{
+					eventMethod = (...args) => {
+						parent[callbackName](...args);
 					};
 					break;
 				}
@@ -1543,7 +1548,6 @@ export class View extends Mixin.with(EventTargetMixin)
 				if(parent.parent)
 				{
 					parent = parent.parent;
-					controller = parent.controller;
 				}
 				else
 				{
@@ -1829,7 +1833,7 @@ export class View extends Mixin.with(EventTargetMixin)
 					{
 						delete v[kk];
 					}
-				}, {wait: 0});
+				});
 
 				this.onRemove(()=>{
 					debind();
@@ -1939,38 +1943,43 @@ export class View extends Mixin.with(EventTargetMixin)
 			viewList.onRemove(()=>this._onRemove.remove(viewListRemover));
 
 			const debindA = this.args.bindTo((v,k,t,d)=>{
-
 				if(k === '_id')
 				{
 					return;
 				}
 
-				if(d)
+				if(!d)
 				{
-					delete viewList.subArgs[k];
+					viewList.subArgs[k] = v;
 				}
-
-				viewList.subArgs[k] = v;
+				else
+				{
+					if(k in viewList.subArgs)
+					{
+						delete viewList.subArgs[k];
+					}
+				}
 			});
 
 			const debindB = viewList.args.bindTo((v,k,t,d,p)=>{
-
-				if(k === '_id' || k === 'value' || k.substring(0,3) === '___')
+				if(k === '_id' || k === 'value' || String(k).substring(0,3) === '___')
 				{
 					return;
 				}
 
-				if(d)
+				if(!d)
+				{
+					if(k in this.args)
+					{
+						this.args[k] = v;
+					}
+				}
+				else
 				{
 					delete this.args[k];
 				}
 
-				if(k in this.args)
-				{
-					this.args[k] = v;
-				}
-
-			}, {wait:0});
+			});
 
 			viewList.onRemove(debindA);
 			viewList.onRemove(debindB);
@@ -2032,7 +2041,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const ifDoc = new DocumentFragment;
 
-		let view = new viewClass({}, bindingView);
+		let view = new viewClass(Object.assign({}, this.args), bindingView);
 
 		this.onRemove(view.tags.bindTo((v,k)=>{
 			this.tags[k]=v
@@ -2061,6 +2070,11 @@ export class View extends Mixin.with(EventTargetMixin)
 			if(defined)
 			{
 				v = v !== null && v !== undefined;
+			}
+
+			if(v instanceof Bag)
+			{
+				v = v.list;
 			}
 
 			if(Array.isArray(v))
@@ -2118,38 +2132,41 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		bindingView.onRemove(propertyDebind);
 
-		const debindA = this.args.bindTo((v,k,t,d)=>{
-
+		const debindA = this.args.bindTo((v,k,t,d) => {
 			if(k === '_id')
 			{
 				return;
 			}
 
-			if(d)
+			if(!d)
 			{
-				delete viewList.subArgs[k];
+				view.args[k] = v;
+			}
+			else if(k in view.args)
+			{
+				delete view.args[k];
 			}
 
-			view.args[k] = v;
 		});
 
-		const debindB = view.args.bindTo((v,k,t,d,p)=>{
-
-			if(k === '_id' || k.substring(0,3) === '___')
+		const debindB = view.args.bindTo((v,k,t,d,p) => {
+			if(k === '_id' || String(k).substring(0,3) === '___')
 			{
 				return;
 			}
 
-			if(d)
-			{
-				delete this.args[k];
-			}
-
 			if(k in this.args)
 			{
-				this.args[k] = v;
+				if(!d)
+				{
+					this.args[k] = v;
+				}
+				else
+				{
+					delete this.args[k];
+				}
 			}
-		}, {wait: 0});
+		});
 
 		let viewDebind = ()=>{
 			propertyDebind();

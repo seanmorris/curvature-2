@@ -356,13 +356,13 @@ export class PopOutTag extends Tag
 					document.body.setAttribute('style', 'height:100%;overflow:hidden;');
 
 					this.moving = false;
-					Dom.mapTags(this.element, false, (tag)=>{
-						let poppedEvent = new CustomEvent('cvPopped');
 
-						tag.dispatchEvent(poppedEvent);
+					const poppedEvent = new CustomEvent('cvPopped');
 
-						this.scrollStyle = this.element.getAttribute('style');
-					});
+					this.element.dispatchEvent(poppedEvent);
+
+					this.scrollStyle = this.element.getAttribute('style');
+
 				}, this.horizontalDuration*1000);
 			}, 16.7*2);
 
@@ -379,7 +379,7 @@ export class PopOutTag extends Tag
 			}
 		});
 
-		Dom.mapTags(this.element, false, (tag) => tag.dispatchEvent(popEvent));
+		this.element.dispatchEvent(popEvent);
 	}
 
 	unpop()
@@ -435,13 +435,15 @@ export class PopOutTag extends Tag
 			{
 				return;
 			}
-			this.element.setAttribute('style', this.style);
-			this.moving = false;
-			Dom.mapTags(this.element, false, (tag)=>{
-				const unpoppedEvent = new CustomEvent('cvUnpopped');
 
-				tag.dispatchEvent(unpoppedEvent);
-			});
+			this.element.setAttribute('style', this.style);
+
+			this.moving = false;
+
+			const unpoppedEvent = new CustomEvent('cvUnpopped');
+
+			this.element.dispatchEvent(unpoppedEvent);
+
 		}, this.horizontalDuration*1000);
 
 		const unpopEvent = new CustomEvent('cvUnpop', {
@@ -454,8 +456,6 @@ export class PopOutTag extends Tag
 		});
 
 		this.element.dispatchEvent(unpopEvent);
-
-		Dom.mapTags(this.element, false, (tag)=> tag.dispatchEvent(unpopEvent));
 
 		this.poppedOut = false;
 	}

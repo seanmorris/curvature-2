@@ -1,6 +1,6 @@
 {
 	"name": "curvature",
-	"version": "0.0.66-s",
+	"version": "0.0.67",
 	"author": "Sean Morris <curvature@seanmorr.is> (https://seanmorr.is)",
 	"license": "Apache-2.0",
 	"repository": "https://github.com/seanmorris/curvature-2",
@@ -15,7 +15,7 @@
 		"babel-plugin-macros": "^3.1.0",
 		"brunch": "^3",
 		"clean-css-brunch": "^3",
-		"cv3-test": "^0.0.11",
+		"cv3-test": "^0.0.12",
 		"pobot": "^0.0.6",
 		"raw-brunch": "^1.0.2",
 		"rawquire": "^0.0.1",

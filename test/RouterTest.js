@@ -3,11 +3,11 @@ import { rawquire } from 'rawquire/rawquire.macro';
 
 const hostname = `file://${process.cwd()}/../html/index.html`;
 
-export class BasicViewTest extends TestBase
+export class RouterTest extends TestBase
 {
-	testTemplate()
+	testIndexRouting()
 	{
-		const name = 'testTemplate';
+		const name = 'testIndexRouting';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -17,9 +17,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testFlicker()
+	testStaticRouting()
 	{
-		const name = 'testFlicker';
+		const name = 'testStaticRouting';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -29,9 +29,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testHtmlEscape()
+	testWildcardRoutingA()
 	{
-		const name = 'testHtmlEscape';
+		const name = 'testWildcardRoutingA';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -41,22 +41,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testHtmlNoEscape()
+	testWildcardRoutingB()
 	{
-		const name = 'testHtmlNoEscape';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result =>
-		this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testViewEscaped()
-	{
-		const name = 'testViewEscaped';
+		const name = 'testWildcardRoutingB';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -66,9 +53,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testViewNoEscape()
+	testWildcardRoutingC()
 	{
-		const name = 'testViewNoEscape';
+		const name = 'testWildcardRoutingC';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -78,9 +65,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testList()
+	testVariadicRouting0()
 	{
-		const name = 'testList';
+		const name = 'testVariadicRouting0';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -90,9 +77,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testListPrefill()
+	testVariadicRouting1()
 	{
-		const name = 'testListPrefill';
+		const name = 'testVariadicRouting1';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -102,9 +89,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testListCascade()
+	testVariadicRouting2()
 	{
-		const name = 'testListCascade';
+		const name = 'testVariadicRouting2';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -114,9 +101,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testListCascadeUp()
+	testVariadicRouting3()
 	{
-		const name = 'testListCascadeUp';
+		const name = 'testVariadicRouting3';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -126,9 +113,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testListSplicedOdds()
+	testFunctionRouting()
 	{
-		const name = 'testListSplicedOdds';
+		const name = 'testFunctionRouting';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -138,9 +125,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testListSplicedUpOdds()
+	testPromiseRouting()
 	{
-		const name = 'testListSplicedUpOdds';
+		const name = 'testPromiseRouting';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -150,9 +137,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testObjectSetProperties()
+	testPromiseFailRouting()
 	{
-		const name = 'testObjectSetProperties';
+		const name = 'testPromiseFailRouting';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -162,9 +149,9 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testObjectDeleteOdds()
+	testNotFoundRouting()
 	{
-		const name = 'testObjectDeleteOdds';
+		const name = 'testNotFoundRouting';
 
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
@@ -174,16 +161,15 @@ export class BasicViewTest extends TestBase
 		));
 	}
 
-	testObjectRefill()
-	{
-		const name = 'testObjectRefill';
+	// testUnexpectedErrorRouting()
+	// {
+	// 	const name = 'testUnexpectedErrorRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
+	// 	return this.pobot.goto(`${hostname}`)
+	// 	.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
+	// 	.then(result => this.assert(
+	// 		result === rawquire(`./tests/${name}.txt`)
+	// 		, 'Document body incorrect or corrupted.'
+	// 	));
+	// }
 }
-

@@ -60,15 +60,15 @@ const keys = {
 [...Array(12)].map((x,fn) => keys[ `F${fn}` ] = 2000 + fn);
 
 const axisMap = {
-	// 12:   -1
-	// , 13: +1
-	// , 14: -0
-	// , 15: +0
+	12:   -1
+	, 13: +1
+	, 14: -0
+	, 15: +0
 
-	// , 112: -2
-	// , 113: +3
-	// , 114: -3
-	// , 115: +2
+	, 112: -2
+	, 113: +3
+	, 114: -3
+	, 115: +2
 };
 
 export class Gamepad extends Mixin.with(EventTargetMixin)
@@ -108,6 +108,8 @@ export class Gamepad extends Mixin.with(EventTargetMixin)
 
 		this.deadZone = deadZone;
 		this.gamepad  = gamepad;
+		this.index    = gamepad.index;
+		this.id       = gamepad.id;
 
 		Object.defineProperties(this, {
 			buttons:    { value: {} }
@@ -134,13 +136,27 @@ export class Gamepad extends Mixin.with(EventTargetMixin)
 
 	rumble(...options)
 	{
-		console.log(this.gamepad.vibrationActuator.pulse);
-
-		return this.gamepad.vibrationActuator.pulse(...options);
+		if(this.gamepad.vibrationActuator.pulse)
+		{
+			return this.gamepad.vibrationActuator.pulse(...options);
+		}
+		else
+		{
+			this.runbleEffect({
+				duration: 1000,
+				strongMagnitude: 1.0,
+				weakMagnitude: 1.0
+			});
+		}
 	}
 
 	readInput()
 	{
+		if(!this.gamepad)
+		{
+			return;
+		}
+
 		const index = String(this.gamepad.index);
 		const stat  = this.constructor;
 
