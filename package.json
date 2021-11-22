@@ -35,6 +35,8 @@
 		"model/*",
 		"strings/*",
 		"tag/*",
-		"toast/*"
+		"toast/*",
+		"LICENSE",
+		"NOTICE"
 	]
 }
