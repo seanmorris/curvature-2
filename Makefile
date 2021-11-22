@@ -15,7 +15,7 @@ test: dist/curvature.js
 	&& npx babel ./tests/ --out-dir build/tests/ \
 	&& npx babel ./*.js --out-dir build \
 	&& cd build/ \
-	&& cvtest \
+	&& cvtest
 
 dependencies:
 	npm install
