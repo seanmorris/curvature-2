@@ -94,7 +94,7 @@ export class Router {
 		this.go(route !== false ? route : '/');
 	}
 
-	static go(path, silent)
+	static go(path, silent = false)
 	{
 		const configTitle = Config.get('title');
 
@@ -126,14 +126,14 @@ export class Router {
 			history.pushState(state, null, path);
 		}
 
-		if(!silent)
+		if(!silent || silent < 0)
 		{
 			if(silent === false)
 			{
 				this.path = null;
 			}
 
-			if(silent > 0)
+			if(!silent)
 			{
 				if(path.substring(0,1) === '#')
 				{
@@ -391,7 +391,7 @@ export class Router {
 				, forceRefresh
 			);
 
-			throw error;
+			// throw error;
 		}
 	}
 
