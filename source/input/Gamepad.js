@@ -142,7 +142,7 @@ export class Gamepad extends Mixin.with(EventTargetMixin)
 		}
 		else
 		{
-			this.runbleEffect({
+			this.rumbleEffect({
 				duration: 1000,
 				strongMagnitude: 1.0,
 				weakMagnitude: 1.0
