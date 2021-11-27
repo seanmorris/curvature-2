@@ -100,14 +100,23 @@ export class Database extends Mixin.with(EventTargetMixin)
 		};
 	}
 
-	insert(storeName, record, origin = {})
+	insert(storeName, records, origin = {})
 	{
-		return new Promise((accept, reject) => {
-			this[Bank][storeName] = this[Bank][storeName] || {};
+		this[Bank][storeName] = this[Bank][storeName] || {};
 
-			const trans = this[Connection].transaction([storeName], 'readwrite');
-			const store = trans.objectStore(storeName);
-			const bank  = this[Bank][storeName];
+		const trans = this[Connection].transaction([storeName], 'readwrite');
+		const store = trans.objectStore(storeName);
+		const bank  = this[Bank][storeName];
+
+		let list = true;
+
+		if(!Array.isArray(records))
+		{
+			records = [records];
+			list = false;
+		}
+
+		const results = records.map(record => new Promise((accept, reject) => {
 
 			record = Bindable.make(record);
 
@@ -180,8 +189,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 						}
 					}
 
-					trans.commit && trans.commit();
-
 					record[Database.AfterInsert] && record[Database.AfterInsert](detail);
 					record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
 				}
@@ -192,7 +199,23 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				accept(record);
 			};
-		});
+
+		}));
+
+		let finalResult;
+
+		if(list)
+		{
+			finalResult = Promise.allSettled(results);
+		}
+		else
+		{
+			finalResult = results[0];
+		}
+
+		Promise.all(results).then(() => trans.commit && trans.commit());
+
+		return finalResult;
 	}
 
 	update(storeName, record, origin = {})

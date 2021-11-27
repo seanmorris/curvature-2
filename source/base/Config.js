@@ -8,7 +8,7 @@ try
 }
 catch (error)
 {
-	window.devMode === true && console.error(error);
+	globalThis.devMode === true && console.error(error);
 }
 
 export class Config

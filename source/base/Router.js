@@ -158,7 +158,7 @@ export class Router {
 
 	static match(path, listener, forceRefresh = false)
 	{
-		if(this.path === path && !forceRefresh)
+		if(this.path === path && !forceRefresh && typeof document !== 'undefined')
 		{
 			return;
 		}
@@ -167,8 +167,8 @@ export class Router {
 		this.path        = path;
 
 		const prev    = this.prevPath;
-		const current = listener.args.content;
-		const routes  = this.routes || listener.routes || Routes.dump();
+		const current = (listener && listener.args) ? listener.args.content : null;
+		const routes  = this.routes || (listener && listener.routes) || Routes.dump();
 		const query   = new URLSearchParams(location.search);
 
 		for(const i in this.query)
@@ -257,9 +257,12 @@ export class Router {
 			}
 		});
 
-		if(!document.dispatchEvent(eventStart))
+		if(typeof document !== 'undefined')
 		{
-			return;
+			if(!document.dispatchEvent(eventStart))
+			{
+				return;
+			}
 		}
 
 		if(!forceRefresh
@@ -312,22 +315,42 @@ export class Router {
 				result = processRoute(NotFoundError);
 			}
 
-			if(result instanceof Promise)
+			if(!(result instanceof Promise))
 			{
-				return result.then(realResult => {
+				result = Promise.resolve(result);
 
-					this.update(
-						listener
-						, path
-						, realResult
-						, routes
-						, selected
-						, args
-						, forceRefresh
-					);
+				// return this.update(
+				// 	listener
+				// 	, path
+				// 	, result
+				// 	, routes
+				// 	, selected
+				// 	, args
+				// 	, forceRefresh
+				// );
+			}
 
-				}).catch(error => {
+			if(typeof document === 'undefined')
+			{
+				return result;
+			}
 
+			return result.then(realResult => {
+
+				this.update(
+					listener
+					, path
+					, realResult
+					, routes
+					, selected
+					, args
+					, forceRefresh
+				);
+
+			}).catch(error => {
+
+				if(typeof document !== 'undefined')
+				{
 					document.dispatchEvent(new CustomEvent('cvRouteError', {
 						detail: {
 							error
@@ -338,48 +361,39 @@ export class Router {
 							, selected
 						}
 					}));
+				}
 
-					this.update(
-						listener
-						, path
-						, window['devMode'] ? String(error) : 'Error: 500'
-						, routes
-						, selected
-						, args
-						, forceRefresh
-					);
-
-					throw error;
-
-				});
-			}
-			else
-			{
-				return this.update(
+				this.update(
 					listener
 					, path
-					, result
+					, window['devMode'] ? String(error) : 'Error: 500'
 					, routes
 					, selected
 					, args
 					, forceRefresh
 				);
-			}
+
+				throw error;
+
+			});
 		}
 		catch(error)
 		{
 			console.error(error);
 
-			document.dispatchEvent(new CustomEvent('cvRouteError', {
-				detail: {
-					error
-					, path
-					, prev
-					, view: listener
-					, routes
-					, selected
-				}
-			}));
+			if(typeof document !== 'undefined')
+			{
+				document.dispatchEvent(new CustomEvent('cvRouteError', {
+					detail: {
+						error
+						, path
+						, prev
+						, view: listener
+						, routes
+						, selected
+					}
+				}));
+			}
 
 			this.update(
 				listener

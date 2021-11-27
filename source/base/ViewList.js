@@ -108,6 +108,8 @@ export class ViewList
 		});
 
 		this._onRemove.add(debind);
+
+		Object.preventExtensions(this);
 	}
 
 	render(tag)
@@ -299,24 +301,38 @@ export class ViewList
 
 				if(finalViews[ii] === this.views[ii])
 				{
-					if(!finalViews[ii].firstNode)
+					if(finalViews[ii] && !finalViews[ii].firstNode)
 					{
-						finalViews[ii].render(this.tag, finalViews[ii+1]);
+						finalViews[ii].render(this.tag, finalViews[ii + 1]);
 
-						return finalViews[ii].rendered.then(() => renderRecurse( Number(i)+1 ));
+						return finalViews[ii].rendered.then(() => renderRecurse(Number(i) + 1));
 					}
-
-					return renderRecurse( Number(i)+1 );
+					else
+					{
+						if(i % 500)
+						{
+							return renderRecurse(Number(i) + 1);
+						}
+						else
+						{
+							return new Promise(
+								accept => requestAnimationFrame(
+									() => accept(renderRecurse(Number(i) + 1))
+								)
+							);
+						}
+					}
 				}
 
-				finalViews[ii].render(this.tag, finalViews[ii+1]);
+				finalViews[ii].render(this.tag, finalViews[ii + 1]);
 
 				this.views.splice(ii, 0, finalViews[ii]);
 
-				return finalViews[ii].rendered.then( () => renderRecurse( Number(i)+1 ) );
+				return finalViews[ii].rendered.then(() => renderRecurse(i + 1));
 			}
 
 			this.rendered = renderRecurse();
+
 		}
 		else
 		{
