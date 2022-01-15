@@ -1,5 +1,7 @@
 import { Bindable } from './Bindable';
 
+const CurrentStyle = Symbol('CurrentStyle');
+
 export class Tag
 {
 	constructor(element, parent, ref, index, direct)
@@ -32,6 +34,11 @@ export class Tag
 				return (...args) => this.node[name](...args);
 			}
 
+			if(name === 'style')
+			{
+				return this.proxy.style;
+			}
+
 			if(this.node && (name in this.node))
 			{
 				return this.node[name];
@@ -40,32 +47,65 @@ export class Tag
 			return this[name];
 		};
 
-		const generateStyler = (_this) => Bindable.make(function(styles) {
+		this[CurrentStyle] = new Map;
 
-			if(!_this.node)
+		const styler = Bindable.make(function(styles) {
+
+			if(!this.node)
 			{
 				return;
 			}
 
 			for(const property in styles)
 			{
+				const stringedProperty = String( styles[property] );
+
+				if(this[CurrentStyle].has(property) && this[CurrentStyle].get(property) === styles[property])
+				{
+					continue;
+				}
+
 				if(property[0] === '-')
 				{
-					_this.node.style.setProperty(property, String(styles[property]));
+					this.node.style.setProperty(property, stringedProperty);
 				}
 				else
 				{
-					_this.node.style[property] = String(styles[property]);
+					this.node.style[property] = stringedProperty;
+				}
+
+				if(styles[property] !== undefined)
+				{
+					this[CurrentStyle].set(property, styles[property]);
+				}
+				else
+				{
+					this[CurrentStyle].delete(property);
 				}
 			}
 		});
 
-		this.style = generateStyler(this);
+		Object.defineProperty(this, 'style', {value: styler});
 
 		this.proxy = Bindable.make(this);
 
-		this.proxy.style.bindTo((v,k)=>{
-			this.element.style[k] = v;
+		this.proxy.style.bindTo((v,k,t,d)=>{
+
+			if(this[CurrentStyle].has(k) && this[CurrentStyle].get(k) === v)
+			{
+				return;
+			}
+
+			this.node.style[k] = v;
+
+			if(!d && v !== undefined)
+			{
+				this[CurrentStyle].set(k, v);
+			}
+			else
+			{
+				this[CurrentStyle].delete(k);
+			}
 		});
 
 		this.proxy.bindTo((v,k)=>{
@@ -97,6 +137,8 @@ export class Tag
 				this.node.setAttribute(attribute, attributes[attribute]);
 			}
 		}
+
+		return this;
 	}
 
 	remove()

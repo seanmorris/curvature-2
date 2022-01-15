@@ -153,16 +153,7 @@ var Service = /*#__PURE__*/function () {
         }).then(function () {
           return globalThis.registration.getNotifications();
         }).then(function (notifyList) {
-          var tag = event.data.args && event.data.args[1] && event.data.args[1].tag; // notifyList.forEach(notification => {
-          // 	if(!this.notifications.has(notification.tag))
-          // 	{
-          // 		this.notifications.set(notification.tag, notification)
-          // 		tag = notification.tag;
-          // 		notification.addEventListener('click', event => console.log(event));
-          // 		notification.addEventListener('close', event => console.log(event));
-          // 	}
-          // });
-
+          var tag = event.data.args && event.data.args[1] && event.data.args[1].tag;
           var notifyClient = new Promise(function (accept) {
             var notifiers;
 
@@ -233,7 +224,6 @@ var Service = /*#__PURE__*/function () {
   }, {
     key: "handleInstall",
     value: function handleInstall(event) {
-      // console.log('install', event);
       globalThis.skipWaiting();
 
       var _iterator2 = _createForOfIteratorHelper(this.pageHandlers),
@@ -405,18 +395,28 @@ var Service = /*#__PURE__*/function () {
   }, {
     key: "handleNotifyClicked",
     value: function handleNotifyClicked(event) {
-      // console.log('Clicked %s', event.action, event);
       if (this.notifyClients.has(event.notification.tag)) {
         var notifiers = this.notifyClients.get(event.notification.tag);
-        notifiers.forEach(function (notifier) {
-          return notifier({
+        var focusables = [];
+        notifiers.forEach(function (notifier, client) {
+          notifier({
             action: event.action,
             data: event.notification.data,
             click: Date.now(),
             time: event.notification.timestamp,
             tag: event.notification.tag
           });
+          focusables.push(client);
         });
+
+        while (focusables.length) {
+          var client = focusables.pop();
+
+          if (client.focus()) {
+            break;
+          }
+        }
+
         this.notifyClients["delete"](event.notification.tag);
       }
 
@@ -436,42 +436,59 @@ var Service = /*#__PURE__*/function () {
       } finally {
         _iterator8.f();
       }
+
+      event.notification.close();
     }
   }, {
     key: "handleNotifyClosed",
     value: function handleNotifyClosed(event) {
-      // console.log('Closed %s', event.action, event);
-      this.notifications["delete"](event.notification.tag);
-
       if (this.notifyClients.has(event.notification.tag)) {
         var notifiers = this.notifyClients.get(event.notification.tag);
         notifiers.forEach(function (notifier) {
           return notifier({
-            action: event.action,
+            action: undefined,
             data: event.notification.data,
             close: Date.now(),
             time: event.notification.timestamp,
             tag: event.notification.tag
           });
         });
-        this.notifyClients["delete"](event.notification.tag);
       }
 
-      var _iterator9 = _createForOfIteratorHelper(this.pageHandlers),
-          _step9;
+      if (this.notifyClients["delete"](event.notification.tag)) {
+        var _iterator9 = _createForOfIteratorHelper(this.pageHandlers),
+            _step9;
+
+        try {
+          for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+            var handler = _step9.value;
+
+            if (typeof handler.handleNotifyDismissed === 'function') {
+              handler.handleNotifyDismissed(event);
+            }
+          }
+        } catch (err) {
+          _iterator9.e(err);
+        } finally {
+          _iterator9.f();
+        }
+      }
+
+      var _iterator10 = _createForOfIteratorHelper(this.pageHandlers),
+          _step10;
 
       try {
-        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-          var handler = _step9.value;
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var _handler2 = _step10.value;
 
-          if (typeof handler.handleNotifyClosed === 'function') {
-            handler.handleNotifyClosed(event);
+          if (typeof _handler2.handleNotifyClosed === 'function') {
+            _handler2.handleNotifyClosed(event);
           }
         }
       } catch (err) {
-        _iterator9.e(err);
+        _iterator10.e(err);
       } finally {
-        _iterator9.f();
+        _iterator10.f();
       }
     }
   }]);

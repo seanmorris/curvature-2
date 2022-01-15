@@ -125,18 +125,6 @@ export class Service
 					&& event.data.args[1]
 					&& event.data.args[1].tag;
 
-				// notifyList.forEach(notification => {
-				// 	if(!this.notifications.has(notification.tag))
-				// 	{
-				// 		this.notifications.set(notification.tag, notification)
-
-				// 		tag = notification.tag;
-
-				// 		notification.addEventListener('click', event => console.log(event));
-				// 		notification.addEventListener('close', event => console.log(event));
-				// 	}
-				// });
-
 				const notifyClient = new Promise(accept => {
 
 					let notifiers;
@@ -201,7 +189,6 @@ export class Service
 
 	static handleInstall(event)
 	{
-		// console.log('install', event);
 		globalThis.skipWaiting();
 
 		for(const handler of this.pageHandlers)
@@ -322,19 +309,33 @@ export class Service
 
 	static handleNotifyClicked(event)
 	{
-		// console.log('Clicked %s', event.action, event);
-
 		if(this.notifyClients.has(event.notification.tag))
 		{
 			const notifiers = this.notifyClients.get(event.notification.tag);
 
-			notifiers.forEach(notifier => notifier({
-				action:  event.action
-				, data:  event.notification.data
-				, click: Date.now()
-				, time:  event.notification.timestamp
-				, tag:   event.notification.tag
-			}));
+			let focusables = [];
+
+			notifiers.forEach((notifier, client) => {
+				notifier({
+					action:  event.action
+					, data:  event.notification.data
+					, click: Date.now()
+					, time:  event.notification.timestamp
+					, tag:   event.notification.tag
+				});
+
+				focusables.push(client);
+			});
+
+			while(focusables.length)
+			{
+				const client = focusables.pop();
+
+				if(client.focus())
+				{
+					break;
+				}
+			}
 
 			this.notifyClients.delete(event.notification.tag);
 		}
@@ -346,26 +347,34 @@ export class Service
 				handler.handleNotifyClicked(event);
 			}
 		}
+
+		event.notification.close();
 	}
 
 	static handleNotifyClosed(event)
 	{
-		// console.log('Closed %s', event.action, event);
-		this.notifications.delete(event.notification.tag);
-
 		if(this.notifyClients.has(event.notification.tag))
 		{
 			const notifiers = this.notifyClients.get(event.notification.tag);
 
 			notifiers.forEach(notifier => notifier({
-				action:  event.action
+				action:  undefined
 				, data:  event.notification.data
 				, close: Date.now()
 				, time:  event.notification.timestamp
 				, tag:   event.notification.tag
 			}));
+		}
 
-			this.notifyClients.delete(event.notification.tag);
+		if(this.notifyClients.delete(event.notification.tag))
+		{
+			for(const handler of this.pageHandlers)
+			{
+				if(typeof handler.handleNotifyDismissed === 'function')
+				{
+					handler.handleNotifyDismissed(event);
+				}
+			}
 		}
 
 		for(const handler of this.pageHandlers)

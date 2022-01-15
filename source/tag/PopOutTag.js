@@ -8,8 +8,8 @@ export class PopOutTag extends Tag
 	{
 		super(element, parent, ref, index, direct);
 
+		this.defaultStyle = element.getAttribute('style') || '';
 		this.poppedOut = false;
-		this.style     = element.getAttribute('style') || '';
 		this.moving    = false;
 
 		this.hostSelector = element.getAttribute('cv-pop-to');
@@ -79,8 +79,6 @@ export class PopOutTag extends Tag
 				{
 					this.verticalDuration = 0.4;
 				}
-
-				// console.log(this.horizontalDuration, this.verticalDuration);
 			}
 
 			if(!this.element.contains(event.target))
@@ -105,7 +103,6 @@ export class PopOutTag extends Tag
 				this.unpop();
 			}
 		};
-
 
 		this.escapeListener = (event) => {
 			if(!this.poppedOut)
@@ -436,7 +433,7 @@ export class PopOutTag extends Tag
 				return;
 			}
 
-			this.element.setAttribute('style', this.style);
+			this.element.setAttribute('style', this.defaultStyle);
 
 			this.moving = false;
 
