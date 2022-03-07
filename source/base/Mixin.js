@@ -42,6 +42,13 @@ export class Mixin
 		return newClass;
 	}
 
+	static make(...classes)
+	{
+		const base = classes.pop();
+
+		return Mixin.to(base, ...classes);
+	}
+
 	static to(base, ...mixins)
 	{
 		const descriptors = {};
@@ -229,8 +236,8 @@ export class Mixin
 								return method(...a);
 
 							});
-
 							break;
+
 						case 'after':
 							mixable.___after((t,e,s,o,a) => {
 

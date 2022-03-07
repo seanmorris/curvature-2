@@ -1,3 +1,5 @@
+import { Bindable } from '../base/Bindable';
+
 import { Mixin } from '../base/Mixin';
 import { EventTargetMixin  } from '../mixin/EventTargetMixin';
 
@@ -59,25 +61,28 @@ const keys = {
 
 [...Array(12)].map((x,fn) => keys[ `F${fn}` ] = 2000 + fn);
 
-const axisMap = {
-	12:   -1
-	, 13: +1
-	, 14: -0
-	, 15: +0
-
-	, 112: -2
-	, 113: +3
-	, 114: -3
-	, 115: +2
-};
-
 export class Gamepad extends Mixin.with(EventTargetMixin)
 {
+	[ Bindable.NoGetters ] = true
+
 	static padsConnected = new Map;
 	static padsRead = new Map;
 
-	static getPad({index = undefined, deadZone = 0, keys = {}, keyboard = null} = {})
+	axisMap = {
+		12:   -1
+		, 13: +1
+		, 14: -0
+		, 15: +0
+
+		, 112: -2
+		, 113: +3
+		, 114: -3
+		, 115: +2
+	}
+
+	static getPad({index = undefined, deadZone = 0, keys = {}, keyboard = null, axisMap = null})
 	{
+
 		if(this.padsConnected.has(index))
 		{
 			return this.padsConnected.get(index);
@@ -89,7 +94,7 @@ export class Gamepad extends Mixin.with(EventTargetMixin)
 
 				event.stopImmediatePropagation();
 
-				const pad = new this({gamepad: event.gamepad, deadZone, keys, keyboard});
+				const pad = new this({gamepad: event.gamepad, deadZone, keys, keyboard, axisMap});
 
 				this.padsConnected.set(event.gamepad.index, waitForPad);
 
@@ -102,7 +107,7 @@ export class Gamepad extends Mixin.with(EventTargetMixin)
 		return waitForPad;
 	}
 
-	constructor({keys = {}, deadZone = 0, gamepad = null, keyboard = null} = {})
+	constructor({keys = {}, deadZone = 0, gamepad = null, keyboard = null, axisMap = null} = {})
 	{
 		super();
 
@@ -110,6 +115,7 @@ export class Gamepad extends Mixin.with(EventTargetMixin)
 		this.gamepad  = gamepad;
 		this.index    = gamepad.index;
 		this.id       = gamepad.id;
+		this.axisMap  = axisMap || this.axisMap;
 
 		Object.defineProperties(this, {
 			buttons:    { value: {} }
@@ -301,14 +307,14 @@ export class Gamepad extends Mixin.with(EventTargetMixin)
 			}
 		}
 
-		for(let inputId in axisMap)
+		for(let inputId in this.axisMap)
 		{
 			if(!this.buttons[inputId])
 			{
 				this.buttons[inputId] = new Button;
 			}
 
-			const axis   = axisMap[ inputId ];
+			const axis   = this.axisMap[ inputId ];
 			const value  = Math.sign(1/axis);
 			const axisId = Math.abs(axis);
 

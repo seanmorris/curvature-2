@@ -1,5 +1,9 @@
+import { Bindable } from '../base/Bindable';
+
 export class Axis
 {
+	[ Bindable.NoGetters ] = true
+
 	magnitude = 0;
 	delta     = 0;
 

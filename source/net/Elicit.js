@@ -114,6 +114,35 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		return this[Fetch].then(({response, stream}) => response.headers)
 	}
 
+	json()
+	{
+		return this[Fetch].then(({response, stream}) => {
+
+			const wrapped = new Response(stream, {headers: {'Content-Type': this.type}});
+
+			return wrapped.json()
+		});
+	}
+
+	text()
+	{
+		return this[Fetch].then(({response, stream}) => {
+
+			const wrapped = new Response(stream, {headers: {'Content-Type': this.type}});
+
+			return wrapped.text()
+		});
+	}
+
+	css()
+	{
+		return this.text().then(css => {
+			const sheet = new CSSStyleSheet();
+			sheet.replace(css);
+			return sheet;
+		});
+	}
+
 	blob()
 	{
 		return this[Fetch].then(({response, stream}) => {
@@ -122,6 +151,16 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 			return wrapped.blob()
 		});
+	}
+
+	buffer()
+	{
+		return this.blob().then(blob => blob.arrayBuffer());
+	}
+
+	bytes()
+	{
+		return this.buffer().then(buffer => new Uint8Array(buffer));
 	}
 
 	objectUrl()

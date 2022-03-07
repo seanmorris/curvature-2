@@ -834,7 +834,7 @@ export class View extends Mixin.with(EventTargetMixin)
 				return tag;
 			}
 
-			let header   = 0;
+			let header = 0;
 			let match;
 
 			while(match = regex.exec(original))
@@ -1910,6 +1910,7 @@ export class View extends Mixin.with(EventTargetMixin)
 	{
 		const eachAttr = tag.getAttribute('cv-each');
 		const viewAttr = tag.getAttribute('cv-view');
+
 		tag.removeAttribute('cv-each');
 		tag.removeAttribute('cv-view');
 
@@ -1923,7 +1924,19 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const [eachProp, asProp, keyProp] = eachAttr.split(':');
 
-		const debind = this.args.bindTo(eachProp, (v,k,t,d,p) => {
+		let proxy    = this.args;
+		let property = eachProp;
+
+		if(eachProp.match(/\./))
+		{
+			[proxy, property] = Bindable.resolve(
+				this.args
+				, eachProp
+				, true
+			);
+		}
+
+		const debind = proxy.bindTo(property, (v,k,t,d,p) => {
 
 			if(v instanceof Bag)
 			{
@@ -2043,9 +2056,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		let view = new viewClass(Object.assign({}, this.args), bindingView);
 
-		this.onRemove(view.tags.bindTo((v,k)=>{
-			this.tags[k]=v
-		}));
+		view.tags.bindTo((v,k)=> this.tags[k]=v, {removeWith: this})
 
 		view.template = subTemplate;
 

@@ -160,14 +160,6 @@ export class Bindable
 			return object;
 		}
 
-		if (Object.isSealed(object)
-			|| Object.isFrozen(object)
-			|| !Object.isExtensible(object)
-			|| excludedClasses.filter(x => object instanceof x).length
-		){
-			return object;
-		}
-
 		if(object[Ref])
 		{
 			return object[Ref];
@@ -175,6 +167,14 @@ export class Bindable
 
 		if(object[IsBindable])
 		{
+			return object;
+		}
+
+		if (Object.isSealed(object)
+			|| Object.isFrozen(object)
+			|| !Object.isExtensible(object)
+			|| excludedClasses.filter(x => object instanceof x).length
+		){
 			return object;
 		}
 
@@ -262,7 +262,7 @@ export class Bindable
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      new Map
+			, value:      Object.preventExtensions(new Map)
 		});
 
 		Object.defineProperty(object, Unwrapped, {
@@ -277,7 +277,7 @@ export class Bindable
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      new Map
+			, value:      Object.preventExtensions(new Map)
 		});
 
 		const bindTo = (property, callback = null, options = {}) => {
@@ -496,7 +496,7 @@ export class Bindable
 
 					if(v === undefined)
 					{
-						v = t[k] = this.makeBindable({});
+						v = t[k] = this.make({});
 					}
 
 					debind = debind.concat(v[BindChain](rest, callback));
@@ -571,7 +571,8 @@ export class Bindable
 
 			const onDeck = object[Deck];
 
-			if(onDeck[key] !== undefined && onDeck[key] === value)
+			// if(onDeck[key] !== undefined && onDeck[key] === value)
+			if(key in onDeck && onDeck[key] === value)
 			{
 				return true;
 			}
@@ -581,7 +582,7 @@ export class Bindable
 				return true;
 			}
 
-			if(target[key] === value)
+			if(target[key] === value || (typeof value === 'number' && isNaN(onDeck[key]) && isNaN(value)))
 			{
 				return true;
 			}
@@ -595,7 +596,7 @@ export class Bindable
 					if(!object[ NoGetters ])
 					{
 					}
-					value = Bindable.makeBindable(value);
+					value = Bindable.make(value);
 				}
 			}
 

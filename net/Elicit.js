@@ -148,8 +148,8 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       });
     }
   }, {
-    key: "blob",
-    value: function blob() {
+    key: "json",
+    value: function json() {
       var _this4 = this;
 
       return this[Fetch].then(function (_ref2) {
@@ -160,7 +160,62 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
             'Content-Type': _this4.type
           }
         });
+        return wrapped.json();
+      });
+    }
+  }, {
+    key: "text",
+    value: function text() {
+      var _this5 = this;
+
+      return this[Fetch].then(function (_ref3) {
+        var response = _ref3.response,
+            stream = _ref3.stream;
+        var wrapped = new Response(stream, {
+          headers: {
+            'Content-Type': _this5.type
+          }
+        });
+        return wrapped.text();
+      });
+    }
+  }, {
+    key: "css",
+    value: function css() {
+      return this.text().then(function (css) {
+        var sheet = new CSSStyleSheet();
+        sheet.replace(css);
+        return sheet;
+      });
+    }
+  }, {
+    key: "blob",
+    value: function blob() {
+      var _this6 = this;
+
+      return this[Fetch].then(function (_ref4) {
+        var response = _ref4.response,
+            stream = _ref4.stream;
+        var wrapped = new Response(stream, {
+          headers: {
+            'Content-Type': _this6.type
+          }
+        });
         return wrapped.blob();
+      });
+    }
+  }, {
+    key: "buffer",
+    value: function buffer() {
+      return this.blob().then(function (blob) {
+        return blob.arrayBuffer();
+      });
+    }
+  }, {
+    key: "bytes",
+    value: function bytes() {
+      return this.buffer().then(function (buffer) {
+        return new Uint8Array(buffer);
       });
     }
   }, {
@@ -289,43 +344,43 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
   }, {
     key: IterateDownload,
     value: function value(reader, controller, length) {
-      var _this5 = this;
+      var _this7 = this;
 
       this[HandleProgress](length, 0);
       var lastTime = Date.now();
       var lastSize = 1;
 
-      var handleChunk = function handleChunk(_ref3) {
-        var done = _ref3.done,
-            value = _ref3.value;
+      var handleChunk = function handleChunk(_ref5) {
+        var done = _ref5.done,
+            value = _ref5.value;
 
         if (done) {
           controller.close();
-          return _this5[HandleComplete]();
+          return _this7[HandleComplete]();
         }
 
         controller.enqueue(value);
-        _this5[Received] += value.length;
+        _this7[Received] += value.length;
 
-        if (!_this5[First]) {
-          _this5[HandleFirstByte](value);
+        if (!_this7[First]) {
+          _this7[HandleFirstByte](value);
         }
 
-        _this5[HandleProgress](length, _this5[Received]);
+        _this7[HandleProgress](length, _this7[Received]);
 
-        _this5[LastChunkTime] = lastTime;
-        _this5[LastChunkSize] = lastSize;
+        _this7[LastChunkTime] = lastTime;
+        _this7[LastChunkSize] = lastSize;
         lastTime = Date.now();
         lastSize = value.length;
         return iterate();
       };
 
       var iterate = function iterate() {
-        if (_this5[Cancelled]) {
+        if (_this7[Cancelled]) {
           return reader.cancel();
         }
 
-        if (_this5[Paused]) {
+        if (_this7[Paused]) {
           return new Promise(function (accept) {
             setTimeout(function () {
               return accept(iterate());
@@ -336,7 +391,7 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
         return reader.read().then(function (chunk) {
           return handleChunk(chunk);
         })["catch"](function (error) {
-          return _this5[HandleError](error);
+          return _this7[HandleError](error);
         });
       };
 

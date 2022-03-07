@@ -14,6 +14,8 @@ export class Keyboard
 		this.listening    = false;
 		this.focusElement = document.body;
 
+		this[ Bindable.NoGetters ] = true;
+
 		Object.defineProperty(this, 'combo',  {value: Bindable.make([])});
 
 		Object.defineProperty(this, 'whichs', {value: Bindable.make({})});
@@ -37,7 +39,8 @@ export class Keyboard
 				return;
 			}
 
-			if(this.focusElement
+			if(!(this.keys[ event.key ] > 0)
+				&& this.focusElement
 				&& document.activeElement !== this.focusElement
 				&& (
 					!this.focusElement.contains(document.activeElement)

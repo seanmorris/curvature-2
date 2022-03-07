@@ -2,6 +2,66 @@ import { Bindable } from './Bindable';
 
 const CurrentStyle = Symbol('CurrentStyle');
 
+const styler = function(styles) {
+	if(!this.node)
+	{
+		return;
+	}
+
+	for(const property in styles)
+	{
+		const stringedProperty = String( styles[property] );
+
+		if(this[CurrentStyle].has(property) && this[CurrentStyle].get(property) === styles[property])
+		{
+			continue;
+		}
+
+		if(property[0] === '-')
+		{
+			this.node.style.setProperty(property, stringedProperty);
+		}
+		else
+		{
+			this.node.style[property] = stringedProperty;
+		}
+
+		if(styles[property] !== undefined)
+		{
+			this[CurrentStyle].set(property, styles[property]);
+		}
+		else
+		{
+			this[CurrentStyle].delete(property);
+		}
+	}
+};
+
+const getter = function(name) {
+
+	if(typeof this[name] === 'function')
+	{
+		return this[name];
+	}
+
+	if(this.node && (typeof this.node[name] === 'function'))
+	{
+		return (...args) => this.node[name](...args);
+	}
+
+	if(name === 'style')
+	{
+		return this.proxy.style;
+	}
+
+	if(this.node && (name in this.node))
+	{
+		return this.node[name];
+	}
+
+	return this[name];
+};
+
 export class Tag
 {
 	constructor(element, parent, ref, index, direct)
@@ -22,70 +82,13 @@ export class Tag
 
 		this.cleanup = [];
 
-		this[Bindable.OnAllGet] = (name) => {
-
-			if(typeof this[name] === 'function')
-			{
-				return this[name];
-			}
-
-			if(this.node && (typeof this.node[name] === 'function'))
-			{
-				return (...args) => this.node[name](...args);
-			}
-
-			if(name === 'style')
-			{
-				return this.proxy.style;
-			}
-
-			if(this.node && (name in this.node))
-			{
-				return this.node[name];
-			}
-
-			return this[name];
-		};
+		this[Bindable.OnAllGet] = getter.bind(this);
 
 		this[CurrentStyle] = new Map;
 
-		const styler = Bindable.make(function(styles) {
+		const boundStyler = Bindable.make(styler.bind(this));
 
-			if(!this.node)
-			{
-				return;
-			}
-
-			for(const property in styles)
-			{
-				const stringedProperty = String( styles[property] );
-
-				if(this[CurrentStyle].has(property) && this[CurrentStyle].get(property) === styles[property])
-				{
-					continue;
-				}
-
-				if(property[0] === '-')
-				{
-					this.node.style.setProperty(property, stringedProperty);
-				}
-				else
-				{
-					this.node.style[property] = stringedProperty;
-				}
-
-				if(styles[property] !== undefined)
-				{
-					this[CurrentStyle].set(property, styles[property]);
-				}
-				else
-				{
-					this[CurrentStyle].delete(property);
-				}
-			}
-		});
-
-		Object.defineProperty(this, 'style', {value: styler});
+		Object.defineProperty(this, 'style', {value: boundStyler});
 
 		this.proxy = Bindable.make(this);
 
@@ -109,7 +112,12 @@ export class Tag
 		});
 
 		this.proxy.bindTo((v,k)=>{
-			if(k in element)
+			if(k === 'index')
+			{
+				return;
+			}
+
+			if(k in element && element[k] !== v)
 			{
 				element[k] = v;
 			}

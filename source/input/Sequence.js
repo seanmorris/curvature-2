@@ -1,19 +1,22 @@
+import { Bindable } from '../base/Bindable';
 import { Mixin } from '../base/Mixin';
 import { EventTargetMixin } from '../mixin/EventTargetMixin';
 
 export class Sequence extends Mixin.with(EventTargetMixin)
 {
+	[ Bindable.NoGetters ] = true
+
 	lastTap  = false;
 	recent   = [];
 	callback = () => {};
 	timing   = 500;
 	keys     = '';
 
-	constructor({callback, keys, timing})
+	constructor({callback, keys, timing, gamepad})
 	{
 		super();
 
-		[this.callback, this.timing, this.keys] = [callback, timing, keys];
+		[this.callback, this.timing, this.keys, this.gamepad] = [callback, timing, keys, gamepad];
 	}
 
 	check(k)

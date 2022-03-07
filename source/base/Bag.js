@@ -7,8 +7,8 @@ const toId   = int => Number(int);
 const fromId = id  => parseInt(id);
 
 const Mapped = Symbol('Mapped');
-const Has = Symbol('Has');
-const Add = Symbol('Add');
+const Has    = Symbol('Has');
+const Add    = Symbol('Add');
 const Remove = Symbol('Remove');
 const Delete = Symbol('Delete');
 
@@ -18,15 +18,14 @@ export class Bag extends Mixin.with(EventTargetMixin)
 	{
 		super();
 
-		this.meta    = Symbol('meta');
-		this.content = new Map;
-		this.list    = Bindable.makeBindable([]);
-		this.current = 0;
-		this.type    = undefined;
-
-		this.length  = 0;
-
 		this.changeCallback = changeCallback;
+
+		this.content = new Map;
+		this.current = 0;
+		this.length  = 0;
+		this.list    = Bindable.makeBindable([]);
+		this.meta    = Symbol('meta');
+		this.type    = undefined;
 	}
 
 	has(item)

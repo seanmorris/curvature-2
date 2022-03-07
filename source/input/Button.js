@@ -1,5 +1,9 @@
+import { Bindable } from '../base/Bindable';
+
 export class Button
 {
+	[ Bindable.NoGetters ] = true
+
 	active   = false;
 
 	pressure = 0;

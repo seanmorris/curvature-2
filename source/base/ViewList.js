@@ -408,9 +408,15 @@ export class ViewList
 
 		this.willReRender = false;
 
-		this.parent.dispatchEvent(new CustomEvent('listRendered', {detail: {
-			detail: {key: this.subProperty, value: this.args.value}
-		}}));
+		this.rendered.then(() => {
+			this.parent.dispatchEvent(new CustomEvent('listRendered', {detail: {
+				detail: {key: this.subProperty, value: this.args.value, tag: this.tag}
+			}}));
+
+			this.tag.dispatchEvent(new CustomEvent('listRendered', {detail: {
+				detail: {key: this.subProperty, value: this.args.value, tag: this.tag}
+			}}));
+		});
 	}
 
 	pause(pause=true)
