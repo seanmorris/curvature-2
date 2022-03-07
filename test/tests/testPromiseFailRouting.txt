@@ -1,1 +1,1 @@
-<b>Error: 500</b>
+<b>Unexpected error.</b>

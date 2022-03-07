@@ -156,6 +156,70 @@ export class Router {
 		this.prevPath = path;
 	}
 
+	static processRoute(routes, selected, args)
+	{
+
+		let result = false;
+
+		if(typeof routes[selected] === 'function')
+		{
+			if(routes[selected].prototype instanceof View)
+			{
+				result = new routes[selected](args);
+			}
+			else
+			{
+				result = routes[selected](args);
+			}
+		}
+		else
+		{
+			result = routes[selected];
+		}
+
+		return result;
+	}
+
+	static handleError(error, routes, selected, args, listener, path, prev, forceRefresh)
+	{
+		console.error(error);
+
+		if(typeof document !== 'undefined')
+		{
+			document.dispatchEvent(new CustomEvent('cvRouteError', {
+				detail: {
+					error
+					, path
+					, prev
+					, view: listener
+					, routes
+					, selected
+				}
+			}));
+		}
+
+		let result = window['devMode']
+			? 'Unexpected error: ' + String(error)
+			: 'Unexpected error.';
+
+		if(routes[InternalError])
+		{
+			args[InternalError] = error;
+
+			result = this.processRoute(routes, InternalError, args);
+		}
+
+		this.update(
+			listener
+			, path
+			, result
+			, routes
+			, selected
+			, args
+			, forceRefresh
+		);
+	}
+
 	static match(path, listener, forceRefresh = false)
 	{
 		if(this.path === path && !forceRefresh && typeof document !== 'undefined')
@@ -283,36 +347,13 @@ export class Router {
 			routes[selected] = routes[NotFoundError];
 		}
 
-		const processRoute = (selected) => {
-
-			let result = false;
-
-			if(typeof routes[selected] === 'function')
-			{
-				if(routes[selected].prototype instanceof View)
-				{
-					result = new routes[selected](args);
-				}
-				else
-				{
-					result = routes[selected](args);
-				}
-			}
-			else
-			{
-				result = routes[selected];
-			}
-
-			return result;
-		};
-
 		try
 		{
-			result = processRoute(selected);
+			result = this.processRoute(routes, selected, args);
 
 			if(result === false)
 			{
-				result = processRoute(NotFoundError);
+				result = this.processRoute(routes, NotFoundError, args);
 			}
 
 			if(!(result instanceof Promise))
@@ -347,65 +388,11 @@ export class Router {
 					, forceRefresh
 				);
 
-			}).catch(error => {
-
-				if(typeof document !== 'undefined')
-				{
-					document.dispatchEvent(new CustomEvent('cvRouteError', {
-						detail: {
-							error
-							, path
-							, prev
-							, view: listener
-							, routes
-							, selected
-						}
-					}));
-				}
-
-				this.update(
-					listener
-					, path
-					, window['devMode'] ? String(error) : 'Error: 500'
-					, routes
-					, selected
-					, args
-					, forceRefresh
-				);
-
-				throw error;
-
-			});
+			}).catch(error => { this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh); });
 		}
 		catch(error)
 		{
-			console.error(error);
-
-			if(typeof document !== 'undefined')
-			{
-				document.dispatchEvent(new CustomEvent('cvRouteError', {
-					detail: {
-						error
-						, path
-						, prev
-						, view: listener
-						, routes
-						, selected
-					}
-				}));
-			}
-
-			this.update(
-				listener
-				, path
-				, window['devMode'] ? String(error) : 'Error: 500'
-				, routes
-				, selected
-				, args
-				, forceRefresh
-			);
-
-			// throw error;
+			this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh);
 		}
 	}
 

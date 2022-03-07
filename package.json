@@ -1,6 +1,6 @@
 {
 	"name": "curvature",
-	"version": "0.0.68-b",
+	"version": "0.0.68-c",
 	"author": "Sean Morris <curvature@seanmorr.is> (https://seanmorr.is)",
 	"license": "Apache-2.0",
 	"repository": "https://github.com/seanmorris/curvature-2",
@@ -19,8 +19,7 @@
 		"pobot": "^0.0.6",
 		"raw-brunch": "^1.0.2",
 		"rawquire": "^0.0.1",
-		"terser-brunch": "^4",
-		"uglify-es-brunch": "^1"
+		"terser-brunch": "^4.1"
 	},
 	"files": [
 		"dist/curvature.js",

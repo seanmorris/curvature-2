@@ -304,7 +304,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 	[IterateDownload](reader, controller, length)
 	{
-		this[HandleProgress](length, 0);
+		this[HandleProgress](length, 0, null);
 
 		let lastTime = Date.now();
 		let lastSize = 1;
@@ -386,7 +386,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 	[HandleOpen](response)
 	{
 		const reader = response.body.getReader();
-		const length = this[Length] || response.headers.get('Content-Length');
+		const length = this[Length] || Number(response.headers.get('Content-Length'));
 		const type   = this[type]   || response.headers.get('Content-Type');
 
 		this[Length] = length;
@@ -418,9 +418,9 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		this.emitHeadersEvent(headers);
 	}
 
-	[HandleProgress](length, received)
+	[HandleProgress](length, received, value)
 	{
-		this.emitProgressEvent(length, received);
+		this.emitProgressEvent(length, received, value);
 	}
 
 	[HandleComplete]()
@@ -465,7 +465,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		this.emitFirstByteEvent(received);
 	}
 
-	emitProgressEvent(length, received)
+	emitProgressEvent(length, received, value)
 	{
 		const done = length ? (received / length) : 0;
 
@@ -475,7 +475,9 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		const speed     = this.speed;
 
 		return this.dispatchEvent(new CustomEvent(
-			'progress', {detail: {length, received, done, speed, loadTime, waitTime, totalTime}}
+			'progress', {detail: {
+				length, received, done, speed, loadTime, waitTime, totalTime, value
+			}}
 		));
 	}
 

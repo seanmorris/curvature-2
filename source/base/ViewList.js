@@ -1,6 +1,5 @@
 import { Bindable } from './Bindable';
 import { SetMap   } from './SetMap';
-import { View     } from './View';
 import { Bag      } from './Bag';
 
 export class ViewList
@@ -13,7 +12,7 @@ export class ViewList
 		this.subArgs      = Bindable.makeBindable({});
 		this.views        = [];
 		this.cleanup      = [];
-		this.viewClass    = viewClass || View;
+		this.viewClass    = viewClass;
 		this._onRemove    = new Bag();
 		this.template     = template;
 		this.subProperty  = subProperty;
@@ -309,7 +308,9 @@ export class ViewList
 					}
 					else
 					{
-						if(i % 500)
+						const split = 500;
+
+						if(i === 0 || i % split)
 						{
 							return renderRecurse(Number(i) + 1);
 						}

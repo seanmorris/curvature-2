@@ -6,7 +6,7 @@ package:
 	npx babel source/ --out-dir .
 
 dist/curvature.js:
-	brunch b
+	brunch b -p
 
 test: dist/curvature.js
 	cp dist/curvature.js test/html/

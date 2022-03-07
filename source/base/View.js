@@ -2453,6 +2453,11 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	remove(now = false)
 	{
+	if(!this.dispatchEvent(new CustomEvent('remove', {detail: {view:this}, cancelable: true})))
+		{
+			return;
+		}
+
 		const remover = () => {
 
 			for(let i in this.tags)
@@ -2541,6 +2546,8 @@ export class View extends Mixin.with(EventTargetMixin)
 		this.ruleSet.purge();
 
 		this.removed = true;
+
+		this.dispatchEvent(new CustomEvent('removed', {detail: {view:this}, cancelable: true}))
 	}
 
 	findTag(selector)
@@ -2577,6 +2584,11 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	onRemove(callback)
 	{
+		if(callback instanceof Event)
+		{
+			return;
+		}
+
 		this._onRemove.add(callback);
 	}
 
