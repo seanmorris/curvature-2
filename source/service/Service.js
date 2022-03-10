@@ -2,7 +2,7 @@ import { Router } from '../base/Router';
 
 export class Service
 {
-	static register(script = '/time-service.js', scope = '/')
+	static register(script, scope = '/')
 	{
 		if(!('serviceWorker' in navigator))
 		{
@@ -24,7 +24,7 @@ export class Service
 		return navigator.serviceWorker.ready;
 	}
 
-	static request({command, args, echo, notify})
+	static request({command, args, echo, notify, broadcast = false})
 	{
 		const correlationId = Number(1/Math.random()).toString(36);
 
@@ -33,7 +33,7 @@ export class Service
 		});
 
 		this.worker.postMessage({
-			broadcast: false
+			broadcast
 			, correlationId
 			, command
 			, notify
@@ -46,22 +46,7 @@ export class Service
 
 	static broadcast({command, args, echo, notify})
 	{
-		const correlationId = Number(1/Math.random()).toString(36);
-
-		const getResponse = new Promise(accept => {
-			this.incomplete.set(correlationId, accept);
-		});
-
-		this.worker.postMessage({
-			broadcast: true
-			, correlationId
-			, command
-			, notify
-			, args
-			, echo
-		});
-
-		return getResponse;
+		this.request({command, args, echo, notify, broadcast: true});
 	}
 
 	static handleResponse(event)
@@ -266,7 +251,8 @@ export class Service
 				continue;
 			}
 
-			Router.match(url.pathname, {routes}).then(result => {
+			Router.match(path, {routes}).then(result => {
+
 				if(result === undefined)
 				{
 					return;
@@ -288,7 +274,7 @@ export class Service
 		}
 	}
 
-	static notify(title, options = {})
+	static notify(title, options = {}, broadcast = false)
 	{
 		options.tag = options.tag || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(
 			/[018]/g
@@ -303,7 +289,7 @@ export class Service
 			});
 		})
 		.then(result => this.request(
-			{notify: true, args: [title, options]}
+			{notify: true, args: [title, options], broadcast}
 		));
 	}
 
@@ -393,3 +379,21 @@ Object.defineProperty(Service, 'pageHandlers',    {value: new Set()});
 Object.defineProperty(Service, 'incomplete',    {value: new Map});
 Object.defineProperty(Service, 'notifications', {value: new Map});
 Object.defineProperty(Service, 'notifyClients', {value: new Map});
+
+if(!globalThis.document)
+{
+	globalThis.addEventListener('install',  event => Service.handleInstall(event));
+	globalThis.addEventListener('activate', event => Service.handleActivate(event));
+	globalThis.addEventListener('error',    event => Service.handleActivate(event));
+
+	globalThis.addEventListener('message', event => Service.handleRequest(event));
+	globalThis.addEventListener('fetch',   event => Service.handleFetch(event));
+	globalThis.addEventListener('push',    event => Service.handlePush(event));
+
+	globalThis.addEventListener('notificationclose', event => Service.handleNotifyClosed(event));
+	globalThis.addEventListener('notificationclick', event => Service.handleNotifyClicked(event));
+
+	globalThis.addEventListener('sync',         event => Service.handleSync(event));
+	globalThis.addEventListener('periodicsync', event => Service.handlePeriodicSync(event));
+}
+

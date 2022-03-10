@@ -59,17 +59,10 @@ export class Router {
 			{
 				this.match(this.nextPath, listener);
 			}
-
-			for(const i in this.query)
-			{
-				delete this.query[i];
-			}
-
-			Object.assign(this.query, this.queryOver({}));
 		};
 
-		window.addEventListener('popstate', listen);
 		window.addEventListener('cvUrlChanged', listen);
+		window.addEventListener('popstate',     listen);
 
 		let route = location.origin !== 'null'
 			? location.pathname + location.search
@@ -146,13 +139,6 @@ export class Router {
 			}
 		}
 
-		for(const i in this.query)
-		{
-			delete this.query[i];
-		}
-
-		Object.assign(this.query, this.queryOver({}));
-
 		this.prevPath = path;
 	}
 
@@ -227,20 +213,25 @@ export class Router {
 			return;
 		}
 
-		this.queryString = location.search;
-		this.path        = path;
+		const url = new URL(path, location.origin);
+
+		this.queryString = location.search || url.search;
+		path = this.path = url.pathname;
 
 		const prev    = this.prevPath;
 		const current = (listener && listener.args) ? listener.args.content : null;
 		const routes  = this.routes || (listener && listener.routes) || Routes.dump();
-		const query   = new URLSearchParams(location.search);
+		const query   = new URLSearchParams(this.queryString);
 
-		for(const i in this.query)
+		for(const key in Object.keys(this.query))
 		{
-			delete this.query[i];
+			delete this.query[key];
 		}
 
-		Object.assign(this.query, this.queryOver({}));
+		for(const [key, value] of query)
+		{
+			this.query[key] = value;
+		}
 
 		let args = {}, selected = false, result = '';
 

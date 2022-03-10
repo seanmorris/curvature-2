@@ -976,9 +976,15 @@ export class View extends Mixin.with(EventTargetMixin)
 					}
 					else if(v instanceof Tag)
 					{
-						tag.parentNode.insertBefore(v.node, dynamicNode);
-
-						this.onRemove(() => v.remove());
+						if(v.node)
+						{
+							tag.parentNode.insertBefore(v.node, dynamicNode);
+							this.onRemove(() => v.remove());
+						}
+						else
+						{
+							v.remove();
+						}
 					}
 					else
 					{

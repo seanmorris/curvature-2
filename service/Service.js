@@ -42,10 +42,9 @@ var Service = /*#__PURE__*/function () {
 
   _createClass(Service, null, [{
     key: "register",
-    value: function register() {
+    value: function register(script) {
       var _this = this;
 
-      var script = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '/time-service.js';
       var scope = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '/';
 
       if (!('serviceWorker' in navigator)) {
@@ -72,13 +71,15 @@ var Service = /*#__PURE__*/function () {
       var command = _ref.command,
           args = _ref.args,
           echo = _ref.echo,
-          notify = _ref.notify;
+          notify = _ref.notify,
+          _ref$broadcast = _ref.broadcast,
+          broadcast = _ref$broadcast === void 0 ? false : _ref$broadcast;
       var correlationId = Number(1 / Math.random()).toString(36);
       var getResponse = new Promise(function (accept) {
         _this2.incomplete.set(correlationId, accept);
       });
       this.worker.postMessage({
-        broadcast: false,
+        broadcast: broadcast,
         correlationId: correlationId,
         command: command,
         notify: notify,
@@ -90,25 +91,17 @@ var Service = /*#__PURE__*/function () {
   }, {
     key: "broadcast",
     value: function broadcast(_ref2) {
-      var _this3 = this;
-
       var command = _ref2.command,
           args = _ref2.args,
           echo = _ref2.echo,
           notify = _ref2.notify;
-      var correlationId = Number(1 / Math.random()).toString(36);
-      var getResponse = new Promise(function (accept) {
-        _this3.incomplete.set(correlationId, accept);
-      });
-      this.worker.postMessage({
-        broadcast: true,
-        correlationId: correlationId,
+      this.request({
         command: command,
-        notify: notify,
         args: args,
-        echo: echo
+        echo: echo,
+        notify: notify,
+        broadcast: true
       });
-      return getResponse;
     }
   }, {
     key: "handleResponse",
@@ -134,7 +127,7 @@ var Service = /*#__PURE__*/function () {
   }, {
     key: "handleRequest",
     value: function handleRequest(event) {
-      var _this4 = this;
+      var _this3 = this;
 
       var packet = event.data;
       var getResponse = Promise.resolve('Unexpected request.');
@@ -147,7 +140,7 @@ var Service = /*#__PURE__*/function () {
           var _globalThis$registrat;
 
           notifyList.forEach(function (notification) {
-            return _this4.notifications.set(notification.tag, notification);
+            return _this3.notifications.set(notification.tag, notification);
           });
           return (_globalThis$registrat = globalThis.registration).showNotification.apply(_globalThis$registrat, _toConsumableArray(args));
         }).then(function () {
@@ -157,12 +150,12 @@ var Service = /*#__PURE__*/function () {
           var notifyClient = new Promise(function (accept) {
             var notifiers;
 
-            if (_this4.notifyClients.has(tag)) {
-              notifiers = _this4.notifyClients.get(tag);
+            if (_this3.notifyClients.has(tag)) {
+              notifiers = _this3.notifyClients.get(tag);
             } else {
               notifiers = new Map();
 
-              _this4.notifyClients.set(tag, notifiers);
+              _this3.notifyClients.set(tag, notifiers);
             }
 
             notifiers.set(event.source, accept);
@@ -336,7 +329,7 @@ var Service = /*#__PURE__*/function () {
             continue;
           }
 
-          _Router.Router.match(url.pathname, {
+          _Router.Router.match(path, {
             routes: routes
           }).then(function (result) {
             if (result === undefined) {
@@ -375,9 +368,10 @@ var Service = /*#__PURE__*/function () {
   }, {
     key: "notify",
     value: function notify(title) {
-      var _this5 = this;
+      var _this4 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var broadcast = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       options.tag = options.tag || ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
         return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
       });
@@ -386,9 +380,10 @@ var Service = /*#__PURE__*/function () {
           accept(result);
         });
       }).then(function (result) {
-        return _this5.request({
+        return _this4.request({
           notify: true,
-          args: [title, options]
+          args: [title, options],
+          broadcast: broadcast
         });
       });
     }
@@ -512,3 +507,36 @@ Object.defineProperty(Service, 'notifications', {
 Object.defineProperty(Service, 'notifyClients', {
   value: new Map()
 });
+
+if (!globalThis.document) {
+  globalThis.addEventListener('install', function (event) {
+    return Service.handleInstall(event);
+  });
+  globalThis.addEventListener('activate', function (event) {
+    return Service.handleActivate(event);
+  });
+  globalThis.addEventListener('error', function (event) {
+    return Service.handleActivate(event);
+  });
+  globalThis.addEventListener('message', function (event) {
+    return Service.handleRequest(event);
+  });
+  globalThis.addEventListener('fetch', function (event) {
+    return Service.handleFetch(event);
+  });
+  globalThis.addEventListener('push', function (event) {
+    return Service.handlePush(event);
+  });
+  globalThis.addEventListener('notificationclose', function (event) {
+    return Service.handleNotifyClosed(event);
+  });
+  globalThis.addEventListener('notificationclick', function (event) {
+    return Service.handleNotifyClicked(event);
+  });
+  globalThis.addEventListener('sync', function (event) {
+    return Service.handleSync(event);
+  });
+  globalThis.addEventListener('periodicsync', function (event) {
+    return Service.handlePeriodicSync(event);
+  });
+}

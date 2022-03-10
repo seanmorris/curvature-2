@@ -161,15 +161,15 @@ export class RouterTest extends TestBase
 		));
 	}
 
-	// testUnexpectedErrorRouting()
-	// {
-	// 	const name = 'testUnexpectedErrorRouting';
+	testUnexpectedErrorRouting()
+	{
+		const name = 'testUnexpectedErrorRouting';
 
-	// 	return this.pobot.goto(`${hostname}`)
-	// 	.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-	// 	.then(result => this.assert(
-	// 		result === rawquire(`./tests/${name}.txt`)
-	// 		, 'Document body incorrect or corrupted.'
-	// 	));
-	// }
+		return this.pobot.goto(`${hostname}`)
+		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
+		.then(result => this.assert(
+			result === rawquire(`./tests/${name}.txt`)
+			, 'Document body incorrect or corrupted.'
+		));
+	}
 }

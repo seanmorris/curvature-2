@@ -646,7 +646,14 @@ export class Database extends Mixin.with(EventTargetMixin)
 }
 
 Object.defineProperty(Database, Instances, {value: []});
-Object.defineProperty(Database, Target,    {value: document.createDocumentFragment()});
+try
+{
+	Object.defineProperty(Database, Target, {value: new EventTarget});
+}
+catch(error)
+{
+	Object.defineProperty(Database, Target, {value: document.createDocumentFragment()});
+}
 
 Object.defineProperty(Database, 'BeforeDelete', {value: BeforeDelete});
 Object.defineProperty(Database, 'AfterDelete',  {value: AfterDelete});

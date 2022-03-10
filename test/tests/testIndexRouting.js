@@ -20,4 +20,3 @@ export const testIndexRouting = () => {
 		setTimeout(() => accept(document.body.innerHTML), 2000);
 	});
 };
-
