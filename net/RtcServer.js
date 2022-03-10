@@ -31,6 +31,8 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var RtcServer = /*#__PURE__*/function (_Mixin$with) {
   _inherits(RtcServer, _Mixin$with);
 
@@ -42,6 +44,9 @@ var RtcServer = /*#__PURE__*/function (_Mixin$with) {
     _classCallCheck(this, RtcServer);
 
     _this = _super.call(this);
+
+    _defineProperty(_assertThisInitialized(_this), "candidateTimeout", 500);
+
     _this.peerServer = new RTCPeerConnection(rtcConfig);
 
     _this.peerServer.addEventListener('datachannel', function (event) {
@@ -107,16 +112,22 @@ var RtcServer = /*#__PURE__*/function (_Mixin$with) {
         });
 
         var candidates = new Set();
+        var timeout = null;
 
         _this2.peerServer.addEventListener('icecandidate', function (event) {
           if (!event.candidate) {
             return;
           } else {
-            console.log(event.candidate);
             candidates.add(event.candidate);
           }
 
-          accept(_this2.peerServer.localDescription);
+          if (timeout) {
+            clearTimeout(timeout);
+          }
+
+          timeout = setTimeout(function () {
+            return accept(_this2.peerServer.localDescription);
+          }, _this2.candidateTimeout);
         });
       });
     }

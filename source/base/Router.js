@@ -213,7 +213,10 @@ export class Router {
 			return;
 		}
 
-		const url = new URL(path, location.origin);
+		const url = new URL(path, (location.origin && location.origin !== 'null')
+			? location.origin
+			: 'http://example.com'
+		);
 
 		this.queryString = location.search || url.search;
 		path = this.path = url.pathname;

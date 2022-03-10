@@ -31,6 +31,8 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var RtcClient = /*#__PURE__*/function (_Mixin$with) {
   _inherits(RtcClient, _Mixin$with);
 
@@ -42,6 +44,9 @@ var RtcClient = /*#__PURE__*/function (_Mixin$with) {
     _classCallCheck(this, RtcClient);
 
     _this = _super.call(this);
+
+    _defineProperty(_assertThisInitialized(_this), "candidateTimeout", 500);
+
     _this.peerClient = new RTCPeerConnection(rtcConfig);
     _this.peerClientChannel = _this.peerClient.createDataChannel("chat");
 
@@ -99,15 +104,22 @@ var RtcClient = /*#__PURE__*/function (_Mixin$with) {
       });
       var candidates = new Set();
       return new Promise(function (accept) {
+        var timeout = null;
+
         _this2.peerClient.addEventListener('icecandidate', function (event) {
           if (!event.candidate) {
             return;
           } else {
-            console.log(event.candidate);
             candidates.add(event.candidate);
           }
 
-          accept(_this2.peerClient.localDescription);
+          if (timeout) {
+            clearTimeout(timeout);
+          }
+
+          timeout = setTimeout(function () {
+            return accept(_this2.peerClient.localDescription);
+          }, _this2.candidateTimeout);
         });
       });
     }
@@ -123,4 +135,3 @@ var RtcClient = /*#__PURE__*/function (_Mixin$with) {
 }(_Mixin.Mixin["with"](_EventTargetMixin.EventTargetMixin));
 
 exports.RtcClient = RtcClient;
-RtcClient.js;
