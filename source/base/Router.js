@@ -6,6 +6,8 @@ import { Routes } from './Routes';
 const NotFoundError = Symbol('NotFound');
 const InternalError = Symbol('Internal');
 
+globalThis.CustomEvent = globalThis.CustomEvent ?? globalThis.Event;
+
 export class Router {
 
 	static wait(view, event = 'DOMContentLoaded', node = document)
@@ -144,7 +146,6 @@ export class Router {
 
 	static processRoute(routes, selected, args)
 	{
-
 		let result = false;
 
 		if(typeof routes[selected] === 'function')
@@ -184,7 +185,7 @@ export class Router {
 			}));
 		}
 
-		let result = window['devMode']
+		let result = globalThis['devMode']
 			? 'Unexpected error: ' + String(error)
 			: 'Unexpected error.';
 
@@ -206,25 +207,52 @@ export class Router {
 		);
 	}
 
-	static match(path, listener, forceRefresh = false)
+	static match(path, listener, options = false)
 	{
-		if(this.path === path && !forceRefresh && typeof document !== 'undefined')
+		let event = null, request = null, forceRefresh = false;
+
+		if(options === true)
+		{
+			forceRefresh = options;
+		}
+
+		if(options && typeof options === 'object')
+		{
+			forceRefresh = options.forceRefresh;
+			event        = options.event;
+		}
+
+		if(typeof document !== 'undefined' && this.path === path && !forceRefresh)
 		{
 			return;
 		}
 
-		const url = new URL(path, (location.origin && location.origin !== 'null')
-			? location.origin
-			: 'http://example.com'
-		);
+		let origin = 'http://example.com';
 
-		this.queryString = location.search || url.search;
+		if(typeof document !== 'undefined')
+		{
+			origin = location.origin !== "null" ? location.origin : origin;
+			this.queryString = location.search;
+		}
+
+		const url = new URL(path, origin);
+
 		path = this.path = url.pathname;
+
+		if(typeof document === 'undefined')
+		{
+			this.queryString = url.search;
+		}
 
 		const prev    = this.prevPath;
 		const current = (listener && listener.args) ? listener.args.content : null;
 		const routes  = this.routes || (listener && listener.routes) || Routes.dump();
 		const query   = new URLSearchParams(this.queryString);
+
+		if(event && event.request)
+		{
+			this.request = event.request;
+		}
 
 		for(const key in Object.keys(this.query))
 		{
@@ -238,7 +266,12 @@ export class Router {
 
 		let args = {}, selected = false, result = '';
 
-		path = path.substr(1).split('/');
+		if(path.substring(0,1) === '/')
+		{
+			path = path.substring(1);
+		}
+
+		path = path.split('/');
 
 		for(let i in this.query)
 		{

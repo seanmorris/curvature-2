@@ -11,20 +11,27 @@ export class Service
 
 		// navigator.serviceWorker.startMessages();
 
-		navigator.serviceWorker.addEventListener(
-			'message', event => this.handleResponse(event)
-		);
+		const serviceWorker = navigator.serviceWorker;
 
-		navigator.serviceWorker.register(script, {scope})
+		serviceWorker.register(script, {scope})
 
-		navigator.serviceWorker.ready.then(
-			registration => this.worker = registration.active
-		);
+		serviceWorker.ready.then(registration => {
+			const worker = registration.active;
 
-		return navigator.serviceWorker.ready;
+			if(!worker)
+			{
+				return;
+			}
+
+			this.workers.set(worker.scriptURL, worker);
+
+			serviceWorker.addEventListener('message', event => this.handleResponse(event));
+		});
+
+		return serviceWorker.ready;
 	}
 
-	static request({command, args, echo, notify, broadcast = false})
+	static request({command, args, echo, notify, to = null, broadcast = false})
 	{
 		const correlationId = Number(1/Math.random()).toString(36);
 
@@ -32,14 +39,23 @@ export class Service
 			this.incomplete.set(correlationId, accept);
 		});
 
-		this.worker.postMessage({
-			broadcast
-			, correlationId
-			, command
-			, notify
-			, args
-			, echo
-		});
+		for(const [scriptURL, worker] of this.workers)
+		{
+			if(worker.state === 'redundant')
+			{
+				return Promise.reject('Worker has been updated, connection lost. Please refresh the page.');
+			}
+
+			worker.postMessage({
+				correlationId
+				, broadcast
+				, command
+				, notify
+				, args
+				, echo
+				, to
+			});
+		}
 
 		return getResponse;
 	}
@@ -51,9 +67,14 @@ export class Service
 
 	static handleResponse(event)
 	{
+		event.target.ready.then(registration => {
+			const worker = registration.active;
+			this.workers.set(worker.scriptURL, worker);
+		});
+
 		const packet = event.data;
 
-		if(!packet.correlationId)
+		if(!packet.to && !packet.correlationId)
 		{
 			return;
 		}
@@ -63,6 +84,10 @@ export class Service
 			if(packet.broadcast)
 			{
 				this.handleBroadcast(event);
+			}
+			else if(packet.to)
+			{
+				this.handleMessage(event);
 			}
 
 			return;
@@ -77,6 +102,11 @@ export class Service
 
 	static handleRequest(event)
 	{
+		if(event.origin !== globalThis.origin)
+		{
+			return;
+		}
+
 		const packet = event.data;
 
 		let getResponse = Promise.resolve('Unexpected request.');
@@ -164,6 +194,18 @@ export class Service
 				});
 			});
 		}
+		else if(packet.to)
+		{
+			const source = event.source.id;
+
+			globalThis.clients.get(packet.to).then(client => {
+				getResponse.then(response => {
+					client.postMessage({
+						...packet, result: response, source
+					});
+				});
+			});
+		}
 		else
 		{
 			getResponse.then(response => event.source.postMessage({
@@ -226,39 +268,24 @@ export class Service
 
 	static handleFetch(event)
 	{
-		for(const handler of this.pageHandlers)
-		{
-			if(typeof handler.handleFetch === 'function')
-			{
-				handler.handleFetch(event);
-			}
-		}
-
-		if(event.defaultPrevented)
-		{
-			return;
-		}
-
 		const url  = new URL(event.request.url);
 		const path = url.pathname + url.search;
 
-		for(const handler of this.serviceHandlers)
+		for(const routes of this.routeHandlers)
 		{
-			const routes = handler.routes;
-
-			if(!routes)
-			{
-				continue;
-			}
-
-			Router.match(path, {routes}).then(result => {
+			return Router.match(path, {routes}, {event}).then(result => {
 
 				if(result === undefined)
 				{
 					return;
 				}
 
-				event.respondWith(new Response(result));
+				if(typeof result !== 'object' || !(result instanceof Response))
+				{
+					result = new Response(result);
+				}
+
+				return result;
 			});
 		}
 	}
@@ -270,6 +297,17 @@ export class Service
 			if(typeof handler.handleBroadcast === 'function')
 			{
 				handler.handleBroadcast(event);
+			}
+		}
+	}
+
+	static handleMessage(event)
+	{
+		for(const handler of this.pageHandlers)
+		{
+			if(typeof handler.handleMessage === 'function')
+			{
+				handler.handleMessage(event);
 			}
 		}
 	}
@@ -374,11 +412,14 @@ export class Service
 }
 
 Object.defineProperty(Service, 'serviceHandlers', {value: new Set()});
+Object.defineProperty(Service, 'routeHandlers',   {value: new Set()});
 Object.defineProperty(Service, 'pageHandlers',    {value: new Set()});
 
-Object.defineProperty(Service, 'incomplete',    {value: new Map});
+
 Object.defineProperty(Service, 'notifications', {value: new Map});
 Object.defineProperty(Service, 'notifyClients', {value: new Map});
+Object.defineProperty(Service, 'incomplete',    {value: new Map});
+Object.defineProperty(Service, 'workers',       {value: new Map});
 
 if(!globalThis.document)
 {
@@ -387,7 +428,18 @@ if(!globalThis.document)
 	globalThis.addEventListener('error',    event => Service.handleActivate(event));
 
 	globalThis.addEventListener('message', event => Service.handleRequest(event));
-	globalThis.addEventListener('fetch',   event => Service.handleFetch(event));
+	globalThis.addEventListener('fetch',   event => {
+		event.waitUntil(new Promise(accept => {
+			Service.handleFetch(event).then(result => {
+				if(result)
+				{
+					event.respondWith(result);
+				}
+
+				accept();
+			});
+		}));
+	});
 	globalThis.addEventListener('push',    event => Service.handlePush(event));
 
 	globalThis.addEventListener('notificationclose', event => Service.handleNotifyClosed(event));

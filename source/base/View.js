@@ -1,6 +1,7 @@
 import { Bindable } from './Bindable';
 import { ViewList } from './ViewList';
 import { Router   } from './Router';
+import { Uuid     } from './Uuid';
 import { Dom      } from './Dom';
 import { Tag      } from './Tag';
 import { Bag      } from './Bag';
@@ -2435,12 +2436,10 @@ export class View extends Mixin.with(EventTargetMixin)
 	}
 
 	postRender(parentNode)
-	{
-	}
+	{}
 
 	attached(parentNode)
-	{
-	}
+	{}
 
 	interpolatable(str)
 	{
@@ -2449,12 +2448,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	static uuid()
 	{
-		return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(
-			/[018]/g
-			, c => (
-				c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4
-			).toString(16)
-		);
+		return new Uuid;
 	}
 
 	remove(now = false)
