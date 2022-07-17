@@ -49,7 +49,7 @@ var EventPipe = function EventPipe(events) {
           };
         }
 
-        writer.write(encoder.encode("event: ".concat((_event$type = event.type) !== null && _event$type !== void 0 ? _event$type : 'ServerEvent', "\n") + "data: ".concat(JSON.stringify(event.data), "\n") + "id: ".concat((_event$id = event.id) !== null && _event$id !== void 0 ? _event$id : Date.now(), "\n\n")));
+        writer.write(encoder.encode("event:  ".concat((_event$type = event.type) !== null && _event$type !== void 0 ? _event$type : 'ServerEvent', "\n") + "data: ".concat(JSON.stringify(event.data), "\n") + "id:   ".concat((_event$id = event.id) !== null && _event$id !== void 0 ? _event$id : Date.now(), "\n\n")));
       });
       eventSenders.push(getEvent);
     }

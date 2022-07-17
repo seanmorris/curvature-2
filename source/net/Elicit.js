@@ -153,6 +153,23 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		});
 	}
 
+	objectUrl()
+	{
+		return this.blob().then(blob => URL.createObjectURL(blob));
+	}
+
+	dataUri()
+	{
+		return this.blob().then(blob => new Promise((accept,reject) => {
+			const reader  = new FileReader();
+			reader.onload  = event => accept(reader.result);
+			reader.onerror = event => reject(reader.error);
+			reader.onabort = event => reject(new Error("Read aborted"));
+
+			reader.readAsDataURL(blob);
+		}));
+	}
+
 	buffer()
 	{
 		return this.blob().then(blob => blob.arrayBuffer());
@@ -161,11 +178,6 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 	bytes()
 	{
 		return this.buffer().then(buffer => new Uint8Array(buffer));
-	}
-
-	objectUrl()
-	{
-		return this.blob().then(blob => URL.createObjectURL(blob));
 	}
 
 	cancel()

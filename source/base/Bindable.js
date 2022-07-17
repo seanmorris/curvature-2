@@ -528,8 +528,8 @@ export class Bindable
 			}
 
 			for (let i in object[Binding]) {
-				for (let j in object[Binding][i]) {
-					if (object[Binding][i][j]) {
+				for (let callback of object[Binding][i]) {
+					if (callback) {
 						return true;
 					}
 				}

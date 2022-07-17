@@ -69,6 +69,8 @@ export class Bag extends Mixin.with(EventTargetMixin)
 			);
 		}
 
+		item = Bindable.make(item);
+
 		if(this.content.has(item))
 		{
 			return;
@@ -126,6 +128,8 @@ export class Bag extends Mixin.with(EventTargetMixin)
 				`Only objects of type ${this.type} may be removed from this Bag.`
 			);
 		}
+
+		item = Bindable.make(item);
 
 		if(!this.content.has(item))
 		{

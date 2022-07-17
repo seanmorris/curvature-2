@@ -2453,7 +2453,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	remove(now = false)
 	{
-	if(!this.dispatchEvent(new CustomEvent('remove', {detail: {view:this}, cancelable: true})))
+		if(!this.dispatchEvent(new CustomEvent('remove', {detail: {view:this}, cancelable: true})))
 		{
 			return;
 		}

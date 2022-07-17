@@ -205,6 +205,36 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       });
     }
   }, {
+    key: "objectUrl",
+    value: function objectUrl() {
+      return this.blob().then(function (blob) {
+        return URL.createObjectURL(blob);
+      });
+    }
+  }, {
+    key: "dataUri",
+    value: function dataUri() {
+      return this.blob().then(function (blob) {
+        return new Promise(function (accept, reject) {
+          var reader = new FileReader();
+
+          reader.onload = function (event) {
+            return accept(reader.result);
+          };
+
+          reader.onerror = function (event) {
+            return reject(reader.error);
+          };
+
+          reader.onabort = function (event) {
+            return reject(new Error("Read aborted"));
+          };
+
+          reader.readAsDataURL(blob);
+        });
+      });
+    }
+  }, {
     key: "buffer",
     value: function buffer() {
       return this.blob().then(function (blob) {
@@ -216,13 +246,6 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
     value: function bytes() {
       return this.buffer().then(function (buffer) {
         return new Uint8Array(buffer);
-      });
-    }
-  }, {
-    key: "objectUrl",
-    value: function objectUrl() {
-      return this.blob().then(function (blob) {
-        return URL.createObjectURL(blob);
       });
     }
   }, {
