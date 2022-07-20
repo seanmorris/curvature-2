@@ -778,7 +778,7 @@ export class View extends Mixin.with(EventTargetMixin)
 	{
 		const attrProperty = sourceTag.getAttribute('cv-attr');
 
-		const pairs = attrProperty.split(',');
+		const pairs = attrProperty.split(/[,;]/);
 		const attrs = pairs.map((p) => p.split(':'));
 
 		sourceTag.removeAttribute('cv-attr');
