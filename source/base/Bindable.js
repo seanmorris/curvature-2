@@ -286,7 +286,7 @@ export class Bindable
 
 			if(Array.isArray(property))
 			{
-				const debinders = property.forEach(p => bindTo(p, callback, options));
+				const debinders = property.map(p => bindTo(p, callback, options));
 
 				return () => debinders.forEach(d => d());
 			}

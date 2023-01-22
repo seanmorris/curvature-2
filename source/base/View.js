@@ -24,9 +24,9 @@ export class View extends Mixin.with(EventTargetMixin)
 		return this[uuid];
 	}
 
-	static from(template, args = {}, parent = null)
+	static from(template, args = {}, mainView = null)
 	{
-		const view = new this(args, parent);
+		const view = new this(args, mainView);
 
 		view.template = template;
 
@@ -36,6 +36,8 @@ export class View extends Mixin.with(EventTargetMixin)
 	constructor(args = {}, mainView = null)
 	{
 		super(args, mainView);
+
+		this[EventTargetMixin.EventTargetParent] = mainView;
 
 		Object.defineProperty(this, 'args', { value: Bindable.make(args) });
 		Object.defineProperty(this, uuid,   { value: this.constructor.uuid() });
@@ -81,9 +83,15 @@ export class View extends Mixin.with(EventTargetMixin)
 			))
 		});
 
-		this.controller = this;
+		this.onRemove(() => {
+			if(!this[EventTargetMixin.Parent])
+			{
+				return;
+			}
+			this[EventTargetMixin.Parent] = null;
+		});
 
-		this.loaded = Promise.resolve(this);
+		this.controller = this;
 
 		this.template  = ``;
 
@@ -95,6 +103,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		this.preserve  = false;
 		this.removed   = false;
+
+		this.loaded = Promise.resolve(this);
 
 		// return Bindable.make(this);
 	}
@@ -947,6 +957,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 					if(v instanceof View)
 					{
+						v[EventTargetMixin.EventTargetParent] = this;
+
 						const onAttach = (rootNode, parentNode) => {
 							v.dispatchAttached(rootNode, parentNode, this);
 						};
@@ -1331,6 +1343,8 @@ export class View extends Mixin.with(EventTargetMixin)
 					};
 
 					this.nodesAttached.add(onAttach);
+
+					v[EventTargetMixin.EventTargetParent] = this;
 
 					v.render(tag);
 
