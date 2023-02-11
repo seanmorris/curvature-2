@@ -19,7 +19,7 @@
 		"pobot": "^0.0.6",
 		"raw-brunch": "^1.0.2",
 		"rawquire": "^0.0.1",
-		"terser-brunch": "^4.1"
+		"uglify-es-brunch": "^1"
 	},
 	"files": [
 		"dist/curvature.js",
