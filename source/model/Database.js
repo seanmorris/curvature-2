@@ -646,14 +646,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 }
 
 Object.defineProperty(Database, Instances, {value: []});
-try
-{
-	Object.defineProperty(Database, Target, {value: new EventTarget});
-}
-catch(error)
-{
-	Object.defineProperty(Database, Target, {value: document.createDocumentFragment()});
-}
 
 Object.defineProperty(Database, 'BeforeDelete', {value: BeforeDelete});
 Object.defineProperty(Database, 'AfterDelete',  {value: AfterDelete});
@@ -672,7 +664,16 @@ Object.defineProperty(Database, 'AfterRead',  {value: AfterRead});
 
 Object.defineProperty(Database, 'PKSymbol',  {value: PrimaryKey});
 
-for(const method in ['addEventListener', 'removeEventListener', 'dispatchEvent'])
+try
+{
+	Object.defineProperty(Database, Target, {value: new EventTarget});
+}
+catch(error)
+{
+	Object.defineProperty(Database, Target, {value: document.createDocumentFragment()});
+}
+
+for(const method of ['addEventListener', 'removeEventListener', 'dispatchEvent'])
 {
 	Object.defineProperty(Database, method, {
 		value: (...args) => Database[Target][method](...args)

@@ -1,38 +1,25 @@
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Elicit = void 0;
-
 var _Mixin = require("curvature/base/Mixin");
-
 var _EventTargetMixin = require("curvature/mixin/EventTargetMixin");
-
 var _PromiseMixin = require("curvature/mixin/PromiseMixin");
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
-
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 var IterateDownload = Symbol('IterateDownload');
 var Retry = Symbol('Retry');
 var HandleFirstByte = Symbol('HandleFirstByte');
@@ -63,19 +50,13 @@ var Closed = Symbol('Closed');
 var Start = Symbol('Start');
 var First = Symbol('First');
 var End = Symbol('End');
-
 var Elicit = /*#__PURE__*/function (_Mixin$with) {
   _inherits(Elicit, _Mixin$with);
-
   var _super = _createSuper(Elicit);
-
   function Elicit(url) {
     var _this2;
-
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
     _classCallCheck(this, Elicit);
-
     _this2 = _super.call(this);
     _this2[RetriesLeft] = options.retries || 5;
     _this2[Timeout] = options.timeout || 4500;
@@ -88,27 +69,21 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
     _this2[Closed] = 0;
     _this2[Options] = Object.assign({}, options);
     _this2[Url] = url;
-
     if (!options.defer) {
       _this2.open();
     }
-
     return _this2;
   }
-
   _createClass(Elicit, [{
     key: "open",
     value: function open() {
       var _this3 = this;
-
       if (this[Opened] && !this[Closed]) {
         return;
       }
-
       if (!this[Start]) {
         this[Start] = Date.now();
       }
-
       this[Canceller] = new AbortController();
       this[Options].signal = this[Canceller].signal;
       this[Opened] = Date.now();
@@ -119,23 +94,17 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       })["catch"](function (error) {
         return _this3[HandleError](error);
       });
-
       var onTimeout = function onTimeout() {
         if (!_this3[First]) {
           _this3[Canceller].abort();
-
           _this3[HandleClose]();
-
           _this3[TimeoutLeft] = Math.max(0, _this3[TimeoutLeft] - _this3[Timeout]);
-
           if (!_this3[TimeoutLeft]) {
             return;
           }
-
           _this3[HandleFail](new Error('Timed out.'));
         }
       };
-
       this[Timer] = setTimeout(onTimeout, this[Timeout]);
     }
   }, {
@@ -143,7 +112,7 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
     value: function headers() {
       return this[Fetch].then(function (_ref) {
         var response = _ref.response,
-            stream = _ref.stream;
+          stream = _ref.stream;
         return response.headers;
       });
     }
@@ -151,10 +120,9 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
     key: "json",
     value: function json() {
       var _this4 = this;
-
       return this[Fetch].then(function (_ref2) {
         var response = _ref2.response,
-            stream = _ref2.stream;
+          stream = _ref2.stream;
         var wrapped = new Response(stream, {
           headers: {
             'Content-Type': _this4.type
@@ -167,10 +135,9 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
     key: "text",
     value: function text() {
       var _this5 = this;
-
       return this[Fetch].then(function (_ref3) {
         var response = _ref3.response,
-            stream = _ref3.stream;
+          stream = _ref3.stream;
         var wrapped = new Response(stream, {
           headers: {
             'Content-Type': _this5.type
@@ -192,10 +159,9 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
     key: "blob",
     value: function blob() {
       var _this6 = this;
-
       return this[Fetch].then(function (_ref4) {
         var response = _ref4.response,
-            stream = _ref4.stream;
+          stream = _ref4.stream;
         var wrapped = new Response(stream, {
           headers: {
             'Content-Type': _this6.type
@@ -217,19 +183,15 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       return this.blob().then(function (blob) {
         return new Promise(function (accept, reject) {
           var reader = new FileReader();
-
           reader.onload = function (event) {
             return accept(reader.result);
           };
-
           reader.onerror = function (event) {
             return reject(reader.error);
           };
-
           reader.onabort = function (event) {
             return reject(new Error("Read aborted"));
           };
-
           reader.readAsDataURL(blob);
         });
       });
@@ -254,7 +216,6 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (!this.emitCancelEvent()) {
         return;
       }
-
       this[Canceller].abort();
       this[Cancelled] = true;
       this.emitCancelledEvent();
@@ -265,11 +226,9 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (this[End] || this[Paused] || this[Closed]) {
         return;
       }
-
       if (!this.emitPauseEvent()) {
         return;
       }
-
       this[Paused] = true;
       this.emitPausedEvent();
     }
@@ -279,11 +238,9 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (this[End] || !this[Paused]) {
         return;
       }
-
       if (!this.emitUnpauseEvent()) {
         return;
       }
-
       this[Paused] = false;
       this.emitUnpausedEvent();
     }
@@ -303,7 +260,6 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (!this[End]) {
         return Date.now() - this[Start];
       }
-
       return this[End] - this[Start];
     }
   }, {
@@ -312,7 +268,6 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (!this[First]) {
         return Date.now() - this[Opened];
       }
-
       return this[First] - this[Opened];
     }
   }, {
@@ -321,11 +276,9 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (!this[Opened]) {
         return 0;
       }
-
       if (!this[Closed]) {
         return Date.now() - this[First];
       }
-
       return this[Closed] - this[First];
     }
   }, {
@@ -334,19 +287,15 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (!this[Opened]) {
         return 0;
       }
-
       var time;
-
       if (this[End]) {
         time = this[End] - this[LastChunkTime];
       } else {
         time = Date.now() - this[LastChunkTime];
       }
-
       if (!time) {
         time = 0.01;
       }
-
       return this[LastChunkSize] / time;
     }
   }, {
@@ -368,41 +317,32 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
     key: IterateDownload,
     value: function value(reader, controller, length) {
       var _this7 = this;
-
       this[HandleProgress](length, 0, null);
       var lastTime = Date.now();
       var lastSize = 1;
-
       var handleChunk = function handleChunk(_ref5) {
         var done = _ref5.done,
-            value = _ref5.value;
-
+          value = _ref5.value;
         if (done) {
           controller.close();
           return _this7[HandleComplete]();
         }
-
         controller.enqueue(value);
         _this7[Received] += value.length;
-
         if (!_this7[First]) {
           _this7[HandleFirstByte](value);
         }
-
         _this7[HandleProgress](length, _this7[Received]);
-
         _this7[LastChunkTime] = lastTime;
         _this7[LastChunkSize] = lastSize;
         lastTime = Date.now();
         lastSize = value.length;
         return iterate();
       };
-
       var iterate = function iterate() {
         if (_this7[Cancelled]) {
           return reader.cancel();
         }
-
         if (_this7[Paused]) {
           return new Promise(function (accept) {
             setTimeout(function () {
@@ -410,14 +350,12 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
             }, 100);
           });
         }
-
         return reader.read().then(function (chunk) {
           return handleChunk(chunk);
         })["catch"](function (error) {
           return _this7[HandleError](error);
         });
       };
-
       return iterate();
     }
   }, {
@@ -426,11 +364,9 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       if (!this.emitRetryEvent()) {
         return;
       }
-
       if (this[RetriesLeft] <= 0) {
         return;
       }
-
       this[Canceller].abort();
       this[HandleClose]();
       this[Received] = 0;
@@ -446,9 +382,7 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       this[Length] = length;
       this[Type] = type;
       this[HandleHeaders](response.headers);
-
       var _this = this;
-
       var stream = new ReadableStream({
         start: function start(controller) {
           _this[IterateDownload](reader, controller, length);
@@ -481,18 +415,15 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       this[End] = Date.now();
       this[HandleClose]();
       this.emitCompleteEvent();
-
       this[_PromiseMixin.PromiseMixin.Accept]();
     }
   }, {
     key: HandleError,
     value: function value(error) {
       console.warn(error);
-
       if (!this.emitErrorEvent(error)) {
         return this[Retry]();
       }
-
       return this[HandleFail](error);
     }
   }, {
@@ -620,7 +551,6 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
       return this.dispatchEvent(new CustomEvent('cancelled'));
     }
   }]);
-
   return Elicit;
 }(_Mixin.Mixin["with"](_EventTargetMixin.EventTargetMixin, _PromiseMixin.PromiseMixin)); // elicit.addEventListener('open', event => console.log(event));
 // elicit.addEventListener('close', event => console.log(event));
@@ -635,6 +565,4 @@ var Elicit = /*#__PURE__*/function (_Mixin$with) {
 // elicit.addEventListener('unpaused', event => console.log(event));
 // elicit.addEventListener('cancelled', event => console.log(event));
 // elicit.addEventListener('cancel', event => console.log(event));
-
-
 exports.Elicit = Elicit;
