@@ -26,13 +26,9 @@ export const testEventBubbleCancel = () => {
 	targetParent.addEventListener('two', event => document.body.innerHTML += 'Second,');
 	targetGrandparent.addEventListener('three', event => document.body.innerHTML += 'Third');
 
-	const one   = new CustomEvent('one', {bubbles: true});
-	const two   = new CustomEvent('two', {bubbles: true, cancelable: true});
-	const three = new CustomEvent('three', {bubbles: true, cancelable: true});
-
-	target.dispatchEvent(one);
-	target.dispatchEvent(two);
-	target.dispatchEvent(three);
+	target.dispatchEvent(new CustomEvent('one', {bubbles: true}));
+	target.dispatchEvent(new CustomEvent('two', {bubbles: true, cancelable: true}));
+	target.dispatchEvent(new CustomEvent('three', {bubbles: true, cancelable: true}));
 
 	return new Promise(accept => setTimeout(() => accept(document.body.innerHTML), 2000));
 };
