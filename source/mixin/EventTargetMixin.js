@@ -28,10 +28,14 @@ export const EventTargetMixin = {
 		}
 
 		event.cvPath   = event.cvPath || [];
-
 		event.cvTarget = event.cvCurrentTarget = this;
 
-		this[Capture](...args);
+		let result = this[Capture](...args);
+
+		if(event.cancelable && (result === false || event.cancelBubble))
+		{
+			return result;
+		}
 
 		const handlers = [];
 
@@ -57,8 +61,6 @@ export const EventTargetMixin = {
 
 		handlers.push([() => this[CallHandler](...args), {}, null]);
 
-		let result;
-
 		for(const [handler, options, map] of handlers)
 		{
 			if(options.once)
@@ -74,7 +76,7 @@ export const EventTargetMixin = {
 			}
 		}
 
-		if(event.cancelable && (event.cancelBubble || result === false))
+		if(!event.cancelable || (!event.cancelBubble && result !== false))
 		{
 			this[Bubble](...args);
 		}
@@ -153,7 +155,7 @@ export const EventTargetMixin = {
 
 		let result = this[EventTargetParent][Capture](...args);
 
-		if(event.cancelable && result === false)
+		if(event.cancelable && (result === false || event.cancelBubble))
 		{
 			return;
 		}
@@ -177,7 +179,7 @@ export const EventTargetMixin = {
 
 			result = handler(event);
 
-			if(event.cancelable && result === false)
+			if(event.cancelable && (result === false || event.cancelBubble))
 			{
 				break;
 			}
@@ -190,7 +192,7 @@ export const EventTargetMixin = {
 	{
 		const event = args[0];
 
-		if(!event.bubbles || !this[EventTargetParent])
+		if(!event.bubbles || !this[EventTargetParent] || event.cancelBubble)
 		{
 			return;
 		}
@@ -224,7 +226,7 @@ export const EventTargetMixin = {
 
 		result = this[EventTargetParent][CallHandler](...args);
 
-		if(event.cancelable && (event.cancelBubble || result === false))
+		if(event.cancelable && (result === false || event.cancelBubble))
 		{
 			return result;
 		}
@@ -250,4 +252,4 @@ export const EventTargetMixin = {
 	}
 }
 
-Object.defineProperty(EventTargetMixin, 'EventTargetParent', {value:EventTargetParent});
+Object.defineProperty(EventTargetMixin, 'Parent', {value:EventTargetParent});

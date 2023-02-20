@@ -11,8 +11,7 @@ export class TestBase extends Test
 
 	setUp()
 	{
-		return Pobot.get(this.options)
-		.then(pobot=> this.pobot = pobot);
+		return Pobot.get(this.options).then(pobot=> this.pobot = pobot);
 	}
 
 	breakDown()
