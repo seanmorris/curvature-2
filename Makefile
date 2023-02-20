@@ -21,4 +21,4 @@ dependencies:
 	npm install
 
 clean:
-	rm -rf access animate base form input mixin model tag strings node_modules toast dist/*
+	rm -rf access animate base form input mixin model net tag service strings node_modules toast dist/* test/html/curvature.js
