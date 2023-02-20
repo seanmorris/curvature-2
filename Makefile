@@ -1,11 +1,11 @@
-.PHONY: all package dist/curvature.js test clean
+.PHONY: all package test clean
 
 all: package dist/curvature.js
 
 package:
 	npx babel source/ --out-dir .
 
-dist/curvature.js:
+dist/curvature.js: $(shell find source/)
 	brunch b -p
 
 test: dist/curvature.js
