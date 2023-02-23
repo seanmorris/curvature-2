@@ -1,4 +1,5 @@
 export const testTemplate = () => {
+
 	while(document.body.firstChild)
 	{
 		document.body.firstChild.remove();

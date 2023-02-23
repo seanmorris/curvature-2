@@ -6,10 +6,11 @@ package:
 	npx babel source/ --out-dir .
 
 dist/curvature.js: $(shell find source/)
-	brunch b -p
+	brunch b
 
 test: dist/curvature.js
 	cp dist/curvature.js test/html/
+	cp dist/curvature.js.map test/html/
 	cd test/ \
 	&& rm -rf build/* \
 	&& npx babel ./tests/ --out-dir build/tests/ \

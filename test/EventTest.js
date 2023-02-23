@@ -17,6 +17,13 @@ export class EventTest extends TestBase
 			return exports;
 		})().${name}`;
 
+		return this.wrapTest(
+			name,
+			code,
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+
 		return this.pobot.goto(`${hostname}`)
 		.then(() => this.pobot.inject(code))
 		.then(result => this.assert(
@@ -37,12 +44,19 @@ export class EventTest extends TestBase
 			return exports;
 		})().${name}`;
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(code))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			code,
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+
+		// return this.pobot.goto(`${hostname}`)
+		// .then(() => this.pobot.inject(code))
+		// .then(result => this.assert(
+		// 	result === rawquire(`./tests/${name}.txt`)
+		// 	, 'Document body incorrect or corrupted.'
+		// ));
 	}
 
 	testEventBubble()
@@ -57,12 +71,19 @@ export class EventTest extends TestBase
 			return exports;
 		})().${name}`;
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(code))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			code,
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+
+		// return this.pobot.goto(`${hostname}`)
+		// .then(() => this.pobot.inject(code))
+		// .then(result => this.assert(
+		// 	result === rawquire(`./tests/${name}.txt`)
+		// 	, 'Document body incorrect or corrupted.'
+		// ));
 	}
 
 	testEventBubbleCancel()
@@ -77,12 +98,19 @@ export class EventTest extends TestBase
 			return exports;
 		})().${name}`;
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(code))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			code,
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+
+		// return this.pobot.goto(`${hostname}`)
+		// .then(() => this.pobot.inject(code))
+		// .then(result => this.assert(
+		// 	result === rawquire(`./tests/${name}.txt`)
+		// 	, 'Document body incorrect or corrupted.'
+		// ));
 	}
 
 	testEventCapture()
@@ -97,12 +125,19 @@ export class EventTest extends TestBase
 			return exports;
 		})().${name}`;
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(code))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			code,
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+
+		// return this.pobot.goto(`${hostname}`)
+		// .then(() => this.pobot.inject(code))
+		// .then(result => this.assert(
+		// 	result === rawquire(`./tests/${name}.txt`)
+		// 	, 'Document body incorrect or corrupted.'
+		// ));
 	}
 
 	testEventCaptureCancel()
@@ -117,11 +152,18 @@ export class EventTest extends TestBase
 			return exports;
 		})().${name}`;
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(code))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			code,
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+
+		// return this.pobot.goto(`${hostname}`)
+		// .then(() => this.pobot.inject(code))
+		// .then(result => this.assert(
+		// 	result === rawquire(`./tests/${name}.txt`)
+		// 	, 'Document body incorrect or corrupted.'
+		// ));
 	}
 }

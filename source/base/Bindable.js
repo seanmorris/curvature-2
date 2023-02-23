@@ -587,17 +587,9 @@ export class Bindable
 				return true;
 			}
 
-			if(value && value instanceof Object)
+			if(value && value instanceof Object && Object.isExtensible(object) && !Object.isSealed(object) && !excludedClasses.filter(x => object instanceof x).length)
 			{
-				if (!excludedClasses.filter(x => object instanceof x).length
-					&& Object.isExtensible(object)
-					&& !Object.isSealed(object)
-				) {
-					if(!object[ NoGetters ])
-					{
-					}
-					value = Bindable.make(value);
-				}
+				value = Bindable.make(value);
 			}
 
 			onDeck[key] = value;

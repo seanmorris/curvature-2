@@ -19,3 +19,7 @@ exports.paths = {
 exports.modules = {
 	nameCleaner: path => path.replace(/^(source|build)?\//, 'curvature/')
 }
+
+exports.overrides = {
+	production: {sourceMaps: true}
+}
