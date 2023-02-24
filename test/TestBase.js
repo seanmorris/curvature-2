@@ -6,6 +6,8 @@ const Pobot = require('pobot/Pobot');
 
 const hostname = `file://${process.cwd()}/../html/index.html`;
 
+const delay = d => () => new Promise(accept => setTimeout(accept,d));
+
 export class TestBase extends Test
 {
 	options = [].concat(
@@ -35,10 +37,11 @@ export class TestBase extends Test
 
 		if(!withCoverage)
 		{
-			return init;
+			return test;
 		}
 
 		return test
+		.then(delay(500))
 		.then(() => this.pobot.takeCoverage())
 		.then(coverage => fsp.writeFile(`${process.cwd()}/../coverage/v8/${name}-coverage.json`, JSON.stringify(coverage, null, 4)))
 		.then(() => this.pobot.stopCoverage());

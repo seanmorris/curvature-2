@@ -17,16 +17,6 @@ export class BasicViewTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.startCoverage()
-		// .then(() => this.pobot.goto(`${hostname}`))
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name])).then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ))
-		// .then(() => this.pobot.takeCoverage())
-		// .then(coverage => fsp.writeFile('/tmp/view-coverage.json', JSON.stringify(coverage, null, 4)))
-		// .then(() => this.pobot.stopCoverage());
 	}
 
 	testFlicker()
