@@ -9,6 +9,7 @@ commands:
       - run: sudo apt install npm -y software-properties-common google-chrome-stable
       - run: mkdir -p /tmp/.chrome-user
       - run: nvm install 18
+      - run: nvm version 18
 
 workflows:
   version: 2
