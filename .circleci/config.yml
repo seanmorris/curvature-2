@@ -5,17 +5,21 @@ commands:
     steps:
       - run: mkdir -p /tmp/.chrome-user
   install-chrome-latest:
+    steps:
       - run: wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
       - run: sudo apt-get update
       - run: sudo apt install -y software-properties-common google-chrome-stable
   install-chrome-80:
+    steps:
       - run: wget http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb CHROME_VERSION=80.0.3987.163-1
       - run: dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb CHROME_VERSION=80.0.3987.163-1
   install-chrome-100:
+    steps:
       - run: http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb CHROME_VERSION=100.0.4896.127-1
       - run: dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb CHROME_VERSION=100.0.4896.127-1
   install-chrome-110:
+    steps:
       - run: http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb CHROME_VERSION=110.0.5481.177-1
       - run: dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb CHROME_VERSION=110.0.5481.177-1
 
