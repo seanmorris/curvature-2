@@ -494,17 +494,20 @@ Promise.all(aggregateCoverage).then(() => {
 				}
 			}
 
-			if(total)
+			if(!isWhitespace)
 			{
-				linesCovered[originName] = linesCovered[originName] || new Set;
-				linesCovered[originName].add(lineNumber);
+				if(total)
+				{
+					linesCovered[originName] = linesCovered[originName] || new Set;
+					linesCovered[originName].add(lineNumber);
 
-				totalCovered++;
-				covered++;
+					totalCovered++;
+					covered++;
+				}
+
+				totalSize++;
+				size++;
 			}
-
-			totalSize++;
-			size++;
 
 			if(total !== current || (segmentBuffer && index === docMask.content.length + -1))
 			{
