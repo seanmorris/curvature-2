@@ -1,43 +1,76 @@
-// const coverage = require(`${process.cwd()}/test/coverage/v8/testTemplate-coverage.json`);
-// const coverage = require(`${process.cwd()}/test/coverage/v8/testList-coverage.json`);
+"use strict";
 
-// const coverage = require(`${process.cwd()}/test/coverage/v8/testWildcardRoutingC-coverage.json`);
-// const coverage = require(`${process.cwd()}/test/coverage/v8/testViewNoEscape-coverage.json`);
-// const coverage = require(`${process.cwd()}/test/coverage/v8/testEventBubble-coverage.json`);
-// const coverage = require(`${process.cwd()}/test/coverage/v8/testEventDispatchCancel-coverage.json`);
-// const coverage = require(`${process.cwd()}/test/coverage/v8/testFormGroupInput-coverage.json`);
+const testNames = [
+'testEventBubbleCancel',
+'testEventBubble',
+'testEventCaptureCancel',
+'testEventCapture',
+'testEventDispatchCancel',
+'testEventDispatch',
+'testFlicker',
+'testFocusClick',
+'testFocusOrder',
 
-// const testName = 'testPromiseFailRouting';
-// const testName = 'testUnexpectedErrorRouting';
-// const testName = 'testList';
+'testTemplate',
 
-const testName = 'testList';
+'testFormBasic',
+'testFormGroupInput',
+'testFormGroupOutput',
+'testFormInputFlicker',
+'testFormOutputFlicker',
+'testFunctionRouting',
+'testHtmlEscape',
+'testHtmlField',
+'testHtmlNoEscape',
+'testIndexRouting',
 
-const coverage = require(`${process.cwd()}/test/coverage/v8/${testName}-coverage.json`);
+// 'testInsertAndSelect',
 
+'testListCascade',
+'testListCascadeUp',
+'testList',
+'testListPrefill',
+'testListSplicedOdds',
+'testListSplicedUpOdds',
+'testNotFoundRouting',
+'testObjectDeleteOdds',
+'testObjectRefill',
+'testObjectSetProperties',
+'testPromiseFailRouting',
+'testPromiseRouting',
+'testStaticRouting',
+'testTextarea',
+'testTextField',
+'testUnexpectedErrorRouting',
+'testVariadicRouting0',
+'testVariadicRouting1',
+'testVariadicRouting2',
+'testVariadicRouting3',
+'testViewEscaped',
+'testViewNoEscape',
+'testWildcardRoutingA',
+'testWildcardRoutingB',
+'testWildcardRoutingC',
+
+];
+
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const { SourceMapConsumer } = require("source-map");
+
 const source = fs.readFileSync('./test/html/curvature.js', 'utf-8');
 const sourcemap = JSON.parse(fs.readFileSync('./test/html/curvature.js.map', 'utf-8'));
-const { SourceMapConsumer } = require("source-map");
-const { start } = require('repl');
-const { off } = require('process');
 
-const scripts = new Map;
-const origins = new Map;
-const bDocs   = new Map;
+const origins  = new Map;
+const bDocs    = new Map;
+const docMasks = new Map;
 
 for(const s in sourcemap.sources)
 {
 	origins.set(sourcemap.sources[s], sourcemap.sourcesContent[s]);
 }
-
-for(const script of coverage.result)
-{
-	scripts.set(script.url, script);
-}
-
-const scriptName = 'file:///home/sean/projects/curvature-2/test/html/curvature.js';
 
 const ansi = {
 	green:  '\x1b[32m',
@@ -50,18 +83,31 @@ class BinDoc
 {
 	constructor(value, offset = 0)
 	{
-		this.value = value;
 		this.start = offset;
 		this.end   = offset + value.length;
+		this.count = null;
+		this.value = value;
 		this.first = null;
 		this.last  = null;
-		this.count = null;
 
 		Object.defineProperty(this, 'next', {writable: true});
 	}
 
+	contains(index)
+	{
+		if(index >= this.start && index < this.end)
+		{
+			return true;
+		}
+	}
+
 	query(index)
 	{
+		if(!this.contains(index))
+		{
+			return;
+		}
+
 		if(this.first)
 		{
 			if(index < this.first.end)
@@ -73,7 +119,7 @@ class BinDoc
 				return this.last.query(index);
 			}
 		}
-		else if(index >= this.start && index < this.end)
+		else
 		{
 			return this;
 		}
@@ -81,6 +127,11 @@ class BinDoc
 
 	split(at)
 	{
+		if(!this.contains(at) || at === this.start)
+		{
+			return false;
+		}
+
 		if(!this.first)
 		{
 			this.first = new BinDoc(this.value.substring(0, at + -this.start), this.start);
@@ -90,71 +141,80 @@ class BinDoc
 
 			this.first.count = this.last.count = this.count;
 
+			this.first.next = this.last;
 			this.last.next = this.next;
 			this.next = this.first;
-			this.first.next = this.last;
+
+			return true;
 		}
 		else
 		{
 			if(at < this.first.end)
 			{
-				this.first.split(at);
+				return this.first.split(at);
 			}
 			else
 			{
-				this.last.split(at);
+				return this.last.split(at);
 			}
 		}
 	}
 
 	segment(startAt, endAt)
 	{
-		if(startAt === this.start && this.endAt === this.end)
+		if(!this.first && startAt === this.start && this.endAt === this.end)
 		{
 			return [this];
 		}
 
 		if(!this.first)
 		{
-			if(startAt >= this.start && startAt < this.end && endAt <= this.end && endAt > this.start)
+			if(startAt >= this.start && startAt < this.end && endAt < this.end && endAt > this.start)
 			{
-				this.split(startAt);
-				this.split(endAt);
+				let current;
 
-				return [this.last.first];
-			}
-			else
-			{
-				this.split(startAt);
+				if(startAt > this.start)
+				{
+					this.split(startAt);
+				}
+
+				current = this.query(startAt);
 
 				let end = null;
-				let current = this.last;
-				const segments = [current];
+				const segments = [];
 
 				while(current)
 				{
-					if(end = current.query(endAt))
+					if(!current.first && (current.contains(endAt) || current.end === endAt))
+					{
+						current.split(endAt);
+						end = current.first || current;
+
+						break;
+					}
+
+					if(current.start === endAt)
 					{
 						break;
 					}
 
+					if(!current.first)
+					{
+						segments.push(current);
+					}
+
 					current = current.next;
-					segments.push(current);
 				}
 
-				end.split(endAt);
-
-				segments.push(end.first);
+				if(end.start !== endAt)
+				{
+					segments.push(end);
+				}
 
 				return segments;
-
-				throw Error(
-					'New segment boundaries overlap with existing segments: '
-					+ JSON.stringify({startAt, endAt, start: this.start, end: this.end})
-					+ "\n"
-					+ this.toString()
-				);
 			}
+
+			return [];
 		}
 		else
 		{
@@ -167,6 +227,8 @@ class BinDoc
 				return this.last.segment(startAt, endAt);
 			}
 		}
+
+		return [];
 	}
 
 	toString()
@@ -188,212 +250,382 @@ class BinDoc
 	}
 }
 
-let totalSize = totalCovered = 0, links = [];
-
-for(const s in sourcemap.sources)
+class DocMask
 {
-	bDocs.set(sourcemap.sources[s], new BinDoc(sourcemap.sourcesContent[s]));
+	constructor(content)
+	{
+		this.content = content;
+		this.masks   = new Map;
+	}
+
+	getMask(maskName, index)
+	{
+		if(!this.masks.has(maskName))
+		{
+			return null;
+		}
+
+		const mask = this.masks.get(maskName);
+
+		return mask[index];
+	}
+
+	setMask(maskName, index, count)
+	{
+		if(!this.masks.has(maskName))
+		{
+			this.masks.set(maskName, new Uint32Array(this.content.length))
+		}
+
+		const mask = this.masks.get(maskName);
+
+		mask[index] = count;
+	}
 }
 
-SourceMapConsumer.with(sourcemap, null, consumer => {
+let totalSize = 0;
+let totalCovered = 0;
+
+const ignores = ['node_modules/'];
+
+sources: for(const s in sourcemap.sources)
+{
+	const sourceFilename = sourcemap.sources[s];
+
+	for(const ignore of ignores)
+	{
+		if(ignore === sourceFilename.substr(0, ignore.length))
+		{
+			continue sources;
+		}
+	}
+
+	docMasks.set(sourceFilename, new DocMask(sourcemap.sourcesContent[s]));
+
+	bDocs.set(sourceFilename, new BinDoc(sourcemap.sourcesContent[s]));
+}
+
+const scriptName = 'file:///home/sean/projects/curvature-2/test/html/curvature.js';
+
+const aggregateCoverage = [];
+
+const testMasks = new Map;
+
+for(const testName of testNames)
+{
+	const coverage = require(`${process.cwd()}/test/coverage/v8/${testName}-coverage.json`);
+
+	const scripts  = new Map;
+
+	for(const script of coverage.result)
+	{
+		scripts.set(script.url, script);
+	}
+
+	const generatedDoc = new BinDoc(source);
 
 	for(const func of scripts.get(scriptName).functions)
 	{
 		for(const range of func.ranges)
 		{
-			if(range.count)
+			generatedDoc
+			.segment(range.startOffset, range.endOffset)
+			.forEach(s => s.count = s.count === 0 ? s.count : range.count);
+		}
+	}
+
+	aggregateCoverage.push(SourceMapConsumer.with(sourcemap, null, consumer => {
+		const generatedLines    = source.split("\n");
+		const generatedLengths  = generatedLines.map(l => l.length + 1);
+		const generatedLineBreaks = [];
+
+		let generatedNewLine = 0;
+
+		for(const length of generatedLengths)
+		{
+			generatedLineBreaks.push(generatedNewLine);
+
+			generatedNewLine += length;
+		}
+
+		let summary = '<body><link rel="stylesheet" href=".coverage.css">';
+
+		const links = [];
+
+		const originMasks = new Set;
+
+		origins: for(const [originName, originContent] of origins)
+		{
+			for(const ignore of ignores)
 			{
-				continue;
-			}
-
-			const positions = new Map;
-
-			for(let offset = range.startOffset; offset <= range.endOffset; offset++)
-			{
-				const preChunk    = source.substring(0, offset);
-				const preLines    = preChunk.split("\n");
-				const line        = preLines.length;
-				const column      = preLines[ preLines.length + -1 ].length;
-				const position    = consumer.originalPositionFor(
-					{line, column}
-				);
-
-				if(position.line === null)
+				if(ignore === originName.substr(0, ignore.length))
 				{
-					continue;
+					continue origins;
 				}
+			}
 
-				position.originalLine   = line;
-				position.originalColumn = column;
+			const originMask = docMasks.get(originName);
 
-				position.byte = offset;
+			originMasks.add(originMask);
 
-				// console.log(position);
+			let current = null;
+			let column  = 0;
+			let line    = 1;
 
-				if(!positions.has(position.line))
+			const filename = testName + '_' + originName.replace(/\//g, '_');
+
+			console.error('file: ' + testName + ' ' + ansi.yellow + originName + ansi.end);
+
+			let started = false;
+
+			originContent.split('').forEach((byte,index) => {
+
+				const position = consumer.generatedPositionFor({source:originName, line, column})
+
+				let segment = null;
+
+				if(position.line !== null)
 				{
-					positions.set(position.line, new Map);
+					const offset = generatedLineBreaks[position.line - 1] + position.column;
+					const check  = generatedDoc.query(offset);
+
+					if(!segment || check.count < segment.count)
+					{
+						segment = check;
+					}
+
+					originMask.setMask(testName, index, segment.count);
+
+					if(segment.count !== current)
+					{
+						current = segment.count;
+					}
 				}
 
-				positions.get(position.line).set(position.column, position);
+				if(byte === '\n')
+				{
+					column = 0;
+					line++;
+					return;
+				}
+
+				column++;
+			});
+		}
+
+		testMasks.set(testName, originMasks);
+	}));
+}
+
+Promise.all(aggregateCoverage).then(() => {
+
+	let summary = '<body><link rel="stylesheet" href=".coverage.css">';
+
+	const links = [];
+
+	let totalCovered = 0;
+	let totalSize = 0;
+
+	const totals = {};
+
+	const segments = {};
+	const linesCovered = {};
+
+	const table = {};
+
+	docMasks.forEach((docMask, originName) => {
+
+		const filename = originName.replace(/\//g, '_');
+
+		console.error('file:: ' + ansi.yellow + originName + ansi.end);
+
+		let report = '<body style = "background-color:#222;font-family:terminal, monospace;">';
+		report += '<link rel="stylesheet" href=".coverage.css">';
+
+		let started = false;
+		let current = null;
+		let lineNumber = 1;
+		let column = 0;
+
+		let covered = 0;
+		let size    = 0;
+
+		let highlighted = ``;
+
+		const lineNumbers = new Set;
+
+		let segmentBuffer = '';
+
+		totals[originName] = totals[originName] || {};
+
+		for(let index = 0; index < docMask.content.length; index++)
+		{
+			const byte = docMask.content[index];
+			let total = 0;
+
+			const isWhitespace = [' ', '\t', '\n'].includes(byte);
+			const isLastLoop = index === docMask.content.length + -1;
+
+			if(current || !isWhitespace || isLastLoop)
+			{
+				for(const [testName, mask] of docMask.masks)
+				{
+					totals[originName][testName] = totals[originName][testName] || {total:0,covered:0}
+
+					totals[originName][testName].covered += mask[index] ? 1 : 0;
+					totals[originName][testName].total   += 1;
+
+					total += mask[index];
+				}
 			}
 
-			if(!positions.size)
+			if(total)
 			{
-				continue;
+				linesCovered[originName] = linesCovered[originName] || new Set;
+				linesCovered[originName].add(lineNumber);
+
+				totalCovered++;
+				covered++;
 			}
 
-			const lineStart = Math.min(...[...positions.keys()]);
-			const colStart  = Math.min(...(positions.get(lineStart).keys()));
-			const lineEnd   = Math.max(...[...positions.keys()]);
-			const colEnd    = Math.max(...(positions.get(lineEnd).keys()));
+			totalSize++;
+			size++;
 
-			const sourceChunk = source.substring(range.startOffset, range.endOffset);
-
-			const startPos = positions.get(lineStart).get(colStart);
-			const endPos   = positions.get(lineEnd).get(colEnd);
-
-			let origin = '';
-
-			range.length = range.endOffset - range.startOffset;
-
-			if(startPos.source && endPos.source)
+			if(total !== current || (segmentBuffer && index === docMask.content.length + -1))
 			{
-				const bDoc        = bDocs.get(startPos.source);
-				const originChunk = origins.get(startPos.source);
-				const originLines = originChunk.split("\n")//.map(l => l + "\n");
-				const originPrev  = originLines.slice(0, startPos.line - 1);
-				const originSlice = originLines.slice(startPos.line - 1, endPos.line);
+				segments[originName] = segments[originName] || [];
+				segments[originName].push(index,lineNumber,column,total);
 
-				originSlice[originSlice.length + -1] = originSlice[originSlice.length + -1].substr(0, endPos.column);
-				originSlice[0] = originSlice[0].substr(startPos.column);
+				const segmentLines = segmentBuffer.split('\n');
+				const wrappedLines = segmentLines.map((l,li) => {
 
-				origin = originSlice.join("\n");
+					const match = l.match(/^([\s]*)(.*?)([\s]*?)\n?$/);
 
-				const startByte   = originPrev.join("\n").length + startPos.column + ((startPos.line > 1 && startPos.column) ? 1 : 0);
-				const endByte     = startByte + origin.length;
+					if(!match)
+					{
+						return l;
+					}
 
-				try{
-					const segments = bDoc.segment(startByte, endByte);
-					segments.forEach(s => s.count = func.isBlockCoverage ? (s.count || range.count) : range.count);
-					// const segment = ;
-					// segment.count = range.count;
+					const [_, pre, line, post] = match;
+
+					const ln = lineNumber - (segmentLines.length - li) + 1;
+
+					l = `<span class = "line">`
+						+ (!lineNumbers.has(ln) ? `<span class = "line-number">${ln}</span>` : '')
+						+ `${pre}<span class = "code" tabindex = "0" data-count = "${current}" data-length = "${line.length}">${line}</span>${post}`
+					+ `</span>`;
+
+					lineNumbers.add(ln);
+
+					return l;
+
+				}).join("\n");
+
+				highlighted += wrappedLines;
+				segmentBuffer  = '';
+
+				if(started)
+				{
+					highlighted += `</span><span class = "segment" data-count = "${total}">`;
 				}
-				catch (error) {
-					console.log({error, range, origin});
+				else
+				{
+					highlighted += `<span class = "segment" data-count = "${total}">`;
+					started = true;
 				}
 
-				console.log('================================================================');
-				console.log(startPos.source, range);
-				console.log('----------------------------------------------------------------');
-				console.log(sourceChunk);
-				console.log('----------------------------------------------------------------');
-				console.log(origin);
-				console.log('================================================================');
+				current = total;
+			}
+
+			if(byte === '\n')
+			{
+				column = 0;
+				lineNumber++;
+				segmentBuffer += `\n`;
+			}
+			else if(byte === '\t')
+			{
+				segmentBuffer += '    ';
+			}
+			else if(byte === '<')
+			{
+				segmentBuffer += '&lt;';
+			}
+			else if(byte === '>')
+			{
+				segmentBuffer += '&gt;';
+			}
+			else if(byte === '&')
+			{
+				segmentBuffer += '&amp;';
+			}
+			else if(byte === '"')
+			{
+				segmentBuffer += '&quot;';
 			}
 			else
 			{
-				continue;
+				segmentBuffer += byte;
 			}
-		}
-	}
 
-	let summary = '<body style = "white-space:pre;background-color:#222;font-family:terminal, monospace;">';
-
-	for(const [filename,bDoc] of bDocs)
-	{
-		if(bDoc.value)
-		{
-			bDoc.count = 0;
+			column++;
 		}
 
-		let size = covered = 0;
+		const percentage = Number(100 * covered / size).toFixed(2);
 
-		bDoc.each(segment => {
-			size += segment.value.trim().length;
-			if(segment.count !== 0)
-			{
-				covered += segment.value.trim().length;
-			}
-		});
+		report += `<h1 style = "color:green">${originName}</h1>`;
+		report += `<h2 style = "color:yellow">Coverage: ${percentage}% (${covered}/${size})</h2>`;
+		report += `<span href = "summary.html" style = "color:lightGray">${testNames.join(', ')}</span>\n\n`;
+		report += `<a href = "summary.html" style = "color:lightGray">back</a>\n`;
+		report += `<label for = "show-totals">Show Totals</label><input id = "show-totals" type = "checkbox">\n\n`;
+		report += `<div class = "highlighted">`;
+		report += highlighted + `</span></div></body>`;
 
-		bDoc.covered = covered;
-		bDoc.size    = size;
+		table[originName] = table[originName] || {size, covered, lines: -1+lineNumber, tests: {}};
 
-		totalCovered += covered;
-		totalSize    += size;
+		const reportFile = `${filename}.coverage.html`;
 
-		{
-			const reportFile = `${filename.replace(/\//g, '_')}.coverage.html`;
+		fs.writeFileSync('./test/coverage/html/' + reportFile, report);
 
-			let report = '<body style = "white-space:pre;background-color:#222;font-family:terminal, monospace;">';
+		links.push(
+			`<span data-covered = "${percentage}" style = "--percentage:${percentage*100};">`
+			+ `<meter max="100" optimum = "100" high = "75" low = "50" value="${Number(percentage).toFixed(0)}"></meter>`
+			+ `<span class = "percentage">${percentage}%</span>`
+			+ `<a href = "${reportFile}" style = "color:lightGray">${filename}</a>\n</span>`
+		);
+	});
 
-			let highlighted = '';
+	Object.entries(totals).forEach(([originName, testTotals]) => Object.entries(testTotals).forEach(([testName,t]) => {
+		table[originName].tests[testName] = t.covered;
+	}));
 
-			let n = 0;
+	const lineCoverage = {};
 
-			bDoc.each(segment => {
-				const content = segment.value
-				.replace(/&/g, "&amp;")
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;")
-				.replace(/\"/g, "&quot;");
+	Object.entries(linesCovered).forEach(([originName,lines]) => lineCoverage[originName] = [...lines]);
 
-				const lines = content.split("\n");
+	const percentage = Number(100 * totalCovered / totalSize).toFixed(2);
 
-				if(segment.count === 0)
-				{
-					highlighted += `<span title = "${segment.count}" style = "color:red">${content}</span>`;
-					return;
-				}
+	fs.writeFileSync('./test/coverage/json/cv-coverage.json', JSON.stringify({
+		id: crypto.randomUUID()
+		, timestamp: Date.now()
+		// , hostname:  os.hostname()
+		// , user:      process.env.USER
+		, totalCovered
+		, totalSize
+		, tests: testNames
+		, files: Object.keys(totals)
+		, stats: table
+		, lines: lineCoverage
+		, segments
+	}));
 
-				highlighted += `<span title = "${segment.count}" style = "color:white">${content}</span>`;
-			});
-
-			highlighted = highlighted.split("\n").map(l => `<span style = "color:lightGray">${++n}</span>	${l}`).join("\n");
-
-			links.push(
-				`<span style = "color:yellow">${Number(100 * covered / size).toFixed(2)}%</span> `
-				+ '<a href = "'+reportFile+'" style = "color:lightGray">' + filename + '</a>' + "\n"
-			);
-
-			report += '<h1 style = "color:green">' + filename + '</h1>';
-
-			report += `<h2 style = "color:yellow">Coverage: ${Number(100 * covered / size).toFixed(2)}% (${covered}/${size})</h2>`;
-			report += `<a href = "summary.html" style = "color:lightGray">back</a>\n\n`;
-
-			report += highlighted + '</body>';
-			fs.writeFileSync('./test/coverage/html/' + reportFile, report)
-		}
-
-		{
-			let report = '';
-
-			console.log('file: ' + ansi.green + filename + ansi.end);
-			console.log(`${ansi.yellow}Coverage: ${Number(100 * covered / size).toFixed(2)}% (${covered}/${size})${ansi.end}`);
-
-			bDoc.each(segment => {
-
-				const content = segment.value;
-
-				if(segment.count === 0)
-				{
-					const lines = content.split("\n");
-					report += lines.map(l => ansi.red + l + ansi.end).join("\n");
-					return;
-				}
-
-				report += content;
-			});
-
-			process.stdout.write(report + (report[report.length + -1] === "\n" ? "" : "\n"));
-		}
-	}
+	// console.table(table);
 
 	summary += '<h1 style = "color:green">curvature.js</h1>';
-	summary += `<h2 style = "color:yellow">Coverage: ${Number(100 * totalCovered / totalSize).toFixed(2)}%</h2>`;
-	summary += `<span href = "summary.html" style = "color:lightGray">${testName}</span>\n\n`;
-	summary += links.join("\n") + '</body>';
+	summary += `<h2 style = "color:yellow">Coverage: ${percentage}% (${totalCovered}/${totalSize})</h2>`;
+	summary += `<span href = "summary.html" style = "color:lightGray">${testNames.join(', ')}</span>\n\n`;
+	summary += `<div class = "links">${links.join("")}</div></body>`;
 
-	fs.writeFileSync(`./test/coverage/html/summary.html`, summary)
+	fs.writeFileSync(`./test/coverage/html/summary.html`, summary);
+
 });

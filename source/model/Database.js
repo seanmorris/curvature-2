@@ -439,6 +439,11 @@ export class Database extends Mixin.with(EventTargetMixin)
 					return accept({record: null, result: null, index: i});
 				}
 
+				const source    = cursor.source;
+				const storeName = source.objectStore
+					? source.objectStore.name
+					: index.name;
+
 				this[Bank][storeName] = this[Bank][storeName] || {};
 
 				const bank   = this[Bank][storeName];
@@ -477,11 +482,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 					value[PrimaryKey] = Symbol.for(pk);
 					bank[pk] = value;
 				}
-
-				const source    = cursor.source;
-				const storeName = source.objectStore
-					? source.objectStore.name
-					: index.name;
 
 				detail.record = value;
 

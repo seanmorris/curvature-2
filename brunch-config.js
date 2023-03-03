@@ -1,14 +1,9 @@
-exports.files = {
-  javascripts: {joinTo: 'curvature.js'},
-};
+exports.files = { javascripts: {joinTo: 'curvature.js'}};
 
 exports.plugins = {
-  babel: {
-    presets: [[ "minify" , { builtIns: false } ]]
-  },
   raw: {
-    pattern: /\.(html|jss)$/,
-    wrapper: content => `module.exports = ${JSON.stringify(content)}`
+    wrapper: content => `module.exports = ${JSON.stringify(content)}`,
+    pattern: /\.html$/,
   }
 };
 
@@ -21,5 +16,6 @@ exports.modules = {
 }
 
 exports.overrides = {
-	production: {sourceMaps: true}
+	development: { paths: { public: 'test/html' } },
+	production: {sourceMaps: true},
 }

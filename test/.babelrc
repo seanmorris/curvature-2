@@ -1,5 +1,6 @@
 {
-	"plugins": ["macros"]
+	retainLines: true
+	, plugins: ["macros", "@babel/plugin-transform-modules-commonjs"]
 	, "presets": [
 		['@babel/preset-env', {
 			"exclude": ['@babel/plugin-transform-new-target']

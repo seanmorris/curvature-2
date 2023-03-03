@@ -53,7 +53,7 @@ export class Router {
 				}
 			}
 
-			if(location.origin !== 'null')
+			if(!this.isOriginLimited(location))
 			{
 				this.match(location.pathname, listener);
 			}
@@ -66,11 +66,11 @@ export class Router {
 		window.addEventListener('cvUrlChanged', listen);
 		window.addEventListener('popstate',     listen);
 
-		let route = location.origin !== 'null'
+		let route = !this.isOriginLimited(location)
 			? location.pathname + location.search
 			: false;
 
-		if(location.origin && location.hash)
+		if(!this.isOriginLimited(location) && location.hash)
 		{
 			route += location.hash;
 		}
@@ -81,7 +81,7 @@ export class Router {
 			, prev:   this.prevPath
 		};
 
-		if(location.origin !== 'null')
+		if(!this.isOriginLimited(location))
 		{
 			history.replaceState(state, null, location.pathname);
 		}
@@ -108,7 +108,7 @@ export class Router {
 		{
 			this.match(path, this.listener, true);
 		}
-		else if(location.origin === 'null')
+		else if(this.isOriginLimited(location))
 		{
 			this.nextPath = path;
 		}
@@ -169,8 +169,6 @@ export class Router {
 
 	static handleError(error, routes, selected, args, listener, path, prev, forceRefresh)
 	{
-		console.error(error);
-
 		if(typeof document !== 'undefined')
 		{
 			document.dispatchEvent(new CustomEvent('cvRouteError', {
@@ -231,7 +229,7 @@ export class Router {
 
 		if(typeof document !== 'undefined')
 		{
-			origin = location.origin !== "null" ? location.origin : origin;
+			origin = this.isOriginLimited(location) ? origin : location.origin;
 			this.queryString = location.search;
 		}
 
@@ -385,17 +383,15 @@ export class Router {
 
 			if(!(result instanceof Promise))
 			{
-				result = Promise.resolve(result);
-
-				// return this.update(
-				// 	listener
-				// 	, path
-				// 	, result
-				// 	, routes
-				// 	, selected
-				// 	, args
-				// 	, forceRefresh
-				// );
+				return this.update(
+					listener
+					, path
+					, result
+					, routes
+					, selected
+					, args
+					, forceRefresh
+				);
 			}
 
 			if(typeof document === 'undefined')
@@ -403,19 +399,16 @@ export class Router {
 				return result;
 			}
 
-			return result.then(realResult => {
-
-				this.update(
-					listener
-					, path
-					, realResult
-					, routes
-					, selected
-					, args
-					, forceRefresh
-				);
-
-			}).catch(error => { this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh); });
+			return result.then(realResult => this.update(
+				listener
+				, path
+				, realResult
+				, routes
+				, selected
+				, args
+				, forceRefresh
+			))
+			.catch(error => { this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh); });
 		}
 		catch(error)
 		{
@@ -477,6 +470,11 @@ export class Router {
 		});
 
 		document.dispatchEvent(eventEnd);
+	}
+
+	static isOriginLimited({origin})
+	{
+		return origin === 'null' || origin === 'file://';
 	}
 
 	static queryOver(args = {})

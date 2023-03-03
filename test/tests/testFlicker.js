@@ -7,8 +7,6 @@ export const testFlicker = () => {
 	const View = require('curvature/base/View').View;
 	const view = View.from('<h1>[[number]]</h1>\n');
 
-	// Load the data BEFORE the render call:
-
 	view.render(document.body);
 
 	view.args.numbers = [];

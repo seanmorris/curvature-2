@@ -35,7 +35,7 @@ export class Wrapper extends View
 		this.args.record    = {};
 		this.args.key       = this.args.field.key;
 		this.args.classes   = '';
-		this.args.icon      = '×';
+		this.args.icon      = '\u00D7';
 		this.deleted        = false;
 
 		this.args.field.args.bindTo('fieldName', (v)=>{
@@ -95,13 +95,13 @@ export class Wrapper extends View
 
 		if(!this.deleted)
 		{
-			this.args.icon = '↺';
+			this.args.icon = '\u21BA';
 			this.args.parent.deleteImage(index);
 			this.deleted = true;
 		}
 		else
 		{
-			this.args.icon = '×';
+			this.args.icon = '\u00D7';
 			this.args.parent.undeleteImage(index);
 			this.deleted = false;
 		}

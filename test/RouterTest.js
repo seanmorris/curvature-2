@@ -15,13 +15,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testStaticRouting()
@@ -34,13 +27,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testWildcardRoutingA()
@@ -53,13 +39,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testWildcardRoutingB()
@@ -72,13 +51,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testWildcardRoutingC()
@@ -91,13 +63,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testVariadicRouting0()
@@ -110,13 +75,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testVariadicRouting1()
@@ -129,13 +87,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testVariadicRouting2()
@@ -148,13 +99,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testVariadicRouting3()
@@ -167,13 +111,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testFunctionRouting()
@@ -186,13 +123,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testPromiseRouting()
@@ -205,13 +135,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testPromiseFailRouting()
@@ -224,13 +147,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testNotFoundRouting()
@@ -243,13 +159,6 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testUnexpectedErrorRouting()
@@ -262,12 +171,5 @@ export class RouterTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 }
