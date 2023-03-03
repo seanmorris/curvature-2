@@ -45,6 +45,7 @@ jobs:
     resource_class: medium
     steps:
       - checkout
+      - install-deps
       - install-chrome-latest
       - run-tests
 
@@ -58,6 +59,7 @@ jobs:
       CHROME_VERSION: 90.0.4430.212-1
     steps:
       - checkout
+      - install-deps
       - install-chrome-version
       - run-tests
 
@@ -71,6 +73,7 @@ jobs:
       CHROME_VERSION: 100.0.4896.127-1
     steps:
       - checkout
+      - install-deps
       - install-chrome-version
       - run-tests
 
@@ -84,5 +87,6 @@ jobs:
       CHROME_VERSION: 110.0.5481.177-1
     steps:
       - checkout
+      - install-deps
       - install-chrome-version
       - run-tests
