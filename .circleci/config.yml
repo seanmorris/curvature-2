@@ -9,8 +9,9 @@ commands:
       - run: sudo apt install -y software-properties-common google-chrome-stable
   install-chrome-version:
     steps:
-      - run: http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb
-      - run: dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb CHROME_VERSION=100.0.4896.127-1
+      - run: wget http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
 
 workflows:
   version: 2
