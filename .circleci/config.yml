@@ -20,6 +20,12 @@ commands:
       - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
       - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
 
+  install-chrome-old-version:
+    steps:
+      - run: wget https://www.slimjet.com/chrome/download-chrome.php?file=files%2F${CHROME_VERSION}%2Fgoogle-chrome-stable_current_amd64.deb
+      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
+
   run-tests:
     steps:
       - run: sudo npm install -g cv3-test pobot
@@ -53,20 +59,6 @@ jobs:
       - run-tests
       - post-coverage
 
-  test-chrome-100:
-    parallelism: 1
-    machine:
-      image: ubuntu-2004:202010-01
-      docker_layer_caching: false
-    resource_class: medium
-    environment:
-      CHROME_VERSION: 100.0.4896.127-1
-    steps:
-      - checkout
-      - install-deps
-      - install-chrome-version
-      - run-tests
-
   test-chrome-110:
     parallelism: 1
     machine:
@@ -79,4 +71,46 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-version
+      - run-tests
+
+  test-chrome-90:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 90.0.4430.72
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
+      - run-tests
+
+  test-chrome-80:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 80.0.3987.149
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
+      - run-tests
+
+  test-chrome-70:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 70.0.3538.77
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
       - run-tests
