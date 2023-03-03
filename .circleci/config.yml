@@ -24,7 +24,11 @@ commands:
     steps:
       - run: sudo npm install -g cv3-test pobot
       - run: npm install
-      - run: make -j `nproc` test post-coverage
+      - run: make -j `nproc` test
+
+  post-coverage:
+    steps:
+      - run: make -j `nproc` post-coverage
 
 workflows:
   version: 2
@@ -48,6 +52,7 @@ jobs:
       - install-deps
       - install-chrome-latest
       - run-tests
+      - post-coverage
 
   test-chrome-90:
     parallelism: 1
