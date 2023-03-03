@@ -35,7 +35,6 @@ workflows:
 
   test:
     jobs:
-      - test-chrome-90
       - test-chrome-100
       - test-chrome-110
       - test-latest
