@@ -17,11 +17,12 @@
 		"brunch": "^3",
 		"clean-css-brunch": "^3.0.0",
 		"cv3-test": "^0.0.14",
-		"pobot": "^0.0.10",
+		"pobot": "^0.0.11",
 		"raw-brunch": "^1.0.2",
 		"rawquire": "^0.0.1",
 		"source-map": "^0.7.4",
-		"uglify-es-brunch": "^1.0.5"
+		"uglify-es-brunch": "^1.0.5",
+		"xml": "^1.0.1"
 	},
 	"files": [
 		"dist/curvature.js",
@@ -41,5 +42,7 @@
 		"toast/*",
 		"LICENSE",
 		"NOTICE"
-	]
+	],
+	"dependencies": {
+	}
 }

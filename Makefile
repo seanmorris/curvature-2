@@ -24,19 +24,26 @@ test: node_modules/.package-lock.json ${CV_SOURCES} test/html/curvature.js
 	&& cd build/ \
 	&& cvtest ${TESTLIST} \
 	&& cd ../../ \
-	&& node test/map-coverage.js
+	&& node test/map-coverage.js \
+	&& node test/generate-xml.js > test/coverage/data/coverage.xml
 
 node_modules/.package-lock.json: package.json
 	npm install
 
+post-coverage: codecov
+	BRANCH_NAME=`git branch --show-current` \
+	GIT_BRANCH=`git branch --show-current` \
+	GIT_COMMIT=`git rev-parse HEAD` \
+	CI=local \
+	./codecov -v \
+	-t ${CODECOV_TOKEN} \
+	-f test/coverage/data/coverage.xml
+
+codecov:
+	curl -O https://uploader.codecov.io/latest/linux/codecov
+
 clean:
 	rm -rf access animate base form input mixin model net tag \
-	service strings toast dist/* test/html/curvature.js \
-	test/html/curvature.js.map test/coverage/v8/* test/coverage/html/*.html
-
-post-coverage:
-	echo codecov -v -d \
-	-t TOKEN_HERE \
-	-B `git branch --show-current` \
-	-C `git rev-parse HEAD` \
-	-f test/coverage/json/simplecov.json
+	service strings toast dist/* test/html/curvature.js test/build/* \
+	test/html/curvature.js.map test/coverage/v8/* test/coverage/html/*.html \
+	codecov

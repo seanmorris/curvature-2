@@ -390,6 +390,7 @@ for(const testName of testNames)
 					const check  = generatedDoc.query(offset);
 
 					if(!segment || check.count < segment.count)
+					// if(!segment || check)
 					{
 						segment = check;
 					}
@@ -433,6 +434,8 @@ Promise.all(aggregateCoverage).then(() => {
 
 	const table = {};
 
+	const blanks = {};
+
 	docMasks.forEach((docMask, originName) => {
 
 		const filename = originName.replace(/\//g, '_');
@@ -458,13 +461,25 @@ Promise.all(aggregateCoverage).then(() => {
 
 		totals[originName] = totals[originName] || {};
 
+		let lineStarted = false;
+
+		blanks[originName] = blanks[originName] || [];
+
 		for(let index = 0; index < docMask.content.length; index++)
 		{
 			const byte = docMask.content[index];
-			let total = 0;
+
+			if(!lineStarted && byte === '\n')
+			{
+				blanks[originName].push(lineNumber);
+			}
+
+			lineStarted = true;
 
 			const isWhitespace = [' ', '\t', '\n'].includes(byte);
 			const isLastLoop = index === docMask.content.length + -1;
+
+			let total = 0;
 
 			if(current || !isWhitespace || isLastLoop)
 			{
@@ -542,6 +557,7 @@ Promise.all(aggregateCoverage).then(() => {
 				column = 0;
 				lineNumber++;
 				segmentBuffer += `\n`;
+				lineStarted = false;
 			}
 			else if(byte === '\t')
 			{
@@ -605,7 +621,7 @@ Promise.all(aggregateCoverage).then(() => {
 
 	const percentage = Number(100 * totalCovered / totalSize).toFixed(2);
 
-	fs.writeFileSync('./test/coverage/json/cv-coverage.json', JSON.stringify({
+	fs.writeFileSync('./test/coverage/data/cv-coverage.json', JSON.stringify({
 		id: crypto.randomUUID()
 		, timestamp: Date.now()
 		// , hostname:  os.hostname()
@@ -617,6 +633,7 @@ Promise.all(aggregateCoverage).then(() => {
 		, stats: table
 		, lines: lineCoverage
 		, segments
+		, blanks
 	}));
 
 	// console.table(table);
