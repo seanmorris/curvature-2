@@ -41,6 +41,7 @@ post-coverage: codecov
 
 codecov:
 	curl -O https://uploader.codecov.io/latest/linux/codecov
+	chmod +x codecov
 
 clean:
 	rm -rf access animate base form input mixin model net tag \
