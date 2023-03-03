@@ -31,7 +31,7 @@ test: node_modules/.package-lock.json ${CV_SOURCES} test/html/curvature.js
 	&& cd build/ \
 	&& cvtest ${TESTLIST} \
 
-test/coverage/data/cv-coverage.json: test/html/curvature.js
+test/coverage/data/cv-coverage.json: test test/html/curvature.js
 	node test/map-coverage.js
 
 test/coverage/data/coverage.xml: test/coverage/data/cv-coverage.json
