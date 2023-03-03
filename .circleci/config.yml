@@ -54,20 +54,6 @@ jobs:
       - run-tests
       - post-coverage
 
-  test-chrome-90:
-    parallelism: 1
-    machine:
-      image: ubuntu-2004:202010-01
-      docker_layer_caching: false
-    resource_class: medium
-    environment:
-      CHROME_VERSION: 90.0.4430.212-1
-    steps:
-      - checkout
-      - install-deps
-      - install-chrome-version
-      - run-tests
-
   test-chrome-100:
     parallelism: 1
     machine:
