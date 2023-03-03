@@ -29,4 +29,4 @@ jobs:
       - run: sudo npm install -g cv3-test pobot
       - run: npm install -g brunch
       - run: npm install
-      - run: nvm version 18 && make test post-coverage
+      - run: make test post-coverage
