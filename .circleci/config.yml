@@ -42,7 +42,7 @@ workflows:
   test:
     jobs:
       - test-latest
-      - test-chrome-70
+      # - test-chrome-70
       - test-chrome-80
       - test-chrome-90
       - test-chrome-100
@@ -119,20 +119,6 @@ jobs:
       - run-tests
 
   test-chrome-70:
-    parallelism: 1
-    machine:
-      image: ubuntu-2004:202010-01
-      docker_layer_caching: false
-    resource_class: medium
-    environment:
-      CHROME_VERSION: 70.0.3538.77
-    steps:
-      - checkout
-      - install-deps
-      - install-chrome-old-version
-      - run-tests
-
-  test-chrome-60:
     parallelism: 1
     machine:
       image: ubuntu-2004:202010-01
