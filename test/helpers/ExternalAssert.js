@@ -1,2 +1,2 @@
-export const ExternalAssert = () => globalThis.console.assert = (...a) => globalThis.externalAssert(JSON.stringify(a));
+export const ExternalAssert = () => (globalThis||window).console.assert = (...a) => (globalThis||window).externalAssert(JSON.stringify(a));
 
