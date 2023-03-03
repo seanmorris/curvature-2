@@ -469,13 +469,16 @@ Promise.all(aggregateCoverage).then(() => {
 		for(let index = 0; index < docMask.content.length; index++)
 		{
 			const byte = docMask.content[index];
+			const nonStarters =  ['\n', '\t', ' ', '[', ']', '{', '}', '(', ')', ';'];
 
-			if(!lineStarted && byte === '\n')
+			if(!lineStarted && nonStarters.includes(byte))
 			{
 				blanks[originName].push(lineNumber);
 			}
-
-			lineStarted = true;
+			else
+			{
+				lineStarted = true;
+			}
 
 			const isWhitespace = [' ', '\t', '\n'].includes(byte);
 			const isLastLoop = index === docMask.content.length + -1;

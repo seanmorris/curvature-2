@@ -1,19 +1,26 @@
-.PHONY: all package test clean post-coverage
+.PHONY: all publish test clean post-coverage
 
 CV_SOURCES:=$(shell find source/)
 SHELL=bash -euxo pipefail
 
+ifeq (${CODECOV_TOKEN},)
+ CODECOV_DRYFLAG=-d
+endif
+
 all: dist/curvature.js test/html/curvature.js curvature-0.0.68-h.tgz
+
+publish: test curvature-0.0.68-h.tgz
+	npm publish
 
 curvature-0.0.68-h.tgz: node_modules/.package-lock.json ${CV_SOURCES}
 	npx babel source/ --out-dir .
 	npm pack
 
 dist/curvature.js: node_modules/.package-lock.json ${CV_SOURCES}
-	brunch b -p
+	npx brunch b -p
 
 test/html/curvature.js: node_modules/.package-lock.json ${CV_SOURCES}
-	brunch b
+	npx brunch b
 
 test: node_modules/.package-lock.json ${CV_SOURCES} test/html/curvature.js
 	cd test/ \
@@ -23,19 +30,22 @@ test: node_modules/.package-lock.json ${CV_SOURCES} test/html/curvature.js
 	&& npx babel ./*.js --out-dir build \
 	&& cd build/ \
 	&& cvtest ${TESTLIST} \
-	&& cd ../../ \
-	&& node test/map-coverage.js \
-	&& node test/generate-xml.js > test/coverage/data/coverage.xml
+
+test/coverage/data/cv-coverage.json:
+	node test/map-coverage.js
+
+test/coverage/data/coverage.xml: test/coverage/data/cv-coverage.json
+	node test/generate-xml.js > test/coverage/data/coverage.xml
 
 node_modules/.package-lock.json: package.json
 	npm install
 
-post-coverage: codecov
+post-coverage: codecov test test/coverage/data/coverage.xml
 	BRANCH_NAME=`git branch --show-current` \
 	GIT_BRANCH=`git branch --show-current` \
 	GIT_COMMIT=`git rev-parse HEAD` \
 	CI=local \
-	./codecov -v \
+	./codecov ${CODECOV_DRYFLAG} -v \
 	-t ${CODECOV_TOKEN} \
 	-f test/coverage/data/coverage.xml
 
