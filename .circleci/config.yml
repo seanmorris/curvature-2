@@ -31,7 +31,7 @@ workflows:
 
   test:
     jobs:
-      - test-chrome-80
+      - test-chrome-90
       - test-chrome-100
       - test-chrome-110
       - test-latest
@@ -48,14 +48,14 @@ jobs:
       - install-chrome-latest
       - run-tests
 
-  test-chrome-80:
+  test-chrome-90:
     parallelism: 1
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
     resource_class: medium
     environment:
-      CHROME_VERSION: 80.0.3987.163-1
+      CHROME_VERSION: 90.0.4430.212-1
     steps:
       - checkout
       - install-chrome-version
