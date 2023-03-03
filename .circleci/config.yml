@@ -1,21 +1,30 @@
 version: 2.1
 
 commands:
+
   install-deps:
     steps:
       - run: sudo apt-get update
       - run: sudo apt install -y npm
+
   install-chrome-latest:
     steps:
       - run: wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
       - run: sudo apt-get update
       - run: sudo apt install -y software-properties-common google-chrome-stable
+
   install-chrome-version:
     steps:
       - run: wget http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb
-      - run: dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
       - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
+
+  run-tests:
+    steps:
+      - run: sudo npm install -g cv3-test pobot
+      - run: npm install
+      - run: make -j `nproc` test post-coverage
 
 workflows:
   version: 2
@@ -37,9 +46,7 @@ jobs:
     steps:
       - checkout
       - install-chrome-latest
-      - run: sudo npm install -g cv3-test pobot
-      - run: npm install
-      - run: make -j `nproc` test post-coverage
+      - run-tests
 
   test-chrome-80:
     parallelism: 1
@@ -52,9 +59,7 @@ jobs:
     steps:
       - checkout
       - install-chrome-version
-      - run: sudo npm install -g cv3-test pobot
-      - run: npm install
-      - run: make -j `nproc` test post-coverage
+      - run-tests
 
   test-chrome-100:
     parallelism: 1
@@ -67,9 +72,7 @@ jobs:
     steps:
       - checkout
       - install-chrome-version
-      - run: sudo npm install -g cv3-test pobot
-      - run: npm install
-      - run: make -j `nproc` test post-coverage
+      - run-tests
 
   test-chrome-110:
     parallelism: 1
@@ -82,6 +85,4 @@ jobs:
     steps:
       - checkout
       - install-chrome-version
-      - run: sudo npm install -g cv3-test pobot
-      - run: npm install
-      - run: make -j `nproc` test post-coverage
+      - run-tests
