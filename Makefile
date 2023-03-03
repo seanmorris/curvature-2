@@ -40,7 +40,7 @@ test/coverage/data/coverage.xml: test/coverage/data/cv-coverage.json
 node_modules/.package-lock.json: package.json
 	npm install
 
-post-coverage: codecov test test/coverage/data/coverage.xml
+post-coverage: codecov test/coverage/data/coverage.xml
 	BRANCH_NAME=`git branch --show-current` \
 	GIT_BRANCH=`git branch --show-current` \
 	GIT_COMMIT=`git rev-parse HEAD` \

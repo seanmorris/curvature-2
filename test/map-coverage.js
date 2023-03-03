@@ -471,11 +471,7 @@ Promise.all(aggregateCoverage).then(() => {
 			const byte = docMask.content[index];
 			const nonStarters =  ['\n', '\t', ' ', '[', ']', '{', '}', '(', ')', ';'];
 
-			if(!lineStarted && nonStarters.includes(byte))
-			{
-				blanks[originName].push(lineNumber);
-			}
-			else
+			if(!nonStarters.includes(byte))
 			{
 				lineStarted = true;
 			}
@@ -558,6 +554,11 @@ Promise.all(aggregateCoverage).then(() => {
 
 			if(byte === '\n')
 			{
+				if(!lineStarted)
+				{
+					blanks[originName].push(lineNumber);
+				}
+
 				column = 0;
 				lineNumber++;
 				segmentBuffer += `\n`;
