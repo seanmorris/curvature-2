@@ -1,9 +1,6 @@
 version: 2.1
 
 commands:
-  install-deps:
-    steps:
-      - run: mkdir -p /tmp/.chrome-user
   install-chrome-latest:
     steps:
       - run: wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
@@ -34,7 +31,6 @@ jobs:
     resource_class: medium
     steps:
       - checkout
-      - install-deps
       - install-chrome-latest
       - run: sudo npm install -g cv3-test pobot
       - run: npm install
@@ -50,7 +46,6 @@ jobs:
       CHROME_VERSION: 80.0.3987.163-1
     steps:
       - checkout
-      - install-deps
       - install-chrome-version
       - run: sudo npm install -g cv3-test pobot
       - run: npm install
@@ -66,7 +61,6 @@ jobs:
       CHROME_VERSION: 100.0.4896.127-1
     steps:
       - checkout
-      - install-deps
       - install-chrome-version
       - run: sudo npm install -g cv3-test pobot
       - run: npm install
@@ -82,7 +76,6 @@ jobs:
       CHROME_VERSION: 110.0.5481.177-1
     steps:
       - checkout
-      - install-deps
       - install-chrome-version
       - run: sudo npm install -g cv3-test pobot
       - run: npm install
