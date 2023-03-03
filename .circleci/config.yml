@@ -114,3 +114,17 @@ jobs:
       - install-deps
       - install-chrome-old-version
       - run-tests
+
+  test-chrome-48:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 48.0.2564.109
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
+      - run-tests
