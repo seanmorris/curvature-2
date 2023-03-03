@@ -305,7 +305,7 @@ sources: for(const s in sourcemap.sources)
 	bDocs.set(sourceFilename, new BinDoc(sourcemap.sourcesContent[s]));
 }
 
-const scriptName = `${process.cwd()}/-2/test/html/curvature.js`;
+const scriptName = `${process.cwd()}/test/html/curvature.js`;
 
 const aggregateCoverage = [];
 
