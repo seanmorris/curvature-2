@@ -170,7 +170,7 @@ jobs:
     steps:
       - checkout
       - install-deps
-      - install-chrome-old-version
+      - install-chrome-older-version
       - run-tests
 
   # test-chrome-50:
