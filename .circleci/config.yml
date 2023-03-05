@@ -35,8 +35,8 @@ commands:
   install-chrome-older-version:
     steps:
       - run: wget https://www.slimjet.com/chrome/download-chrome.php?file=lnx%2Fchrome64_${CHROME_VERSION}.deb -O google-chrome-stable_${CHROME_VERSION}_amd64.deb
-      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
-      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb || apt install -f
+      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb || apt install -f
+      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
 
   run-tests:
     steps:
