@@ -5,7 +5,7 @@ commands:
   install-deps:
     steps:
       - run: sudo apt-get update
-      - run: sudo apt install -y npm
+      - run: sudo apt install -y npm jq
 
   install-chrome-latest:
     steps:

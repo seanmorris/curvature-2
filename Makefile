@@ -7,12 +7,14 @@ ifeq (${CODECOV_TOKEN},)
  CODECOV_DRYFLAG=-d
 endif
 
-all: dist/curvature.js test/html/curvature.js curvature-0.0.68-h.tgz
+VERSION=$(shell jq -r .version < package.json)
 
-publish: test curvature-0.0.68-h.tgz
+all: dist/curvature.js test/html/curvature.js curvature-${VERSION}.tgz
+
+publish: test curvature-${VERSION}.tgz
 	npm publish
 
-curvature-0.0.68-h.tgz: ${CV_SOURCES}
+curvature-${VERSION}.tgz: ${CV_SOURCES}
 	npx babel source/ --out-dir .
 	npm pack
 
@@ -57,4 +59,4 @@ clean:
 	rm -rf access animate base form input mixin model net tag \
 	service strings toast dist/* test/html/curvature.js test/build/* \
 	test/html/curvature.js.map test/coverage/v8/* test/coverage/html/*.html \
-	codecov
+	codecov curvature-${VERSION}.tgz
