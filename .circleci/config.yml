@@ -64,7 +64,7 @@ workflows:
       # - test-chrome-50
 
 jobs:
-  test-latest:
+  test-chrome-latest:
     parallelism: 1
     machine:
       image: ubuntu-2004:202010-01
