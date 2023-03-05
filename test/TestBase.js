@@ -20,7 +20,7 @@ export class TestBase extends Test
 		{ modules: [['Delay', Delay]] }
 		, {
 			inits: [() => window.console.assert = (...a) => window.externalAssert(JSON.stringify(a))]
-			, bindings: [[ 'externalAssert', (condition,message) => this.assert(condition,message) ]]
+			, bindings: [[ 'externalAssert', (...a) => this.assert(...a) ]]
 		}
 	];
 

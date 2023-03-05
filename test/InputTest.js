@@ -4,8 +4,6 @@ const fsp = require('fs').promises;
 
 const hostname = `file://${process.cwd()}/../html/index.html`;
 
-console.log(process.cwd());
-
 export class InputTest extends TestBase
 {
 	testFocusOrder()
@@ -45,15 +43,16 @@ export class InputTest extends TestBase
 		const checkResult = (result, expected) => {
 			this.assert(
 				result === expected
-				, '  Document body incorrect or corrupted.\n'
-					+ `  \x1b[32m[--] Expected:\x1b[0m\n`
-					+ `  \x1b[32m[--] ${JSON.stringify(result)}\x1b[0m\n`
-					+ `  \x1b[31m[++] Got:\x1b[0m\n`
-					+ `  \x1b[31m[++] ${JSON.stringify(expected)}\x1b[0m\n`
+				, 'Document body incorrect or corrupted.\n'
+					+ `\x1b[32m[--] Expected:\x1b[0m\n`
+					+ `\x1b[32m[--] ${JSON.stringify(result)}\x1b[0m\n`
+					+ `\x1b[31m[++] Got:\x1b[0m\n`
+					+ `\x1b[31m[++] ${JSON.stringify(expected)}\x1b[0m\n`
 			);
 		};
 
-		const iterate = (steps, prevResult) => steps.shift()(prevResult).then(result => steps.length ? iterate(steps, result) : result);
+		const iterate = (steps, prevResult) => steps.shift()(prevResult)
+		.then(result => steps.length ? iterate(steps, result) : result);
 
 		const init = withCoverage ? this.pobot.startCoverage() : Promise.resolve();
 

@@ -1,8 +1,6 @@
 export const testTemplate = () => {
 	console.log('Clearing document...');
 
-	console.assert(true, 'testing...');
-
 	while(document.body.firstChild)
 	{
 		document.body.firstChild.remove();

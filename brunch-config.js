@@ -17,5 +17,4 @@ exports.modules = {
 
 exports.overrides = {
 	development: { paths: { public: 'test/html' } },
-	production: {sourceMaps: true},
 }
