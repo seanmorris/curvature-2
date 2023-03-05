@@ -7,8 +7,11 @@ public/
 /input
 /mixin
 /model
+/net
+/service
 /strings
 /tag
 /toast
 /test/codecov
 codecov
+curvature-*.tgz
