@@ -77,7 +77,7 @@ jobs:
       - run-tests
       - post-coverage
 
-  test-latest:
+  test-chrome-dev:
     parallelism: 1
     machine:
       image: ubuntu-2004:202010-01
