@@ -3,12 +3,11 @@
 SHELL=bash -euxo pipefail
 
 CV_SOURCES:=$(shell find source/)
+VERSION:=$(shell jq -r .version < package.json)
 
 ifeq (${CODECOV_TOKEN},)
 	CODECOV_DRYFLAG=-d
 endif
-
-VERSION=$(shell jq -r .version < package.json)
 
 all: dist/curvature.js test/html/curvature.js curvature-${VERSION}.tgz
 
@@ -55,6 +54,16 @@ post-coverage: codecov test/coverage/data/coverage.xml
 	./codecov ${CODECOV_DRYFLAG} -v \
 	-t ${CODECOV_TOKEN} \
 	-f test/coverage/data/coverage.xml
+
+post-images: test/results.json
+	ls test/screenshots | while read SCREENSHOT; do { \
+		echo $$SCREENSHOT; \
+		SS_PATH="$$(basename $$SCREENSHOT)"; \
+		curl -sX POST "https://imgur.com/upload" \
+			-H "Referer: http://imgur.com/upload" \
+			-F "Filedata=@\"test/screenshots/$$SS_PATH\";filename=$$SCREENSHOT;type=image/png" \
+		| jq '"https://imgur.com/\(.data.hash)"'
+	} done;
 
 codecov:
 	curl -O https://uploader.codecov.io/latest/linux/codecov

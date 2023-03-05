@@ -66,7 +66,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-latest
-      - run: make -j `nproc` test post-coverage
+      - run: make -j `nproc` test post-coverage post-images
 
   test-chrome-dev:
     parallelism: 1
