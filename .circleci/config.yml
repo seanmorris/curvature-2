@@ -88,7 +88,6 @@ jobs:
       - install-deps
       - install-chrome-dev
       - run-tests
-      - post-coverage
 
   test-chrome-110:
     parallelism: 1
