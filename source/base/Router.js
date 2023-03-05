@@ -6,7 +6,9 @@ import { Routes } from './Routes';
 const NotFoundError = Symbol('NotFound');
 const InternalError = Symbol('Internal');
 
-globalThis.CustomEvent = globalThis.CustomEvent ?? globalThis.Event;
+const win = typeof globalThis === 'object' ? globalThis : (typeof window === 'object' ? window : (typeof self === 'object' ? self : this));
+
+win.CustomEvent = win.CustomEvent ?? win.Event;
 
 export class Router {
 
@@ -183,7 +185,7 @@ export class Router {
 			}));
 		}
 
-		let result = globalThis['devMode']
+		let result = win['devMode']
 			? 'Unexpected error: ' + String(error)
 			: 'Unexpected error.';
 

@@ -30,5 +30,5 @@ export const testEventCaptureCancel = () => {
 	target.dispatchEvent(new CustomEvent('two',   {cancelable: true}));
 	target.dispatchEvent(new CustomEvent('three', {cancelable: true}));
 
-	return new Promise(accept => setTimeout(() => accept(document.body.innerHTML), 2000));
+	return document.body.innerHTML;
 };

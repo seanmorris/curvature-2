@@ -9,6 +9,8 @@ export const testFlicker = () => {
 
 	view.render(document.body);
 
+	const h1 = document.querySelector('h1');
+
 	view.args.numbers = [];
 
 	let x = 0;
@@ -20,12 +22,14 @@ export const testFlicker = () => {
 			return;
 		}
 
-		view.args.number = x++;
+		view.args.number = x;
+
+		console.assert(String(x) === h1.innerText, `x [${x}] and H1 [${h1.innerText}] should match.`);
+
+		x++;
 	};
 
 	setInterval(cascade, 10);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 2000);
-	});
+	return require('Delay')(2000).then(() => document.body.innerHTML);
 };

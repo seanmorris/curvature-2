@@ -1,4 +1,3 @@
-
 export const testFormGroupInput = () => {
 	while(document.body.firstChild)
 	{

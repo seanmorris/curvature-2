@@ -1,8 +1,7 @@
 export const testTemplate = () => {
-
 	console.log('Clearing document...');
 
-	document.addEventListener('mousemove', ({x,y}) => console.log({x,y}));
+	console.assert(true, 'testing...');
 
 	while(document.body.firstChild)
 	{

@@ -14,6 +14,12 @@ commands:
       - run: sudo apt-get update
       - run: sudo apt install -y software-properties-common google-chrome-stable
 
+  install-chrome-dev:
+    steps:
+      - run: wget https://dl.google.com/linux/direct/google-chrome-unstable_current_amd64.deb
+      - run: sudo dpkg -i google-chrome-unstable_current_amd64.deb
+      - run: rm google-chrome-unstable_current_amd64.deb
+
   install-chrome-version:
     steps:
       - run: wget http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb
@@ -26,6 +32,12 @@ commands:
       - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
       - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
 
+  install-chrome-older-version:
+    steps:
+      - run: wget https://www.slimjet.com/chrome/download-chrome.php?file=lnx%2Fchrome${CHROME_VERSION}.deb -O google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
+
   run-tests:
     steps:
       - run: sudo npm install -g cv3-test pobot
@@ -34,19 +46,22 @@ commands:
 
   post-coverage:
     steps:
-      - run: make -j `nproc` post-coverage
+      - run: make post-coverage
 
 workflows:
   version: 2
 
   test:
     jobs:
-      - test-latest
-      # - test-chrome-70
-      - test-chrome-80
-      - test-chrome-90
-      - test-chrome-100
+      - test-chrome-latest
+      - test-chrome-dev
       - test-chrome-110
+      - test-chrome-100
+      - test-chrome-90
+      - test-chrome-80
+      - test-chrome-70
+      # - test-chrome-60
+      # - test-chrome-50
 
 jobs:
   test-latest:
@@ -59,6 +74,19 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-latest
+      - run-tests
+      - post-coverage
+
+  test-latest:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-dev
       - run-tests
       - post-coverage
 
@@ -131,3 +159,31 @@ jobs:
       - install-deps
       - install-chrome-old-version
       - run-tests
+
+  # test-chrome-60:
+  #   parallelism: 1
+  #   machine:
+  #     image: ubuntu-2004:202010-01
+  #     docker_layer_caching: false
+  #   resource_class: medium
+  #   environment:
+  #     CHROME_VERSION: 60.0.3112.90
+  #   steps:
+  #     - checkout
+  #     - install-deps
+  #     - install-chrome-old-version
+  #     - run-tests
+
+  # test-chrome-50:
+  #   parallelism: 1
+  #   machine:
+  #     image: ubuntu-2004:202010-01
+  #     docker_layer_caching: false
+  #   resource_class: medium
+  #   environment:
+  #     CHROME_VERSION: 50.0.2661.75
+  #   steps:
+  #     - checkout
+  #     - install-deps
+  #     - install-chrome-old-version
+  #     - run-tests

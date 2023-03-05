@@ -26,7 +26,7 @@ const TypedArray  = Object.getPrototypeOf(Int8Array);
 const SetIterator = Set.prototype[Symbol.iterator];
 const MapIterator = Map.prototype[Symbol.iterator];
 
-const win = globalThis;
+const win = typeof globalThis === 'object' ? globalThis : (typeof window === 'object' ? window : (typeof self === 'object' ? self : this));
 
 const excludedClasses = [
 	win.Node

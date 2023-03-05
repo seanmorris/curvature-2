@@ -12,14 +12,14 @@ all: dist/curvature.js test/html/curvature.js curvature-0.0.68-h.tgz
 publish: test curvature-0.0.68-h.tgz
 	npm publish
 
-curvature-0.0.68-h.tgz: node_modules/.package-lock.json ${CV_SOURCES}
+curvature-0.0.68-h.tgz: ${CV_SOURCES}
 	npx babel source/ --out-dir .
 	npm pack
 
-dist/curvature.js: node_modules/.package-lock.json ${CV_SOURCES}
+dist/curvature.js: ${CV_SOURCES}
 	npx brunch b -p
 
-test/html/curvature.js: node_modules/.package-lock.json ${CV_SOURCES}
+test/html/curvature.js: ${CV_SOURCES}
 	npx brunch b
 
 test: node_modules/.package-lock.json ${CV_SOURCES} test/html/curvature.js
@@ -29,7 +29,7 @@ test: node_modules/.package-lock.json ${CV_SOURCES} test/html/curvature.js
 	&& npx babel ./tests/ --out-dir build/tests/ \
 	&& npx babel ./*.js --out-dir build \
 	&& cd build/ \
-	&& cvtest ${TESTLIST} \
+	&& cvtest ${TESTLIST}
 
 test/coverage/data/cv-coverage.json: test test/html/curvature.js
 	node test/map-coverage.js

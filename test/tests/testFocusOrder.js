@@ -9,6 +9,8 @@ export const testFocusOrder = () => {
 
 	view.render(document.body);
 
+	return document.body.innerHTML;
+
 	// const Mixin = require('curvature/base/Mixin').Mixin;
 	// const EventTargetMixin = require('curvature/mixin/EventTargetMixin').EventTargetMixin;
 

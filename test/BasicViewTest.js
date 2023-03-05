@@ -7,9 +7,11 @@ export class BasicViewTest extends TestBase
 	{
 		const name = 'testTemplate';
 
+		const testScript = require(`./tests/${name}`);
+
 		return this.wrapTest(
 			name,
-			require(`./tests/${name}`)[name],
+			testScript[name],
 			rawquire(`./tests/${name}.txt`),
 			true
 		);

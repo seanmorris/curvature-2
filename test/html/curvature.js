@@ -1861,10 +1861,10 @@ Object.defineProperty(exports, "__esModule", {
 exports.Bindable = void 0;
 var _construct2 = _interopRequireDefault(require("@babel/runtime/helpers/construct"));
 var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
-var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
@@ -1893,7 +1893,7 @@ var NoGetters = Symbol('NoGetters');
 var TypedArray = Object.getPrototypeOf(Int8Array);
 var SetIterator = Set.prototype[Symbol.iterator];
 var MapIterator = Map.prototype[Symbol.iterator];
-var win = globalThis;
+var win = (typeof globalThis === "undefined" ? "undefined" : (0, _typeof2.default)(globalThis)) === 'object' ? globalThis : (typeof window === "undefined" ? "undefined" : (0, _typeof2.default)(window)) === 'object' ? window : (typeof self === "undefined" ? "undefined" : (0, _typeof2.default)(self)) === 'object' ? self : void 0;
 var excludedClasses = [win.Node, win.File, win.Map, win.Set, win.WeakMap, win.WeakSet, win.ArrayBuffer, win.ResizeObserver, win.MutationObserver, win.PerformanceObserver, win.IntersectionObserver, win.IDBCursor, win.IDBCursorWithValue, win.IDBDatabase, win.IDBFactory, win.IDBIndex, win.IDBKeyRange, win.IDBObjectStore, win.IDBOpenDBRequest, win.IDBRequest, win.IDBTransaction, win.IDBVersionChangeEvent, win.Event, win.CustomEvent, win.FileSystemFileHandle].filter(function (x) {
   return typeof x === 'function';
 });
@@ -2758,12 +2758,15 @@ Object.defineProperty(exports, "__esModule", {
 exports.Config = void 0;
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 var AppConfig = {};
 var _require = require;
+var win = (typeof globalThis === "undefined" ? "undefined" : (0, _typeof2.default)(globalThis)) === 'object' ? globalThis : (typeof window === "undefined" ? "undefined" : (0, _typeof2.default)(window)) === 'object' ? window : (typeof self === "undefined" ? "undefined" : (0, _typeof2.default)(self)) === 'object' ? self : void 0;
 try {
-  AppConfig = _require('/Config').Config || {};
+  AppConfig = _require('/Config').Config;
 } catch (error) {
-  globalThis.devMode === true && console.error(error);
+  win.devMode === true && console.error(error);
+  AppConfig = {};
 }
 var Config = /*#__PURE__*/function () {
   function Config() {
@@ -3810,20 +3813,21 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Router = void 0;
 var _slicedToArray2 = _interopRequireDefault(require("@babel/runtime/helpers/slicedToArray"));
-var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 var _View = require("./View");
 var _Cache = require("./Cache");
 var _Config = require("./Config");
 var _Routes = require("./Routes");
-var _globalThis$CustomEve;
+var _win$CustomEvent;
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 var NotFoundError = Symbol('NotFound');
 var InternalError = Symbol('Internal');
-globalThis.CustomEvent = (_globalThis$CustomEve = globalThis.CustomEvent) !== null && _globalThis$CustomEve !== void 0 ? _globalThis$CustomEve : globalThis.Event;
+var win = (typeof globalThis === "undefined" ? "undefined" : (0, _typeof2.default)(globalThis)) === 'object' ? globalThis : (typeof window === "undefined" ? "undefined" : (0, _typeof2.default)(window)) === 'object' ? window : (typeof self === "undefined" ? "undefined" : (0, _typeof2.default)(self)) === 'object' ? self : void 0;
+win.CustomEvent = (_win$CustomEvent = win.CustomEvent) !== null && _win$CustomEvent !== void 0 ? _win$CustomEvent : win.Event;
 var Router = /*#__PURE__*/function () {
   function Router() {
     (0, _classCallCheck2.default)(this, Router);
@@ -3950,7 +3954,7 @@ var Router = /*#__PURE__*/function () {
           }
         }));
       }
-      var result = globalThis['devMode'] ? 'Unexpected error: ' + String(error) : 'Unexpected error.';
+      var result = win['devMode'] ? 'Unexpected error: ' + String(error) : 'Unexpected error.';
       if (routes[InternalError]) {
         args[InternalError] = error;
         result = this.processRoute(routes, InternalError, args);

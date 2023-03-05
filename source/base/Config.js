@@ -2,13 +2,16 @@ let AppConfig = {};
 
 const _require = require;
 
+const win = typeof globalThis === 'object' ? globalThis : (typeof window === 'object' ? window : (typeof self === 'object' ? self : this));
+
 try
 {
-	AppConfig = _require('/Config').Config || {};
+	AppConfig = _require('/Config').Config;
 }
 catch (error)
 {
-	globalThis.devMode === true && console.error(error);
+	win.devMode === true && console.error(error);
+	AppConfig = {};
 }
 
 export class Config

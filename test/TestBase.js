@@ -1,113 +1,63 @@
 import { Test } from 'cv3-test/Test';
-import { rawquire } from 'rawquire/rawquire.macro';
+
 const fsp = require('fs').promises;
-
 const Pobot = require('pobot/Pobot');
-
 const pending = new Set;
 
-const objectMapper = (pobot,object) => {
-	switch(object.type)
-	{
-		case 'object':
-			return !object.objectId ? Promise.resolve(object) : pobot.client.Runtime
-			.getProperties({objectId: object.objectId})
-			.then(({result}) => {
-
-				const mapped = result
-				.filter(p => p.enumerable)
-				.map( p => objectMapper(pobot,p.value).then( value => ({[p.name]: value}) ) );
-
-				const getObject = Promise.all(mapped).then(p => p.reduce((a,b) => ({...a, ...b}), {}));
-
-				getObject.then(() => pending.delete(pending));
-
-				pending.add(pending);
-
-				if(object.subtype === 'array')
-				{
-					return getObject.then(object => Object.assign([], object));
-				}
-
-				return getObject;
-			});
-
-		case 'number':
-		case 'string':
-		case 'boolean':
-		case 'function':
-			return Promise.resolve(object.value);
-			break;
-	}
-
-	return Promise.reject(`Unknown type: "${object.type}"`);
-};
-
-const formatStackTrace = (pobot,error) => {
-	if(error.result.type === 'object' && error.result.subtype === 'error')
-	{
-		return Promise.resolve('        [EXCEPTION] ' + error.result.description.replace(/\n/g, '\n     '));
-	}
-
-	return objectMapper(pobot, error.result).then(message => {
-		const lines = error.exceptionDetails.stackTrace.callFrames.map(frame => frame.functionName
-			? `${frame.functionName} (${frame.url||'<anonymous>'}:${frame.lineNumber}:${frame.columnNumber})`
-			: `${frame.url||'<anonymous>'}:${frame.lineNumber}:${frame.columnNumber}`
-		);
-		return `        ${error.exceptionDetails.text} "${message}"\n          at ${lines.join('\n          at ')}`;
-	});
-};
+import { Delay } from './helpers/Delay';
 
 export class TestBase extends Test
 {
 	testEnvironment = `file://${process.cwd()}/../html/index.html`;
 
-	options = [].concat(
+	options = ['--window-size=640,480'].concat(
 		!process.env.VISIBLE
 		? ['--headless', '--disable-gpu']
 		: []
 	);
 
-	bindings = new Map
+	helpers = [
+		{ modules: [['Delay', Delay]] }
+		, {
+			inits: [() => window.console.assert = (...a) => window.externalAssert(JSON.stringify(a))]
+			, bindings: [[ 'externalAssert', (condition,message) => this.assert(condition,message) ]]
+		}
+	];
 
 	setUp()
 	{
-		const consoleHandler = {
-			'*': event => {
-				console.dir(event, {colors:true, depth:null})
-			}
-			, log: event => {
-				const all = Promise.all(event.args.map(a => objectMapper(this.pobot, a))).then(mapped => {
-					this.reporter.Print(`        [${event.type}] ` + this.reporter.Format(
+		return Pobot.get(this.options).then(pobot=> {
+
+			const addBindings = this.helpers.filter(h => h.bindings).map(h => pobot.addBindings(h.bindings));
+			const addInits    = this.helpers.filter(h => h.inits).map(h => pobot.addInits(h.inits));
+
+			const printConsole = event => {
+				const all = Promise.all(event.args.map(a => pobot.getObject(a))).then(mapped => {
+					this.reporter.Print(`     [${event.type}] ` + this.reporter.Format(
 						mapped.map(JSON.stringify).join(', '), this.reporter.METHOD_WARN
 					));
 				});
 
 				pending.add(all);
 
-				all.then(() => pending.delete(all));
+				all.finally(() => pending.delete(all));
 
 				return all;
-			}
-			, warning: (...a) => consoleHandler.log(...a)
-			, error: (...a) => consoleHandler.log(...a)
-			, dir: (...a) => consoleHandler.log(...a)
-		};
+			};
 
-		const handleConsole = event => {
-			if(event.type in consoleHandler) consoleHandler[ event.type ](event);
-			else if(consoleHandler['*']) consoleHandler['*'](event);
-		};
+			const addHandlers = pobot.addConsoleHandler({
+				warning: printConsole
+				, error: printConsole
+				, dir:   printConsole
+				, log:   printConsole
+				, '!':   event => console.dir(event, {depth:null})
+			});
 
-		const handleException = event => {
-			// console.dir(event, {depth:null});
-		}
+			const addExceptionHandler = pobot.client.Runtime.exceptionThrown(exception => console.dir(exception, {depth:null}));
 
-		return Pobot.get(this.options).then(pobot=> {
-			pobot.client.Runtime.consoleAPICalled(handleConsole);
-			pobot.client.Runtime.exceptionThrown(handleException);
-			pobot.client.Runtime.bindingCalled(event => this.callBinding(event));
-			this.pobot = pobot
+			this.pobot = pobot;
+
+			return Promise.all([addBindings, addInits, addHandlers, addExceptionHandler]);
 		});
 	}
 
@@ -118,66 +68,80 @@ export class TestBase extends Test
 
 	wrapTest(name, script, expected, withCoverage = false)
 	{
-		const checkResult = (result, expected) => {
-			this.assert(result === expected, 'Document body incorrect or corrupted.');
-			if(result !== expected)
-			{
-				console.log(`        \x1b[32m[+] Expected:\x1b[0m`);
-				console.log(`        \x1b[31m[-] ${JSON.stringify(expected)}\x1b[0m`);
-				console.log(`        \x1b[31m[-] Got:\x1b[0m`);
-				console.log(`        \x1b[32m[+] ${JSON.stringify(result)}\x1b[0m`);
-			}
-		};
+		const {pobot, reporter} = this;
 
-		const init = withCoverage
-		? this.pobot.startCoverage()
-		: Promise.resolve;
+		const init = (withCoverage ? pobot.startCoverage() : Promise.resolve())
+		.then(() => pobot.goto(this.testEnvironment))
+		.then(() => Promise.all(this.helpers.filter(h => h.modules).map(h => pobot.addModules(h.modules))))
 
-		const test = init
-		.then(() => this.addBinding('externalAssert', (condition,message) => this.assert(condition,message)) )
-		.then(() => this.pobot.goto(this.testEnvironment))
-		.then(() => this.pobot.inject( require('./helpers/ExternalAssert.js').ExternalAssert ))
-		.then(() => this.pobot.inject(script))
-		.then(result => checkResult(result, expected))
+		const runTest = init.then(() => pobot.inject(script));
+
+		// const getHtml = runTest.then(() => pobot.getHtml('body'));
+		// const snapshotFile  = `${process.cwd()}/../snapshots/${name}.txt`;
+		// const checkSnapshot = fsp.access(snapshotFile);
+		// const getSnapshot = checkSnapshot
+		// .catch(() => getHtml.then(result => fsp.writeFile(snapshotFile, result)))
+		// .then(()  => fsp.readFile(snapshotFile, 'utf-8'));
+
+		const check = runTest
+		.then(result => this.assert(result === expected, 'Document body incorrect or corrupted.\n'
+			+ `\x1b[32m[+] Expected:\x1b[0m\n`
+			+ `\x1b[32m[-] ${JSON.stringify(expected)}\x1b[0m\n`
+			+ `\x1b[31m[-] Got:\x1b[0m\n`
+			+ `\x1b[31m[+] ${JSON.stringify(result)}\x1b[0m`
+		))
 		.catch(error => {
 			this.fail[this.EXCEPTION]++;
-			// this.assert(false, 'Exception thrown!');
+
 			if(error.result)
 			{
-				return formatStackTrace(this.pobot, error)
-				.then(trace => this.reporter.Print(this.reporter.Format(trace, this.reporter.EXCEPTION)))
+				let formatStackTrace;
+
+				if(error.result.type === 'object' && error.result.subtype === 'error')
+				{
+					formatStackTrace = Promise.resolve('     [EXCEPTION] ' + error.result.description.replace(/\n/g, '\n     '));
+				}
+				else
+				{
+					formatStackTrace = pobot.getObject(error.result).then(message => {
+						const lines = error.exceptionDetails.stackTrace.callFrames.map(frame => frame.functionName
+							? `${frame.functionName} (${frame.url||'<anonymous>'}:${frame.lineNumber}:${frame.columnNumber})`
+							: `${frame.url||'<anonymous>'}:${frame.lineNumber}:${frame.columnNumber}`
+						);
+						return `     ${error.exceptionDetails.text} "${message}"\n       at ${lines.join('\n       at ')}`;
+					});
+				}
+
+				return formatStackTrace.then(trace => reporter.Print(reporter.Format(trace, reporter.EXCEPTION)));
 			}
 			else if(error.response)
 			{
-				this.reporter.Print(
-					this.reporter.Format('        [EXCEPTION] ' + error.response.data.replace(/\n/g, '\n     '), this.reporter.EXCEPTION)
+				error.response.data && reporter.Print(
+					reporter.Format('        [EXCEPTION] ' + error.response.data.replace(/\n/g, '\n     '), reporter.EXCEPTION)
 				);
+				console.error(error);
+			}
+			else
+			{
 				console.error(error);
 			}
 		});
 
+		const filename = `${process.cwd()}/../screenshots/${name}.png`;
+
+		const takeScreenshot = check.then(() => pobot.getScreenshot({filename, captureBeyondViewport:true}));
+
 		if(!withCoverage)
 		{
-			return test;
+			return check;
 		}
 
-		return test
-		.then(() => Promise.all([...pending]))
-		.then(() => this.pobot.takeCoverage())
-		.then(coverage => fsp.writeFile(`${process.cwd()}/../coverage/v8/${name}-coverage.json`, JSON.stringify(coverage, null, 4)))
-		.then(() => this.pobot.stopCoverage())
-	}
+		const coverageFile = `${process.cwd()}/../coverage/v8/${name}-coverage.json`;
 
-	addBinding(name, callback)
-	{
-		this.bindings.set(name, callback);
-		return this.pobot.client.Runtime.addBinding({name});
-	}
-
-	callBinding({name, payload})
-	{
-		const args = JSON.parse(payload);
-		const callback = this.bindings.get(name);
-		callback(...args);
+		return check
+		.then(() => pobot.takeCoverage())
+		.then(coverage => fsp.writeFile(coverageFile, JSON.stringify(coverage, null, 4)))
+		.then(() => pobot.stopCoverage())
+		.then(() => Promise.all([takeScreenshot, ...pending]));
 	}
 }

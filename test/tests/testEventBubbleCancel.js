@@ -30,5 +30,5 @@ export const testEventBubbleCancel = () => {
 	target.dispatchEvent(new CustomEvent('two', {bubbles: true, cancelable: true}));
 	target.dispatchEvent(new CustomEvent('three', {bubbles: true, cancelable: true}));
 
-	return new Promise(accept => setTimeout(() => accept(document.body.innerHTML), 2000));
+	return document.body.innerHTML;
 };
