@@ -166,23 +166,23 @@ jobs:
       docker_layer_caching: false
     resource_class: medium
     environment:
-      CHROME_VERSION: 65.0.3325.181
+      CHROME_VERSION: 60.0.3112.90
     steps:
       - checkout
       - install-deps
       - install-chrome-older-version
       - run-tests
 
-  # test-chrome-50:
-  #   parallelism: 1
-  #   machine:
-  #     image: ubuntu-2004:202010-01
-  #     docker_layer_caching: false
-  #   resource_class: medium
-  #   environment:
-  #     CHROME_VERSION: 50.0.2661.75
-  #   steps:
-  #     - checkout
-  #     - install-deps
-  #     - install-chrome-old-version
-  #     - run-tests
+  test-chrome-50:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 50.0.2661.75
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-older-version
+      - run-tests
