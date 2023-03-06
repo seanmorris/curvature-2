@@ -1,6 +1,6 @@
 .PHONY: all publish test clean post-coverage
 
-SHELL=bash -euxo pipefail
+SHELL=bash -euo pipefail
 
 CV_SOURCES:=$(shell find source/)
 VERSION:=$(shell jq -r .version < package.json)
@@ -25,7 +25,7 @@ test/html/curvature.js: ${CV_SOURCES} node_modules/.package-lock.json
 	npx brunch b
 
 test:
-	rm -f test/results.json
+	touch test/html/curvature.js
 	make test/results.json
 
 test/results.json: test/html/curvature.js
@@ -63,7 +63,8 @@ post-images: test/results.json
 			-H "Referer: http://imgur.com/upload" \
 			-F "Filedata=@\"test/screenshots/$$SS_PATH\";filename=$$SCREENSHOT;type=image/png" \
 		| jq -r '"https://imgur.com/\(.data.hash)"'; \
-	} done;
+	} done | tee test/screenshots/list;
+	cat list;
 
 codecov:
 	curl -O https://uploader.codecov.io/latest/linux/codecov

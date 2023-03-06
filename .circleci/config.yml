@@ -66,9 +66,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-latest
-      - run: make test
-      - run: make post-coverage
-      - run: make post-images
+      - run: make -j `nproc` test post-coverage post-images
 
   test-chrome-dev:
     parallelism: 1
@@ -80,7 +78,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-dev
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-110:
     parallelism: 1
@@ -94,7 +92,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-version
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-100:
     parallelism: 1
@@ -108,7 +106,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-version
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-90:
     parallelism: 1
@@ -122,7 +120,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-old-version
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-80:
     parallelism: 1
@@ -136,7 +134,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-old-version
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-70:
     parallelism: 1
@@ -150,7 +148,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-old-version
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-60:
     parallelism: 1
@@ -164,7 +162,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-older-version
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-50:
     parallelism: 1
@@ -178,7 +176,7 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-older-version
-      - run: make test
+      - run: make -j `nproc` test
 
   test-chrome-48:
     parallelism: 1
@@ -192,4 +190,4 @@ jobs:
       - checkout
       - install-deps
       - install-chrome-older-version
-      - run: make test
+      - run: make -j `nproc` test
