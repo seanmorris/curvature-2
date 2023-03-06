@@ -25,7 +25,7 @@ test/html/curvature.js: ${CV_SOURCES} node_modules/.package-lock.json
 	npx brunch b
 
 test:
-	touch test/html/curvature.js
+	touch -d 0 test/results.json
 	make test/results.json
 
 test/results.json: test/html/curvature.js
