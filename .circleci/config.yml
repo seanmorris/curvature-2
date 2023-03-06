@@ -7,7 +7,7 @@ commands:
       - run: sudo apt-get update
       - run: sudo apt install -y npm jq
       - run: npm install
-      - run: wget -c http://archive.ubuntu.com/ubuntu/pool/main/m/make-dfsg/make_4.3-4ubuntu1_amd64.deb
+      - run: wget http://launchpadlibrarian.net/487694450/make_4.3-4ubuntu1_amd64.deb
       - run: sudo apt-get install make_4.3-4ubuntu1_amd64.deb
       - run: rm make_4.3-4ubuntu1_amd64.deb
 
