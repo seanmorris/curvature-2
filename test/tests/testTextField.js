@@ -18,7 +18,5 @@ export const testTextField = () => {
 
 	input.dispatchEvent(new Event('input'));
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return document.body.innerHTML;
 };

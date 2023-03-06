@@ -62,7 +62,7 @@ post-images: test/results.json
 		curl -sX POST "https://imgur.com/upload" \
 			-H "Referer: http://imgur.com/upload" \
 			-F "Filedata=@\"test/screenshots/$$SS_PATH\";filename=$$SCREENSHOT;type=image/png" \
-		| jq '"https://imgur.com/\(.data.hash)"'
+		| jq -r '"https://imgur.com/\(.data.hash)"'; \
 	} done;
 
 codecov:

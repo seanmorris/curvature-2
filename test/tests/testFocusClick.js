@@ -8,4 +8,6 @@ export const testFocusClick = () => {
 	const view = View.from('<style type="text/css">input{width: 100px;} body{margin:0}</style><input><input><input cv-bind = "value"><input>[[value]]');
 
 	view.render(document.body);
+
+	return document.body.innerHTML;
 };

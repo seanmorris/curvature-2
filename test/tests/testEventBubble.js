@@ -24,5 +24,5 @@ export const testEventBubble = () => {
 	target.dispatchEvent(new CustomEvent('two',   {bubbles: true}));
 	target.dispatchEvent(new CustomEvent('three', {bubbles: true}));
 
-	return require('Delay')(2000).then(() => document.body.innerHTML);
+	return document.body.innerHTML;
 };

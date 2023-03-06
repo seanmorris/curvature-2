@@ -22,5 +22,5 @@ export const testUnexpectedErrorRouting = () => {
 
 	Router.go('/page', -1);
 
-	return new Promise(accept => setTimeout(() => accept(document.body.innerHTML), 1000));
+	return require('Delay')(1).then(() => document.body.innerHTML);
 };

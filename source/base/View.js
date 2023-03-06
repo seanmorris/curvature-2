@@ -325,18 +325,29 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		this.dispatchEvent(new CustomEvent('render'));
 
-		const templateParsed = (this.template instanceof DocumentFragment)
-			? this.template.cloneNode(true)
-			: View.templates.has(this.template);
+		const templateIsFragment = (typeof this.template === 'object' && typeof this.template.cloneNode === 'function');
 
-		const subDoc = templateParsed
-			? ((this.template instanceof DocumentFragment)
-				? templateParsed
-				: View.templates.get(this.template).cloneNode(true)
-			)
-			: document.createRange().createContextualFragment(this.template);
+		const templateParsed = templateIsFragment || View.templates.has(this.template);
 
-		if(!templateParsed && !(this.template instanceof DocumentFragment))
+		let subDoc;
+
+		if(templateParsed)
+		{
+			if(templateIsFragment)
+			{
+				subDoc = this.template.cloneNode(true);
+			}
+			else
+			{
+				subDoc = View.templates.get(this.template).cloneNode(true);
+			}
+		}
+		else
+		{
+			subDoc = document.createRange().createContextualFragment(this.template);
+		}
+
+		if(!templateParsed && !templateIsFragment)
 		{
 			View.templates.set(this.template, subDoc.cloneNode(true));
 		}

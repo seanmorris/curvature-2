@@ -62,8 +62,5 @@ export const testObjectRefill = () => {
 
 	}, 1000);
 
-	return new Promise(accept => {
-
-		setTimeout(() => accept(document.body.innerHTML), 4000);
-	});
+	return require('Delay')(4000).then(() => document.body.innerHTML);
 };

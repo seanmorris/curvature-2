@@ -307,9 +307,7 @@ sources: for(const s in sourcemap.sources)
 
 
 const scriptName = `file://${process.cwd()}/test/html/curvature.js`;
-
 const aggregateCoverage = [];
-
 const testMasks = new Map;
 
 for(const testName of testNames)
@@ -353,7 +351,8 @@ for(const testName of testNames)
 
 		const links = [];
 
-		const originMasks = new Set;
+		// const originMasks = new Set;
+		console.error('Aggregating test coverage : ' + ansi.yellow +  testName + ' ' + ansi.end);
 
 		origins: for(const [originName, originContent] of origins)
 		{
@@ -367,15 +366,13 @@ for(const testName of testNames)
 
 			const originMask = docMasks.get(originName);
 
-			originMasks.add(originMask);
+			// originMasks.add(originMask);
 
 			let current = null;
 			let column  = 0;
 			let line    = 1;
 
 			const filename = testName + '_' + originName.replace(/\//g, '_');
-
-			console.error('file: ' + testName + ' ' + ansi.yellow + originName + ansi.end);
 
 			let started = false;
 
@@ -415,7 +412,7 @@ for(const testName of testNames)
 			});
 		}
 
-		testMasks.set(testName, originMasks);
+		// testMasks.set(testName, originMasks);
 	}));
 }
 

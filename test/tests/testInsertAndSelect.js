@@ -33,9 +33,7 @@ export const testInsertAndSelect = () => {
 	}
 	finally
 	{
-		return new Promise(accept => {
-			setTimeout(() => accept(document.body.innerHTML), 1000 * 1000);
-		});
+		return require('Delay')(1000).then(() => JSON.stringify(form.value, null, 4) + "\n");
 	}
 
 };

@@ -37,5 +37,5 @@ export const testFormBasic = () => {
 
 	}, 100);
 
-	return require('Delay')(1000).then(() => JSON.stringify(form.value, null, 4) + "\n");
+	return require('Delay')(101).then(() => JSON.stringify(form.value, null, 4) + "\n");
 };

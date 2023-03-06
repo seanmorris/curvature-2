@@ -21,7 +21,5 @@ export const testVariadicRouting0 = () => {
 
 	Router.go('/var', -1);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return document.body.innerHTML;
 };
