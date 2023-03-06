@@ -64,7 +64,7 @@ post-images: test/results.json
 			-F "Filedata=@\"test/screenshots/$$SS_PATH\";filename=$$SCREENSHOT;type=image/png" \
 		| jq -r '"https://imgur.com/\(.data.hash)"'; \
 	} done | tee test/screenshots/list;
-	cat list;
+	cat test/screenshots/list;
 
 codecov:
 	curl -O https://uploader.codecov.io/latest/linux/codecov
