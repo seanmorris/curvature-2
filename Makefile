@@ -38,7 +38,7 @@ test/results.json: test/html/curvature.js
 	&& cd build/ \
 	&& npx cvtest ${TESTLIST} > ../results.json
 
-test/coverage/data/cv-coverage.json: test/results.json test/html/curvature.js
+test/coverage/data/cv-coverage.json: test/results.json
 	node test/map-coverage.js
 
 test/coverage/data/coverage.xml: test/coverage/data/cv-coverage.json
