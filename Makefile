@@ -25,6 +25,7 @@ test/html/curvature.js: ${CV_SOURCES} node_modules/.package-lock.json
 	npx brunch b
 
 test:
+	echo -e "\e[33m"`google-chrome --version`"\e[0m";
 	touch -d 0 test/results.json
 	make test/results.json
 
