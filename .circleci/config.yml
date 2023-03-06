@@ -8,7 +8,7 @@ commands:
       - run: sudo apt install -y npm jq
       - run: npm install
       - run: wget http://launchpadlibrarian.net/487694450/make_4.3-4ubuntu1_amd64.deb
-      - run: sudo apt-get install make_4.3-4ubuntu1_amd64.deb
+      - run: sudo dpkg -i make_4.3-4ubuntu1_amd64.deb
       - run: rm make_4.3-4ubuntu1_amd64.deb
 
   install-chrome-latest:
