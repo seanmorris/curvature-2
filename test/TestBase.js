@@ -168,7 +168,7 @@ export class TestBase extends Test
 
 		const screenshotFile = `${process.cwd()}/../screenshots/${name}.png`;
 
-		const takeScreenshot = check.then(() => pobot.getScreenshot({screenshotFile, captureBeyondViewport:true}));
+		const takeScreenshot = check.then(() => pobot.getScreenshot({filename: screenshotFile, captureBeyondViewport:true}));
 
 		if(!withCoverage)
 		{
