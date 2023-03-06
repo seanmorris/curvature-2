@@ -67,8 +67,8 @@ jobs:
       - install-deps
       - install-chrome-latest
       - run: make test
-      - run: post-coverage
-      - run: post-images
+      - run: make post-coverage
+      - run: make post-images
 
   test-chrome-dev:
     parallelism: 1
