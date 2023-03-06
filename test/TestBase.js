@@ -109,9 +109,6 @@ export class TestBase extends Test
 
 	wrapTest(name, script, expected, withCoverage = false)
 	{
-		withCoverage = false;
-
-
 		const {pobot, reporter} = this;
 
 		const init = (withCoverage ? pobot.startCoverage() : Promise.resolve())
