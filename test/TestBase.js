@@ -178,7 +178,7 @@ export class TestBase extends Test
 		const coverageFile = `${process.cwd()}/../coverage/v8/${name}-coverage.json`;
 
 		return check
-		.finally(() => pobot.takeCoverage())
+		.then(() => pobot.takeCoverage())
 		.then(coverage => fsp.writeFile(coverageFile, JSON.stringify(coverage, null, 4)))
 		.then(() => pobot.stopCoverage())
 		.then(() => Promise.all([takeScreenshot, ...pending]));
