@@ -72,5 +72,5 @@ export const testFormGroupInput = () => {
 	}, 100);
 
 
-	return require('Delay')(128 * 11).then(() => JSON.stringify(form.value, null, 4) + "\n");
+	return require('Delay')(160 * 10).then(() => JSON.stringify(form.value, null, 4) + "\n");
 };

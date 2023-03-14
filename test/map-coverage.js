@@ -1,64 +1,13 @@
 "use strict";
-
-const testNames = [
-'testEventBubbleCancel',
-'testEventBubble',
-'testEventCaptureCancel',
-'testEventCapture',
-'testEventDispatchCancel',
-'testEventDispatch',
-'testFlicker',
-'testFocusClick',
-'testFocusOrder',
-
-'testTemplate',
-
-'testFormBasic',
-'testFormGroupInput',
-'testFormGroupOutput',
-'testFormInputFlicker',
-'testFormOutputFlicker',
-'testFunctionRouting',
-'testHtmlEscape',
-'testHtmlField',
-'testHtmlNoEscape',
-'testIndexRouting',
-
-// 'testInsertAndSelect',
-
-'testListCascade',
-'testListCascadeUp',
-'testList',
-'testListPrefill',
-'testListSplicedOdds',
-'testListSplicedUpOdds',
-'testNotFoundRouting',
-'testObjectDeleteOdds',
-'testObjectRefill',
-'testObjectSetProperties',
-'testPromiseFailRouting',
-'testPromiseRouting',
-'testStaticRouting',
-'testTextarea',
-'testTextField',
-'testUnexpectedErrorRouting',
-'testVariadicRouting0',
-'testVariadicRouting1',
-'testVariadicRouting2',
-'testVariadicRouting3',
-'testViewEscaped',
-'testViewNoEscape',
-'testWildcardRoutingA',
-'testWildcardRoutingB',
-'testWildcardRoutingC',
-
-];
-
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { SourceMapConsumer } = require("source-map");
+
+const testNames = fs.readdirSync('./test/coverage/v8')
+.filter(f => f.match(/-coverage\.json$/))
+.map(f => f.replace(/-coverage\.json$/, ''));
 
 const source = fs.readFileSync('./test/html/curvature.js', 'utf-8');
 const sourcemap = JSON.parse(fs.readFileSync('./test/html/curvature.js.map', 'utf-8'));
@@ -463,6 +412,8 @@ Promise.all(aggregateCoverage).then(() => {
 
 		blanks[originName] = blanks[originName] || [];
 
+		let isComment = false;
+
 		for(let index = 0; index < docMask.content.length; index++)
 		{
 			const byte = docMask.content[index];
@@ -473,12 +424,17 @@ Promise.all(aggregateCoverage).then(() => {
 				lineStarted = true;
 			}
 
+			if(byte === '/' && docMask.content[index + 1] === '/')
+			{
+				isComment = true;
+			}
+
 			const isWhitespace = [' ', '\t', '\n'].includes(byte);
 			const isLastLoop = index === docMask.content.length + -1;
 
 			let total = 0;
 
-			if(current || !isWhitespace || isLastLoop)
+			if(!isComment && (current || !isWhitespace || isLastLoop))
 			{
 				for(const [testName, mask] of docMask.masks)
 				{
@@ -491,7 +447,12 @@ Promise.all(aggregateCoverage).then(() => {
 				}
 			}
 
-			if(!isWhitespace)
+			if(isComment)
+			{
+				total = null;
+			}
+
+			if(!isComment && !isWhitespace)
 			{
 				if(total)
 				{
@@ -560,6 +521,7 @@ Promise.all(aggregateCoverage).then(() => {
 				}
 
 				column = 0;
+				isComment = false;
 				lineNumber++;
 				segmentBuffer += `\n`;
 				lineStarted = false;
@@ -609,9 +571,10 @@ Promise.all(aggregateCoverage).then(() => {
 		fs.writeFileSync('./test/coverage/html/' + reportFile, report);
 
 		links.push(
-			`<span data-covered = "${percentage}" style = "--percentage:${percentage*100};">`
+			`<span data-covered = "${percentage}" style = "--percentage:${percentage*100};--size:${size};">`
 			+ `<meter max="100" optimum = "100" high = "75" low = "50" value="${Number(percentage).toFixed(0)}"></meter>`
 			+ `<span class = "percentage">${percentage}%</span>`
+			+ `<span class = "size">${size}</span>`
 			+ `<a href = "${reportFile}" style = "color:lightGray">${filename}</a>\n</span>`
 		);
 	});
@@ -624,7 +587,7 @@ Promise.all(aggregateCoverage).then(() => {
 
 	Object.entries(linesCovered).forEach(([originName,lines]) => lineCoverage[originName] = [...lines]);
 
-	const percentage = Number(100 * totalCovered / totalSize).toFixed(2);
+	const percentage = totalSize ? Number(100 * totalCovered / totalSize).toFixed(2) : 0;
 
 	const uuid = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(
 		/[018]/g
@@ -653,6 +616,8 @@ Promise.all(aggregateCoverage).then(() => {
 	summary += '<h1 style = "color:green">curvature.js</h1>';
 	summary += `<h2 style = "color:yellow">Coverage: ${percentage}% (${totalCovered}/${totalSize})</h2>`;
 	summary += `<span href = "summary.html" style = "color:lightGray">${testNames.join(', ')}</span>\n\n`;
+	summary += `<label for = "sort-coverage">Sort By Coverage</label><input id = "sort-coverage" name = "sort" type = "radio">\n\n`;
+	summary += `<label for = "sort-size">Sort By Size</label><input id = "sort-size" name = "sort" type = "radio">\n\n`;
 	summary += `<div class = "links">${links.join("")}</div></body>`;
 
 	fs.writeFileSync(`./test/coverage/html/summary.html`, summary);

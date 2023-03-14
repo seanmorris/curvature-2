@@ -17,6 +17,62 @@ export class BasicViewTest extends TestBase
 		);
 	}
 
+	testFindTag()
+	{
+		const name = 'testFindTag';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testFindTags()
+	{
+		const name = 'testFindTags';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testListenSelf()
+	{
+		const name = 'testListenSelf';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testListenNode()
+	{
+		const name = 'testListenNode';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
 	testFlicker()
 	{
 		const name = 'testFlicker';
@@ -68,114 +124,6 @@ export class BasicViewTest extends TestBase
 	testViewNoEscape()
 	{
 		const name = 'testViewNoEscape';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testList()
-	{
-		const name = 'testList';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testListPrefill()
-	{
-		const name = 'testListPrefill';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testListCascade()
-	{
-		const name = 'testListCascade';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testListCascadeUp()
-	{
-		const name = 'testListCascadeUp';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testListSplicedOdds()
-	{
-		const name = 'testListSplicedOdds';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testListSplicedUpOdds()
-	{
-		const name = 'testListSplicedUpOdds';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testObjectSetProperties()
-	{
-		const name = 'testObjectSetProperties';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testObjectDeleteOdds()
-	{
-		const name = 'testObjectDeleteOdds';
-
-		return this.wrapTest(
-			name,
-			require(`./tests/${name}`)[name],
-			rawquire(`./tests/${name}.txt`),
-			true
-		);
-	}
-
-	testObjectRefill()
-	{
-		const name = 'testObjectRefill';
 
 		return this.wrapTest(
 			name,

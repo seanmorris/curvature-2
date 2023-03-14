@@ -117,6 +117,8 @@ export class ViewList
 
 		for(const view of this.views)
 		{
+			view.viewList = this;
+
 			view.render(tag);
 
 			renders.push(view.rendered.then(()=>view));

@@ -15,13 +15,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testTextarea()
@@ -34,13 +27,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testHtmlField()
@@ -53,13 +39,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Document body incorrect or corrupted.'
-		// ));
 	}
 
 	testFormBasic()
@@ -72,13 +51,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Form values incorrect or corrupted.'
-		// ));
 	}
 
 	testFormInputFlicker()
@@ -91,13 +63,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Form values incorrect or corrupted.'
-		// ));
 	}
 
 	testFormOutputFlicker()
@@ -110,13 +75,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Form values incorrect or corrupted.'
-		// ));
 	}
 
 	testFormGroupInput()
@@ -129,13 +87,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Form values incorrect or corrupted.'
-		// ));
 	}
 
 	testFormGroupOutput()
@@ -148,13 +99,6 @@ export class FormTest extends TestBase
 			rawquire(`./tests/${name}.txt`),
 			true
 		);
-
-		// return this.pobot.goto(`${hostname}`)
-		// .then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		// .then(result => this.assert(
-		// 	result === rawquire(`./tests/${name}.txt`)
-		// 	, 'Form values incorrect or corrupted.'
-		// ));
 	}
 
 	// testFormGroups

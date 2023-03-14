@@ -17,6 +17,30 @@ export class RouterTest extends TestBase
 		);
 	}
 
+	testNamedArgRouting()
+	{
+		const name = 'testNamedArgRouting';
+
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testOptionalNamedArgRouting()
+	{
+		const name = 'testOptionalNamedArgRouting';
+
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
 	testStaticRouting()
 	{
 		const name = 'testStaticRouting';

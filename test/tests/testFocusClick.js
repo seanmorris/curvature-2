@@ -9,5 +9,5 @@ export const testFocusClick = () => {
 
 	view.render(document.body);
 
-	return document.body.innerHTML;
+	return require('Delay')(100).then(() => document.body.innerHTML);
 };

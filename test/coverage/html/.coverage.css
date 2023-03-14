@@ -1,7 +1,7 @@
 body {
-	font-size: 13pt;
+	font-size: 11pt;
 	tab-size: 4;
-	white-space:pre-wrap;
+	white-space:pre;
 	background-color:#222;
 	font-family:terminal, monospace;
 	padding:1rem;
@@ -24,8 +24,7 @@ html {
 	color: #AAA;
 }
 
-
-.segment:nth-of-type(2n + 1) .line {
+.links span.segment:nth-of-type(2n + 1) .line {
 	background-color: rgba(255, 255, 255, 0.025);
 }
 .segment:nth-of-type(2n + 2) .line {
@@ -70,9 +69,14 @@ input:checked + div.highlighted .code:not([data-length="1"]):not(:empty)::before
 	flex-direction: column;
 }
 
-.links [data-covered] {
+#sort-size:checked ~.links [data-covered] {
+	order: calc(-1 * var(--size));
+}
+
+#sort-coverage:checked ~ .links [data-covered] {
 	order: calc(-1 * var(--percentage));
 }
+
 /*
 [data-covered="0.00"] {
 	display: none;
@@ -95,6 +99,16 @@ meter {
 	margin-right: 1em;
 }
 
+
+.size {
+	color: orange;
+	font-size: small;
+	min-width: 4em;
+	display: inline-block;
+	text-align: right;
+	margin-right: 1em;
+}
+
 .line-number {
 	color: gray;
 	font-size: small;
@@ -102,6 +116,7 @@ meter {
 	display: inline-block;
 	text-align: right;
 	margin-right: 1rem;
+	font-size: 9pt;
 }
 
 .line {

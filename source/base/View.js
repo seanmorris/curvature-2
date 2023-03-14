@@ -8,8 +8,7 @@ import { Bag      } from './Bag';
 import { RuleSet  } from './RuleSet';
 import { Mixin    } from './Mixin';
 
-import { PromiseMixin      } from '../mixin/PromiseMixin';
-import { EventTargetMixin  } from '../mixin/EventTargetMixin';
+import { EventTargetMixin } from '../mixin/EventTargetMixin';
 
 const dontParse  = Symbol('dontParse');
 const expandBind = Symbol('expandBind');
@@ -58,7 +57,7 @@ export class View extends Mixin.with(EventTargetMixin)
 		Object.defineProperty(this, 'nodes',     { value: Bindable.make([]) });
 
 		Object.defineProperty(this, 'timeouts',  { value: new Map });
-		Object.defineProperty(this, 'intervals', { value: [] });
+		Object.defineProperty(this, 'intervals', { value: new Map });
 		Object.defineProperty(this, 'frames',    { value: [] });
 
 		Object.defineProperty(this, 'ruleSet',    { value: new RuleSet });
@@ -66,6 +65,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		Object.defineProperty(this, 'subBindings', { value: {} });
 		Object.defineProperty(this, 'templates',   { value: {} });
+		Object.defineProperty(this, 'postMapping', { value: new Set });
 
 		Object.defineProperty(this, 'eventCleanup', { value: [] });
 
@@ -183,17 +183,23 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	clearTimeout(timeout)
 	{
-		for(const [callback, timeoutInfo] of this.timeouts) {
-			clearTimeout(timeoutInfo.timeout);
-			this.timeouts.delete(timeoutInfo.timeout);
+		if(!this.timeouts.has(timeout))
+		{
+			return;
 		}
+
+		const timeoutInfo = this.timeouts.get(timeout);
+
+		clearTimeout(timeoutInfo.timeout);
+
+		this.timeouts.delete(timeoutInfo.timeout);
 	}
 
 	onInterval(time, callback)
 	{
 		let timeout = setInterval(callback, time);
 
-		this.intervals.push({
+		this.intervals.set(timeout, {
 			timeout:    timeout
 			, callback: callback
 			, time:     time
@@ -205,13 +211,16 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	clearInterval(timeout)
 	{
-		for(var i in this.intervals) {
-			if(timeout === this.intervals[i].timeout) {
-				clearInterval(this.intervals[i].timeout);
-
-				delete this.intervals[i];
-			}
+		if(!this.intervals.has(timeout))
+		{
+			return;
 		}
+
+		const timeoutInfo = this.intervals.get(timeout);
+
+		clearTimeout(timeoutInfo.timeout);
+
+		this.intervals.delete(timeoutInfo.timeout);
 	}
 
 	pause(paused = undefined)
@@ -239,9 +248,11 @@ export class View extends Mixin.with(EventTargetMixin)
 				timeout.time   = Math.max(0, timeout.time - (Date.now() - timeout.created));
 			}
 
-			for(let i in this.intervals)
+			for(const [callback, timeout] of this.intervals)
 			{
-				clearInterval(this.intervals[i].timeout);
+				clearInterval(timeout.timeout);
+
+				timeout.paused = true;
 			}
 		}
 		else
@@ -264,19 +275,15 @@ export class View extends Mixin.with(EventTargetMixin)
 				timeout.paused  = false;
 			}
 
-			for(let i in this.intervals)
+			for(const [callback, timeout] of this.intervals)
 			{
-				if(!this.intervals[i].timeout.paused)
+				if(!timeout.paused)
 				{
 					continue;
 				}
 
-				this.intervals[i].timeout.paused = false;
-
-				this.intervals[i].timeout = setInterval(
-					this.intervals[i].callback
-					, this.intervals[i].time
-				);
+				timeout.timeout = setInterval(timeout.callback, timeout.time);
+				timeout.paused  = false;
 			}
 
 			for(const [, callback] of this.unpauseCallbacks)
@@ -614,19 +621,16 @@ export class View extends Mixin.with(EventTargetMixin)
 				walker.currentNode = tag;
 			}
 		});
+
+		this.postMapping.forEach(c => c());
 	}
 
 	mapExpandableTag(tag)
 	{
-		/*/
-		const tagCompiler = this.compileExpandableTag(tag);
-
-		const newTag = tagCompiler(this);
-
-		tag.replaceWith(newTag);
-
-		return newTag;
-		/*/
+		// const tagCompiler = this.compileExpandableTag(tag);
+		// const newTag = tagCompiler(this);
+		// tag.replaceWith(newTag);
+		// return newTag;
 
 		let existing = tag[expandBind];
 
@@ -700,49 +704,47 @@ export class View extends Mixin.with(EventTargetMixin)
 		// }
 
 		return tag;
-		//*/
 	}
 
-	compileExpandableTag(sourceTag)
-	{
-		return (bindingView) => {
+	// compileExpandableTag(sourceTag)
+	// {
+	// 	return (bindingView) => {
 
-			const tag = sourceTag.cloneNode(true);
+	// 		const tag = sourceTag.cloneNode(true);
 
-			let expandProperty = tag.getAttribute('cv-expand');
-			let expandArg = Bindable.make(
-				bindingView.args[expandProperty] || {}
-			);
+	// 		let expandProperty = tag.getAttribute('cv-expand');
+	// 		let expandArg = Bindable.make(
+	// 			bindingView.args[expandProperty] || {}
+	// 		);
 
-			tag.removeAttribute('cv-expand');
+	// 		tag.removeAttribute('cv-expand');
 
-			for(let i in expandArg)
-			{
-				if(i === 'name' || i === 'type')
-				{
-					continue;
-				}
+	// 		for(let i in expandArg)
+	// 		{
+	// 			if(i === 'name' || i === 'type')
+	// 			{
+	// 				continue;
+	// 			}
 
-				let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
-					tag.setAttribute(i, v);
-				})(tag,i));
+	// 			let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
+	// 				tag.setAttribute(i, v);
+	// 			})(tag,i));
 
-				bindingView.onRemove(()=>{
-					debind();
-					if(expandArg.isBound())
-					{
-						Bindable.clearBindings(expandArg);
-					}
-				});
-			}
+	// 			bindingView.onRemove(()=>{
+	// 				debind();
+	// 				if(expandArg.isBound())
+	// 				{
+	// 					Bindable.clearBindings(expandArg);
+	// 				}
+	// 			});
+	// 		}
 
-			return tag;
-		};
-	}
+	// 		return tag;
+	// 	};
+	// }
 
 	mapAttrTag(tag)
 	{
-		//*/
 		const tagCompiler = this.compileAttrTag(tag);
 
 		const newTag = tagCompiler(this);
@@ -751,48 +753,44 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		return newTag;
 
-		/*/
+		// let attrProperty = tag.getAttribute('cv-attr');
 
-		let attrProperty = tag.getAttribute('cv-attr');
+		// tag.removeAttribute('cv-attr');
 
-		tag.removeAttribute('cv-attr');
+		// let pairs = attrProperty.split(',');
+		// let attrs = pairs.map((p) => p.split(':'));
 
-		let pairs = attrProperty.split(',');
-		let attrs = pairs.map((p) => p.split(':'));
+		// for (let i in attrs)
+		// {
+		// 	let proxy        = this.args;
+		// 	let bindProperty = attrs[i][1];
+		// 	let property     = bindProperty;
 
-		for (let i in attrs)
-		{
-			let proxy        = this.args;
-			let bindProperty = attrs[i][1];
-			let property     = bindProperty;
+		// 	if(bindProperty.match(/\./))
+		// 	{
+		// 		[proxy, property] = Bindable.resolve(
+		// 			this.args
+		// 			, bindProperty
+		// 			, true
+		// 		);
+		// 	}
 
-			if(bindProperty.match(/\./))
-			{
-				[proxy, property] = Bindable.resolve(
-					this.args
-					, bindProperty
-					, true
-				);
-			}
+		// 	let attrib = attrs[i][0];
 
-			let attrib = attrs[i][0];
+		// 	this.onRemove(proxy.bindTo(
+		// 		property
+		// 		, (v)=>{
+		// 			if(v == null)
+		// 			{
+		// 				tag.setAttribute(attrib, '');
+		// 				return;
+		// 			}
+		// 			tag.setAttribute(attrib, v);
+		// 		}
+		// 	));
+		// }
 
-			this.onRemove(proxy.bindTo(
-				property
-				, (v)=>{
-					if(v == null)
-					{
-						tag.setAttribute(attrib, '');
-						return;
-					}
-					tag.setAttribute(attrib, v);
-				}
-			));
-		}
-
-		return tag;
-
-		//*/
+		// return tag;
 	}
 
 	compileAttrTag(sourceTag)
@@ -1199,12 +1197,12 @@ export class View extends Mixin.with(EventTargetMixin)
 			// 	tag, this, refProp, refKeyVal
 			// );
 		}
-		else
-		{
-			// this.tags[refProp] = new refClass(
-			// 	tag, this, refProp
-			// );
-		}
+		// else
+		// {
+		// 	this.tags[refProp] = new refClass(
+		// 		tag, this, refProp
+		// 	);
+		// }
 
 		let tagObject = new refClass(
 			tag, this, refProp, undefined, direct
@@ -1328,7 +1326,6 @@ export class View extends Mixin.with(EventTargetMixin)
 					{
 						tag.value = v == null ? '' : v;
 					}
-
 
 					tag.dispatchEvent(autoChangedEvent);
 				}
@@ -1702,15 +1699,13 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	mapLinkTag(tag)
 	{
-		/*/
-		const tagCompiler = this.compileLinkTag(tag);
+		// const tagCompiler = this.compileLinkTag(tag);
 
-		const newTag = tagCompiler(this);
+		// const newTag = tagCompiler(this);
 
-		tag.replaceWith(newTag);
+		// tag.replaceWith(newTag);
 
-		return newTag;
-		/*/
+		// return newTag;
 
 		let linkAttr = tag.getAttribute('cv-link');
 
@@ -1740,29 +1735,25 @@ export class View extends Mixin.with(EventTargetMixin)
 		tag.removeAttribute('cv-link');
 
 		return tag;
-		//*/
 	}
 
-	compileLinkTag(sourceTag)
-	{
-		const linkAttr = sourceTag.getAttribute('cv-link');
-
-		sourceTag.removeAttribute('cv-link');
-
-		return (bindingView) => {
-
-			const tag = sourceTag.cloneNode(true);
-
-			tag.setAttribute('href', linkAttr);
-
-			return tag;
-		};
-	}
+	// compileLinkTag(sourceTag)
+	// {
+	// 	const linkAttr = sourceTag.getAttribute('cv-link');
+	// 	sourceTag.removeAttribute('cv-link');
+	// 	return (bindingView) => {
+	// 		const tag = sourceTag.cloneNode(true);
+	// 		tag.setAttribute('href', linkAttr);
+	// 		return tag;
+	// 	};
+	// }
 
 	mapPrendererTag(tag)
 	{
 		let prerenderAttr = tag.getAttribute('cv-prerender');
 		let prerendering  = window.prerenderer || navigator.userAgent.match(/prerender/i);
+
+		tag.removeAttribute('cv-prerender');
 
 		if(prerendering)
 		{
@@ -1772,7 +1763,7 @@ export class View extends Mixin.with(EventTargetMixin)
 		if(prerenderAttr === 'never' && prerendering
 			|| prerenderAttr === 'only' && !prerendering
 		){
-			tag.parentNode.removeChild(tag);
+			this.postMapping.add(() => tag.parentNode.removeChild(tag));
 		}
 
 		return tag;
@@ -1910,26 +1901,21 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const parts = viewAttr.split(':');
 
-		const viewClass = parts.pop()
-			? this.stringToClass(viewAttr)
+		const viewName  = parts.shift();
+		const viewClass = parts.length
+			? this.stringToClass(parts[0])
 			: View;
-
-		const viewName = parts.shift();
 
 		let view = new viewClass(this.args, this);
 
 		this.views.set(tag, view);
+		this.views.set(viewName, view);
 
-		if(viewName)
-		{
-			this.views.set(viewName, view);
-		}
-
-		this.onRemove(((view)=>()=>{
+		this.onRemove(() => {
 			view.remove();
 			this.views.delete(tag);
 			this.views.delete(viewName);
-		})(view));
+		});
 
 		view.template = subTemplate;
 
@@ -2234,131 +2220,143 @@ export class View extends Mixin.with(EventTargetMixin)
 		return tag;
 	}
 
-	compileIfTag(sourceTag)
-	{
-		let ifProperty = sourceTag.getAttribute('cv-if');
-		let inverted   = false;
+	// compileIfTag(sourceTag)
+	// {
+	// 	let ifProperty = sourceTag.getAttribute('cv-if');
+	// 	let inverted   = false;
 
-		sourceTag.removeAttribute('cv-if');
+	// 	sourceTag.removeAttribute('cv-if');
 
-		if(ifProperty.substr(0, 1) === '!')
-		{
-			ifProperty = ifProperty.substr(1);
-			inverted   = true;
-		}
+	// 	if(ifProperty.substr(0, 1) === '!')
+	// 	{
+	// 		ifProperty = ifProperty.substr(1);
+	// 		inverted   = true;
+	// 	}
 
-		const subTemplate = new DocumentFragment;
+	// 	const subTemplate = new DocumentFragment;
 
-		[...sourceTag.childNodes].forEach(
-			n => subTemplate.appendChild(n.cloneNode(true))
-		);
+	// 	[...sourceTag.childNodes].forEach(
+	// 		n => subTemplate.appendChild(n.cloneNode(true))
+	// 	);
 
-		return (bindingView) => {
+	// 	return (bindingView) => {
 
-			const tag = sourceTag.cloneNode();
+	// 		const tag = sourceTag.cloneNode();
 
-			const ifDoc = new DocumentFragment;
+	// 		const ifDoc = new DocumentFragment;
 
-			let view = new View({}, bindingView);
+	// 		let view = new View({}, bindingView);
 
-			view.template = subTemplate;
-			// view.parent   = bindingView;
+	// 		view.template = subTemplate;
+	// 		// view.parent   = bindingView;
 
-			bindingView.syncBind(view);
+	// 		bindingView.syncBind(view);
 
-			let proxy    = bindingView.args;
-			let property = ifProperty;
+	// 		let proxy    = bindingView.args;
+	// 		let property = ifProperty;
 
-			if(ifProperty.match(/\./))
-			{
-				[proxy, property] = Bindable.resolve(
-					bindingView.args
-					, ifProperty
-					, true
-				);
-			}
+	// 		if(ifProperty.match(/\./))
+	// 		{
+	// 			[proxy, property] = Bindable.resolve(
+	// 				bindingView.args
+	// 				, ifProperty
+	// 				, true
+	// 			);
+	// 		}
 
-			let hasRendered = false;
+	// 		let hasRendered = false;
 
-			const propertyDebind = proxy.bindTo(property, (v,k) => {
+	// 		const propertyDebind = proxy.bindTo(property, (v,k) => {
 
-				if(!hasRendered)
-				{
-					const renderDoc = (bindingView.args[property] || inverted)
-						? tag : ifDoc;
+	// 			if(!hasRendered)
+	// 			{
+	// 				const renderDoc = (bindingView.args[property] || inverted)
+	// 					? tag : ifDoc;
 
-					view.render(renderDoc);
+	// 				view.render(renderDoc);
 
-					hasRendered = true;
+	// 				hasRendered = true;
 
-					return;
-				}
+	// 				return;
+	// 			}
 
-				if(Array.isArray(v))
-				{
-					v = !!v.length;
-				}
+	// 			if(Array.isArray(v))
+	// 			{
+	// 				v = !!v.length;
+	// 			}
 
-				if(inverted)
-				{
-					v = !v;
-				}
+	// 			if(inverted)
+	// 			{
+	// 				v = !v;
+	// 			}
 
-				if(v)
-				{
-					tag.appendChild(ifDoc);
-				}
-				else
-				{
-					view.nodes.forEach(n=>ifDoc.appendChild(n));
-				}
+	// 			if(v)
+	// 			{
+	// 				tag.appendChild(ifDoc);
+	// 			}
+	// 			else
+	// 			{
+	// 				view.nodes.forEach(n=>ifDoc.appendChild(n));
+	// 			}
 
-			});
+	// 		});
 
-			// let cleaner = bindingView;
+	// 		// let cleaner = bindingView;
 
-			// while(cleaner.parent)
-			// {
-			// 	cleaner = cleaner.parent;
-			// }
+	// 		// while(cleaner.parent)
+	// 		// {
+	// 		// 	cleaner = cleaner.parent;
+	// 		// }
 
-			bindingView.onRemove(propertyDebind);
+	// 		bindingView.onRemove(propertyDebind);
 
-			let bindableDebind = () => {
+	// 		let bindableDebind = () => {
 
-				if(!proxy.isBound())
-				{
-					Bindable.clearBindings(proxy);
-				}
+	// 			if(!proxy.isBound())
+	// 			{
+	// 				Bindable.clearBindings(proxy);
+	// 			}
 
-			};
+	// 		};
 
-			let viewDebind = ()=>{
-				propertyDebind();
-				bindableDebind();
-				bindingView._onRemove.remove(propertyDebind);
-				bindingView._onRemove.remove(bindableDebind);
-			};
+	// 		let viewDebind = ()=>{
+	// 			propertyDebind();
+	// 			bindableDebind();
+	// 			bindingView._onRemove.remove(propertyDebind);
+	// 			bindingView._onRemove.remove(bindableDebind);
+	// 		};
 
-			view.onRemove(viewDebind);
+	// 		view.onRemove(viewDebind);
 
-			return tag;
-		};
-	}
+	// 		return tag;
+	// 	};
+	// }
 
 	mapTemplateTag(tag)
 	{
+		// const templateName = tag.getAttribute('cv-template');
+
+		// tag.removeAttribute('cv-template');
+
+		// this.templates[ templateName ] = tag.tagName === 'TEMPLATE'
+		// 	? tag.cloneNode(true).content
+		// 	: new DocumentFragment(tag.innerHTML);
+
+
 		const templateName = tag.getAttribute('cv-template');
 
 		tag.removeAttribute('cv-template');
 
-		this.templates[ templateName ] = () => {
-			return tag.tagName === 'TEMPLATE'
-				? tag.content.cloneNode(true)
-				: new DocumentFragment(tag.innerHTML);
-		};
+		const source = tag.innerHTML;
 
-		this.rendered.then(()=>tag.remove());
+		if(!View.templates.has(source))
+		{
+			View.templates.set(source, document.createRange().createContextualFragment(tag.innerHTML));
+		}
+
+		this.templates[ templateName ] = View.templates.get(source);
+
+		this.postMapping.add(() => tag.remove());
 
 		return tag;
 	}
@@ -2366,17 +2364,17 @@ export class View extends Mixin.with(EventTargetMixin)
 	mapSlotTag(tag)
 	{
 		const templateName = tag.getAttribute('cv-slot');
-		let getTemplate    = this.templates[ templateName ];
+		let template = this.templates[ templateName ];
 
-		if(!getTemplate)
+		if(!template)
 		{
 			let parent = this;
 
 			while(parent)
 			{
-				getTemplate = parent.templates[ templateName ];
+				template = parent.templates[ templateName ];
 
-				if(getTemplate)
+				if(template)
 				{
 					break;
 				}
@@ -2384,14 +2382,12 @@ export class View extends Mixin.with(EventTargetMixin)
 				parent = this.parent;
 			}
 
-			if(!getTemplate)
+			if(!template)
 			{
 				console.error(`Template ${templateName} not found.`);
 				return;
 			}
 		}
-
-		const template = getTemplate();
 
 		tag.removeAttribute('cv-slot');
 
@@ -2400,65 +2396,65 @@ export class View extends Mixin.with(EventTargetMixin)
 			tag.firstChild.remove();
 		}
 
-		tag.appendChild(template);
+		tag.appendChild(template.cloneNode(true));
 
 		return tag;
 	}
 
-	syncBind(subView)
-	{
-		let debindA = this.args.bindTo((v,k,t,d)=>{
-			if(k === '_id')
-			{
-				return;
-			}
+	// syncBind(subView)
+	// {
+	// 	let debindA = this.args.bindTo((v,k,t,d)=>{
+	// 		if(k === '_id')
+	// 		{
+	// 			return;
+	// 		}
 
-			if(subView.args[k] !== v)
-			{
-				subView.args[k] = v;
-			}
-		});
+	// 		if(subView.args[k] !== v)
+	// 		{
+	// 			subView.args[k] = v;
+	// 		}
+	// 	});
 
-		let debindB = subView.args.bindTo((v,k,t,d,p)=>{
+	// 	let debindB = subView.args.bindTo((v,k,t,d,p)=>{
 
-			if(k === '_id')
-			{
-				return;
-			}
+	// 		if(k === '_id')
+	// 		{
+	// 			return;
+	// 		}
 
-			let newRef = v;
-			let oldRef = p;
+	// 		let newRef = v;
+	// 		let oldRef = p;
 
-			if(newRef instanceof View)
-			{
-				newRef = newRef.___ref___;
-			}
+	// 		if(newRef instanceof View)
+	// 		{
+	// 			newRef = newRef.___ref___;
+	// 		}
 
-			if(oldRef instanceof View)
-			{
-				oldRef = oldRef.___ref___;
-			}
+	// 		if(oldRef instanceof View)
+	// 		{
+	// 			oldRef = oldRef.___ref___;
+	// 		}
 
-			if(newRef !== oldRef && oldRef instanceof View)
-			{
-				p.remove();
-			}
+	// 		if(newRef !== oldRef && oldRef instanceof View)
+	// 		{
+	// 			p.remove();
+	// 		}
 
-			if(k in this.args)
-			{
-				this.args[k] = v;
-			}
+	// 		if(k in this.args)
+	// 		{
+	// 			this.args[k] = v;
+	// 		}
 
-		});
+	// 	});
 
-		this.onRemove(debindA);
-		this.onRemove(debindB);
+	// 	this.onRemove(debindA);
+	// 	this.onRemove(debindB);
 
-		subView.onRemove(()=>{
-			this._onRemove.remove(debindA);
-			this._onRemove.remove(debindB);
-		});
-	}
+	// 	subView.onRemove(()=>{
+	// 		this._onRemove.remove(debindA);
+	// 		this._onRemove.remove(debindB);
+	// 	});
+	// }
 
 	postRender(parentNode)
 	{}
@@ -2600,11 +2596,14 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	findTags(selector)
 	{
-		return this.nodes
-			.filter(n=>n.querySelectorAll)
-			.map(n=> [...n.querySelectorAll(selector)])
-			.flat()
-			.map(n=> new Tag(n, this, undefined,  undefined, this)) || [];
+		const topLevel = this.nodes.filter(n => n.matches && n.matches(selector));
+		const subLevel = this.nodes
+		.filter(n=>n.querySelectorAll)
+		.map(n=> [...n.querySelectorAll(selector)])
+		.flat()
+		.map(n=> new Tag(n, this, undefined,  undefined, this)) || [];
+
+		return topLevel.concat(subLevel);
 	}
 
 	onRemove(callback)
@@ -2699,9 +2698,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		if(Array.isArray(node))
 		{
-			return node
-				.map(n => this.listen(n, eventName, callback, options))
-				.forEach(r => r());
+			return node.map(n => this.listen(n, eventName, callback, options));
+				// .forEach(r => r());
 		}
 
 		if(node instanceof Tag)

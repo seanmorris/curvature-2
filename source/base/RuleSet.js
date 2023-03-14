@@ -185,22 +185,17 @@ export class RuleSet
 			{
 				if(view)
 				{
-					view.cleanup.push(((r)=>()=>{
-						r.remove();
-					})(result));
+					view.cleanup.push(() => result.remove());
 
-					view.cleanup.push(
-						view.args.bindTo((v, k,t)=>{
-							t[k] = v;
-							result.args[k] = v;
-						})
-					);
-					view.cleanup.push(
-						result.args.bindTo((v, k, t, d)=>{
-							t[k] = v;
-							view.args[k] = v;
-						})
-					);
+					view.cleanup.push(view.args.bindTo((v, k,t) => {
+						t[k] = v;
+						result.args[k] = v;
+					}));
+
+					view.cleanup.push(result.args.bindTo((v, k, t, d) => {
+						t[k] = v;
+						view.args[k] = v;
+					}));
 				}
 
 				tag.clear();

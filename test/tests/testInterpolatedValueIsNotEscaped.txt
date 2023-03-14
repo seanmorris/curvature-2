@@ -1,0 +1,1 @@
+<h1>The value "<div><b>Hello, world!</b></div>" is interpolated.</h1>

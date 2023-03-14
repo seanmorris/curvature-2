@@ -40,6 +40,8 @@ export class InputTest extends TestBase
 
 	wrapSteps(name, steps, expected, withCoverage = false)
 	{
+		withCoverage = false;
+
 		const checkResult = (result, expected) => {
 			this.assert(
 				result === expected
@@ -51,13 +53,17 @@ export class InputTest extends TestBase
 			);
 		};
 
-		const iterate = (steps, prevResult) => steps.shift()(prevResult)
-		.then(result => steps.length ? iterate(steps, result) : result);
+		const pobot = this.pobot;
 
-		const init = withCoverage ? this.pobot.startCoverage() : Promise.resolve();
+		const iterate = (steps, prevResult) => steps.shift()(prevResult).then(result => steps.length ? iterate(steps, result) : result);
+
+		// const init = withCoverage ? this.pobot.startCoverage() : Promise.resolve();
+		const init = (withCoverage ? pobot.startCoverage() : Promise.resolve())
+		.then(() => pobot.goto(this.startDocument))
+		.then(() => Promise.all(this.helpers.filter(h => h.modules).map(h => pobot.addModules(h.modules))));
+
 
 		const test = init
-		.then(() => this.pobot.goto(this.testEnvironment))
 		.then(() => iterate(steps))
 		.then(result => checkResult(result, expected));
 
@@ -69,9 +75,9 @@ export class InputTest extends TestBase
 		const coverageFile = `${process.cwd()}/../coverage/v8/${name}-coverage.json`;
 
 		return test
-		.then(() => this.pobot.takeCoverage())
+		.then(() => pobot.takeCoverage())
 		.then(coverage => fsp.writeFile(coverageFile, JSON.stringify(coverage, null, 4)))
-		.then(() => this.pobot.stopCoverage());
+		.then(() => pobot.stopCoverage());
 	}
 
 }

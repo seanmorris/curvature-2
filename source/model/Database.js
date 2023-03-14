@@ -76,13 +76,13 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				for(let v = event.oldVersion + 1; v <= version; v += 1)
 				{
-					instance['_version_' + v](connection);
+					instance['_version_' + v](connection, instance);
 				}
 			};
 		});
 	}
 
-	select({store, index, range = null, ranges = [], direction = 'next', limit = 0, offset = 0, type = false, origin = undefined, map = undefined})
+	select({store, index, range = undefined, ranges = [], direction = 'next', limit = 0, offset = 0, type = false, origin = undefined, map = undefined})
 	{
 		const t = this[Connection].transaction(store, "readonly");
 		const s = t.objectStore(store);
@@ -426,6 +426,38 @@ export class Database extends Mixin.with(EventTargetMixin)
 	[Fetch](type, index, direction, ranges, limit, offset, origin, map)
 	{
 		return callback => Promise.all(ranges.map(range => new Promise((accept, reject) => {
+
+			if(range instanceof IDBKeyRange)
+			{
+				// NOOP
+			}
+			else if(!Array.isArray(range))
+			{
+				if(typeof range !== 'undefined')
+				{
+					range = IDBKeyRange.only(range);
+				}
+			}
+			else if(range.length === 1)
+			{
+				range = IDBKeyRange.only(range[0]);
+			}
+			else
+			{
+				if(range[0] === undefined)
+				{
+					range = IDBKeyRange.upperBound(range[1], range[2] ?? true);
+				}
+				else if(range[1] === undefined)
+				{
+					range = IDBKeyRange.lowerBound(range[0], range[2] ?? true);
+				}
+				else
+				{
+					range = IDBKeyRange.bound(range[0], range[1], range[2] ?? true, range[3] ?? true);
+				}
+			}
+
 			const request = index.openCursor(range, direction);
 
 			let i = 0;
@@ -578,11 +610,11 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 	createObjectStore(storeName, options)
 	{
-		const eventLog = this[Connection].createObjectStore(storeName, options);
+		const store = this[Connection].createObjectStore(storeName, options);
 
 		this.setStoreMeta(storeName, 'store', options);
 
-		return eventLog;
+		return store;
 	}
 
 	deleteObjectStore(storeName)

@@ -1,0 +1,1 @@
+<span data-foo="123" data-bar="abc"></span>

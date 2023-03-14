@@ -97,7 +97,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 				this[TimeoutLeft] = Math.max(0, this[TimeoutLeft] - this[Timeout]);
 
-				if(!this[TimeoutLeft])
+				if(this[TimeoutLeft])
 				{
 					return;
 				}
@@ -118,9 +118,9 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 	{
 		return this[Fetch].then(({response, stream}) => {
 
-			const wrapped = new Response(stream, {headers: {'Content-Type': this.type}});
+			const wrapped = new Response(stream, {headers: {'Content-Type': 'application/json'}});
 
-			return wrapped.json()
+			return wrapped.json();
 		});
 	}
 
@@ -130,7 +130,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 			const wrapped = new Response(stream, {headers: {'Content-Type': this.type}});
 
-			return wrapped.text()
+			return wrapped.text();
 		});
 	}
 
@@ -147,7 +147,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 	{
 		return this[Fetch].then(({response, stream}) => {
 
-			const wrapped = new Response(stream, {headers: {'Content-Type': this.type}});
+			const wrapped = new Response(stream, {headers: {'Content-Type': response.headers.get('Content-Type')}});
 
 			return wrapped.blob()
 		});
@@ -447,9 +447,9 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 	[HandleError](error)
 	{
-		console.warn(error);
+		console.warn(`[${error.constructor.name}] ${error.code}: ${error.message}`, error);
 
-		if(!this.emitErrorEvent(error))
+		if(this.emitErrorEvent(error))
 		{
 			return this[Retry]();
 		}

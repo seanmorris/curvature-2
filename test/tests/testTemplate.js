@@ -1,12 +1,14 @@
 export const testTemplate = () => {
 	console.log('Clearing document...');
 
-	// console.dir('Testing console.dir...');
-	// console.log('Testing console.log...');
-	// console.warn('Testing console.warn...');
 	// console.error('Testing console.error...');
-	// console.trace('Testing console.trace...');
-	// console.assert(false, 'Testing console.assert');
+	// console.warn('Testing console.warn...');
+	// console.log('Testing console.log...');
+	// console.dir('Testing console.dir...');
+	// console.assert(false, 'Testing console.assert (error)...');
+	// console.assert(false, 'Testing console.assert (warn)...', 3);
+	// console.assert(false, 'Testing console.assert (notice)...', 4);
+	console.trace('Testing console.trace...');
 
 	// throw new Error('xyz');
 
