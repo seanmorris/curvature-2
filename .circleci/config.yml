@@ -4,7 +4,11 @@ commands:
 
   install-deps:
     steps:
-      - run: nvm install 18
+      - run: |
+          export NVM_DIR="/opt/circleci/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          nvm install 18 && nvm use 18 && nvm alias default 18
+          node -v
       - run: sudo apt install -y jq
       - run: npm install
       - run: wget http://launchpadlibrarian.net/487694450/make_4.3-4ubuntu1_amd64.deb
