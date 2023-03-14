@@ -6,7 +6,7 @@ commands:
     steps:
       - run: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
       - run: sudo apt-get update
-      - run: sudo apt install -y nodejs npm jq
+      - run: sudo apt install -y nodejs jq
       - run: npm install
       - run: wget http://launchpadlibrarian.net/487694450/make_4.3-4ubuntu1_amd64.deb
       - run: sudo dpkg -i make_4.3-4ubuntu1_amd64.deb
