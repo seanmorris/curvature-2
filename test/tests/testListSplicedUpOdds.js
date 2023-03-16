@@ -38,5 +38,5 @@ export const testListSplicedUpOdds = () => {
 
 	setInterval(cascade, 10);
 
-	return require('Delay')(128 * 11).then(() => document.body.innerHTML);
+	return require('Delay')(160 * 10).then(() => document.body.innerHTML);
 };
