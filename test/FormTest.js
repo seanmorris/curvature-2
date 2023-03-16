@@ -5,6 +5,8 @@ const hostname = `file://${process.cwd()}/../html/index.html`;
 
 export class FormTest extends TestBase
 {
+	parallel = false;
+
 	testTextField()
 	{
 		const name = 'testTextField';
