@@ -331,7 +331,7 @@ export class Bindable
 
 				if(!('now' in options) || options.now)
 				{
-					for (let i in object)
+					for(let i in object)
 					{
 						callback(object[i], i, object, false);
 					}
@@ -521,15 +521,20 @@ export class Bindable
 		});
 
 		const isBound = () => {
-			for (let i in object[BindingAll]) {
-				if (object[BindingAll][i]) {
+			for(let i in object[BindingAll])
+			{
+				if(object[BindingAll][i])
+				{
 					return true;
 				}
 			}
 
-			for (let i in object[Binding]) {
-				for (let callback of object[Binding][i]) {
-					if (callback) {
+			for(let i in object[Binding])
+			{
+				for(let callback of object[Binding][i])
+				{
+					if (callback)
+					{
 						return true;
 					}
 				}
@@ -556,6 +561,10 @@ export class Bindable
 				}
 			}
 		}
+
+		const descriptors = object[Descriptors];
+		const wrapped     = object[Wrapped];
+		const stack       = object[Stack];
 
 		const set = (target, key, value) => {
 
@@ -604,39 +613,22 @@ export class Bindable
 				object[BindingAll][i](value, key, target, false);
 			}
 
-			let stop = false;
-
 			if(key in object[Binding])
 			{
 				for(const callback of object[Binding][key])
 				{
-					if(callback(value, key, target, false, target[key]) === false)
-					{
-						stop = true;
-					}
+					callback(value, key, target, false, target[key]);
 				}
 			}
 
 			delete onDeck[key];
 
-			if(!stop)
+			const excluded = target instanceof File && key == 'lastModifiedDate';
+
+			if(!excluded)
 			{
-				let descriptor = Object.getOwnPropertyDescriptor(target, key);
-
-				let excluded = (
-					target instanceof File
-					&& key == 'lastModifiedDate'
-				);
-
-				if(!excluded
-					&& (!descriptor || descriptor.writable)
-					&& target[key] === value
-				){
-					target[key] = value;
-				}
+				Reflect.set(target, key, value);
 			}
-
-			const result = Reflect.set(target, key, value);
 
 			if(Array.isArray(target) && object[Binding]['length'])
 			{
@@ -648,7 +640,7 @@ export class Bindable
 				}
 			}
 
-			return result;
+			return true;
 		};
 
 		const deleteProperty = (target, key) => {
@@ -722,10 +714,6 @@ export class Bindable
 
 			return instance;
 		};
-
-		const descriptors = object[Descriptors];
-		const wrapped     = object[Wrapped];
-		const stack       = object[Stack];
 
 		const get = (target, key) => {
 
@@ -940,7 +928,7 @@ export class Bindable
 
 			node = pathParts.shift();
 
-			if(!node in object
+			if(!(node in object)
 				|| !object[node]
 				|| !(object[node] instanceof Object)
 			){

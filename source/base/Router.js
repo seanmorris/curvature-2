@@ -383,6 +383,16 @@ export class Router {
 				result = this.processRoute(routes, NotFoundError, args);
 			}
 
+			if(typeof document === 'undefined')
+			{
+				if(!(result instanceof Promise))
+				{
+					return Promise.resolve(result);
+				}
+
+				return result;
+			}
+
 			if(!(result instanceof Promise))
 			{
 				return this.update(
@@ -394,11 +404,6 @@ export class Router {
 					, args
 					, forceRefresh
 				);
-			}
-
-			if(typeof document === 'undefined')
-			{
-				return result;
 			}
 
 			return result.then(realResult => this.update(

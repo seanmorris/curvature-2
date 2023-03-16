@@ -172,7 +172,12 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 	buffer()
 	{
-		return this.blob().then(blob => blob.arrayBuffer());
+		return this[Fetch].then(({response, stream}) => {
+
+			const wrapped = new Response(stream, {headers: {'Content-Type': response.headers.get('Content-Type')}});
+
+			return wrapped.arrayBuffer();
+		});
 	}
 
 	bytes()

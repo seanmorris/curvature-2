@@ -2074,7 +2074,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		let view = new viewClass(Object.assign({}, this.args), bindingView);
 
-		view.tags.bindTo((v,k)=> this.tags[k]=v, {removeWith: this})
+		view.tags.bindTo((v,k)=> this.tags[k]=v, {removeWith: this});
 
 		view.template = subTemplate;
 

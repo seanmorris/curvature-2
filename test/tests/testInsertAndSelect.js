@@ -33,12 +33,11 @@ export const testInsertAndSelect = () => {
 
 			database.clear('records')
 			.then(() => records.map(record => database.insert('records', record)))
-			.then(() => database.select({store: 'records', index: 'id', range: [,3]}).each(record => selected.push(record)))
+			.then(() => database.select({store: 'records', index: 'id', ranges: [[,3], [5,7]]}).each(record => selected.push(record)))
 			.then(() => Promise.all(selected.map(updateSelected)))
 			.then(updates => database.select({store: 'records', index: 'id', range: [8]}).each(record => database.delete('records', record)))
-			.then(() => database.select({store:   'records', index: 'id'}).each(record => view.args.records.push(record)));
+			.then(() => database.select({store: 'records', index: 'id', ranges: [[0,2], [5], [7,,]]}).each(record => view.args.records.push(record)));
 		});
-
 	}
 	catch(error)
 	{
@@ -47,7 +46,5 @@ export const testInsertAndSelect = () => {
 	finally
 	{
 		return require('Delay')(1000).then(() => document.body.innerHTML);
-		return require('Delay')(1000**3).then(() => document.body.innerHTML);
 	}
-
 };

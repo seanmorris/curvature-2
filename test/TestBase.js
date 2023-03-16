@@ -14,6 +14,8 @@ import { Delay } from './helpers/Delay';
 
 export class TestBase extends Test
 {
+	parallel = true;
+
 	startDocument = `file://${process.cwd()}/../html/index.html`;
 
 	options = ['--window-size=640,480', '--js-flags="--jitless"', `--url="${this.startDocument}"`].concat(

@@ -84,86 +84,104 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 	select({store, index, range = undefined, ranges = [], direction = 'next', limit = 0, offset = 0, type = false, origin = undefined, map = undefined})
 	{
-		const t = this[Connection].transaction(store, "readonly");
-		const s = t.objectStore(store);
-		const i = index ? s.index(index) : s;
+		const transaction = this[Connection].transaction(store, "readonly");
+		const storeObject = transaction.objectStore(store);
+		const indexObject = index ? storeObject.index(index) : storeObject;
 
-		if(!ranges || !ranges.length)
+		if(range !== undefined && (!ranges || !ranges.length))
 		{
 			ranges = [range];
 		}
 
+		const params = [type, indexObject, direction, ranges, limit, offset, origin, map];
+
+		let existing = null;
+
 		return {
-			each:   this[Fetch](type, i, direction, ranges, limit, offset, origin, map)
-			, one:  this[Fetch](type, i, direction, ranges, 1, offset, origin, map)
-			, then: c=>(this[Fetch](type, i, direction, ranges, limit, offset, origin, map))(e=>e).then(c)
+			finally: c => ( existing || (existing = this[Fetch](...params)(e=>e)) ).finally(c)
+			, catch: c => ( existing || (existing = this[Fetch](...params)(e=>e)) ).catch(c)
+			,  then: c => ( existing || (existing = this[Fetch](...params)(e=>e)) ).then(c)
+			,  each: c => ( existing || (existing = this[Fetch](...params)(c)) )
+			,   one: c => ( existing || (existing = this[Fetch](...Object.assign(params, [,,,,1]) )(c)) )
 		};
 	}
 
 	insert(storeName, records, origin = {})
 	{
-		this[Bank][storeName] = this[Bank][storeName] || {};
+		const inserts = this.inserts({[storeName]: records}, origin);
+		return inserts[0];
+	}
 
-		const trans = this[Connection].transaction([storeName], 'readwrite');
-		const store = trans.objectStore(storeName);
-		const bank  = this[Bank][storeName];
+	inserts(storesToRecords, origin = {})
+	{
+		const storeNames = Object.keys(storesToRecords);
 
-		let list = true;
+		const transaction = this[Connection].transaction(storeNames, 'readwrite');
 
-		if(!Array.isArray(records))
+		const inserts = [];
+
+		for(let [storeName, records] of Object.entries(storesToRecords))
 		{
-			records = [records];
-			list = false;
-		}
+			const store = transaction.objectStore(storeName);
+			const bank  = this[Bank][storeName] = this[Bank][storeName] || {};
 
-		const results = records.map(record => new Promise((accept, reject) => {
+			let list = true;
 
-			record = Bindable.make(record);
-
-			const detail = {
-				database:  this[Name]
-				, record:  record
-				, store:   storeName
-				, type:    'write'
-				, subType: 'insert'
-				, origin:  origin
-			};
-
-			const beforeWriteResult = record[Database.BeforeWrite]
-				? record[Database.BeforeWrite](detail)
-				: null;
-
-			const beforeInsertResult = record[Database.BeforeInsert]
-				? record[Database.BeforeInsert](detail)
-				: null;
-
-			const request = store.add(Object.assign({}, Bindable.shuck(record)));
-
-			if(beforeWriteResult === false || beforeInsertResult === false)
+			if(!Array.isArray(records))
 			{
-				return;
+				records = [records];
+				list = false;
 			}
 
-			request.onerror = error => {
-				this.dispatchEvent(new CustomEvent('writeError', {detail}));
+			const results = records.map(record => new Promise((accept, reject) => {
 
-				reject(error);
-			};
+				record = Bindable.make(record);
 
-			request.onsuccess = event => {
-				const pk = event.target.result;
-				bank[pk] = record;
-
-				const cancelable = true;
+				const detail = {
+					database:  this[Name]
+					, record:  record
+					, store:   storeName
+					, type:    'write'
+					, subType: 'insert'
+					, origin:  origin
+				};
 
 				detail.key = Database.getPrimaryKey(record);
 
-				const eventResult = this.dispatchEvent(new CustomEvent('write', {
-					cancelable, detail
-				}));
+				const cancelable = true;
 
-				if(eventResult)
+				const eventResult = this.dispatchEvent(new CustomEvent('write', {cancelable, detail}));
+
+				if(!eventResult)
 				{
+					return;
+				}
+
+				const beforeWriteResult = record[Database.BeforeWrite]
+					? record[Database.BeforeWrite](detail)
+					: null;
+
+				const beforeInsertResult = record[Database.BeforeInsert]
+					? record[Database.BeforeInsert](detail)
+					: null;
+
+				const request = store.add(Object.assign({}, Bindable.shuck(record)));
+
+				if(beforeWriteResult === false || beforeInsertResult === false)
+				{
+					return;
+				}
+
+				request.onerror = error => {
+					this.dispatchEvent(new CustomEvent('writeError', {detail}));
+					// console.warn(error);
+					reject(error);
+				};
+
+				request.onsuccess = event => {
+					const pk = event.target.result;
+					bank[pk] = record;
+
 					record[PrimaryKey] = Symbol.for(pk);
 
 					if(!this[Metadata][storeName])
@@ -191,183 +209,215 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 					record[Database.AfterInsert] && record[Database.AfterInsert](detail);
 					record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
-				}
-				else
-				{
-					trans.abort();
-				}
 
-				accept(record);
-			};
+					accept(record)
+				};
 
-		}));
+			}));
 
-		let finalResult;
+			let finalResult;
 
-		if(list)
-		{
-			finalResult = Promise.allSettled(results);
-		}
-		else
-		{
-			finalResult = results[0];
+			if(list)
+			{
+				finalResult = Promise.all(results);
+			}
+			else
+			{
+				finalResult = results[0];
+			}
+
+			inserts.push(finalResult);
 		}
 
-		Promise.all(results).then(() => trans.commit && trans.commit());
+		Promise.all(inserts).then(() => transaction.commit && transaction.commit());
 
-		return finalResult;
+		return inserts;
 	}
 
 	update(storeName, record, origin = {})
 	{
-		if(!record[PrimaryKey])
-		{
-			throw Error('Value provided is not a DB record!');
-		}
-
-		return new Promise((accept, reject) => {
-			const trans     = this[Connection].transaction([storeName], 'readwrite');
-			const store     = trans.objectStore(storeName);
-
-			const detail = {
-				database:  this[Name]
-				, key:     Database.getPrimaryKey(record)
-				, record:  record
-				, store:   storeName
-				, type:    'write'
-				, subType: 'update'
-				, origin:  origin
-			};
-
-			record[Database.AfterInsert] && record[Database.AfterInsert](detail);
-			record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
-
-			const beforeWriteResult = record[Database.BeforeWrite]
-				? record[Database.BeforeWrite](detail)
-				: null;
-
-			const beforeUpdateResult = record[Database.BeforeUpdate]
-				? record[Database.BeforeUpdate](detail)
-				: null;
-
-			if(beforeWriteResult === false || beforeUpdateResult === false)
-			{
-				return;
-			}
-
-			const request = store.put(Object.assign({}, Bindable.shuck(record)));
-
-			request.onerror = error => {
-				this.dispatchEvent(new CustomEvent('writeError', {detail}));
-
-				reject(error);
-			};
-
-			request.onsuccess = event => {
-
-				const cancelable = true;
-
-				const eventResult = this.dispatchEvent(new CustomEvent('write', {
-					cancelable, detail
-				}));
-
-				if(eventResult)
-				{
-					if(!this[Metadata][storeName])
-					{
-						this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
-					}
-
-					if(this[Metadata][storeName])
-					{
-						const currentHighMark = this.checkHighWaterMark(storeName, record);
-						const currentLowMark  = this.checkLowWaterMark(storeName, record);
-						const metadata        = this[Metadata][storeName];
-						const recordMark      = record[metadata.highWater];
-
-						if(origin.setHighWater && currentHighMark < recordMark)
-						{
-							this.setHighWaterMark(storeName, record, origin, 'insert');
-						}
-
-						if(origin.setLowWater && currentLowMark > recordMark)
-						{
-
-							this.setLowWaterMark(storeName, record, origin, 'insert');
-						}
-					}
-
-					trans.commit && trans.commit();
-				}
-				else
-				{
-					trans.abort();
-				}
-
-				accept(event);
-			};
-		});
+		const updates = this.updates({[storeName]: [record]}, origin);
+		return updates[0];
 	}
 
-	delete(storeName, record, origin = undefined)
+	updates(storesToRecords, origin = {})
 	{
-		if(!record[PrimaryKey])
+		const storeNames = Object.keys(storesToRecords);
+
+		const transaction = this[Connection].transaction(storeNames, 'readwrite');
+
+		const updates = [];
+
+		for(const [storeName, records] of Object.entries(storesToRecords))
 		{
-			throw Error('Value provided is not a DB record!');
+			const store = transaction.objectStore(storeName);
+
+			for(const record of records)
+			{
+				if(!record[PrimaryKey])
+				{
+					throw Error('Value provided is not a DB record!');
+				}
+
+				updates.push(new Promise((accept, reject) => {
+
+					const detail = {
+						database:  this[Name]
+						, key:     Database.getPrimaryKey(record)
+						, record:  record
+						, store:   storeName
+						, type:    'write'
+						, subType: 'update'
+						, origin:  origin
+					};
+
+					const cancelable  = true;
+					const writeEvent  = new CustomEvent('write', {cancelable, detail});
+					const eventResult = this.dispatchEvent(writeEvent);
+
+					if(!eventResult)
+					{
+						return;
+					}
+
+					const beforeWriteResult = record[Database.BeforeWrite]
+						? record[Database.BeforeWrite](detail)
+						: null;
+
+					const beforeUpdateResult = record[Database.BeforeUpdate]
+						? record[Database.BeforeUpdate](detail)
+						: null;
+
+					if(beforeWriteResult === false || beforeUpdateResult === false)
+					{
+						return;
+					}
+
+					const request = store.put(Object.assign({}, Bindable.shuck(record)));
+
+					request.onerror = error => {
+						this.dispatchEvent(new CustomEvent('writeError', {detail}));
+						// console.warn(error);
+						reject(error);
+					};
+
+					request.onsuccess = event => {
+						if(!this[Metadata][storeName])
+						{
+							this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
+						}
+
+						if(this[Metadata][storeName])
+						{
+							const currentHighMark = this.checkHighWaterMark(storeName, record);
+							const currentLowMark  = this.checkLowWaterMark(storeName, record);
+							const metadata        = this[Metadata][storeName];
+							const recordMark      = record[metadata.highWater];
+
+							if(origin.setHighWater && currentHighMark < recordMark)
+							{
+								this.setHighWaterMark(storeName, record, origin, 'insert');
+							}
+
+							if(origin.setLowWater && currentLowMark > recordMark)
+							{
+
+								this.setLowWaterMark(storeName, record, origin, 'insert');
+							}
+						}
+
+						record[Database.AfterInsert] && record[Database.AfterInsert](detail);
+						record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
+
+						accept(writeEvent)
+					};
+				}));
+			}
 		}
 
-		return new Promise((accept, reject) => {
-			const trans     = this[Connection].transaction([storeName], 'readwrite');
-			const store     = trans.objectStore(storeName);
-			const detail    = {
-				database:   this[Name]
-				, record:   record
-				, key:      Database.getPrimaryKey(record)
-				, store:    storeName
-				, type:     'write'
-				, subType:  'delete'
-				, origin:   origin
-			};
+		Promise.all(updates).then(() => transaction.commit && transaction.commit());
 
-			const beforeDeleteResult = record[Database.BeforeDelete]
-				? record[Database.BeforeDelete](detail)
-				: null;
+		return updates;
+	}
 
-			if(beforeDeleteResult === false)
+	delete(storeName, record, origin = {})
+	{
+		const deletes = this.deletes({[storeName]: [record]}, origin);
+		return deletes[0];
+	}
+
+	deletes(storesToRecords, origin = {})
+	{
+		const storeNames = Object.keys(storesToRecords);
+
+		const transaction = this[Connection].transaction(storeNames, 'readwrite');
+
+		const deletes = [];
+
+		for(const [storeName, records] of Object.entries(storesToRecords))
+		{
+			const store = transaction.objectStore(storeName);
+
+			for(const record of records)
 			{
-				return;
+				if(!record[PrimaryKey])
+				{
+					throw Error('Value provided is not a DB record!');
+				}
+
+				deletes.push(new Promise((accept, reject) => {
+					const detail = {
+						database:  this[Name]
+						, record:  record
+						, key:     Database.getPrimaryKey(record)
+						, store:   storeName
+						, type:    'write'
+						, subType: 'delete'
+						, origin:  origin
+					};
+
+					const beforeDeleteResult = record[Database.BeforeDelete]
+						? record[Database.BeforeDelete](detail)
+						: null;
+
+					if(beforeDeleteResult === false)
+					{
+						return;
+					}
+
+					const request = store.delete(record.id);
+
+					record[PrimaryKey] = undefined;
+
+					record[Database.AfterDelete] && record[Database.AfterDelete](detail);
+
+					request.onerror = error => {
+						detail.original = error;
+						const deleteEvent = new CustomEvent('writeError', {detail});
+						this.dispatchEvent(deleteEvent);
+						// console.warn(error);
+						reject(error);
+					};
+
+					const writeEvent = new CustomEvent('write', {detail});
+
+					request.onsuccess = event => accept(writeEvent);
+
+					request.oncomplete = event => {
+
+						detail.original = event;
+
+						this.dispatchEvent(writeEvent);
+
+						transaction.commit && transaction.commit();
+
+						accept(writeEvent);
+					};
+				}));
 			}
+		}
 
-		const request = store.delete(record.id);
-
-			record[PrimaryKey] = undefined;
-
-			record[Database.AfterDelete] && record[Database.AfterDelete](detail);
-
-			request.onerror = error => {
-
-				detail.original = error;
-
-				const deleteEvent = new CustomEvent('writeError', {detail});
-
-				this.dispatchEvent(deleteEvent);
-
-				reject(error);
-			};
-
-			request.onsuccess = event => {
-
-				detail.original = event;
-
-				const writeEvent = new CustomEvent('write', {detail});
-
-				this.dispatchEvent(writeEvent);
-
-				trans.commit && trans.commit();
-
-				accept(writeEvent);
-			};
-		});
+		return deletes;
 	}
 
 	clear(storeName)
@@ -417,15 +467,15 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 	listIndexes(storeName)
 	{
-		const trans     = this[Connection].transaction([storeName]);
-		const store     = trans.objectStore(storeName);
+		const trans = this[Connection].transaction([storeName]);
+		const store = trans.objectStore(storeName);
 
 		return [...store.indexNames];
 	}
 
 	[Fetch](type, index, direction, ranges, limit, offset, origin, map)
 	{
-		return callback => Promise.all(ranges.map(range => new Promise((accept, reject) => {
+		const processRange = (range,callback) => new Promise((accept, reject) => {
 
 			if(range instanceof IDBKeyRange)
 			{
@@ -433,10 +483,14 @@ export class Database extends Mixin.with(EventTargetMixin)
 			}
 			else if(!Array.isArray(range))
 			{
-				if(typeof range !== 'undefined')
+				if(typeof range !== 'undefined' && range !== null)
 				{
 					range = IDBKeyRange.only(range);
 				}
+			}
+			else if(range.length === 0)
+			{
+				range = undefined;
 			}
 			else if(range.length === 1)
 			{
@@ -444,17 +498,21 @@ export class Database extends Mixin.with(EventTargetMixin)
 			}
 			else
 			{
-				if(range[0] === undefined)
+				if(range[0] === undefined && range[1] === undefined)
+				{
+					range = undefined;
+				}
+				else if(range[0] === undefined)
 				{
 					range = IDBKeyRange.upperBound(range[1], range[2] ?? true);
 				}
 				else if(range[1] === undefined)
 				{
-					range = IDBKeyRange.lowerBound(range[0], range[2] ?? true);
+					range = IDBKeyRange.lowerBound(range[0], range[2] ?? false);
 				}
 				else
 				{
-					range = IDBKeyRange.bound(range[0], range[1], range[2] ?? true, range[3] ?? true);
+					range = IDBKeyRange.bound(range[0], range[1], range[2] ?? false, range[3] ?? true);
 				}
 			}
 
@@ -463,7 +521,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 			let i = 0;
 
 			const resultHandler = event => {
-
 				const cursor = event.target.result;
 
 				if(!cursor)
@@ -548,7 +605,20 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 			request.addEventListener('success', resultHandler);
 
-		}))).then(results => {
+		});
+
+		const results = [];
+
+		ranges = (ranges && ranges.length) ? ranges.slice() : [ [] ];
+
+		const processResult = (result, callback) => {
+
+			results.push(result);
+
+			if(ranges.length)
+			{
+				return processRange(ranges.shift(),callback).then(result => processResult(result, callback));
+			}
 
 			if(results.length === 1)
 			{
@@ -556,7 +626,9 @@ export class Database extends Mixin.with(EventTargetMixin)
 			}
 
 			return results;
-		});
+		};
+
+		return callback => processRange(ranges.shift(),callback).then(result => processResult(result, callback));
 	}
 
 	static getPrimaryKey(record)
@@ -587,6 +659,22 @@ export class Database extends Mixin.with(EventTargetMixin)
 				accept(dbName);
 			};
 		});
+	}
+
+	getObjectStores(storeName)
+	{
+		return [...this[Connection].objectStoreNames];
+	}
+
+	getStoreIndexes(storeName)
+	{
+		const transaction = this[Connection].transaction([storeName], 'readonly');
+		const storeObject = transaction.objectStore(storeName);
+		const indexes = [...storeObject.indexNames];
+
+		transaction.abort();
+
+		return indexes;
 	}
 
 	setStoreMeta(storeName, key, value)

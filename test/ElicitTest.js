@@ -5,6 +5,8 @@ const http = require('http');
 
 export class ElicitTest extends TestBase
 {
+	parallel = false;
+
 	setUp()
 	{
 		this.respond = () => Promise.resolve({data: 'Hello, world!'});
