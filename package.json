@@ -18,7 +18,7 @@
 		"brunch": "^3",
 		"clean-css-brunch": "^3.0.0",
 		"cv3-test": "^0.0.17-a",
-		"pobot": "^0.0.13-d",
+		"pobot": "^0.0.13-e",
 		"raw-brunch": "^1.0.2",
 		"rawquire": "^0.0.1",
 		"source-map": "^0.7.4",
