@@ -23,9 +23,7 @@ export class Service
 				return;
 			}
 
-			this.workers.set(worker.scriptURL, worker);
-
-			serviceWorker.addEventListener('message', event => this.handleResponse(event));
+			this.setupWorker(worker);
 		});
 
 		return serviceWorker.ready;
@@ -43,7 +41,18 @@ export class Service
 		{
 			if(worker.state === 'redundant')
 			{
-				return Promise.reject('Worker has been updated, connection lost. Please refresh the page.');
+				if(navigator.serviceWorker.controller
+					&& navigator.serviceWorker.controller.scriptURL === scriptURL
+					&& navigator.serviceWorker.controller.state === 'activated'
+				){
+					worker = navigator.serviceWorker.controller;
+
+					this.setupWorker(worker);
+				}
+				else
+				{
+					return Promise.reject('Worker has been updated, connection lost. Please refresh the page.');
+				}
 			}
 
 			worker.postMessage({
@@ -67,10 +76,7 @@ export class Service
 
 	static handleResponse(event)
 	{
-		event.target.ready.then(registration => {
-			const worker = registration.active;
-			this.workers.set(worker.scriptURL, worker);
-		});
+		event.target.ready.then(registration => this.setupWorker(registration.active));
 
 		const packet = event.data;
 
@@ -212,6 +218,13 @@ export class Service
 				...packet, result: response
 			}));
 		}
+	}
+
+	static setupWorker(worker)
+	{
+		this.workers.set(worker.scriptURL, worker);
+
+		navigator.serviceWorker.addEventListener('message', event => this.handleResponse(event));
 	}
 
 	static handleInstall(event)

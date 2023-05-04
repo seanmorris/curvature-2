@@ -26,37 +26,4 @@ export class TestTest extends TestBase
 
 		return Promise.resolve();
 	}
-
-	testTest()
-	{
-		// const name = 'testTemplate';
-
-		// this.assert(false, 'Assert level: Notice', this.NOTICE);
-		// this.assert(false, 'Assert level: Warning', this.WARN);
-		// this.assert(false, 'Assert level: Error');
-		// // this.assert(0, 'Assert level: Error');
-
-		// return this.wrapTest(
-		// 	name,
-		// 	require(`./tests/${name}`)[name],
-		// 	rawquire(`./tests/${name}.txt`),
-		// 	true
-		// );
-	}
-
-	// testTest2()
-	// {
-	// 	const name = 'testFormGroupInput';
-
-	// 	// this.assert(false, 'Assert level: Notice', this.NOTICE);
-	// 	this.assert(false, 'Assert level: Warning', this.WARN);
-	// 	// this.assert(false, 'Assert level: Error');
-
-	// 	// return this.wrapTest(
-	// 	// 	name,
-	// 	// 	require(`./tests/${name}`)[name],
-	// 	// 	rawquire(`./tests/${name}.txt`),
-	// 	// 	true
-	// 	// );
-	// }
 }

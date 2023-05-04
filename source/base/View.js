@@ -36,7 +36,7 @@ export class View extends Mixin.with(EventTargetMixin)
 	{
 		super(args, mainView);
 
-		this[EventTargetMixin.EventTargetParent] = mainView;
+		this[EventTargetMixin.Parent] = mainView;
 
 		Object.defineProperty(this, 'args', { value: Bindable.make(args) });
 		Object.defineProperty(this, uuid,   { value: this.constructor.uuid() });
@@ -47,7 +47,7 @@ export class View extends Mixin.with(EventTargetMixin)
 		Object.defineProperty(this, '_onRemove', { value: new Bag((i,s,a) => {}) });
 		Object.defineProperty(this, 'cleanup',   { value: [] });
 
-		Object.defineProperty(this, 'parent',    { value: mainView });
+		Object.defineProperty(this, 'parent',    { value: mainView, writable: true });
 
 		Object.defineProperty(this, 'views',     { value: new Map });
 		Object.defineProperty(this, 'viewLists', { value: new Map });
@@ -313,7 +313,7 @@ export class View extends Mixin.with(EventTargetMixin)
 		}
 	}
 
-	render(parentNode = null, insertPoint = null)
+	render(parentNode = null, insertPoint = null, outerView = null)
 	{
 		if(parentNode instanceof View)
 		{
@@ -327,7 +327,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		if(this.firstNode)
 		{
-			return this.reRender(parentNode, insertPoint);
+			return this.reRender(parentNode, insertPoint, outerView);
 		}
 
 		this.dispatchEvent(new CustomEvent('render'));
@@ -393,8 +393,6 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		if(parentNode)
 		{
-			const rootNode = parentNode.getRootNode();
-
 			if(insertPoint)
 			{
 				parentNode.insertBefore(this.firstNode, insertPoint);
@@ -410,27 +408,25 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			moveIndex++;
 
+			const rootNode = parentNode.getRootNode();
+
 			if(rootNode.isConnected)
 			{
 				this.attached(rootNode, parentNode);
-				this.dispatchAttached(rootNode, parentNode);
+				this.dispatchAttached(rootNode, parentNode, outerView);
 			}
-			else
+			else if(outerView)
 			{
 				const firstDomAttach = event => {
-
-					if(!event.target.isConnected)
-					{
-						return;
-					}
+					const rootNode = parentNode.getRootNode();
 
 					this.attached(rootNode, parentNode);
-					this.dispatchAttached(rootNode, parentNode);
+					this.dispatchAttached(rootNode, parentNode, outerView);
 
-					parentNode.removeEventListener('cvDomAttached', firstDomAttach);
+					outerView.removeEventListener('attached', firstDomAttach);
 				};
 
-				parentNode.addEventListener('cvDomAttached', firstDomAttach);
+				outerView.addEventListener('attached', firstDomAttach);
 			}
 		}
 
@@ -463,11 +459,15 @@ export class View extends Mixin.with(EventTargetMixin)
 	dispatchDomAttached(view)
 	{
 		this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).forEach(child => {
-
 			if(!child.matches)
 			{
 				return;
 			}
+
+			child.dispatchEvent(new CustomEvent('cvDomAttached', {
+				target: child
+				, detail: { view: view || this, mainView: this }
+			}));
 
 			Dom.mapTags(child, false, (tag, walker) => {
 
@@ -481,18 +481,13 @@ export class View extends Mixin.with(EventTargetMixin)
 					, detail: { view: view || this, mainView: this }
 				}));
 			});
-
-			child.dispatchEvent(new CustomEvent('cvDomAttached', {
-				target: child
-				, detail: { view: view || this, mainView: this }
-			}));
 		});
 	}
 
-	reRender(parentNode, insertPoint)
+	reRender(parentNode, insertPoint, outerView)
 	{
 		const willReRender = this.dispatchEvent(new CustomEvent('reRender'), {
-			cancelable:true, target:this
+			cancelable:true, target:this, view: outerView
 		});
 
 		if(!willReRender)
@@ -531,7 +526,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 
 			this.dispatchEvent(new CustomEvent('reRendered'), {
-				cancelable:true, target:this
+				cancelable:true, target:this, view: outerView
 			});
 
 			const rootNode = parentNode.getRootNode();
@@ -966,17 +961,11 @@ export class View extends Mixin.with(EventTargetMixin)
 
 					if(v instanceof View)
 					{
-						v[EventTargetMixin.EventTargetParent] = this;
+						v[EventTargetMixin.Parent] = this;
 
-						const onAttach = (rootNode, parentNode) => {
-							v.dispatchAttached(rootNode, parentNode, this);
-						};
+						v.render(tag.parentNode, dynamicNode, this);
 
-						this.nodesAttached.add(onAttach);
-
-						v.render(tag.parentNode, dynamicNode);
-
-						const cleanup = ()=>{
+						const cleanup = () => {
 							if(!v.preserve)
 							{
 								v.remove();
@@ -985,10 +974,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 						this.onRemove(cleanup);
 
-						v.onRemove(() => {
-							this.nodesAttached.remove(onAttach);
-							this._onRemove.remove(cleanup);
-						});
+						v.onRemove(() => this._onRemove.remove(cleanup));
 					}
 					else if(v instanceof Node)
 					{
@@ -1143,12 +1129,12 @@ export class View extends Mixin.with(EventTargetMixin)
 						}
 					}));
 
-					this.onRemove(()=>{
-						if(!proxy.isBound())
-						{
-							Bindable.clearBindings(proxy);
-						}
-					});
+					// this.onRemove(()=>{
+					// 	if(!proxy.isBound())
+					// 	{
+					// 		Bindable.clearBindings(proxy);
+					// 	}
+					// });
 				}
 			}
 		}
@@ -1277,14 +1263,13 @@ export class View extends Mixin.with(EventTargetMixin)
 			unsafeHtml = true;
 		}
 
-		let debind = proxy.bindTo(property, (v,k,t,d,p) => {
+		let autoEventStarted = false;
 
+		let debind = proxy.bindTo(property, (v,k,t,d,p) => {
 			if((p instanceof View || p instanceof Node || p instanceof Tag) && p !== v)
 			{
 				p.remove();
 			}
-
-			const autoChangedEvent = new CustomEvent('cvAutoChanged', {bubbles: true});
 
 			if(['INPUT', 'SELECT', 'TEXTAREA'].includes(tag.tagName))
 			{
@@ -1293,14 +1278,10 @@ export class View extends Mixin.with(EventTargetMixin)
 				if(type && type.toLowerCase() === 'checkbox')
 				{
 					tag.checked = !!v;
-
-					tag.dispatchEvent(autoChangedEvent);
 				}
 				else if(type && type.toLowerCase() === 'radio')
 				{
 					tag.checked = (v == tag.value);
-
-					tag.dispatchEvent(autoChangedEvent);
 				}
 				else if(type !== 'file')
 				{
@@ -1326,9 +1307,14 @@ export class View extends Mixin.with(EventTargetMixin)
 					{
 						tag.value = v == null ? '' : v;
 					}
-
-					tag.dispatchEvent(autoChangedEvent);
 				}
+
+				if(autoEventStarted)
+				{
+					tag.dispatchEvent(new CustomEvent('cvAutoChanged', {bubbles: true}));
+				}
+
+				autoEventStarted = true;
 			}
 			else
 			{
@@ -1339,24 +1325,9 @@ export class View extends Mixin.with(EventTargetMixin)
 						node.remove();
 					}
 
-					const onAttach = (parentNode) => {
+					v[EventTargetMixin.Parent] = this;
 
-						v.dispatchDomAttached(this);
-
-						// if(v.nodes.length && v.dispatchAttach())
-						// {
-						// 	v.attached(parentNode.getRootNode(), parentNode, this);
-						// 	v.dispatchAttached(parentNode.getRootNode(), parentNode, this);
-						// }
-					};
-
-					this.nodesAttached.add(onAttach);
-
-					v[EventTargetMixin.EventTargetParent] = this;
-
-					v.render(tag);
-
-					v.onRemove(()=>this.nodesAttached.remove(onAttach));
+					v.render(tag, null, this);
 				}
 				else if(v instanceof Node)
 				{
@@ -1876,7 +1847,7 @@ export class View extends Mixin.with(EventTargetMixin)
 				});
 			}
 
-			view.render(tag);
+			view.render(tag, null, this);
 
 			this.withViews.set(tag, view);
 		});
@@ -1919,7 +1890,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		view.template = subTemplate;
 
-		view.render(tag);
+		view.render(tag, null, this);
 
 		return tag;
 	}
@@ -2009,7 +1980,6 @@ export class View extends Mixin.with(EventTargetMixin)
 				{
 					delete this.args[k];
 				}
-
 			});
 
 			viewList.onRemove(debindA);
@@ -2025,7 +1995,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			this.viewLists.set(tag, viewList);
 
-			viewList.render(tag);
+			viewList.render(tag, null, this);
 		});
 
 		this.onRemove(debind);
@@ -2072,7 +2042,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		const ifDoc = new DocumentFragment;
 
-		let view = new viewClass(Object.assign({}, this.args), bindingView);
+		// let view = new viewClass(Object.assign({}, this.args), bindingView);
+		let view = new viewClass(this.args, bindingView);
 
 		view.tags.bindTo((v,k)=> this.tags[k]=v, {removeWith: this});
 
@@ -2090,7 +2061,7 @@ export class View extends Mixin.with(EventTargetMixin)
 			);
 		}
 
-		view.render(ifDoc);
+		view.render(ifDoc, null, this);
 
 		const propertyDebind = proxy.bindTo(property, (v,k) => {
 
@@ -2161,46 +2132,46 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		bindingView.onRemove(propertyDebind);
 
-		const debindA = this.args.bindTo((v,k,t,d) => {
-			if(k === '_id')
-			{
-				return;
-			}
+		// const debindA = this.args.bindTo((v,k,t,d) => {
+		// 	if(k === '_id')
+		// 	{
+		// 		return;
+		// 	}
 
-			if(!d)
-			{
-				view.args[k] = v;
-			}
-			else if(k in view.args)
-			{
-				delete view.args[k];
-			}
+		// 	if(!d)
+		// 	{
+		// 		view.args[k] = v;
+		// 	}
+		// 	else if(k in view.args)
+		// 	{
+		// 		delete view.args[k];
+		// 	}
 
-		});
+		// });
 
-		const debindB = view.args.bindTo((v,k,t,d,p) => {
-			if(k === '_id' || String(k).substring(0,3) === '___')
-			{
-				return;
-			}
+		// const debindB = view.args.bindTo((v,k,t,d,p) => {
+		// 	if(k === '_id' || String(k).substring(0,3) === '___')
+		// 	{
+		// 		return;
+		// 	}
 
-			if(k in this.args)
-			{
-				if(!d)
-				{
-					this.args[k] = v;
-				}
-				else
-				{
-					delete this.args[k];
-				}
-			}
-		});
+		// 	if(k in this.args)
+		// 	{
+		// 		if(!d)
+		// 		{
+		// 			this.args[k] = v;
+		// 		}
+		// 		else
+		// 		{
+		// 			delete this.args[k];
+		// 		}
+		// 	}
+		// });
 
 		let viewDebind = ()=>{
 			propertyDebind();
-			debindA();
-			debindB();
+			// debindA();
+			// debindB();
 			bindingView._onRemove.remove(propertyDebind);
 			// bindingView._onRemove.remove(bindableDebind);
 		};
@@ -2208,8 +2179,8 @@ export class View extends Mixin.with(EventTargetMixin)
 		bindingView.onRemove(viewDebind);
 
 		this.onRemove(()=>{
-			debindA();
-			debindB();
+			// debindA();
+			// debindB();
 			view.remove();
 			if(bindingView !== this)
 			{

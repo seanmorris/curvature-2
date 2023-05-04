@@ -73,7 +73,7 @@ export class Bindable
 
 	static onDeck(object, key)
 	{
-		return object[Deck][key] || false;
+		return object[Deck].get(key) || false;
 	}
 
 	static ref(object)
@@ -90,7 +90,7 @@ export class Bindable
 	{
 		seen = seen || new Map;
 
-		const clone = {};
+		const clone = Object.create({});
 
 		if(original instanceof TypedArray || original instanceof ArrayBuffer)
 		{
@@ -173,7 +173,7 @@ export class Bindable
 		if (Object.isSealed(object)
 			|| Object.isFrozen(object)
 			|| !Object.isExtensible(object)
-			|| excludedClasses.filter(x => object instanceof x).length
+			|| excludedClasses.find(x => object instanceof x)
 		){
 			return object;
 		}
@@ -203,14 +203,14 @@ export class Bindable
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      {}
+			, value:      new Map
 		});
 
 		Object.defineProperty(object, Binding, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      {}
+			, value:      Object.create(null)
 		});
 
 		Object.defineProperty(object, SubBinding, {
@@ -224,7 +224,7 @@ export class Bindable
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      []
+			, value:      new Set
 		});
 
 		Object.defineProperty(object, Executing, {
@@ -248,14 +248,14 @@ export class Bindable
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      []
+			, value:      new Set
 		});
 
 		Object.defineProperty(object, After, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      []
+			, value:      new Set
 		});
 
 		Object.defineProperty(object, Wrapped, {
@@ -269,7 +269,7 @@ export class Bindable
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      {}
+			, value:      Object.preventExtensions(new Map)
 		});
 
 
@@ -325,9 +325,7 @@ export class Bindable
 
 			if(bindToAll)
 			{
-				let bindIndex = object[BindingAll].length;
-
-				object[BindingAll].push(callback);
+				object[BindingAll].add(callback);
 
 				if(!('now' in options) || options.now)
 				{
@@ -338,7 +336,7 @@ export class Bindable
 				}
 
 				return () => {
-					delete object[BindingAll][bindIndex];
+					object[BindingAll].delete(callback);
 				};
 			}
 
@@ -433,45 +431,13 @@ export class Bindable
 		});
 
 		const ___before = (callback) => {
-
-			const beforeIndex = object[Before].length;
-
-			object[Before].push(callback);
-
-			let cleaned = false;
-
-			return () => {
-
-				if(cleaned)
-				{
-					return;
-				}
-
-				cleaned = true;
-
-				delete object[Before][beforeIndex];
-			};
+			object[Before].add(callback);
+			return () => object[Before].delete(callback);
 		};
 
 		const ___after = (callback) => {
-
-			const afterIndex = object[After].length;
-
-			object[After].push(callback);
-
-			let cleaned = false;
-
-			return () => {
-
-				if(cleaned)
-				{
-					return;
-				}
-
-				cleaned = true;
-
-				delete object[After][afterIndex];
-			};
+			object[After].add(callback);
+			return () => object[After].delete(callback);
 		};
 
 		Object.defineProperty(object, BindChain, {
@@ -521,24 +487,22 @@ export class Bindable
 		});
 
 		const isBound = () => {
-			for(let i in object[BindingAll])
+			if(object[BindingAll].size)
 			{
-				if(object[BindingAll][i])
-				{
-					return true;
-				}
+				return true;
 			}
 
-			for(let i in object[Binding])
+			for(let callbacks of object[Binding])
 			{
-				for(let callback of object[Binding][i])
+				for(let callback of callbacks)
 				{
-					if (callback)
+					if(callback)
 					{
 						return true;
 					}
 				}
 			}
+
 			return false;
 		};
 
@@ -551,9 +515,9 @@ export class Bindable
 
 		for(let i in object)
 		{
-			if(object[i] && object[i] instanceof Object && !object[i] instanceof Promise)
+			if(object[i] && typeof object[i] === 'object' && !object[i] instanceof Promise)
 			{
-				if(!excludedClasses.filter(excludeClass => object[i] instanceof excludeClass).length
+				if(!excludedClasses.find(excludeClass => object[i] instanceof excludeClass)
 					&& Object.isExtensible(object[i])
 					&& !Object.isSealed(object[i])
 				){
@@ -567,21 +531,27 @@ export class Bindable
 		const stack       = object[Stack];
 
 		const set = (target, key, value) => {
+			if(value && typeof value === 'object' && Object.isExtensible(object) && !Object.isSealed(object) && !excludedClasses.find(x => object instanceof x))
+			{
+				value = Bindable.make(value);
+
+				if(target[key] === value)
+				{
+					return true;
+				}
+			}
 
 			if(wrapped.has(key))
 			{
 				wrapped.delete(key);
 			}
 
-			if(key === Original)
-			{
-				return true;
-			}
-
-			const onDeck = object[Deck];
+			const onDeck    = object[Deck];
+			const isOnDeck  = onDeck.has(key);
+			const valOnDeck = isOnDeck && onDeck.get(key);
 
 			// if(onDeck[key] !== undefined && onDeck[key] === value)
-			if(key in onDeck && onDeck[key] === value)
+			if(isOnDeck && valOnDeck === value)
 			{
 				return true;
 			}
@@ -591,26 +561,16 @@ export class Bindable
 				return true;
 			}
 
-			if(target[key] === value || (typeof value === 'number' && isNaN(onDeck[key]) && isNaN(value)))
+			if(target[key] === value || (typeof value === 'number' && isNaN(valOnDeck) && isNaN(value)))
 			{
 				return true;
 			}
 
-			if(value && value instanceof Object && Object.isExtensible(object) && !Object.isSealed(object) && !excludedClasses.filter(x => object instanceof x).length)
+			onDeck.set(key, value);
+
+			for(const callback of object[BindingAll])
 			{
-				value = Bindable.make(value);
-			}
-
-			onDeck[key] = value;
-
-			for(let i in object[BindingAll])
-			{
-				if(!object[BindingAll][i])
-				{
-					continue;
-				}
-
-				object[BindingAll][i](value, key, target, false);
+				callback(value, key, target, false);
 			}
 
 			if(key in object[Binding])
@@ -621,7 +581,7 @@ export class Bindable
 				}
 			}
 
-			delete onDeck[key];
+			onDeck.delete(key);
 
 			const excluded = target instanceof File && key == 'lastModifiedDate';
 
@@ -645,9 +605,10 @@ export class Bindable
 
 		const deleteProperty = (target, key) => {
 
-			const onDeck = object[Deck];
+			const onDeck    = object[Deck];
+			const isOnDeck  = onDeck.has(key);
 
-			if(onDeck[key] !== undefined)
+			if(isOnDeck)
 			{
 				return true;
 			}
@@ -669,16 +630,16 @@ export class Bindable
 				descriptors.delete(key);
 			}
 
-			onDeck[key] = null;
+			onDeck.set(key, null);
 
 			if(wrapped.has(key))
 			{
 				wrapped.delete(key);
 			}
 
-			for(let i in object[BindingAll])
+			for(const callback of object[BindingAll])
 			{
-				object[BindingAll][i](undefined, key, target, true, target[key]);
+				callback(undefined, key, target, true, target[key]);
 			}
 
 			if(key in object[Binding])
@@ -689,9 +650,9 @@ export class Bindable
 				}
 			}
 
-			delete onDeck[key];
+			Reflect.deleteProperty(target, key);
 
-			delete target[key];
+			onDeck.delete(key);
 
 			return true;
 		};
@@ -700,16 +661,16 @@ export class Bindable
 
 			const key = 'constructor';
 
-			for(let i in target[Before])
+			for(const callback of target[Before])
 			{
-				target[Before][i](target, key, object[Stack], undefined, args);
+				callback(target, key, object[Stack], undefined, args);
 			}
 
 			const instance = Bindable.make(new target[Original](...args));
 
-			for(let i in target[After])
+			for(const callback of target[After])
 			{
-				target[After][i](target, key, object[Stack], instance, args);
+				callback(target, key, object[Stack], instance, args);
 			}
 
 			return instance;
@@ -775,33 +736,27 @@ export class Bindable
 					return object[key];
 				}
 
-				Object.defineProperty(object[Unwrapped], key, {
-					configurable: false
-					, enumerable: false
-					, writable:   true
-					, value:      object[key]
-				});
+				object[Unwrapped].set(key, object[key]);
 
 				const prototype = Object.getPrototypeOf(object);
 				const isMethod  = prototype[key] === object[key];
 				const objRef = (
 					(typeof Promise === 'function'                    && object instanceof Promise)
+					|| (typeof object[Symbol.iterator] === 'function' && key === 'next')
 					|| (typeof Map === 'function'                     && object instanceof Map)
 					|| (typeof Set === 'function'                     && object instanceof Set)
-					|| (typeof MapIterator === 'function'             && object.prototype === MapIterator)
-					|| (typeof SetIterator === 'function'             && object.prototype === SetIterator)
-					|| (typeof SetIterator === 'function'             && object.prototype === SetIterator)
+					|| (typeof Date === 'function'                    && object instanceof Date)
 					|| (typeof WeakMap === 'function'                 && object instanceof WeakMap)
 					|| (typeof WeakSet === 'function'                 && object instanceof WeakSet)
-					|| (typeof Date === 'function'                    && object instanceof Date)
+					|| (typeof EventTarget === 'function'             && object instanceof EventTarget)
+					|| (typeof MapIterator === 'function'             && object.prototype === MapIterator)
+					|| (typeof SetIterator === 'function'             && object.prototype === SetIterator)
 					|| (typeof TypedArray === 'function'              && object instanceof TypedArray)
 					|| (typeof ArrayBuffer === 'function'             && object instanceof ArrayBuffer)
-					|| (typeof EventTarget === 'function'             && object instanceof EventTarget)
 					|| (typeof ResizeObserver === 'function'          && object instanceof ResizeObserver)
 					|| (typeof MutationObserver === 'function'        && object instanceof MutationObserver)
 					|| (typeof PerformanceObserver === 'function'     && object instanceof PerformanceObserver)
 					|| (typeof IntersectionObserver === 'function'    && object instanceof IntersectionObserver)
-					|| (typeof object[Symbol.iterator] === 'function' && key === 'next')
 				)	? object
 					: object[Ref];
 
@@ -820,11 +775,11 @@ export class Bindable
 
 					if(new.target)
 					{
-						ret = new object[Unwrapped][key](...providedArgs);
+						ret = new object[Unwrapped].get(key)(...providedArgs);
 					}
 					else
 					{
-						const func = object[Unwrapped][key];
+						const func = object[Unwrapped].get(key);
 
 						if(isMethod)
 						{
@@ -878,14 +833,21 @@ export class Bindable
 			return Reflect.getPrototypeOf(target);
 		}
 
-		const handler = {
-			get, set, construct, getPrototypeOf, deleteProperty
-		}
+		const handlerDef = {
+			get: {value: get},
+			set: {value: set},
+			construct: {value: construct},
+			getPrototypeOf: {value: getPrototypeOf},
+			deleteProperty: {value: deleteProperty},
+		};
 
 		if(object[NoGetters])
 		{
-			delete handler.get;
+			delete handlerDef.getPrototypeOf;
+			delete handlerDef.get;
 		}
+
+		const handler = Object.create(null, handlerDef);
 
 		Object.defineProperty(object, Ref, {
 			configurable: false
@@ -902,13 +864,9 @@ export class Bindable
 		const maps      = func => (...os) => os.map(func);
 		const clearObjs = maps(clearObj);
 
-		clearObjs(
-			object[Wrapped]
-			, object[Binding]
-			, object[BindingAll]
-			, object[After]
-			, object[Before]
-		);
+		object[BindingAll].clear();
+
+		clearObjs(object[Wrapped], object[Binding], object[After], object[Before]);
 	}
 
 	static resolve(object, path, owner = false)
@@ -930,9 +888,9 @@ export class Bindable
 
 			if(!(node in object)
 				|| !object[node]
-				|| !(object[node] instanceof Object)
+				|| !(typeof object[node] === 'object')
 			){
-				object[node] = {};
+				object[node] = Object.create(null);
 			}
 
 			object = this.make(object[node]);

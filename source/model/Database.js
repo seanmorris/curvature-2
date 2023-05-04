@@ -76,7 +76,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				for(let v = event.oldVersion + 1; v <= version; v += 1)
 				{
-					instance['_version_' + v](connection, instance);
+					instance['_version_' + v](connection, instance, event);
 				}
 			};
 		});
@@ -138,7 +138,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				record = Bindable.make(record);
 
 				const detail = {
-					database:  this[Name]
+					database:  this
 					, record:  record
 					, store:   storeName
 					, type:    'write'
@@ -148,12 +148,13 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				detail.key = Database.getPrimaryKey(record);
 
-				const cancelable = true;
-
-				const eventResult = this.dispatchEvent(new CustomEvent('write', {cancelable, detail}));
+				const cancelable  = true;
+				const writeEvent  = new CustomEvent('write', {cancelable, detail});
+				const eventResult = this.dispatchEvent(writeEvent);
 
 				if(!eventResult)
 				{
+					transaction.abort && transaction.abort();
 					return;
 				}
 
@@ -169,50 +170,57 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				if(beforeWriteResult === false || beforeInsertResult === false)
 				{
+					transaction.abort && transaction.abort();
 					return;
 				}
 
 				request.onerror = error => {
 					this.dispatchEvent(new CustomEvent('writeError', {detail}));
-					// console.warn(error);
+					transaction.abort && transaction.abort();
 					reject(error);
 				};
 
 				request.onsuccess = event => {
 					const pk = event.target.result;
-					bank[pk] = record;
 
-					record[PrimaryKey] = Symbol.for(pk);
-
-					if(!this[Metadata][storeName])
-					{
-						this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
-					}
-
-					if(this[Metadata][storeName])
-					{
-						const currentHighMark = this.checkHighWaterMark(storeName, record);
-						const currentLowMark  = this.checkLowWaterMark(storeName, record);
-						const metadata        = this[Metadata][storeName];
-						const recordMark      = record[metadata.highWater];
-
-						if(origin.setHighWater && currentHighMark < recordMark)
+					transaction.addEventListener('complete', event => {
+						if(store.autoIncrement)
 						{
-							this.setHighWaterMark(storeName, record, origin, 'insert');
+							record.id = pk;
 						}
 
-						if(origin.setLowWater && currentLowMark > recordMark)
+						record[Database.AfterInsert] && record[Database.AfterInsert](detail);
+						record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
+
+						bank[pk] = record;
+						record[PrimaryKey] = Symbol.for(pk);
+
+						accept(record);
+
+						if(!this[Metadata][storeName])
 						{
-							this.setLowWaterMark(storeName, record, origin, 'insert');
+							this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
 						}
-					}
 
-					record[Database.AfterInsert] && record[Database.AfterInsert](detail);
-					record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
+						if(this[Metadata][storeName])
+						{
+							const currentHighMark = this.checkHighWaterMark(storeName, record);
+							const currentLowMark  = this.checkLowWaterMark(storeName, record);
+							const metadata        = this[Metadata][storeName];
+							const recordMark      = record[metadata.highWater];
 
-					accept(record)
+							if(origin.setHighWater && currentHighMark < recordMark)
+							{
+								this.setHighWaterMark(storeName, record, origin, 'insert');
+							}
+
+							if(origin.setLowWater && currentLowMark > recordMark)
+							{
+								this.setLowWaterMark(storeName, record, origin, 'insert');
+							}
+						}
+					});
 				};
-
 			}));
 
 			let finalResult;
@@ -229,7 +237,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 			inserts.push(finalResult);
 		}
 
-		Promise.all(inserts).then(() => transaction.commit && transaction.commit());
+		// Promise.all(inserts).then(() => transaction.commit && transaction.commit());
 
 		return inserts;
 	}
@@ -262,7 +270,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 				updates.push(new Promise((accept, reject) => {
 
 					const detail = {
-						database:  this[Name]
+						database:  this
 						, key:     Database.getPrimaryKey(record)
 						, record:  record
 						, store:   storeName
@@ -277,6 +285,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 					if(!eventResult)
 					{
+						transaction.abort && transaction.abort();
 						return;
 					}
 
@@ -290,46 +299,57 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 					if(beforeWriteResult === false || beforeUpdateResult === false)
 					{
+						transaction.abort && transaction.abort();
 						return;
 					}
 
-					const request = store.put(Object.assign({}, Bindable.shuck(record)));
+					const requestA = store.delete(record.id);
 
-					request.onerror = error => {
+					requestA.onerror = error => {
 						this.dispatchEvent(new CustomEvent('writeError', {detail}));
-						// console.warn(error);
 						reject(error);
 					};
 
-					request.onsuccess = event => {
-						if(!this[Metadata][storeName])
-						{
-							this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
-						}
+					requestA.onsuccess = event => {
+						const requestB = store.put(Object.assign({}, Bindable.shuck(record)));
+						requestB.onerror = error => {
+							this.dispatchEvent(new CustomEvent('writeError', {detail}));
+							reject(error);
+						};
 
-						if(this[Metadata][storeName])
-						{
-							const currentHighMark = this.checkHighWaterMark(storeName, record);
-							const currentLowMark  = this.checkLowWaterMark(storeName, record);
-							const metadata        = this[Metadata][storeName];
-							const recordMark      = record[metadata.highWater];
+						requestB.onsuccess = event => {
 
-							if(origin.setHighWater && currentHighMark < recordMark)
-							{
-								this.setHighWaterMark(storeName, record, origin, 'insert');
+							accept(writeEvent);
+
+							transaction.oncomplete = event => {
+								record[Database.AfterInsert] && record[Database.AfterInsert](detail);
+								record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
+
+								if(!this[Metadata][storeName])
+								{
+									this[Metadata][storeName] = this.getStoreMeta(storeName, 'store', {});
+								}
+
+								if(this[Metadata][storeName])
+								{
+									const currentHighMark = this.checkHighWaterMark(storeName, record);
+									const currentLowMark  = this.checkLowWaterMark(storeName, record);
+									const metadata        = this[Metadata][storeName];
+									const recordMark      = record[metadata.highWater];
+
+									if(origin.setHighWater && currentHighMark < recordMark)
+									{
+										this.setHighWaterMark(storeName, record, origin, 'insert');
+									}
+
+									if(origin.setLowWater && currentLowMark > recordMark)
+									{
+
+										this.setLowWaterMark(storeName, record, origin, 'insert');
+									}
+								}
 							}
-
-							if(origin.setLowWater && currentLowMark > recordMark)
-							{
-
-								this.setLowWaterMark(storeName, record, origin, 'insert');
-							}
-						}
-
-						record[Database.AfterInsert] && record[Database.AfterInsert](detail);
-						record[Database.AfterWrite]  && record[Database.AfterWrite](detail);
-
-						accept(writeEvent)
+						};
 					};
 				}));
 			}
@@ -367,7 +387,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 				deletes.push(new Promise((accept, reject) => {
 					const detail = {
-						database:  this[Name]
+						database:  this
 						, record:  record
 						, key:     Database.getPrimaryKey(record)
 						, store:   storeName
@@ -376,46 +396,49 @@ export class Database extends Mixin.with(EventTargetMixin)
 						, origin:  origin
 					};
 
+					const cancelable  = true;
+					const writeEvent  = new CustomEvent('write', {cancelable, detail});
+					const eventResult = this.dispatchEvent(writeEvent);
+
+					if(!eventResult)
+					{
+						transaction.abort && transaction.abort();
+						return;
+					}
+
 					const beforeDeleteResult = record[Database.BeforeDelete]
 						? record[Database.BeforeDelete](detail)
 						: null;
 
 					if(beforeDeleteResult === false)
 					{
+						transaction.abort && transaction.abort();
 						return;
 					}
 
 					const request = store.delete(record.id);
 
-					record[PrimaryKey] = undefined;
-
-					record[Database.AfterDelete] && record[Database.AfterDelete](detail);
-
 					request.onerror = error => {
 						detail.original = error;
 						const deleteEvent = new CustomEvent('writeError', {detail});
 						this.dispatchEvent(deleteEvent);
-						// console.warn(error);
 						reject(error);
 					};
 
-					const writeEvent = new CustomEvent('write', {detail});
-
-					request.onsuccess = event => accept(writeEvent);
-
-					request.oncomplete = event => {
-
-						detail.original = event;
-
-						this.dispatchEvent(writeEvent);
-
-						transaction.commit && transaction.commit();
-
+					request.onsuccess = event => {
 						accept(writeEvent);
+						transaction.oncomplete = event => {
+							record[PrimaryKey] = undefined;
+							record[Database.AfterDelete] && record[Database.AfterDelete](detail);
+							detail.original = event;
+						};
 					};
+
 				}));
 			}
 		}
+
+		Promise.all(deletes).then(() => transaction.commit && transaction.commit());
 
 		return deletes;
 	}
@@ -475,7 +498,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 	[Fetch](type, index, direction, ranges, limit, offset, origin, map)
 	{
-		const processRange = (range,callback) => new Promise((accept, reject) => {
+		const processRange = (range, callback) => new Promise((accept, reject) => {
 
 			if(range instanceof IDBKeyRange)
 			{
@@ -604,7 +627,6 @@ export class Database extends Mixin.with(EventTargetMixin)
 			};
 
 			request.addEventListener('success', resultHandler);
-
 		});
 
 		const results = [];
@@ -617,7 +639,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 
 			if(ranges.length)
 			{
-				return processRange(ranges.shift(),callback).then(result => processResult(result, callback));
+				return processRange(ranges.shift(), callback).then(result => processResult(result, callback));
 			}
 
 			if(results.length === 1)
@@ -628,7 +650,7 @@ export class Database extends Mixin.with(EventTargetMixin)
 			return results;
 		};
 
-		return callback => processRange(ranges.shift(),callback).then(result => processResult(result, callback));
+		return callback => processRange(ranges.shift(), callback).then(result => processResult(result, callback));
 	}
 
 	static getPrimaryKey(record)
@@ -782,7 +804,8 @@ Object.defineProperty(Database, 'AfterUpdate',  {value: AfterUpdate});
 Object.defineProperty(Database, 'BeforeRead', {value: BeforeRead});
 Object.defineProperty(Database, 'AfterRead',  {value: AfterRead});
 
-Object.defineProperty(Database, 'PKSymbol',  {value: PrimaryKey});
+Object.defineProperty(Database, 'PKSymbol',   {value: PrimaryKey});
+Object.defineProperty(Database, 'PrimaryKey', {value: PrimaryKey});
 
 try
 {

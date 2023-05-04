@@ -7,9 +7,9 @@ export class ViewList
 	constructor(template, subProperty, list, parent, keyProperty = null, viewClass = null)
 	{
 		this.removed      = false;
-		this.args         = Bindable.makeBindable({});
-		this.args.value   = Bindable.makeBindable(list || {});
-		this.subArgs      = Bindable.makeBindable({});
+		this.args         = Bindable.makeBindable(Object.create(null));
+		this.args.value   = Bindable.makeBindable(list || Object.create(null));
+		this.subArgs      = Bindable.makeBindable(Object.create(null));
 		this.views        = [];
 		this.cleanup      = [];
 		this.viewClass    = viewClass;
@@ -22,6 +22,7 @@ export class ViewList
 		this.upDebind     = [];
 		this.paused       = false;
 		this.parent       = parent;
+		this.viewCount    = 0;
 		this.rendered     = new Promise((accept, reject) => {
 			Object.defineProperty(this, 'renderComplete', {
 				configurable: false
@@ -52,7 +53,7 @@ export class ViewList
 			this.reRender();
 		});
 
-		let debind = this.args.value.bindTo((v, k, t, d) => {
+		const debind = this.args.value.bindTo((v, k, t, d) => {
 
 			if(this.paused)
 			{
@@ -75,7 +76,7 @@ export class ViewList
 			{
 				if(this.views[kk])
 				{
-					this.views[kk].remove();
+					this.views[kk].remove(true);
 				}
 
 				delete this.views[kk];
@@ -93,11 +94,13 @@ export class ViewList
 			}
 			else if(!this.views[kk])
 			{
-				cancelAnimationFrame(this.willReRender);
-
-				this.willReRender = requestAnimationFrame(()=>{
-					this.reRender();
-				});
+				if(this.willReRender === false)
+				{
+					this.willReRender = requestAnimationFrame(() => {
+						this.willReRender = false;
+						this.reRender();
+					});
+				}
 			}
 			else if(this.views[kk] && this.views[kk].args)
 			{
@@ -119,7 +122,7 @@ export class ViewList
 		{
 			view.viewList = this;
 
-			view.render(tag);
+			view.render(tag, null, this.parent);
 
 			renders.push(view.rendered.then(()=>view));
 		}
@@ -188,7 +191,6 @@ export class ViewList
 					existingView.args[ this.keyProperty ] = i;
 
 					finalViews[k] = existingView;
-
 					finalViewSet.add(existingView);
 
 					found = true;
@@ -205,7 +207,7 @@ export class ViewList
 
 			if(!found)
 			{
-				let viewArgs = {};
+				let viewArgs = Object.create(null);
 				let view = finalViews[k] = new (this.viewClass)(viewArgs, this.parent);
 
 				if(!isNaN(k))
@@ -274,7 +276,7 @@ export class ViewList
 		{
 			if(!finalViewSet.has(views[i]))
 			{
-				views[i].remove();
+				views[i].remove(true);
 			}
 		}
 
@@ -304,7 +306,7 @@ export class ViewList
 				{
 					if(finalViews[ii] && !finalViews[ii].firstNode)
 					{
-						finalViews[ii].render(this.tag, finalViews[ii + 1]);
+						finalViews[ii].render(this.tag, finalViews[ii + 1], this.parent);
 
 						return finalViews[ii].rendered.then(() => renderRecurse(Number(i) + 1));
 					}
@@ -327,7 +329,7 @@ export class ViewList
 					}
 				}
 
-				finalViews[ii].render(this.tag, finalViews[ii + 1]);
+				finalViews[ii].render(this.tag, finalViews[ii + 1], this.parent);
 
 				this.views.splice(ii, 0, finalViews[ii]);
 
@@ -340,7 +342,7 @@ export class ViewList
 		else
 		{
 			const renders = [];
-			const leftovers = Object.assign({}, finalViews);
+			const leftovers = Object.assign(Object.create(null), finalViews);
 
 			const isInt = (x) => parseInt(x) === x - 0;
 
@@ -377,7 +379,7 @@ export class ViewList
 					continue;
 				}
 
-				finalViews[i].render(this.tag);
+				finalViews[i].render(this.tag, null, this.parent);
 
 				renders.push( finalViews[i].rendered.then(()=>finalViews[i]) );
 			}
@@ -386,7 +388,7 @@ export class ViewList
 			{
 				delete this.args.views[i];
 
-				leftovers.remove();
+				leftovers.remove(true);
 			}
 
 			this.rendered = Promise.all(renders);
@@ -407,6 +409,8 @@ export class ViewList
 			? [...finalViews]
 			: finalViews;
 
+		this.viewCount = finalViewSet.size;
+
 		finalViewSet.clear();
 
 		this.willReRender = false;
@@ -420,6 +424,8 @@ export class ViewList
 				detail: {key: this.subProperty, value: this.args.value, tag: this.tag}
 			}}));
 		});
+
+		return this.rendered;
 	}
 
 	pause(pause=true)
@@ -439,7 +445,7 @@ export class ViewList
 	{
 		for(let i in this.views)
 		{
-			this.views[i].remove();
+			this.views[i].remove(true);
 		}
 
 		let onRemove = this._onRemove.items();
@@ -473,10 +479,10 @@ export class ViewList
 
 		Bindable.clearBindings(this.args);
 
-		if(this.args.value && !this.args.value.isBound())
-		{
-			Bindable.clearBindings(this.args.value);
-		}
+		// if(this.args.value && !this.args.value.isBound())
+		// {
+		// 	Bindable.clearBindings(this.args.value);
+		// }
 
 		this.removed = true;
 	}

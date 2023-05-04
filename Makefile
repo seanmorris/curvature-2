@@ -2,14 +2,19 @@
 
 SHELL=bash -euo pipefail
 
-CV_SOURCES:=$(shell find source/)
+MAKEFLAGS+= --no-builtin-rules --warn-undefined-variables
+
 VERSION:=$(shell jq -r .version < package.json)
+CV_SOURCES:=$(shell find source/)
+CV_TEST_CLASSES=$(subst test/,test/build/,$(wildcard test/*.js))
+CV_TEST_SCRIPTS=$(subst test/,test/build/,$(wildcard test/tests/*.js))
+CV_TEST_HELPERS=$(subst test/,test/build/,$(wildcard test/helpers/*.js))
 
 ifeq (${CODECOV_TOKEN},)
 	CODECOV_DRYFLAG=-d
 endif
 
-all: dist/curvature.js test/html/curvature.js curvature-${VERSION}.tgz
+all: curvature-${VERSION}.tgz dist/curvature.js
 
 # publish: test/results.json curvature-${VERSION}.tgz
 # 	npm publish
@@ -21,22 +26,31 @@ curvature-${VERSION}.tgz: ${CV_SOURCES} node_modules/.package-lock.json
 dist/curvature.js: ${CV_SOURCES} node_modules/.package-lock.json
 	@ npx brunch b -p
 
+dist/curvature.sri: dist/curvature.js
+	cat dist/curvature.js | openssl dgst -sha384 -binary | openssl base64 -A | tee dist/curvature.sri
+
 test/html/curvature.js: ${CV_SOURCES} node_modules/.package-lock.json
 	@ npx brunch b
 
 test:
+	cd test/ && npx babel helpers/*.js --out-dir build/helpers
+	cd test/ && npx babel tests/*.js --out-dir build/tests
+	cd test/ && npx babel *.js -d build/
 	@ echo -e "Testing with \e[33m"`google-chrome --version`"\e[0m...";
-	@ touch node_modules/.package-lock.json
+	@ rm test/results.json || true
 	@ make test/results.json
 
-test/results.json: test/html/curvature.js
-	@ cd test/ \
-	&& rm -rf build/* \
-	&& npx babel ./helpers/ --out-dir build/helpers/ \
-	&& npx babel ./tests/ --out-dir build/tests/ \
-	&& npx babel ./*.js --out-dir build \
-	&& cd build/ \
-	&& npx cvtest ${TESTLIST} > ../results.json
+test/build/helpers/%.js: test/helpers/%.js
+	npx babel ${<} -o ${@}
+
+test/build/tests/%.js: test/tests/%.js
+	npx babel ${<} -o ${@}
+
+test/build/%.js: test/%.js ${CV_TEST_SCRIPTS}
+	cd test/ && npx babel ../${<} -o ../${@}
+
+test/results.json: test/html/curvature.js ${CV_TEST_CLASSES} ${CV_TEST_SCRIPTS} ${CV_TEST_HELPERS}
+	@ cd test/build/ && npx cvtest ${TESTLIST} > ../results.json
 
 test/coverage/data/cv-coverage.json: test/results.json
 	@ node test/map-coverage.js

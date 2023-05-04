@@ -14,6 +14,7 @@ const HandleError     = Symbol('HandleError');
 const HandleOpen      = Symbol('HandleOpen');
 const HandleFail      = Symbol('HandleFail');
 
+const FetchDeferrer   = Symbol('FetchDeferrer');
 const LastChunkSize   = Symbol('LastChunkSize');
 const LastChunkTime   = Symbol('LastChunkTime');
 
@@ -39,6 +40,40 @@ const End         = Symbol('End');
 
 export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 {
+	static backlog = [];
+	static running = new Set;
+
+	static pool(elicit)
+	{
+		const maxPool = 5;
+
+		elicit.finally(() => {
+			this.running.delete(elicit);
+
+			if(!this.backlog.length)
+			{
+				return;
+			}
+
+			const next = this.backlog.shift();
+
+			this.running.add(next);
+
+			next.open();
+		});
+
+		if(this.running.size < maxPool)
+		{
+			this.running.add(elicit);
+
+			elicit.open();
+		}
+		else
+		{
+			this.backlog.push(elicit);
+		}
+	}
+
 	constructor(url, options = {})
 	{
 		super();
@@ -46,6 +81,8 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		this[RetriesLeft] = options.retries    || 5;
 		this[Timeout]     = options.timeout    || 4500;
 		this[TimeoutLeft] = options.maxTimeout || this[Timeout] * this[RetriesLeft];
+
+		this[FetchDeferrer] = null;
 
 		this[LastChunkTime] = 0;
 		this[LastChunkSize] = 0;
@@ -61,6 +98,10 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		if(!options.defer)
 		{
 			this.open();
+		}
+		else
+		{
+			this[Fetch] = new Promise(accept => this[FetchDeferrer] = accept);
 		}
 	}
 
@@ -344,7 +385,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 				this[HandleFirstByte](value);
 			}
 
-			this[HandleProgress](length, this[Received]);
+			this[HandleProgress](length, this[Received], value);
 
 			this[LastChunkTime] = lastTime;
 			this[LastChunkSize] = lastSize;
@@ -402,6 +443,8 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 	[HandleOpen](response)
 	{
+
+
 		const reader = response.body.getReader();
 		const length = this[Length] || Number(response.headers.get('Content-Length'));
 		const type   = this[type]   || response.headers.get('Content-Type');
@@ -410,6 +453,11 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 		this[Type]   = type;
 
 		this[HandleHeaders](response.headers);
+
+		if(this[FetchDeferrer])
+		{
+			this[FetchDeferrer]( this[Fetch] );
+		}
 
 		const _this  = this;
 
@@ -454,7 +502,7 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 	{
 		console.warn(`[${error.constructor.name}] ${error.code}: ${error.message}`, error);
 
-		if(this.emitErrorEvent(error))
+		if(!this.emitErrorEvent(error))
 		{
 			return this[Retry]();
 		}

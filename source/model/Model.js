@@ -75,7 +75,6 @@ export class Model
 			changed = true;
 		}
 
-
 		return instance;
 	}
 

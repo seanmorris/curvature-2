@@ -3,8 +3,6 @@ import { rawquire } from 'rawquire/rawquire.macro';
 
 export class CvEachTagTest extends TestBase
 {
-	parallel = false;
-
 	testList()
 	{
 		const name = 'testList';
