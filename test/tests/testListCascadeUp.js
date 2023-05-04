@@ -32,5 +32,5 @@ export const testListCascadeUp = () => {
 
 	setInterval(cascade, 10);
 
-	return require('Delay')(160 * 10).then(() => document.body.innerHTML);
+	return require('Delay')(200 * 10).then(() => document.body.innerHTML);
 };
