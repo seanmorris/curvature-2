@@ -54,7 +54,6 @@ export const testObjectRefill = () => {
 
 	setInterval(cascade, 10);
 
-
 	setTimeout(() => {
 
 		const filterInterval = setInterval(filter, 10)
@@ -64,8 +63,7 @@ export const testObjectRefill = () => {
 			setInterval(refill, 10)
 		}, 500);
 
-
 	}, 1000);
 
-	return require('Delay')(5000).then(() => document.body.innerHTML);
+	return require('Delay')(4500).then(() => document.body.innerHTML);
 };
