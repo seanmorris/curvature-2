@@ -70,7 +70,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     steps:
       - checkout
       - install-deps
@@ -82,7 +82,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     steps:
       - checkout
       - install-deps
@@ -94,7 +94,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION: 110.0.5481.177-1
     steps:
@@ -108,7 +108,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION:  100.0.4896.127-1
     steps:
@@ -122,7 +122,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION: 90.0.4430.72
     steps:
@@ -136,7 +136,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION: 80.0.3987.149
     steps:
@@ -150,7 +150,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION: 70.0.3538.77
     steps:
@@ -164,7 +164,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION: 60.0.3112.90
     steps:
@@ -178,7 +178,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION: 50.0.2661.75
     steps:
@@ -192,7 +192,7 @@ jobs:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: false
-    resource_class: medium
+    resource_class: large
     environment:
       CHROME_VERSION: 48.0.2564.109
     steps:
