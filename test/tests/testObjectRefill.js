@@ -23,12 +23,15 @@ export const testObjectRefill = () => {
 			return;
 		}
 
-		view.args.keys[ 'prop-' + String.fromCharCode(97 + x++) ] = x;
+		const key = 'prop-' + String.fromCharCode(97 + x++);
+
+		view.args.keys[ key ] = x;
 	};
 
 	const filter = () => {
 		for(const key in view.args.keys)
 		{
+
 			if(view.args.keys[key] % 2)
 			{
 				delete view.args.keys[key];
@@ -44,7 +47,9 @@ export const testObjectRefill = () => {
 			return;
 		}
 
-		view.args.keys[ 'prop-' + String.fromCharCode(97 + y++) ] = -25 + y;
+		const key =  'prop-' + String.fromCharCode(97 + y++);
+
+		view.args.keys[ key ] = -25 + y;
 	};
 
 	setInterval(cascade, 10);
@@ -62,8 +67,5 @@ export const testObjectRefill = () => {
 
 	}, 1000);
 
-	return new Promise(accept => {
-
-		setTimeout(() => accept(document.body.innerHTML), 4000);
-	});
+	return require('Delay')(4000).then(() => document.body.innerHTML);
 };

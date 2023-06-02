@@ -42,7 +42,5 @@ export const testObjectDeleteOdds = () => {
 
 	setTimeout(() => setInterval(filter, 10), 1000);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 2000);
-	});
+	return require('Delay')(128 * 11).then(() => document.body.innerHTML);
 };

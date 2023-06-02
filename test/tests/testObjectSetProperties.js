@@ -27,7 +27,5 @@ export const testObjectSetProperties = () => {
 
 	setInterval(cascade, 10);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 2000);
-	});
+	return require('Delay')(2000).then(() => document.body.innerHTML);
 };

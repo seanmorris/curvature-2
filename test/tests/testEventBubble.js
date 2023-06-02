@@ -24,5 +24,5 @@ export const testEventBubble = () => {
 	target.dispatchEvent(new CustomEvent('two',   {bubbles: true}));
 	target.dispatchEvent(new CustomEvent('three', {bubbles: true}));
 
-	return new Promise(accept => setTimeout(() => accept(document.body.innerHTML), 2000));
+	return document.body.innerHTML;
 };

@@ -30,9 +30,9 @@ export const EventPipe = (events) => {
 			}
 
 			writer.write(encoder.encode(
-				`event:  ${ event.type ?? 'ServerEvent' }\n`
+				 `event: ${ event.type ?? 'ServerEvent' }\n`
 				+ `data: ${ JSON.stringify(event.data)  }\n`
-				+ `id:   ${ event.id ?? Date.now()      }\n\n`
+				+   `id: ${ event.id ?? Date.now()      }\n\n`
 			));
 		});
 

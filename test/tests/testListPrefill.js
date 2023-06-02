@@ -14,7 +14,5 @@ export const testListPrefill = () => {
 
 	view.render(document.body);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return require('Delay')(10).then(() => document.body.innerHTML);
 };

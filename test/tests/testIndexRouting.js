@@ -8,7 +8,7 @@ export const testIndexRouting = () => {
 
 	const Router = require('curvature/base/Router').Router;
 	const View = require('curvature/base/View').View;
-	const view = View.from('<b>[[content]]</b>\n');
+	const view = View.from('<b>[[content]]</b>');
 
 	view.render(document.body);
 
@@ -16,7 +16,5 @@ export const testIndexRouting = () => {
 
 	Router.go('', -1);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 2000);
-	});
+	return require('Delay')(1).then(() => document.body.innerHTML);
 };

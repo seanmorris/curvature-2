@@ -11,8 +11,6 @@ export const testHtmlEscape = () => {
 
 	view.args.html = '<u>html escape test</u>'
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return document.body.innerHTML;
 };
 

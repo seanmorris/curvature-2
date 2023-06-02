@@ -1,189 +1,136 @@
 import { TestBase } from './TestBase';
 import { rawquire } from 'rawquire/rawquire.macro';
 
-const hostname = `file://${process.cwd()}/../html/index.html`;
-
 export class BasicViewTest extends TestBase
 {
 	testTemplate()
 	{
 		const name = 'testTemplate';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testFindTag()
+	{
+		const name = 'testFindTag';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testFindTags()
+	{
+		const name = 'testFindTags';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testListenSelf()
+	{
+		const name = 'testListenSelf';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testListenNode()
+	{
+		const name = 'testListenNode';
+
+		const testScript = require(`./tests/${name}`);
+
+		return this.wrapTest(
+			name,
+			testScript[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testFlicker()
 	{
 		const name = 'testFlicker';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testHtmlEscape()
 	{
 		const name = 'testHtmlEscape';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testHtmlNoEscape()
 	{
 		const name = 'testHtmlNoEscape';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result =>
-		this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testViewEscaped()
 	{
 		const name = 'testViewEscaped';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testViewNoEscape()
 	{
 		const name = 'testViewNoEscape';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testList()
-	{
-		const name = 'testList';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testListPrefill()
-	{
-		const name = 'testListPrefill';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testListCascade()
-	{
-		const name = 'testListCascade';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testListCascadeUp()
-	{
-		const name = 'testListCascadeUp';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testListSplicedOdds()
-	{
-		const name = 'testListSplicedOdds';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testListSplicedUpOdds()
-	{
-		const name = 'testListSplicedUpOdds';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testObjectSetProperties()
-	{
-		const name = 'testObjectSetProperties';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testObjectDeleteOdds()
-	{
-		const name = 'testObjectDeleteOdds';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
-	}
-
-	testObjectRefill()
-	{
-		const name = 'testObjectRefill';
-
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 }
 

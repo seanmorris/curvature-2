@@ -1,4 +1,3 @@
-
 export const testFormGroupInput = () => {
 	while(document.body.firstChild)
 	{
@@ -73,7 +72,5 @@ export const testFormGroupInput = () => {
 	}, 100);
 
 
-	return new Promise(accept => {
-		setTimeout(() => accept(JSON.stringify(form.value, null, 4) + "\n"), 3000);
-	});
+	return require('Delay')(160 * 10).then(() => JSON.stringify(form.value, null, 4) + "\n");
 };

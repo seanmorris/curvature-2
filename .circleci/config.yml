@@ -1,23 +1,71 @@
 version: 2.1
 
 commands:
+
   install-deps:
+    steps:
+      - run: |
+          export NVM_DIR="/opt/circleci/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          nvm install 18 && nvm use 18 && nvm alias default 18
+          node -v
+      - run: sudo apt install -y jq
+      - run: npm install
+      - run: wget http://launchpadlibrarian.net/487694450/make_4.3-4ubuntu1_amd64.deb
+      - run: sudo dpkg -i make_4.3-4ubuntu1_amd64.deb
+      - run: rm make_4.3-4ubuntu1_amd64.deb
+
+  install-chrome-latest:
     steps:
       - run: wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
       - run: sudo apt-get update
-      - run: sudo apt install -y software-properties-common nodejs npm google-chrome-stable
-      - run: mkdir -p /tmp/.chrome-user
+      - run: sudo apt install -y software-properties-common google-chrome-stable
+
+  install-chrome-dev:
+    steps:
+      - run: sudo apt remove google-chrome-stable
+      - run: wget https://dl.google.com/linux/direct/google-chrome-unstable_current_amd64.deb
+      - run: sudo dpkg -i google-chrome-unstable_current_amd64.deb
+      - run: rm google-chrome-unstable_current_amd64.deb
+
+  install-chrome-version:
+    steps:
+      - run: wget http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
+
+  install-chrome-old-version:
+    steps:
+      - run: wget https://www.slimjet.com/chrome/download-chrome.php?file=files%2F${CHROME_VERSION}%2Fgoogle-chrome-stable_current_amd64.deb -O google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
+
+  install-chrome-older-version:
+    steps:
+      - run: sudo apt remove google-chrome-stable
+      - run: wget https://www.slimjet.com/chrome/download-chrome.php?file=lnx%2Fchrome64_${CHROME_VERSION}.deb -O google-chrome-stable_${CHROME_VERSION}_amd64.deb
+      - run: sudo dpkg -i google-chrome-stable_${CHROME_VERSION}_amd64.deb || sudo apt install -f -y
+      - run: rm google-chrome-stable_${CHROME_VERSION}_amd64.deb
 
 workflows:
   version: 2
 
   test:
     jobs:
-      - test
+      - test-chrome-latest
+      - test-chrome-dev
+      - test-chrome-110
+      - test-chrome-100
+      - test-chrome-90
+      - test-chrome-80
+      - test-chrome-70
+      # - test-chrome-60
+      # - test-chrome-50
+      # - test-chrome-48
 
 jobs:
-  test:
+  test-chrome-latest:
     parallelism: 1
     machine:
       image: ubuntu-2004:202010-01
@@ -26,7 +74,129 @@ jobs:
     steps:
       - checkout
       - install-deps
-      - run: sudo npm install -g cv3-test pobot
-      - run: npm install -g brunch
-      - run: npm install
+      - install-chrome-latest
+      - run: make test post-coverage post-images
+
+  test-chrome-dev:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-dev
+      - run: make test
+
+  test-chrome-110:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 110.0.5481.177-1
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-version
+      - run: make test
+
+  test-chrome-100:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION:  100.0.4896.127-1
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-version
+      - run: make test
+
+  test-chrome-90:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 90.0.4430.72
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
+      - run: make test
+
+  test-chrome-80:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 80.0.3987.149
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
+      - run: make test
+
+  test-chrome-70:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 70.0.3538.77
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
+      - run: make test
+
+  test-chrome-60:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 60.0.3112.90
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-older-version
+      - run: make test
+
+  test-chrome-50:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 50.0.2661.75
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-older-version
+      - run: make test
+
+  test-chrome-48:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: false
+    resource_class: medium
+    environment:
+      CHROME_VERSION: 48.0.2564.109
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-older-version
       - run: make test

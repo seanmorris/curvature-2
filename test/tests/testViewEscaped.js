@@ -12,8 +12,6 @@ export const testViewEscaped = () => {
 	view.args.view = '[[escaped]]'
 	view.args.escaped = '<u>view escape test</u>'
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return document.body.innerHTML;
 };
 

@@ -11,7 +11,5 @@ export const testList = () => {
 
 	view.args.numbers = Array.from(Array(32)).map((_,i) => i);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return require('Delay')(10).then(() => document.body.innerHTML);;
 };

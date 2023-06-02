@@ -18,7 +18,5 @@ export const testEventDispatch = () => {
 	target.dispatchEvent('two');
 	target.dispatchEvent('three');
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 2000);
-	});
+	return document.body.innerHTML;
 };

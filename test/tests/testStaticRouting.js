@@ -16,8 +16,6 @@ export const testStaticRouting = () => {
 
 	Router.go('/page', -1);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 2000);
-	});
+	return require('Delay')(1).then(() => document.body.innerHTML);
 };
 

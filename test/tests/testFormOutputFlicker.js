@@ -45,7 +45,5 @@ export const testFormOutputFlicker = () => {
 	}, 100);
 
 
-	return new Promise(accept => {
-		setTimeout(() => accept(JSON.stringify(form.value, null, 4) + "\n"), 2000);
-	});
+	return require('Delay')(160 * 10).then(() => JSON.stringify(form.value, null, 4) + "\n");
 };

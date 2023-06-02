@@ -6,7 +6,9 @@ import { Routes } from './Routes';
 const NotFoundError = Symbol('NotFound');
 const InternalError = Symbol('Internal');
 
-globalThis.CustomEvent = globalThis.CustomEvent ?? globalThis.Event;
+const win = typeof globalThis === 'object' ? globalThis : (typeof window === 'object' ? window : (typeof self === 'object' ? self : this));
+
+win.CustomEvent = win.CustomEvent ?? win.Event;
 
 export class Router {
 
@@ -53,7 +55,7 @@ export class Router {
 				}
 			}
 
-			if(location.origin !== 'null')
+			if(!this.isOriginLimited(location))
 			{
 				this.match(location.pathname, listener);
 			}
@@ -66,11 +68,11 @@ export class Router {
 		window.addEventListener('cvUrlChanged', listen);
 		window.addEventListener('popstate',     listen);
 
-		let route = location.origin !== 'null'
+		let route = !this.isOriginLimited(location)
 			? location.pathname + location.search
 			: false;
 
-		if(location.origin && location.hash)
+		if(!this.isOriginLimited(location) && location.hash)
 		{
 			route += location.hash;
 		}
@@ -81,7 +83,7 @@ export class Router {
 			, prev:   this.prevPath
 		};
 
-		if(location.origin !== 'null')
+		if(!this.isOriginLimited(location))
 		{
 			history.replaceState(state, null, location.pathname);
 		}
@@ -108,7 +110,7 @@ export class Router {
 		{
 			this.match(path, this.listener, true);
 		}
-		else if(location.origin === 'null')
+		else if(this.isOriginLimited(location))
 		{
 			this.nextPath = path;
 		}
@@ -169,8 +171,6 @@ export class Router {
 
 	static handleError(error, routes, selected, args, listener, path, prev, forceRefresh)
 	{
-		console.error(error);
-
 		if(typeof document !== 'undefined')
 		{
 			document.dispatchEvent(new CustomEvent('cvRouteError', {
@@ -185,7 +185,7 @@ export class Router {
 			}));
 		}
 
-		let result = globalThis['devMode']
+		let result = win['devMode']
 			? 'Unexpected error: ' + String(error)
 			: 'Unexpected error.';
 
@@ -231,7 +231,7 @@ export class Router {
 
 		if(typeof document !== 'undefined')
 		{
-			origin = location.origin !== "null" ? location.origin : origin;
+			origin = this.isOriginLimited(location) ? origin : location.origin;
 			this.queryString = location.search;
 		}
 
@@ -383,39 +383,39 @@ export class Router {
 				result = this.processRoute(routes, NotFoundError, args);
 			}
 
-			if(!(result instanceof Promise))
-			{
-				result = Promise.resolve(result);
-
-				// return this.update(
-				// 	listener
-				// 	, path
-				// 	, result
-				// 	, routes
-				// 	, selected
-				// 	, args
-				// 	, forceRefresh
-				// );
-			}
-
 			if(typeof document === 'undefined')
 			{
+				if(!(result instanceof Promise))
+				{
+					return Promise.resolve(result);
+				}
+
 				return result;
 			}
 
-			return result.then(realResult => {
-
-				this.update(
+			if(!(result instanceof Promise))
+			{
+				return this.update(
 					listener
 					, path
-					, realResult
+					, result
 					, routes
 					, selected
 					, args
 					, forceRefresh
 				);
+			}
 
-			}).catch(error => { this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh); });
+			return result.then(realResult => this.update(
+				listener
+				, path
+				, realResult
+				, routes
+				, selected
+				, args
+				, forceRefresh
+			))
+			.catch(error => { this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh); });
 		}
 		catch(error)
 		{
@@ -477,6 +477,11 @@ export class Router {
 		});
 
 		document.dispatchEvent(eventEnd);
+	}
+
+	static isOriginLimited({origin})
+	{
+		return origin === 'null' || origin === 'file://';
 	}
 
 	static queryOver(args = {})

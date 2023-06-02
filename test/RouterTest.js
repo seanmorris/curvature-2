@@ -9,167 +9,191 @@ export class RouterTest extends TestBase
 	{
 		const name = 'testIndexRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testNamedArgRouting()
+	{
+		const name = 'testNamedArgRouting';
+
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
+	}
+
+	testOptionalNamedArgRouting()
+	{
+		const name = 'testOptionalNamedArgRouting';
+
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testStaticRouting()
 	{
 		const name = 'testStaticRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testWildcardRoutingA()
 	{
 		const name = 'testWildcardRoutingA';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testWildcardRoutingB()
 	{
 		const name = 'testWildcardRoutingB';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testWildcardRoutingC()
 	{
 		const name = 'testWildcardRoutingC';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testVariadicRouting0()
 	{
 		const name = 'testVariadicRouting0';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testVariadicRouting1()
 	{
 		const name = 'testVariadicRouting1';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testVariadicRouting2()
 	{
 		const name = 'testVariadicRouting2';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testVariadicRouting3()
 	{
 		const name = 'testVariadicRouting3';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testFunctionRouting()
 	{
 		const name = 'testFunctionRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testPromiseRouting()
 	{
 		const name = 'testPromiseRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testPromiseFailRouting()
 	{
 		const name = 'testPromiseFailRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testNotFoundRouting()
 	{
 		const name = 'testNotFoundRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 
 	testUnexpectedErrorRouting()
 	{
 		const name = 'testUnexpectedErrorRouting';
 
-		return this.pobot.goto(`${hostname}`)
-		.then(() => this.pobot.inject(require(`./tests/${name}`)[name]))
-		.then(result => this.assert(
-			result === rawquire(`./tests/${name}.txt`)
-			, 'Document body incorrect or corrupted.'
-		));
+		return this.wrapTest(
+			name,
+			require(`./tests/${name}`)[name],
+			rawquire(`./tests/${name}.txt`),
+			true
+		);
 	}
 }

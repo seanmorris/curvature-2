@@ -37,8 +37,5 @@ export const testFormBasic = () => {
 
 	}, 100);
 
-
-	return new Promise(accept => {
-		setTimeout(() => accept(JSON.stringify(form.value, null, 4) + "\n"), 1000);
-	});
+	return require('Delay')(101).then(() => JSON.stringify(form.value, null, 4) + "\n");
 };

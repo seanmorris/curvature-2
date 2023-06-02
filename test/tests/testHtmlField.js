@@ -14,7 +14,5 @@ export const testHtmlField = () => {
 
 	view.args.value = 'something';
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return document.body.innerHTML;
 };

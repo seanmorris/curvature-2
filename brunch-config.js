@@ -1,15 +1,22 @@
-exports.files = {
-  javascripts: {joinTo: 'curvature.js'},
-};
+exports.files = { javascripts: {joinTo: 'curvature.js'}};
 
 exports.plugins = {
-  babel: {
-    presets: [[ "minify" , { builtIns: false } ]]
-  },
   raw: {
-    pattern: /\.(html|jss)$/,
-    wrapper: content => `module.exports = ${JSON.stringify(content)}`
-  }
+    wrapper: content => `module.exports = ${JSON.stringify(content)}`,
+    pattern: /\.html$/,
+  },
+  presets:   [
+	['@babel/preset-env', {
+	  useBuiltIns: false,
+	  targets: {browsers: ['>0.25%',  'not ie 11', 'not op_mini all', 'not dead']},
+	  exclude: [
+	    '@babel/plugin-transform-arrow-functions',
+		'@babel/plugin-transform-block-scoping',
+		'@babel/plugin-transform-for-of',
+		'@babel/plugin-transform-spread',
+	  ]
+	}]
+  ]
 };
 
 exports.paths = {
@@ -18,4 +25,8 @@ exports.paths = {
 
 exports.modules = {
 	nameCleaner: path => path.replace(/^(source|build)?\//, 'curvature/')
+}
+
+exports.overrides = {
+	development: { paths: { public: 'test/html' } },
 }

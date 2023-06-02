@@ -2,10 +2,10 @@ import { Cache } from '../base/Cache';
 import { Bindable } from '../base/Bindable';
 import { Database } from './Database';
 
-const Changed = Symbol('Changed');
-const Deleted = Symbol('Deleted');
-const Saved   = Symbol('Saved');
-const Keys    = Symbol('Keys');
+const Changed  = Symbol('Changed');
+const Deleted  = Symbol('Deleted');
+const Saved    = Symbol('Saved');
+const Keys     = Symbol('Keys');
 
 export class Model
 {
@@ -74,7 +74,6 @@ export class Model
 
 			changed = true;
 		}
-
 
 		return instance;
 	}

@@ -11,8 +11,6 @@ export const testHtmlNoEscape = () => {
 
 	view.args.html = '<u>html no escape test</u>'
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return document.body.innerHTML;
 };
 

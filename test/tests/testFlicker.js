@@ -7,9 +7,9 @@ export const testFlicker = () => {
 	const View = require('curvature/base/View').View;
 	const view = View.from('<h1>[[number]]</h1>\n');
 
-	// Load the data BEFORE the render call:
-
 	view.render(document.body);
+
+	const h1 = document.querySelector('h1');
 
 	view.args.numbers = [];
 
@@ -22,12 +22,14 @@ export const testFlicker = () => {
 			return;
 		}
 
-		view.args.number = x++;
+		view.args.number = x;
+
+		console.assert(String(x) === h1.innerText, `x [${x}] and H1 [${h1.innerText}] should match.`);
+
+		x++;
 	};
 
 	setInterval(cascade, 10);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 2000);
-	});
+	return require('Delay')(128 * 11).then(() => document.body.innerHTML);
 };

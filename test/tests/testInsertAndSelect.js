@@ -8,24 +8,36 @@ export const testInsertAndSelect = () => {
 	{
 		const Database = require('curvature/model/Database').Database;
 
-		Database._version_1 = database => this.createObjectStore('records', {keyPath: 'id'});
+		Database.prototype._version_1 = (connection,database) => {
+			const store = database.createObjectStore('records', {keyPath: 'id', indexName: 'id'});
+			const index = store.createIndex('id', 'id', {keyPath: 'id', });
+		};
 
 		const View = require('curvature/base/View').View;
-		const view = View.from('<ul cv-each = "records:record"><li>[[record.id]]</li></ul>\n');
+		const view = View.from('<ul cv-each = "records:record"><li>[[record.id]]::[[record.value]]</li></ul>');
+
+		view.args.records = [];
 
 		view.render(document.body);
 
-		const records = Array.from(Array(10)).map((_,id) => ({id}));
+		const records = Array.from(Array(10)).map((_,id) => ({id, value: id}));
+
+		const selected = [];
 
 		Database.open('records', 1).then(database => {
-			console.log(database);
+
+			const updateSelected = r => {
+				r.value++;
+				return database.update('records', r);
+			};
+
+			database.clear('records')
+			.then(() => records.map(record => database.insert('records', record)))
+			.then(() => database.select({store: 'records', index: 'id', ranges: [[,3], [5,7]]}).each(record => selected.push(record)))
+			.then(() => Promise.all(selected.map(updateSelected)))
+			.then(updates => database.select({store: 'records', index: 'id', range: [8]}).each(record => database.delete('records', record)))
+			.then(() => database.select({store: 'records', index: 'id', ranges: [[0,2], [5], [7,,]]}).each(record => view.args.records.push(record)));
 		});
-
-		// records.forEach(record => )
-		// database.insert('records', record);
-
-		view.args.records = records;
-
 	}
 	catch(error)
 	{
@@ -33,9 +45,6 @@ export const testInsertAndSelect = () => {
 	}
 	finally
 	{
-		return new Promise(accept => {
-			setTimeout(() => accept(document.body.innerHTML), 1000 * 1000);
-		});
+		return require('Delay')(1000).then(() => document.body.innerHTML);
 	}
-
 };

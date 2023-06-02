@@ -14,7 +14,7 @@ export const testUnexpectedErrorRouting = () => {
 	routes[Router.InternalError] = 'Custom Error Page';
 
 	const View = require('curvature/base/View').View;
-	const view = View.from('<b>[[content]]</b>\n');
+	const view = View.from('<b>[[content]]</b>');
 
 	view.render(document.body);
 
@@ -22,7 +22,5 @@ export const testUnexpectedErrorRouting = () => {
 
 	Router.go('/page', -1);
 
-	return new Promise(accept => {
-		setTimeout(() => accept(document.body.innerHTML), 1000);
-	});
+	return require('Delay')(1).then(() => document.body.innerHTML);
 };
