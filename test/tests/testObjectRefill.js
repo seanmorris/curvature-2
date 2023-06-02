@@ -67,5 +67,5 @@ export const testObjectRefill = () => {
 
 	}, 1000);
 
-	return require('Delay')(4000).then(() => document.body.innerHTML);
+	return require('Delay')(5000).then(() => document.body.innerHTML);
 };
