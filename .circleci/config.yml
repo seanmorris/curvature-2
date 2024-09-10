@@ -93,6 +93,20 @@ jobs:
       - install-chrome-dev
       - run: make test
 
+  test-chrome-120:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:2024.05.1
+      docker_layer_caching: false
+    resource_class: large
+    environment:
+      CHROME_VERSION: 110.0.5481.177-1
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-old-version
+      - run: make test
+
   test-chrome-110:
     parallelism: 1
     machine:
@@ -104,7 +118,7 @@ jobs:
     steps:
       - checkout
       - install-deps
-      - install-chrome-version
+      - install-chrome-old-version
       - run: make test
 
   test-chrome-100:
@@ -119,7 +133,7 @@ jobs:
       - checkout
       - install-deps
       - install-old-deps
-      - install-chrome-version
+      - install-chrome-old-version
       - run: make test
 
   test-chrome-90:
