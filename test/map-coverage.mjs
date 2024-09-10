@@ -1,9 +1,6 @@
 "use strict";
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const { SourceMapConsumer } = require("source-map");
+import fs from 'node:fs';
+import { SourceMapConsumer } from "source-map";
 
 const testNames = fs.readdirSync('./test/coverage/v8')
 .filter(f => f.match(/-coverage\.json$/))
@@ -261,8 +258,7 @@ const testMasks = new Map;
 
 for(const testName of testNames)
 {
-	const coverage = require(`${process.cwd()}/test/coverage/v8/${testName}-coverage.json`);
-
+	const coverage = JSON.parse(fs.readFileSync(`${process.cwd()}/test/coverage/v8/${testName}-coverage.json`, {encoding: 'utf8'}));
 	const scripts  = new Map;
 
 	for(const script of coverage.result)
