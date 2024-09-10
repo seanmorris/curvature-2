@@ -39,15 +39,6 @@ test:
 	@ rm test/results.json || true
 	@ make test/results.json
 
-# test/build/helpers/%.js: test/helpers/%.js
-# 	npx babel ${<} -o ${@}
-
-# test/build/tests/%.js: test/tests/%.js
-# 	npx babel ${<} -o ${@}
-
-# test/build/%.js: test/%.js ${CV_TEST_SCRIPTS}
-# 	cd test/ && npx babel ../${<} -o ../${@}
-
 test/results.json: test/html/curvature.js ${CV_TEST_CLASSES} ${CV_TEST_SCRIPTS} ${CV_TEST_HELPERS}
 	@ cd test/ && npx cvtest ${TESTLIST} > ../results.json
 
