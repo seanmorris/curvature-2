@@ -15,6 +15,10 @@ commands:
       - run: sudo dpkg -i make_4.3-4ubuntu1_amd64.deb
       - run: rm make_4.3-4ubuntu1_amd64.deb
 
+  install-old-deps:
+    steps:
+      - run: sudo apt install libappindicator3-1
+
   install-chrome-latest:
     steps:
       - run: wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
@@ -60,6 +64,7 @@ workflows:
       - test-chrome-90
       - test-chrome-80
       - test-chrome-70
+      - test-chrome-60
 
 jobs:
   test-chrome-latest:
@@ -111,6 +116,7 @@ jobs:
     steps:
       - checkout
       - install-deps
+      - install-old-deps
       - install-chrome-version
       - run: make test
 
@@ -125,6 +131,7 @@ jobs:
     steps:
       - checkout
       - install-deps
+      - install-old-deps
       - install-chrome-old-version
       - run: make test
 
@@ -139,6 +146,7 @@ jobs:
     steps:
       - checkout
       - install-deps
+      - install-old-deps
       - install-chrome-old-version
       - run: make test
 
@@ -153,6 +161,50 @@ jobs:
     steps:
       - checkout
       - install-deps
-      - run: sudo apt install libappindicator3-1;
+      - install-old-deps
       - install-chrome-old-version
+      - run: make test
+
+test-chrome-60:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:2024.05.1
+      docker_layer_caching: false
+    resource_class: large
+    environment:
+      CHROME_VERSION: 60.0.3112.90
+    steps:
+      - checkout
+      - install-deps
+      - install-old-deps
+      - install-chrome-older-version
+      - run: make test
+
+  test-chrome-50:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:2024.05.1
+      docker_layer_caching: false
+    resource_class: large
+    environment:
+      CHROME_VERSION: 50.0.2661.75
+    steps:
+      - checkout
+      - install-deps
+      - install-chrome-older-version
+      - run: make test
+
+  test-chrome-48:
+    parallelism: 1
+    machine:
+      image: ubuntu-2004:2024.05.1
+      docker_layer_caching: false
+    resource_class: large
+    environment:
+      CHROME_VERSION: 48.0.2564.109
+    steps:
+      - checkout
+      - install-deps
+      - install-old-deps
+      - install-chrome-older-version
       - run: make test
