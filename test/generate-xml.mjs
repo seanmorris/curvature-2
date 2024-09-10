@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import xml from 'node:xml';
+import xml from 'xml';
 
 const coverage = JSON.parse(fs.readFileSync('./test/coverage/data/cv-coverage.json', 'utf-8'));
 
