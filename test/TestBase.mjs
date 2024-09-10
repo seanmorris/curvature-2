@@ -198,7 +198,7 @@ export class TestBase extends Test
 
 		const addExceptionHandler = pobot.client.Runtime.exceptionThrown(exception => console.dir(exception, {depth:null}));
 
-		await new Promise(a => setTimeout(a, 10));
+		await Delay(100);
 
 		return Promise.all([addBindings, addInits, addHandlers, addExceptionHandler]);
 	}
