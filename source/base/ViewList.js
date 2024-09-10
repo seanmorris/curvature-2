@@ -83,6 +83,11 @@ export class ViewList
 
 				for(let i in this.views)
 				{
+					if(!this.views[i])
+					{
+						continue;
+					}
+
 					if(isNaN(i))
 					{
 						this.views[i].args[ this.keyProperty ] = i.substr(1);
@@ -94,12 +99,19 @@ export class ViewList
 			}
 			else if(!this.views[kk])
 			{
-				if(this.willReRender === false)
+				if(!this.viewCount)
 				{
-					this.willReRender = requestAnimationFrame(() => {
-						this.willReRender = false;
-						this.reRender();
-					});
+					this.reRender();
+				}
+				else
+				{
+					if(this.willReRender === false)
+					{
+						this.willReRender = requestAnimationFrame(() => {
+							this.willReRender = false;
+							this.reRender();
+						});
+					}
 				}
 			}
 			else if(this.views[kk] && this.views[kk].args)
@@ -107,7 +119,8 @@ export class ViewList
 				this.views[kk].args[ this.keyProperty ] = k;
 				this.views[kk].args[ this.subProperty ] = v;
 			}
-		});
+
+		}, {wait: 0});
 
 		this._onRemove.add(debind);
 
@@ -148,7 +161,14 @@ export class ViewList
 
 		for(let i in this.views)
 		{
-			const view     = this.views[i]
+			const view = this.views[i];
+
+			if(view === undefined)
+			{
+				views[i] = view;
+				continue;
+			}
+
 			const rawValue = view.args[ this.subProperty ];
 
 			existingViews.add(rawValue, view);
@@ -274,7 +294,7 @@ export class ViewList
 
 		for(let i in views)
 		{
-			if(!finalViewSet.has(views[i]))
+			if(views[i] && !finalViewSet.has(views[i]))
 			{
 				views[i].remove(true);
 			}
@@ -337,7 +357,6 @@ export class ViewList
 			}
 
 			this.rendered = renderRecurse();
-
 		}
 		else
 		{
@@ -409,7 +428,7 @@ export class ViewList
 			? [...finalViews]
 			: finalViews;
 
-		this.viewCount = finalViewSet.size;
+		this.viewCount = finalViews.length;
 
 		finalViewSet.clear();
 
@@ -445,7 +464,7 @@ export class ViewList
 	{
 		for(let i in this.views)
 		{
-			this.views[i].remove(true);
+			this.views[i] && this.views[i].remove(true);
 		}
 
 		let onRemove = this._onRemove.items();

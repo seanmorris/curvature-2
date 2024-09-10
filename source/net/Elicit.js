@@ -443,11 +443,9 @@ export class Elicit extends Mixin.with(EventTargetMixin, PromiseMixin)
 
 	[HandleOpen](response)
 	{
-
-
 		const reader = response.body.getReader();
 		const length = this[Length] || Number(response.headers.get('Content-Length'));
-		const type   = this[type]   || response.headers.get('Content-Type');
+		const type   = this[Type]   || response.headers.get('Content-Type');
 
 		this[Length] = length;
 		this[Type]   = type;

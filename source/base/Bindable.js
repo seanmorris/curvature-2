@@ -20,6 +20,7 @@ const Descriptors = Symbol('Descriptors');
 const Before      = Symbol('Before');
 const After       = Symbol('After');
 const NoGetters   = Symbol('NoGetters');
+const Prevent     = Symbol('Prevent');
 
 const TypedArray  = Object.getPrototypeOf(Int8Array);
 
@@ -28,33 +29,38 @@ const MapIterator = Map.prototype[Symbol.iterator];
 
 const win = typeof globalThis === 'object' ? globalThis : (typeof window === 'object' ? window : (typeof self === 'object' ? self : this));
 
-const excludedClasses = [
-	win.Node
-	, win.File
-	, win.Map
-	, win.Set
-	, win.WeakMap
-	, win.WeakSet
-	, win.ArrayBuffer
-	, win.ResizeObserver
-	, win.MutationObserver
-	, win.PerformanceObserver
-	, win.IntersectionObserver
-	, win.IDBCursor
-	, win.IDBCursorWithValue
-	, win.IDBDatabase
-	, win.IDBFactory
-	, win.IDBIndex
-	, win.IDBKeyRange
-	, win.IDBObjectStore
-	, win.IDBOpenDBRequest
-	, win.IDBRequest
-	, win.IDBTransaction
-	, win.IDBVersionChangeEvent
-	, win.Event
-	, win.CustomEvent
-	, win.FileSystemFileHandle
-].filter(x=>typeof x === 'function');
+const isExcluded = object =>
+       (typeof win.Map === 'function' && object instanceof win.Map)
+	|| (typeof win.Set === 'function'                   && object instanceof win.Set)
+	|| (typeof win.Node === 'function'                  && object instanceof win.Node)
+	|| (typeof win.WeakMap === 'function'               && object instanceof win.WeakMap)
+	|| (typeof win.Location === 'function'              && object instanceof win.Location)
+	|| (typeof win.Storage === 'function'               && object instanceof win.Storage)
+	|| (typeof win.WeakSet === 'function'               && object instanceof win.WeakSet)
+	|| (typeof win.ArrayBuffer === 'function'           && object instanceof win.ArrayBuffer)
+	|| (typeof win.Promise === 'function'               && object instanceof win.Promise)
+	|| (typeof win.File === 'function'                  && object instanceof win.File)
+	|| (typeof win.Event === 'function'                 && object instanceof win.Event)
+	|| (typeof win.CustomEvent === 'function'           && object instanceof win.CustomEvent)
+	|| (typeof win.Gamepad === 'function'               && object instanceof win.Gamepad)
+	|| (typeof win.ResizeObserver === 'function'        && object instanceof win.ResizeObserver)
+	|| (typeof win.MutationObserver === 'function'      && object instanceof win.MutationObserver)
+	|| (typeof win.PerformanceObserver === 'function'   && object instanceof win.PerformanceObserver)
+	|| (typeof win.IntersectionObserver === 'function'  && object instanceof win.IntersectionObserver)
+	|| (typeof win.IDBCursor === 'function'             && object instanceof win.IDBCursor)
+	|| (typeof win.IDBCursorWithValue === 'function'    && object instanceof win.IDBCursorWithValue)
+	|| (typeof win.IDBDatabase === 'function'           && object instanceof win.IDBDatabase)
+	|| (typeof win.IDBFactory === 'function'            && object instanceof win.IDBFactory)
+	|| (typeof win.IDBIndex === 'function'              && object instanceof win.IDBIndex)
+	|| (typeof win.IDBKeyRange === 'function'           && object instanceof win.IDBKeyRange)
+	|| (typeof win.IDBObjectStore === 'function'        && object instanceof win.IDBObjectStore)
+	|| (typeof win.IDBOpenDBRequest === 'function'      && object instanceof win.IDBOpenDBRequest)
+	|| (typeof win.IDBRequest === 'function'            && object instanceof win.IDBRequest)
+	|| (typeof win.IDBTransaction === 'function'        && object instanceof win.IDBTransaction)
+	|| (typeof win.IDBVersionChangeEvent === 'function' && object instanceof win.IDBVersionChangeEvent)
+	|| (typeof win.FileSystemFileHandle === 'function'  && object instanceof win.FileSystemFileHandle)
+	|| (typeof win.RTCPeerConnection === 'function'     && object instanceof win.RTCPeerConnection)
+	|| (typeof win.ServiceWorkerRegistration === 'function' && object instanceof win.ServiceWorkerRegistration);
 
 export class Bindable
 {
@@ -63,7 +69,7 @@ export class Bindable
 
 	static isBindable(object)
 	{
-		if (!object || !object[IsBindable])
+		if (!object || !object[IsBindable] || !object[Prevent])
 		{
 			return false;
 		}
@@ -155,12 +161,17 @@ export class Bindable
 
 	static make(object)
 	{
+		if(object[Prevent])
+		{
+			return object;
+		}
+
 		if(!object || !['function', 'object'].includes(typeof object))
 		{
 			return object;
 		}
 
-		if(object[Ref])
+		if(Ref in object)
 		{
 			return object[Ref];
 		}
@@ -170,10 +181,10 @@ export class Bindable
 			return object;
 		}
 
-		if (Object.isSealed(object)
+		if(Object.isSealed(object)
 			|| Object.isFrozen(object)
 			|| !Object.isExtensible(object)
-			|| excludedClasses.find(x => object instanceof x)
+			|| isExcluded(object)
 		){
 			return object;
 		}
@@ -492,15 +503,19 @@ export class Bindable
 				return true;
 			}
 
-			for(let callbacks of object[Binding])
+			for(const callbacks of Object.values(object[Binding]))
 			{
-				for(let callback of callbacks)
+				if(callbacks.size)
 				{
-					if(callback)
-					{
-						return true;
-					}
+					return true;
 				}
+				// for(let callback of callbacks)
+				// {
+				// 	if(callback)
+				// 	{
+				// 		return true;
+				// 	}
+				// }
 			}
 
 			return false;
@@ -515,14 +530,26 @@ export class Bindable
 
 		for(let i in object)
 		{
-			if(object[i] && typeof object[i] === 'object' && !object[i] instanceof Promise)
+			// const descriptors = Object.getOwnPropertyDescriptors(object);
+
+			if(!object[i] || typeof object[i] !== 'object')
 			{
-				if(!excludedClasses.find(excludeClass => object[i] instanceof excludeClass)
-					&& Object.isExtensible(object[i])
-					&& !Object.isSealed(object[i])
-				){
-					object[i] = Bindable.make(object[i]);
-				}
+				continue;
+			}
+
+			if(object[i][Ref] || object[i] instanceof Promise)
+			{
+				continue;
+			}
+
+			if(!Object.isExtensible(object[i]) || Object.isSealed(object[i]))
+			{
+				continue;
+			}
+
+			if(!isExcluded(object[i]))
+			{
+				object[i] = Bindable.make(object[i]);
 			}
 		}
 
@@ -531,7 +558,7 @@ export class Bindable
 		const stack       = object[Stack];
 
 		const set = (target, key, value) => {
-			if(value && typeof value === 'object' && Object.isExtensible(object) && !Object.isSealed(object) && !excludedClasses.find(x => object instanceof x))
+			if(value && typeof value === 'object')
 			{
 				value = Bindable.make(value);
 
@@ -583,7 +610,7 @@ export class Bindable
 
 			onDeck.delete(key);
 
-			const excluded = target instanceof File && key == 'lastModifiedDate';
+			const excluded = win.File && target instanceof win.File && key == 'lastModifiedDate';
 
 			if(!excluded)
 			{
@@ -741,22 +768,24 @@ export class Bindable
 				const prototype = Object.getPrototypeOf(object);
 				const isMethod  = prototype[key] === object[key];
 				const objRef = (
-					(typeof Promise === 'function'                    && object instanceof Promise)
+					// (typeof Promise === 'function'                    && object instanceof Promise)
+					// || (typeof Storage === 'function'                 && object instanceof Storage)
+					// || (typeof Map === 'function'                     && object instanceof Map)
+					// || (typeof Set === 'function'                     && object instanceof Set)
+					// || (typeof WeakMap === 'function'                 && object instanceof WeakMap)
+					// || (typeof WeakSet === 'function'                 && object instanceof WeakSet)
+					// || (typeof ArrayBuffer === 'function'             && object instanceof ArrayBuffer)
+					// || (typeof ResizeObserver === 'function'          && object instanceof ResizeObserver)
+					// || (typeof MutationObserver === 'function'        && object instanceof MutationObserver)
+					// || (typeof PerformanceObserver === 'function'     && object instanceof PerformanceObserver)
+					// || (typeof IntersectionObserver === 'function'    && object instanceof IntersectionObserver)
+					isExcluded(object)
 					|| (typeof object[Symbol.iterator] === 'function' && key === 'next')
-					|| (typeof Map === 'function'                     && object instanceof Map)
-					|| (typeof Set === 'function'                     && object instanceof Set)
-					|| (typeof Date === 'function'                    && object instanceof Date)
-					|| (typeof WeakMap === 'function'                 && object instanceof WeakMap)
-					|| (typeof WeakSet === 'function'                 && object instanceof WeakSet)
+					|| (typeof TypedArray === 'function'              && object instanceof TypedArray)
 					|| (typeof EventTarget === 'function'             && object instanceof EventTarget)
+					|| (typeof Date === 'function'                    && object instanceof Date)
 					|| (typeof MapIterator === 'function'             && object.prototype === MapIterator)
 					|| (typeof SetIterator === 'function'             && object.prototype === SetIterator)
-					|| (typeof TypedArray === 'function'              && object instanceof TypedArray)
-					|| (typeof ArrayBuffer === 'function'             && object instanceof ArrayBuffer)
-					|| (typeof ResizeObserver === 'function'          && object instanceof ResizeObserver)
-					|| (typeof MutationObserver === 'function'        && object instanceof MutationObserver)
-					|| (typeof PerformanceObserver === 'function'     && object instanceof PerformanceObserver)
-					|| (typeof IntersectionObserver === 'function'    && object instanceof IntersectionObserver)
 				)	? object
 					: object[Ref];
 
@@ -775,7 +804,7 @@ export class Bindable
 
 					if(new.target)
 					{
-						ret = new object[Unwrapped].get(key)(...providedArgs);
+						ret = new (object[Unwrapped].get(key)) (...providedArgs);
 					}
 					else
 					{
@@ -803,16 +832,7 @@ export class Bindable
 					return ret;
 				}
 
-				wrappedMethod[Names] = wrappedMethod[Names] || new WeakMap;
-
-				wrappedMethod[Names].set(object, key);
-
-				wrappedMethod[OnAllGet] = (key) => {
-
-					const selfName = wrappedMethod[Names].get(object);
-
-					return object[selfName][key];
-				};
+				wrappedMethod[OnAllGet] = (_key) => object[key][_key];
 
 				const result = Bindable.make(wrappedMethod);
 
@@ -833,35 +853,31 @@ export class Bindable
 			return Reflect.getPrototypeOf(target);
 		}
 
-		const handlerDef = {
-			get: {value: get},
-			set: {value: set},
-			construct: {value: construct},
-			getPrototypeOf: {value: getPrototypeOf},
-			deleteProperty: {value: deleteProperty},
-		};
+		const handlerDef = Object.create(null);
 
-		if(object[NoGetters])
+		handlerDef.set = set;
+		handlerDef.construct = construct;
+		handlerDef.deleteProperty = deleteProperty;
+
+		if(!object[NoGetters])
 		{
-			delete handlerDef.getPrototypeOf;
-			delete handlerDef.get;
+			handlerDef.getPrototypeOf = getPrototypeOf;
+			handlerDef.get = get;
 		}
-
-		const handler = Object.create(null, handlerDef);
 
 		Object.defineProperty(object, Ref, {
 			configurable: false
 			, enumerable: false
 			, writable:   false
-			, value:      new Proxy(object, handler)
+			, value:      new Proxy(object, handlerDef)
 		});
 
 		return object[Ref];
 	}
 
 	static clearBindings(object) {
-		const clearObj  = o => Object.keys(o).map(k => delete o[k]);
 		const maps      = func => (...os) => os.map(func);
+		const clearObj  = o => Object.keys(o).map(k => delete o[k]);
 		const clearObjs = maps(clearObj);
 
 		object[BindingAll].clear();
@@ -936,7 +952,7 @@ export class Bindable
 				clearTimeout(waiter);
 			}
 
-			waiter = setTimeout(()=> callback(...args), wait);
+			waiter = setTimeout(() => callback(...args), wait);
 
 			this.waiters.set(callback, waiter);
 		};
@@ -958,6 +974,13 @@ export class Bindable
 		};
 	}
 }
+
+Object.defineProperty(Bindable, 'Prevent', {
+	configurable: false
+	, enumerable: false
+	, writable:   false
+	, value:      Prevent
+});
 
 Object.defineProperty(Bindable, 'OnGet', {
 	configurable: false

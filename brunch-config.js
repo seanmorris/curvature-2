@@ -14,6 +14,8 @@ exports.plugins = {
 		'@babel/plugin-transform-block-scoping',
 		'@babel/plugin-transform-for-of',
 		'@babel/plugin-transform-spread',
+		'@babel/plugin-transform-new-target',
+		'@babel/plugin-transform-parameters',
 	  ]
 	}]
   ]

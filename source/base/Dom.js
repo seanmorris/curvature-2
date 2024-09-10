@@ -15,52 +15,50 @@ export class Dom
 
 		let ended = false;
 
-		const treeWalker = document.createTreeWalker(
-			doc,
-			NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-			{
-				acceptNode: (node, walker) => {
+		const { Node, Element, NodeFilter, document } = globalThis.window;
 
-					if(!started)
+		const treeWalker = document.createTreeWalker(doc,NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+			acceptNode: (node, walker) => {
+
+				if(!started)
+				{
+					if(node === startNode)
 					{
-						if(node === startNode)
-						{
-							started = true;
-						}
-						else
-						{
-							return NodeFilter.FILTER_SKIP;
-						}
+						started = true;
 					}
-
-					if(endNode && node === endNode)
-					{
-						ended = true;
-					}
-
-					if(ended)
+					else
 					{
 						return NodeFilter.FILTER_SKIP;
 					}
-
-					if(selector)
-					{
-						if(node instanceof Element)
-						{
-							if(node.matches(selector))
-							{
-								return NodeFilter.FILTER_ACCEPT;
-							}
-						}
-
-						return NodeFilter.FILTER_SKIP;
-					}
-
-					return NodeFilter.FILTER_ACCEPT;
 				}
-			},
-			false
-		);
+
+				if(endNode && node === endNode)
+				{
+					ended = true;
+				}
+
+				if(ended)
+				{
+					return NodeFilter.FILTER_SKIP;
+				}
+
+				if(selector)
+				{
+					if(node instanceof Element)
+					{
+						if(node.matches(selector))
+						{
+							return NodeFilter.FILTER_ACCEPT;
+						}
+					}
+
+					return NodeFilter.FILTER_SKIP;
+				}
+
+				return NodeFilter.FILTER_ACCEPT;
+			}
+
+		}, false);
 
 		const traversal = traversals++;
 
@@ -71,11 +69,12 @@ export class Dom
 
 		return result;
 	}
+
 	static dispatchEvent(doc, event)
 	{
 		doc.dispatchEvent(event);
 
-		Dom.mapTags(doc, false, (node) => {
+		this.mapTags(doc, false, (node) => {
 			node.dispatchEvent(event);
 		});
 	}

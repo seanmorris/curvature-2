@@ -14,21 +14,21 @@ export class RtcClient extends Mixin.with(EventTargetMixin)
 		this.peerClientChannel = this.peerClient.createDataChannel("chat");
 
 		this.peerClientChannel.addEventListener('open', event => {
-			const openEvent = new CustomEvent('open', {detail: event.data });
+			const openEvent = new CustomEvent('open', {detail: event.data});
 			openEvent.originalEvent = event;
 			this.dispatchEvent(openEvent);
 			this.connected = true;
 		});
 
 		this.peerClientChannel.addEventListener('close', event => {
-			const closeEvent = new CustomEvent('close', {detail: event.data });
+			const closeEvent = new CustomEvent('close', {detail: event.data});
 			closeEvent.originalEvent = event;
 			this.dispatchEvent(closeEvent);
 			this.connected = false;
 		});
 
 		this.peerClientChannel.addEventListener('message', event => {
-			const messageEvent = new CustomEvent('message', {detail: event.data });
+			const messageEvent = new CustomEvent('message', {detail: event.data});
 			messageEvent.originalEvent = event;
 			this.dispatchEvent(messageEvent);
 		});
@@ -36,6 +36,8 @@ export class RtcClient extends Mixin.with(EventTargetMixin)
 
 	send(input)
 	{
+		console.log(this.peerClientChannel.readyState);
+
 		this.peerClientChannel && this.peerClientChannel.send(input);
 	}
 

@@ -4,11 +4,13 @@ SHELL=bash -euo pipefail
 
 MAKEFLAGS+= --no-builtin-rules --warn-undefined-variables
 
+TESTLIST?=
+
 VERSION:=$(shell jq -r .version < package.json)
 CV_SOURCES:=$(shell find source/)
-CV_TEST_CLASSES=$(subst test/,test/build/,$(wildcard test/*.js))
-CV_TEST_SCRIPTS=$(subst test/,test/build/,$(wildcard test/tests/*.js))
-CV_TEST_HELPERS=$(subst test/,test/build/,$(wildcard test/helpers/*.js))
+CV_TEST_CLASSES=$(wildcard test/*.mjs)
+CV_TEST_HELPERS=$(wildcard test/helpers/*.mjs)
+CV_TEST_SCRIPTS=$(wildcard test/tests/*.js)
 
 ifeq (${CODECOV_TOKEN},)
 	CODECOV_DRYFLAG=-d
@@ -33,24 +35,21 @@ test/html/curvature.js: ${CV_SOURCES} node_modules/.package-lock.json
 	@ npx brunch b
 
 test:
-	cd test/ && npx babel helpers/*.js --out-dir build/helpers
-	cd test/ && npx babel tests/*.js --out-dir build/tests
-	cd test/ && npx babel *.js -d build/
 	@ echo -e "Testing with \e[33m"`google-chrome --version`"\e[0m...";
 	@ rm test/results.json || true
 	@ make test/results.json
 
-test/build/helpers/%.js: test/helpers/%.js
-	npx babel ${<} -o ${@}
+# test/build/helpers/%.js: test/helpers/%.js
+# 	npx babel ${<} -o ${@}
 
-test/build/tests/%.js: test/tests/%.js
-	npx babel ${<} -o ${@}
+# test/build/tests/%.js: test/tests/%.js
+# 	npx babel ${<} -o ${@}
 
-test/build/%.js: test/%.js ${CV_TEST_SCRIPTS}
-	cd test/ && npx babel ../${<} -o ../${@}
+# test/build/%.js: test/%.js ${CV_TEST_SCRIPTS}
+# 	cd test/ && npx babel ../${<} -o ../${@}
 
 test/results.json: test/html/curvature.js ${CV_TEST_CLASSES} ${CV_TEST_SCRIPTS} ${CV_TEST_HELPERS}
-	@ cd test/build/ && npx cvtest ${TESTLIST} > ../results.json
+	@ cd test/ && npx cvtest ${TESTLIST} > ../results.json
 
 test/coverage/data/cv-coverage.json: test/results.json
 	@ node test/map-coverage.js

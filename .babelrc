@@ -13,6 +13,8 @@
 				'@babel/plugin-transform-arrow-functions',
 				'@babel/plugin-transform-spread',
 				'@babel/plugin-transform-for-of',
+				'@babel/plugin-transform-new-target',
+				'@babel/plugin-transform-parameters',
 			],
 		}],
 	]

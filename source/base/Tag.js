@@ -46,7 +46,7 @@ const getter = function(name) {
 
 	if(this.node && (typeof this.node[name] === 'function'))
 	{
-		return (...args) => this.node[name](...args);
+		return this[name] = (...args) => this.node[name](...args);
 	}
 
 	if(name === 'style')

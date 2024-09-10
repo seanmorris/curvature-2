@@ -14,8 +14,6 @@ const dontParse  = Symbol('dontParse');
 const expandBind = Symbol('expandBind');
 const uuid       = Symbol('uuid');
 
-let moveIndex = 0;
-
 export class View extends Mixin.with(EventTargetMixin)
 {
 	get _id()
@@ -315,6 +313,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	render(parentNode = null, insertPoint = null, outerView = null)
 	{
+		const { document } = globalThis.window;
+
 		if(parentNode instanceof View)
 		{
 			parentNode = parentNode.firstNode.parentNode;
@@ -365,7 +365,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 		this.mainView || this.ruleSet.apply(subDoc, this);
 
-		if(window.devMode === true)
+		if(globalThis.devMode === true)
 		{
 			this.firstNode = document.createComment(`Template ${this._id} Start`);
 			this.lastNode = document.createComment(`Template ${this._id} End`);
@@ -406,8 +406,6 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			parentNode.insertBefore(subDoc, this.lastNode);
 
-			moveIndex++;
-
 			const rootNode = parentNode.getRootNode();
 
 			if(rootNode.isConnected)
@@ -437,6 +435,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	dispatchAttach()
 	{
+		const { CustomEvent } = globalThis.window;
+
 		return this.dispatchEvent(new CustomEvent('attach', {
 			cancelable: true, target: this
 		}));
@@ -444,6 +444,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	dispatchAttached(rootNode, parentNode, view = undefined)
 	{
+		const { CustomEvent } = globalThis.window;
+
 		this.dispatchEvent(new CustomEvent('attached', {detail: {
 			view: view || this, node: parentNode, root: rootNode, mainView: this
 		}}));
@@ -458,6 +460,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	dispatchDomAttached(view)
 	{
+		const { Node , CustomEvent } = globalThis.window;
+
 		this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).forEach(child => {
 			if(!child.matches)
 			{
@@ -486,6 +490,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 	reRender(parentNode, insertPoint, outerView)
 	{
+		const { CustomEvent } = globalThis.window;
+
 		const willReRender = this.dispatchEvent(new CustomEvent('reRender'), {
 			cancelable:true, target:this, view: outerView
 		});
@@ -839,6 +845,8 @@ export class View extends Mixin.with(EventTargetMixin)
 	mapInterpolatableTag(tag)
 	{
 		let regex = this.interpolateRegex;
+
+		const { Node, document} = globalThis.window;
 
 		if(tag.nodeType === Node.TEXT_NODE)
 		{
@@ -1523,39 +1531,38 @@ export class View extends Mixin.with(EventTargetMixin)
 				eventName = callbackName;
 			}
 
-			let eventMethod;
-			let parent = this;
-
-			while(parent)
-			{
-				const controller = parent.controller;
-
-				if(typeof controller[callbackName] === 'function')
-				{
-					eventMethod = (...args) => {
-						controller[callbackName](...args);
-					};
-					break;
-				}
-				else if(typeof parent[callbackName] === 'function')
-				{
-					eventMethod = (...args) => {
-						parent[callbackName](...args);
-					};
-					break;
-				}
-
-				if(parent.parent)
-				{
-					parent = parent.parent;
-				}
-				else
-				{
-					break;
-				}
-			}
-
 			const eventListener = ((event) => {
+				let eventMethod;
+				let parent = this;
+
+				while(parent)
+				{
+					const controller = parent.controller;
+
+					if(typeof controller[callbackName] === 'function')
+					{
+						eventMethod = (...args) => {
+							controller[callbackName](...args);
+						};
+						break;
+					}
+					else if(typeof parent[callbackName] === 'function')
+					{
+						eventMethod = (...args) => {
+							parent[callbackName](...args);
+						};
+						break;
+					}
+
+					if(parent.parent)
+					{
+						parent = parent.parent;
+					}
+					else
+					{
+						break;
+					}
+				}
 				const argRefs = argList.map((arg) => {
 					let match;
 					if(Number(arg) == arg)
@@ -1688,7 +1695,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 			if(linkAttr.substring(0, 4) === 'http' || linkAttr.substring(0, 2) === '//')
 			{
-				window.open(tag.getAttribute('href', linkAttr));
+				globalThis.open(tag.getAttribute('href', linkAttr));
 				return;
 			}
 
@@ -1722,13 +1729,13 @@ export class View extends Mixin.with(EventTargetMixin)
 	mapPrendererTag(tag)
 	{
 		let prerenderAttr = tag.getAttribute('cv-prerender');
-		let prerendering  = window.prerenderer || navigator.userAgent.match(/prerender/i);
+		let prerendering  = globalThis.prerenderer || navigator.userAgent.match(/prerender/i);
 
 		tag.removeAttribute('cv-prerender');
 
 		if(prerendering)
 		{
-			window.prerenderer = window.prerenderer || true;
+			globalThis.prerenderer = globalThis.prerenderer || true;
 		}
 
 		if(prerenderAttr === 'never' && prerendering
@@ -1996,6 +2003,11 @@ export class View extends Mixin.with(EventTargetMixin)
 			this.viewLists.set(tag, viewList);
 
 			viewList.render(tag, null, this);
+
+			if(tag.tagName === 'SELECT')
+			{
+				viewList.reRender();
+			}
 		});
 
 		this.onRemove(debind);
@@ -2350,7 +2362,7 @@ export class View extends Mixin.with(EventTargetMixin)
 					break;
 				}
 
-				parent = this.parent;
+				parent = parent.parent;
 			}
 
 			if(!template)
@@ -2365,6 +2377,15 @@ export class View extends Mixin.with(EventTargetMixin)
 		while(tag.firstChild)
 		{
 			tag.firstChild.remove();
+		}
+
+		if(typeof template === 'string')
+		{
+			if(!View.templates.has(template))
+			{
+				View.templates.set(template, document.createRange().createContextualFragment(template));
+			}
+			template = View.templates.get(template);
 		}
 
 		tag.appendChild(template.cloneNode(true));

@@ -359,8 +359,8 @@ export class Router {
 		if(!forceRefresh
 			&& listener
 			&& current
-			&& (result instanceof Object)
-			&& (current instanceof result)
+			&& typeof result === 'object'
+			&& (current.constructor === result.constructor)
 			&& !(result instanceof Promise)
 			&& current.update(args)
 		) {
