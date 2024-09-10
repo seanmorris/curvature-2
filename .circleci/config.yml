@@ -153,6 +153,6 @@ jobs:
     steps:
       - checkout
       - install-deps
-      - sudo apt install libappindicator3-1;
+      - run: sudo apt install libappindicator3-1;
       - install-chrome-old-version
       - run: make test
