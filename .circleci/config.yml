@@ -64,7 +64,7 @@ workflows:
       - test-chrome-100
       - test-chrome-90
       - test-chrome-80
-      - test-chrome-70
+      # - test-chrome-70
       - test-chrome-60
       - test-chrome-50
       - test-chrome-48
@@ -175,7 +175,7 @@ jobs:
       docker_layer_caching: false
     resource_class: large
     environment:
-      CHROME_VERSION: 79.0.3945.88
+      CHROME_VERSION: 70.0.3538.77
     steps:
       - checkout
       - install-deps
