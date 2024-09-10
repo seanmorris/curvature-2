@@ -213,22 +213,20 @@ export class TestBase extends Test
 		return this.wrapScript(name, script, expected, withCoverage);
 	}
 
-	wrapScript(name, script, expected, withCoverage = false)
+	async wrapScript(name, script, expected, withCoverage = false)
 	{
 		const {pobot, reporter} = this;
 
 		withCoverage = withCoverage && pobot.adapter.type === 'chrome';
 
-		const init = (withCoverage ? pobot.startCoverage() : Promise.resolve())
-		.then(() => pobot.goto(this.startDocument))
-		.then(() => Promise.all(this.helpers.filter(h => h.modules).map(h => pobot.addModules(h.modules))));
+		if(withCoverage)
+		{
+			await pobot.startCoverage();
+		}
 
-		// const getHtml = runTest.then(() => pobot.getHtml('body'));
-		// const snapshotFile  = `${process.cwd()}/../snapshots/${name}.txt`;
-		// const checkSnapshot = fsp.access(snapshotFile);
-		// const getSnapshot = checkSnapshot
-		// .catch(() => getHtml.then(result => fsp.writeFile(snapshotFile, result)))
-		// .then(()  => fsp.readFile(snapshotFile, 'utf-8'));
+		await pobot.goto(this.startDocument);
+		await Delay(100);
+		await Promise.all(this.helpers.filter(h => h.modules).map(h => pobot.addModules(h.modules)));
 
 		const docCheckMessage = (a,b) => 'Document body incorrect or corrupted.\n'
 			+ `\x1b[32m[-] Expected:\x1b[0m `
@@ -236,10 +234,13 @@ export class TestBase extends Test
 			+ `\x1b[32m[-] ${JSON.stringify(a)}\x1b[0m\n`
 			+ `\x1b[31m[+] ${JSON.stringify(b)}\x1b[0m`;
 
-		const runTest = init.then(() => pobot.inject(script));
-		const check = runTest
-		.then(result => this.assertEquals(expected, result, docCheckMessage))
-		.catch(error => {
+		try
+		{
+			const result = await pobot.inject(script);
+			this.assertEquals(expected, result, docCheckMessage);
+		}
+		catch(error)
+		{
 			this.fail[this.EXCEPTION]++;
 
 			if(error.result)
@@ -269,23 +270,22 @@ export class TestBase extends Test
 			{
 				reporter.exceptionCaught(error, this);
 			}
-		});
+		}
 
 		const screenshotFile = `${process.cwd()}/screenshots/${name}.png`;
-
-		const takeScreenshot = check.then(() => pobot.getScreenshot({filename: screenshotFile, captureBeyondViewport:true}));
+		const takeScreenshot = pobot.getScreenshot({filename: screenshotFile, captureBeyondViewport:true});
 
 		if(!withCoverage)
 		{
-			return check.finally(() => Promise.all([takeScreenshot, ...pendingRequests]));
+			return Promise.all([takeScreenshot, ...pendingRequests]);
 		}
 
 		const coverageFile = `${process.cwd()}/coverage/v8/${name}-coverage.json`;
 
-		return check
-		.then(() => pobot.takeCoverage())
-		.then(coverage => fsp.writeFile(coverageFile, JSON.stringify(coverage, null, 4)))
-		.then(() => pobot.stopCoverage())
-		.then(() => Promise.all([takeScreenshot, ...pendingRequests]));
+		const coverage = await pobot.takeCoverage();
+		await fsp.writeFile(coverageFile, JSON.stringify(coverage, null, 4));
+		await pobot.stopCoverage();
+
+		return Promise.all([takeScreenshot, ...pendingRequests]);
 	}
 }
