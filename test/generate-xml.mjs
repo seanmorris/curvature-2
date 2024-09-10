@@ -19,7 +19,7 @@ let projectTotalLines = 0;
 
 let fileCount = 0;
 
-Object.entries(coverage.lines).forEach(([name,linesHit]) => {
+Object.entries(coverage.lines).forEach(([name, linesHit]) => {
 	const fileInfo     = coverage.stats[name];
 	const ratio        = fileInfo.covered / fileInfo.size;
 	const percent      = Number(Number(ratio * 100).toFixed(1));
@@ -33,7 +33,7 @@ Object.entries(coverage.lines).forEach(([name,linesHit]) => {
 	const file = [ {  _attr: { name } } ];
 
 	linesHit = linesHit.slice(0)
-	blanks   = coverage.blanks[name].slice(0)
+	const blanks = coverage.blanks[name].slice(0)
 
 	for(let i = 1; i <= totalLines; i++)
 	{
