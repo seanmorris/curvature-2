@@ -225,7 +225,6 @@ export class TestBase extends Test
 		}
 
 		await pobot.goto(this.startDocument);
-		await Delay(100);
 		await Promise.all(this.helpers.filter(h => h.modules).map(h => pobot.addModules(h.modules)));
 
 		const docCheckMessage = (a,b) => 'Document body incorrect or corrupted.\n'

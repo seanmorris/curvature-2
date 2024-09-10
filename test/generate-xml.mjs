@@ -14,8 +14,8 @@ const project = [ {_attr: {timestamp:time}}, { package:_package } ];
 
 const outputDoc = { coverage:[ {_attr:{generated:time}}, { project } ] };
 
-projectCoveredLines = 0;
-projectTotalLines = 0;
+let projectCoveredLines = 0;
+let projectTotalLines = 0;
 
 let fileCount = 0;
 
