@@ -10,7 +10,7 @@ VERSION:=$(shell jq -r .version < package.json)
 CV_SOURCES:=$(shell find source/)
 CV_TEST_CLASSES=$(wildcard test/*.mjs)
 CV_TEST_HELPERS=$(wildcard test/helpers/*.mjs)
-CV_TEST_SCRIPTS=$(wildcard test/tests/*.js)
+CV_TEST_SCRIPTS=$(wildcard test/tests/*.mjs)
 
 ifeq (${CODECOV_TOKEN},)
 	CODECOV_DRYFLAG=-d
@@ -43,10 +43,10 @@ test/results.json: test/html/curvature.js ${CV_TEST_CLASSES} ${CV_TEST_SCRIPTS} 
 	@ cd test/ && npx cvtest ${TESTLIST} > ../results.json
 
 test/coverage/data/cv-coverage.json: test/results.json
-	@ node test/map-coverage.js
+	@ node test/map-coverage.mjs
 
 test/coverage/data/coverage.xml: test/coverage/data/cv-coverage.json
-	@ node test/generate-xml.js > test/coverage/data/coverage.xml
+	@ node test/generate-xml.mjs > test/coverage/data/coverage.xml
 
 node_modules/.package-lock.json: package.json
 	@ npm install
