@@ -129,7 +129,8 @@ jobs:
       docker_layer_caching: false
     resource_class: large
     environment:
-      CHROME_VERSION:  100.0.4896.127-1
+      # CHROME_VERSION: 100.0.4896.127-1
+      CHROME_VERSION: 102.0.5005.63
     steps:
       - checkout
       - install-deps
