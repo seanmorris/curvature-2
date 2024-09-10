@@ -65,6 +65,8 @@ workflows:
       - test-chrome-80
       - test-chrome-70
       - test-chrome-60
+      - test-chrome-50
+      - test-chrome-48
 
 jobs:
   test-chrome-latest:
@@ -191,6 +193,7 @@ jobs:
     steps:
       - checkout
       - install-deps
+      - install-old-deps
       - install-chrome-older-version
       - run: make test
 
