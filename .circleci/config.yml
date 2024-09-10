@@ -68,7 +68,7 @@ jobs:
   test-chrome-latest:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     steps:
@@ -80,7 +80,7 @@ jobs:
   test-chrome-dev:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     steps:
@@ -92,7 +92,7 @@ jobs:
   test-chrome-110:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
@@ -106,7 +106,7 @@ jobs:
   test-chrome-100:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
@@ -120,7 +120,7 @@ jobs:
   test-chrome-90:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
@@ -134,7 +134,7 @@ jobs:
   test-chrome-80:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
@@ -148,7 +148,7 @@ jobs:
   test-chrome-70:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
@@ -162,7 +162,7 @@ jobs:
   test-chrome-60:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
@@ -176,7 +176,7 @@ jobs:
   test-chrome-50:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
@@ -190,7 +190,7 @@ jobs:
   test-chrome-48:
     parallelism: 1
     machine:
-      image: ubuntu-2404:2024.05.1
+      image: ubuntu-2004:2024.05.1
       docker_layer_caching: false
     resource_class: large
     environment:
