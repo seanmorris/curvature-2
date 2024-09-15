@@ -15,6 +15,7 @@ const konsole = new Console({stdout: process.stderr, stderr: process.stderr});
 export class TestBase extends Test
 {
 	parallel = true;
+	setUpTime = null;
 
 	startDocument = `file://${process.cwd()}/html/index.html`;
 
@@ -198,13 +199,18 @@ export class TestBase extends Test
 
 		const addExceptionHandler = pobot.client.Runtime.exceptionThrown(exception => console.dir(exception, {depth:null}));
 
-		await Delay(100);
+		this.setUpTime = Date.now();
 
 		return Promise.all([addBindings, addInits, addHandlers, addExceptionHandler]);
 	}
 
-	breakDown()
+	async breakDown()
 	{
+		if(Date.now() - this.setUpTime < 100)
+		{
+			await Delay(100);
+		}
+
 		return this.pobot.kill();
 	}
 
@@ -286,5 +292,19 @@ export class TestBase extends Test
 		await pobot.stopCoverage();
 
 		return Promise.all([takeScreenshot, ...pendingRequests]);
+	}
+
+	generateTest(path)
+	{
+		return async() => {
+			const testScript = await import(`${path}.mjs`);
+
+			return this.wrapScript(
+				name,
+				testScript,
+				fs.readFileSync(`${path}.txt`, {encoding: 'utf8'}),
+				true
+			);
+		}
 	}
 }

@@ -6,12 +6,12 @@ export class RuleSetTest extends TestBase
 	async testGlobalRule()
 	{
 		const name = 'testGlobalRule';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/ruleSetTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/ruleSetTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -19,12 +19,12 @@ export class RuleSetTest extends TestBase
 	async testLocalRule()
 	{
 		const name = 'testLocalRule';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/ruleSetTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/ruleSetTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -32,12 +32,12 @@ export class RuleSetTest extends TestBase
 	async testRuleReturnsWrappedTag()
 	{
 		const name = 'testRuleReturnsWrappedTag';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/ruleSetTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/ruleSetTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -45,12 +45,12 @@ export class RuleSetTest extends TestBase
 	async testRuleReturnsView()
 	{
 		const name = 'testRuleReturnsView';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/ruleSetTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/ruleSetTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}

@@ -10,12 +10,12 @@ export class FormTest extends TestBase
 	async testTextField()
 	{
 		const name = 'testTextField';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -23,12 +23,12 @@ export class FormTest extends TestBase
 	async testTextarea()
 	{
 		const name = 'testTextarea';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -36,12 +36,12 @@ export class FormTest extends TestBase
 	async testHtmlField()
 	{
 		const name = 'testHtmlField';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -49,12 +49,12 @@ export class FormTest extends TestBase
 	async testFormBasic()
 	{
 		const name = 'testFormBasic';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -62,12 +62,12 @@ export class FormTest extends TestBase
 	async testFormInputFlicker()
 	{
 		const name = 'testFormInputFlicker';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -75,12 +75,12 @@ export class FormTest extends TestBase
 	async testFormOutputFlicker()
 	{
 		const name = 'testFormOutputFlicker';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -88,12 +88,12 @@ export class FormTest extends TestBase
 	async testFormGroupInput()
 	{
 		const name = 'testFormGroupInput';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -101,12 +101,12 @@ export class FormTest extends TestBase
 	async testFormGroupOutput()
 	{
 		const name = 'testFormGroupOutput';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/formTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/formTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}

@@ -6,12 +6,12 @@ export class CvAttrTagTest extends TestBase
 	async testAttributesPresent()
 	{
 		const name = 'testAttributesPresent';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvAttrTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvAttrTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -19,12 +19,12 @@ export class CvAttrTagTest extends TestBase
 	async testExpandedAttributesPresent()
 	{
 		const name = 'testExpandedAttributesPresent';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvAttrTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvAttrTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}

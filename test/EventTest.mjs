@@ -11,8 +11,8 @@ export class EventTest extends TestBase
 
 		return this.wrapTest(
 			name,
-			(await import(`./tests/${name}.mjs`))[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			(await import(`./tests/eventTests/${name}.mjs`))[name],
+			fs.readFileSync(`./tests/eventTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -23,8 +23,8 @@ export class EventTest extends TestBase
 
 		return this.wrapTest(
 			name,
-			(await import(`./tests/${name}.mjs`))[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			(await import(`./tests/eventTests/${name}.mjs`))[name],
+			fs.readFileSync(`./tests/eventTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -35,8 +35,8 @@ export class EventTest extends TestBase
 
 		return this.wrapTest(
 			name,
-			(await import(`./tests/${name}.mjs`))[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			(await import(`./tests/eventTests/${name}.mjs`))[name],
+			fs.readFileSync(`./tests/eventTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -47,8 +47,8 @@ export class EventTest extends TestBase
 
 		return this.wrapTest(
 			name,
-			(await import(`./tests/${name}.mjs`))[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			(await import(`./tests/eventTests/${name}.mjs`))[name],
+			fs.readFileSync(`./tests/eventTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -59,8 +59,8 @@ export class EventTest extends TestBase
 
 		return this.wrapTest(
 			name,
-			(await import(`./tests/${name}.mjs`))[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			(await import(`./tests/eventTests/${name}.mjs`))[name],
+			fs.readFileSync(`./tests/eventTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -71,8 +71,8 @@ export class EventTest extends TestBase
 
 		return this.wrapTest(
 			name,
-			(await import(`./tests/${name}.mjs`))[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			(await import(`./tests/eventTests/${name}.mjs`))[name],
+			fs.readFileSync(`./tests/eventTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}

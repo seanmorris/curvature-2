@@ -6,12 +6,12 @@ export class CvBindTagTest extends TestBase
 	async testValueIsPresent()
 	{
 		const name = 'testValueIsPresent';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvBindTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -19,12 +19,12 @@ export class CvBindTagTest extends TestBase
 	async testValueIsTransfomed()
 	{
 		const name = 'testValueIsTransfomed';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvBindTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -32,12 +32,12 @@ export class CvBindTagTest extends TestBase
 	async testValueIsEscaped()
 	{
 		const name = 'testValueIsEscaped';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvBindTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -45,12 +45,12 @@ export class CvBindTagTest extends TestBase
 	async testValueIsNotEscaped()
 	{
 		const name = 'testValueIsNotEscaped';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvBindTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -60,12 +60,12 @@ export class CvBindTagTest extends TestBase
 	async testInterpolatedValueIsPresent()
 	{
 		const name = 'testInterpolatedValueIsPresent';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvBindTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -73,12 +73,12 @@ export class CvBindTagTest extends TestBase
 	async testInterpolatedValueIsEscaped()
 	{
 		const name = 'testInterpolatedValueIsEscaped';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvBindTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -86,12 +86,12 @@ export class CvBindTagTest extends TestBase
 	async testInterpolatedValueIsNotEscaped()
 	{
 		const name = 'testInterpolatedValueIsNotEscaped';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvBindTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -105,8 +105,8 @@ export class CvBindTagTest extends TestBase
 
 	// 	return this.wrapTest(
 	// 		name,
-	// 		require(`./tests/${name}`)[name],
-	// 		fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+	// 		require(`./tests/cvBindTagTests/${name}`)[name],
+	// 		fs.readFileSync(`./tests/cvBindTagTests/${name}.txt`, {encoding: 'utf8'}),
 	// 		true
 	// 	);
 	// }

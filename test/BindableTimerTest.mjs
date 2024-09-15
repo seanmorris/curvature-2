@@ -6,12 +6,12 @@ export class BindableTimerTest extends TestBase
 	async testDelay()
 	{
 		const name = 'testDelay';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/bindableTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/bindableTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -19,12 +19,12 @@ export class BindableTimerTest extends TestBase
 	async testThrottle()
 	{
 		const name = 'testThrottle';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/bindableTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/bindableTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -32,12 +32,12 @@ export class BindableTimerTest extends TestBase
 	async testWait()
 	{
 		const name = 'testWait';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/bindableTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/bindableTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -48,8 +48,8 @@ export class BindableTimerTest extends TestBase
 
 // 		return this.wrapTest(
 // 			name,
-// 			require(`./tests/${name}`)[name],
-// 			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+// 			require(`./tests/bindableTimerTests/${name}`)[name],
+// 			fs.readFileSync(`./tests/bindableTimerTests/${name}.txt`, {encoding: 'utf8'}),
 // 			true
 // 		);
 // 	}
@@ -60,8 +60,8 @@ export class BindableTimerTest extends TestBase
 
 // 		return this.wrapTest(
 // 			name,
-// 			require(`./tests/${name}`)[name],
-// 			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+// 			require(`./tests/bindableTimerTests/${name}`)[name],
+// 			fs.readFileSync(`./tests/bindableTimerTests/${name}.txt`, {encoding: 'utf8'}),
 // 			true
 // 		);
 // 	}

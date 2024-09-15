@@ -32,12 +32,12 @@ export class ElicitTest extends TestBase
 	async testNormalGetRequest()
 	{
 		const name = 'testNormalGetRequest';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/elicitTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/elicitTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -53,12 +53,12 @@ export class ElicitTest extends TestBase
 		});
 
 		const name = 'testTimedOutGetRequest';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/elicitTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/elicitTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -66,12 +66,12 @@ export class ElicitTest extends TestBase
 	async testGetDataUri()
 	{
 		const name = 'testGetDataUri';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/elicitTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/elicitTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -79,12 +79,12 @@ export class ElicitTest extends TestBase
 	async testGetJson()
 	{
 		const name = 'testGetJson';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/elicitTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/elicitTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -92,12 +92,12 @@ export class ElicitTest extends TestBase
 	async testGetBytes()
 	{
 		const name = 'testGetBytes';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/elicitTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/elicitTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}

@@ -6,12 +6,12 @@ export class BasicViewTest extends TestBase
 	async testTemplate()
 	{
 		const name = 'testTemplate';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -19,12 +19,12 @@ export class BasicViewTest extends TestBase
 	async testFindTag()
 	{
 		const name = 'testFindTag';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -32,12 +32,12 @@ export class BasicViewTest extends TestBase
 	async testFindTags()
 	{
 		const name = 'testFindTags';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -45,12 +45,12 @@ export class BasicViewTest extends TestBase
 	async testListenSelf()
 	{
 		const name = 'testListenSelf';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -58,12 +58,12 @@ export class BasicViewTest extends TestBase
 	async testListenNode()
 	{
 		const name = 'testListenNode';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -71,12 +71,12 @@ export class BasicViewTest extends TestBase
 	async testFlicker()
 	{
 		const name = 'testFlicker';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -84,12 +84,12 @@ export class BasicViewTest extends TestBase
 	async testHtmlEscape()
 	{
 		const name = 'testHtmlEscape';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -97,12 +97,12 @@ export class BasicViewTest extends TestBase
 	async testHtmlNoEscape()
 	{
 		const name = 'testHtmlNoEscape';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -110,12 +110,12 @@ export class BasicViewTest extends TestBase
 	async testViewEscaped()
 	{
 		const name = 'testViewEscaped';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -123,14 +123,13 @@ export class BasicViewTest extends TestBase
 	async testViewNoEscape()
 	{
 		const name = 'testViewNoEscape';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/basicViewTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/basicViewTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
 }
-

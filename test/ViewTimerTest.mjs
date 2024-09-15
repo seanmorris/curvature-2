@@ -6,12 +6,12 @@ export class ViewTimerTest extends TestBase
 	async testTimeout()
 	{
 		const name = 'testTimeout';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -19,12 +19,12 @@ export class ViewTimerTest extends TestBase
 	async testClearTimeout()
 	{
 		const name = 'testClearTimeout';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -32,12 +32,12 @@ export class ViewTimerTest extends TestBase
 	async testPausedTimeout()
 	{
 		const name = 'testPausedTimeout';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -45,12 +45,12 @@ export class ViewTimerTest extends TestBase
 	async testInterval()
 	{
 		const name = 'testInterval';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -58,12 +58,12 @@ export class ViewTimerTest extends TestBase
 	async testClearInterval()
 	{
 		const name = 'testClearInterval';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -71,12 +71,12 @@ export class ViewTimerTest extends TestBase
 	async testPausedInterval()
 	{
 		const name = 'testPausedInterval';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -84,12 +84,12 @@ export class ViewTimerTest extends TestBase
 	async testOnNextFrame()
 	{
 		const name = 'testOnNextFrame';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -97,12 +97,12 @@ export class ViewTimerTest extends TestBase
 	async testOnFrame()
 	{
 		const name = 'testOnFrame';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/viewTimerTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/viewTimerTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}

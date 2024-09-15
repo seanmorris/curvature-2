@@ -9,8 +9,8 @@ export class InputTest extends TestBase
 	async testFocusOrder()
 	{
 		const name = 'testFocusOrder';
-		const script = (await import(`./tests/${name}.mjs`))[name];
-		const expected = fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'});
+		const script = (await import(`./tests/inputTests/${name}.mjs`))[name];
+		const expected = fs.readFileSync(`./tests/inputTests/${name}.txt`, {encoding: 'utf8'});
 
 		const steps = [
 			(r) => this.pobot.inject(script)
@@ -24,8 +24,8 @@ export class InputTest extends TestBase
 	async testFocusClick()
 	{
 		const name = 'testFocusClick';
-		const script = (await import(`./tests/${name}.mjs`))[name];
-		const expected = fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'});
+		const script = (await import(`./tests/inputTests/${name}.mjs`))[name];
+		const expected = fs.readFileSync(`./tests/inputTests/${name}.txt`, {encoding: 'utf8'});
 
 		const steps = [
 			(r) => this.pobot.inject(script)

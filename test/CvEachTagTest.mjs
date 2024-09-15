@@ -6,12 +6,12 @@ export class CvEachTagTest extends TestBase
 	async testList()
 	{
 		const name = 'testList';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -19,12 +19,12 @@ export class CvEachTagTest extends TestBase
 	async testListPrefill()
 	{
 		const name = 'testListPrefill';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -32,12 +32,12 @@ export class CvEachTagTest extends TestBase
 	async testListCascade()
 	{
 		const name = 'testListCascade';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -45,12 +45,12 @@ export class CvEachTagTest extends TestBase
 	async testListCascadeObjects()
 	{
 		const name = 'testListCascadeObjects';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -58,12 +58,12 @@ export class CvEachTagTest extends TestBase
 	async testListCascadeUp()
 	{
 		const name = 'testListCascadeUp';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -71,12 +71,12 @@ export class CvEachTagTest extends TestBase
 	async testListCascadeUpObjects()
 	{
 		const name = 'testListCascadeUpObjects';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -84,12 +84,12 @@ export class CvEachTagTest extends TestBase
 	async testListSplicedOdds()
 	{
 		const name = 'testListSplicedOdds';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -97,12 +97,12 @@ export class CvEachTagTest extends TestBase
 	async testListSplicedUpOdds()
 	{
 		const name = 'testListSplicedUpOdds';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -110,12 +110,12 @@ export class CvEachTagTest extends TestBase
 	async testObjectSetProperties()
 	{
 		const name = 'testObjectSetProperties';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -123,12 +123,12 @@ export class CvEachTagTest extends TestBase
 	async testObjectDeleteOdds()
 	{
 		const name = 'testObjectDeleteOdds';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
@@ -136,12 +136,12 @@ export class CvEachTagTest extends TestBase
 	async testObjectRefill()
 	{
 		const name = 'testObjectRefill';
-		const testScript = await import(`./tests/${name}.mjs`);
+		const testScript = await import(`./tests/cvEachTagTests/${name}.mjs`);
 
 		return this.wrapTest(
 			name,
 			testScript[name],
-			fs.readFileSync(`./tests/${name}.txt`, {encoding: 'utf8'}),
+			fs.readFileSync(`./tests/cvEachTagTests/${name}.txt`, {encoding: 'utf8'}),
 			true
 		);
 	}
