@@ -4,6 +4,7 @@ import { Delay } from './helpers/Delay.mjs';
 
 import { Console } from 'node:console';
 import fs from 'node:fs';
+import path from 'node:path';
 
 const fsp = fs.promises;
 
@@ -14,13 +15,13 @@ const konsole = new Console({stdout: process.stderr, stderr: process.stderr});
 
 export class TestBase extends Test
 {
-	parallel = true;
+	parallel = Boolean(Number(process.env.TEST_PARALLEL ?? 1));
 	setUpTime = null;
 
 	startDocument = `file://${process.cwd()}/html/index.html`;
 
 	options = ['--window-size=640,480', '--js-flags="--jitless"', `--url="${this.startDocument}"`].concat(
-		!process.env.VISIBLE
+		!Boolean(Number(process.env.TEST_VISIBLE ?? 0))
 		? ['--headless', '--disable-gpu']
 		: []
 	);
@@ -241,8 +242,7 @@ export class TestBase extends Test
 
 		try
 		{
-			const result = await pobot.inject(script);
-			this.assertEquals(expected, result, docCheckMessage);
+			this.assertEquals(await pobot.inject(script), expected, docCheckMessage);
 		}
 		catch(error)
 		{
@@ -294,17 +294,15 @@ export class TestBase extends Test
 		return Promise.all([takeScreenshot, ...pendingRequests]);
 	}
 
-	generateTest(path)
+	generateTestMethod(testPath)
 	{
-		return async() => {
-			const testScript = await import(`${path}.mjs`);
+		const func = async function() {
+			const testScript = await import(`../${testPath}.mjs`);
+			const testName = path.basename(testPath);
+			const expected = fs.readFileSync(`../${testPath}.txt`, {encoding: 'utf8'});
+			return this.wrapScript(testName, testScript[testName], expected, true);
+		};
 
-			return this.wrapScript(
-				name,
-				testScript,
-				fs.readFileSync(`${path}.txt`, {encoding: 'utf8'}),
-				true
-			);
-		}
+		return func.bind(this);
 	}
 }

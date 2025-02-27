@@ -3,6 +3,8 @@
 		'@babel/plugin-proposal-json-strings',
 		'@babel/plugin-proposal-class-properties',
 		'@babel/plugin-transform-modules-commonjs',
+		'@babel/plugin-transform-nullish-coalescing-operator',
+		'@babel/plugin-transform-block-scoping',
 	]
 	, presets: [
 		[ '@babel/preset-env', {
@@ -22,10 +24,7 @@
 		compact: true,
 		comments: false,
 		presets: [
-			[ 'minify' , {
-				builtIns: false,
-				mergeVars: false,
-			}]
+
 		]
 	}}
 }

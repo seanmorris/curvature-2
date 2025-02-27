@@ -30,7 +30,7 @@ const MapIterator = Map.prototype[Symbol.iterator];
 const win = typeof globalThis === 'object' ? globalThis : (typeof window === 'object' ? window : (typeof self === 'object' ? self : this));
 
 const isExcluded = object =>
-       (typeof win.Map === 'function' && object instanceof win.Map)
+	(typeof win.Map === 'function' && object instanceof win.Map)
 	|| (typeof win.Set === 'function'                   && object instanceof win.Set)
 	|| (typeof win.Node === 'function'                  && object instanceof win.Node)
 	|| (typeof win.WeakMap === 'function'               && object instanceof win.WeakMap)
@@ -60,7 +60,8 @@ const isExcluded = object =>
 	|| (typeof win.IDBVersionChangeEvent === 'function' && object instanceof win.IDBVersionChangeEvent)
 	|| (typeof win.FileSystemFileHandle === 'function'  && object instanceof win.FileSystemFileHandle)
 	|| (typeof win.RTCPeerConnection === 'function'     && object instanceof win.RTCPeerConnection)
-	|| (typeof win.ServiceWorkerRegistration === 'function' && object instanceof win.ServiceWorkerRegistration);
+	|| (typeof win.ServiceWorkerRegistration === 'function' && object instanceof win.ServiceWorkerRegistration)
+	|| (typeof win.WebGLTexture === 'function'          && object instanceof win.WebGLTexture);
 
 export class Bindable
 {

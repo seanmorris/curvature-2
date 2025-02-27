@@ -400,8 +400,8 @@ export class View extends Mixin.with(EventTargetMixin)
 			}
 			else
 			{
-				parentNode.appendChild(this.firstNode);
-				parentNode.appendChild(this.lastNode);
+				parentNode.insertBefore(this.firstNode, null);
+				parentNode.insertBefore(this.lastNode, null);
 			}
 
 			parentNode.insertBefore(subDoc, this.lastNode);
@@ -524,8 +524,8 @@ export class View extends Mixin.with(EventTargetMixin)
 			}
 			else
 			{
-				parentNode.appendChild(this.firstNode);
-				parentNode.appendChild(this.lastNode);
+				parentNode.insertBefore(this.firstNode, null);
+				parentNode.insertBefore(this.lastNode, null);
 			}
 
 			parentNode.insertBefore(subDoc, this.lastNode);
@@ -951,14 +951,10 @@ export class View extends Mixin.with(EventTargetMixin)
 						}
 					}
 
-					dynamicNode.nodeValue = '';
-
 					if(unsafeView && !(v instanceof View))
 					{
 						const unsafeTemplate = v ?? '';
-
 						v = new View(this.args, this);
-
 						v.template = unsafeTemplate;
 					}
 
@@ -969,6 +965,8 @@ export class View extends Mixin.with(EventTargetMixin)
 
 					if(v instanceof View)
 					{
+						dynamicNode.nodeValue = '';
+
 						v[EventTargetMixin.Parent] = this;
 
 						v.render(tag.parentNode, dynamicNode, this);
@@ -986,12 +984,16 @@ export class View extends Mixin.with(EventTargetMixin)
 					}
 					else if(v instanceof Node)
 					{
+						dynamicNode.nodeValue = '';
+
 						tag.parentNode.insertBefore(v, dynamicNode);
 
 						this.onRemove(() => v.remove());
 					}
 					else if(v instanceof Tag)
 					{
+						dynamicNode.nodeValue = '';
+
 						if(v.node)
 						{
 							tag.parentNode.insertBefore(v.node, dynamicNode);
@@ -1098,12 +1100,7 @@ export class View extends Mixin.with(EventTargetMixin)
 
 					const matching = [];
 					const bindProperty = j;
-
 					const matchingSegments = bindProperties[longProperty];
-
-					// const changeAttribute = (v, k, t, d) => {
-					// 	tag.setAttribute(attribute.name, segments.join(''));
-					// };
 
 					this.onRemove(proxy.bindTo(property, (v,k,t,d) => {
 
@@ -1127,22 +1124,13 @@ export class View extends Mixin.with(EventTargetMixin)
 
 						if(!this.paused)
 						{
-							// changeAttribute(v,k,t,d);
-							tag.setAttribute(attribute.name, segments.join(''))
+							tag.setAttribute(attribute.name, segments.join(''));
 						}
 						else
 						{
-							// this.unpauseCallbacks.set(attribute, () => changeAttribute(v,k,t,d));
 							this.unpauseCallbacks.set(attribute, () => tag.setAttribute(attribute.name, segments.join('')));
 						}
 					}));
-
-					// this.onRemove(()=>{
-					// 	if(!proxy.isBound())
-					// 	{
-					// 		Bindable.clearBindings(proxy);
-					// 	}
-					// });
 				}
 			}
 		}

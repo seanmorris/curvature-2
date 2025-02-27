@@ -1,4 +1,4 @@
-.PHONY: all publish test clean post-coverage
+.PHONY: all publish test coverage clean post-coverage
 
 SHELL=bash -euo pipefail
 
@@ -12,8 +12,10 @@ CV_TEST_CLASSES=$(wildcard test/*.mjs)
 CV_TEST_HELPERS=$(wildcard test/helpers/*.mjs)
 CV_TEST_SCRIPTS=$(wildcard test/tests/*.mjs)
 
+ifdef (CODECOV_TOKEN)
 ifeq (${CODECOV_TOKEN},)
 	CODECOV_DRYFLAG=-d
+endif
 endif
 
 all: curvature-${VERSION}.tgz dist/curvature.js
@@ -36,7 +38,7 @@ test/html/curvature.js: ${CV_SOURCES} node_modules/.package-lock.json
 
 test:
 	@ echo -e "Testing with \e[33m"`google-chrome --version`"\e[0m...";
-	@ rm test/results.json || true
+	@ rm test/results.json 2>/dev/null || true
 	@ make test/results.json
 
 test/results.json: test/html/curvature.js ${CV_TEST_CLASSES} ${CV_TEST_SCRIPTS} ${CV_TEST_HELPERS}
@@ -50,6 +52,8 @@ test/coverage/data/coverage.xml: test/coverage/data/cv-coverage.json
 
 node_modules/.package-lock.json: package.json
 	@ npm install
+
+coverage: test/coverage/data/coverage.xml
 
 post-coverage: codecov test/coverage/data/coverage.xml
 	@ BRANCH_NAME=`git branch --show-current` \

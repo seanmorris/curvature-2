@@ -4,6 +4,9 @@
 	"author": "Sean Morris <curvature@seanmorr.is> (https://seanmorr.is)",
 	"license": "Apache-2.0",
 	"repository": "https://github.com/seanmorris/curvature-2",
+	"scripts": {
+		"test": "make test"
+	},
 	"devDependencies": {
 		"@babel/cli": "^7.21.0",
 		"@babel/core": "^7.21.0",
@@ -17,9 +20,9 @@
 		"babel-plugin-macros": "^3.1.0",
 		"brunch": "^4",
 		"clean-css-brunch": "^3.0.0",
-		"cv3-test": "^0.1.1",
+		"cv3-test": "^0.1.5",
+		"pobot": "^0.1.5",
 		"jsdom": "^22.1.0",
-		"pobot": "^0.1.1",
 		"prettier": "^3.0.1",
 		"raw-brunch": "^1.0.2",
 		"rawquire": "^0.0.1",

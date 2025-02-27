@@ -383,7 +383,7 @@ Promise.all(aggregateCoverage).then(() => {
 
 		const filename = originName.replace(/\//g, '_');
 
-		console.error('file:: ' + ansi.yellow + originName + ansi.end);
+		// console.error('file:: ' + ansi.yellow + originName + ansi.end);
 
 		let report = '<body style = "background-color:#222;font-family:terminal, monospace;">';
 		report += '<link rel="stylesheet" href=".coverage.css">';
@@ -550,11 +550,11 @@ Promise.all(aggregateCoverage).then(() => {
 			column++;
 		}
 
-		const percentage = Number(100 * covered / size).toFixed(2);
+		const percentage = Number(100 * (covered / size) || 0).toFixed(2);
 
 		report += `<h1 style = "color:green">${originName}</h1>`;
 		report += `<h2 style = "color:yellow">Coverage: ${percentage}% (${covered}/${size})</h2>`;
-		report += `<span href = "summary.html" style = "color:lightGray">${testNames.join(', ')}</span>\n\n`;
+		report += `<span href = "summary.html" style = "color:lightGray; white-space: pre-line;">${testNames.join(', ')}</span>\n\n`;
 		report += `<a href = "summary.html" style = "color:lightGray">back</a>\n`;
 		report += `<label for = "show-totals">Show Totals</label><input id = "show-totals" type = "checkbox">\n\n`;
 		report += `<div class = "highlighted">`;

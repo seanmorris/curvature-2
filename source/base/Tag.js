@@ -12,7 +12,7 @@ const styler = function(styles) {
 	{
 		const stringedProperty = String( styles[property] );
 
-		if(this[CurrentStyle].has(property) && this[CurrentStyle].get(property) === styles[property])
+		if(this[CurrentStyle].has(property) && this[CurrentStyle].get(property) === styles[property] || Number.isNaN(styles[property]))
 		{
 			continue;
 		}

@@ -16,7 +16,7 @@ export class ElicitTest extends TestBase
 			this.reporter.Print(`    \uD835\uDD8E` + this.reporter.Format(`[${new Date}] ${method} `, this.reporter.DIM) + url);
 
 			response.writeHead(200, {
-				'Access-Control-Allow-Methods':  'GET'
+				'Access-Control-Allow-Methods': 'GET'
 				, 'Access-Control-Allow-Origin': '*'
 				, 'Content-Type': 'application/json'
 			});
